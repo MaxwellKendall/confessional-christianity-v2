@@ -128,6 +128,14 @@ body {
   color: var(--color-ink-3);
 }
 
+/* Algolia match highlighting inside search excerpts — emphasis by weight,
+   not color, per the monochrome system */
+.search-excerpt em {
+  font-style: normal;
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
 /* bordered small-caps action button (outline style used across the mockups) */
 @utility action-button {
   display: block;

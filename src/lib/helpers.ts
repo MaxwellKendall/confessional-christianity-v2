@@ -1,23 +1,23 @@
 // Pure domain helpers, ported from v1 helpers/index.js. The parsing logic
-// (parseFacets facet grammar, id parsing, title copy) is preserved verbatim;
-// the link generators are updated for v2's routes: canonical entry pages live
-// at /library/[confession]/[entry] (one dash-joined segment, not a catch-all)
+// (parseFacets facet grammar, id parsing) is preserved verbatim; the link
+// generators are updated for v2's routes: canonical entry pages live at
+// /library/[confession]/[entry] (one dash-joined segment, not a catch-all)
 // and search lives at /search?q=.
-import { capitalize, groupBy, startCase } from 'lodash-es';
+//
+// This module stays free of the content-by-id JSON so client components can
+// import the parsers without dragging ~700K of confession text into the
+// bundle — the contentById-dependent title copy lives in pageTitle.ts.
+import { groupBy } from 'lodash-es';
 
 import {
   confessionCitationByIndex,
   DOCUMENTS_WITHOUT_ARTICLES,
   excludedWordsInDocumentId,
-  facetNamesByCanonicalDocId,
   parentIdByAbbreviation,
   slugByDocumentId,
 } from './dataMapping';
 import { toOsis } from './bible';
 import type { ConfessionEntry, ContentById, FacetFilters } from './domain';
-import contentByIdJson from '../../dataMapping/content-by-id.json';
-
-const contentById = contentByIdJson as unknown as ContentById;
 
 // returns doc id excluding of/the, so not WCoF --> WCF. This is confusing tech debt.
 export const getConciseDocId = (docTitle: string): string => docTitle
@@ -183,8 +183,7 @@ const removeDot = (str: string | null): string | null => (str ? str.replaceAll('
 export const regexV2 = /(catechism\sfor\syoung\schildren|cfyc|wcf|Westminster\sConfession\sof\sFaith|hc|Heidelberg\sCatechism|WSC|Westminster\sShorter\sCatechism|WLC|Westminster\sLarger\sCatechism|39A|Thirty Nine Articles|39 Articles|tar|bcf|bc|Belgic Confession of Faith|Belgic Confession|COD|CD|Canons of Dordt|95T|95 Theses|Ninety Five Theses|ML9T|\*)|(\1\.[0-9]{1,})|(\1\2\.[0-9]{1,})|(\1\.r[0-9]{1,})|(\1\2\.r[0-9]{1,})/ig;
 export const keyWords = /(westminster\sstandards|three\sforms\sof\sunity|3\sforms\sof\sunity|six\sforms\sof\sunity|6\sforms\sof\sunity)/ig;
 export const bibleRegex = /(genesis|exodus|leviticus|numbers|deuteronomy|joshua|judges|ruth|1\ssamuel|2\ssamuel|1\skings|2\skings|1\schronicles|2\schronicles|ezra|nehemiah|esther|job|psalms|psalm|proverbs|ecclesiastes|song\sof\ssolomon|isaiah|jeremiah|lamentations|ezekiel|daniel|hosea|joel|amos|obadiah|jonah|micah|nahum|habakkuk|zephaniah|haggai|zechariah|malachi|testament|matthew|mark|luke|john|acts|romans|1\scorinthians|2\scorinthians|galatians|ephesians|philippians|colossians|1\sthessalonians|2\sthessalonians|1\stimothy|2\stimothy|titus|philemon|hebrews|james|1\speter|2\speter|1\sjohn|2\sjohn|3\sjohn|jude|revelation)|(\1\s[0-9]{1,}:[0-9]{1,}$|\1\s[0-9]{1,}$)|(\1\s[0-9]{1,}:[0-9]{1,}-[0-9]{1,})/ig;
-const documentPrefix = /question\s[0-9]{1,}:\s|chapter\s[0-9]{1,}:\s|article\s[0-9]{1,}:\s|rejection\s[0-9]{1,}:\s/ig;
-const regexTest = (regex: RegExp, value = ''): boolean => {
+export const regexTest = (regex: RegExp, value = ''): boolean => {
   regex.lastIndex = 0;
   return regex.test(value);
 };
@@ -327,77 +326,13 @@ export const parseFacets = (str: string): FacetFilters => {
 export const isFacetLength = (search: string, length: number): boolean => search
   .split('.').length === length;
 
-const removePrefix = (str: string | undefined): string | undefined => {
-  if (str) {
-    return str.replace(documentPrefix, '');
-  }
-  return undefined;
-};
-
-const getSubTitleFromConfession = (
-  query: string | null,
-  docId: string,
-  chapterId: string,
-  articleId?: string,
-): string | null | undefined => {
-  if (query) return query;
-  const confessionId = `${docId}-${chapterId}`;
-  if (confessionId.startsWith('HC') && chapterId && !articleId) {
-    // title is just LORD's Day X
-    return '';
-  }
-  if (confessionId.startsWith('HC') && chapterId && articleId) {
-    const key = `${confessionId}-${articleId}`;
-    // title is actually useful, return it
-    if (contentById[key]) {
-      return removePrefix(contentById[`${confessionId}-${articleId}`].title);
-    }
-  }
-
-  if (contentById[confessionId]) return removePrefix(contentById[confessionId].title);
-  return undefined;
-};
-
-// Pure function: derives the [title, subtitle] copy for a given search string.
-export const getPageTitle = (search?: string): [string, string | null | undefined] => {
-  if (!search) return ['Search the Confessions of Historic Protestantism', 'By Keyword, Scripture Text, or Citation'];
-  let queryWithoutFacetFilters: string | null = `${search.replace(regexV2, '').replace(keyWords, '').replace(bibleRegex, '')}` || null;
-  queryWithoutFacetFilters = queryWithoutFacetFilters ? `search results for "${startCase(queryWithoutFacetFilters)}"` : queryWithoutFacetFilters;
-  const result = search.match(regexV2);
-  const doc = (result && result.length && getCanonicalDocId(result[0])) || null;
-  const chap = (doc && result && result.length > 1 && `${facetNamesByCanonicalDocId[doc][0]} ${removeDot(result[1])}`) || null;
-  const art = (doc && result && result.length > 2 && `${facetNamesByCanonicalDocId[doc][1]} ${removeDot(result[2])}`) || null;
-  if (doc && chap && art && result) {
-    const subTitle = getSubTitleFromConfession(
-      queryWithoutFacetFilters,
-      parentIdByAbbreviation[doc],
-      removeDot(result[1]) as string,
-      removeDot(result[2]) as string,
-    );
-    return [`${confessionCitationByIndex[doc][0]} ${startCase(chap.toLowerCase())} ${startCase(art.toLowerCase())}`, subTitle];
-  }
-  if (doc && chap && result) {
-    const subTitle = getSubTitleFromConfession(
-      queryWithoutFacetFilters,
-      parentIdByAbbreviation[doc],
-      removeDot(result[1]) as string,
-    );
-    return [`${confessionCitationByIndex[doc][0]} ${startCase(chap.toLowerCase())}`, subTitle];
-  }
-  if (doc) {
-    return [`${confessionCitationByIndex[doc][0]}`, queryWithoutFacetFilters];
-  }
-  if (regexTest(keyWords, search)) {
-    return [`The ${startCase((search.match(keyWords) as RegExpMatchArray)[0].toLowerCase())}`, queryWithoutFacetFilters];
-  }
-  if (regexTest(bibleRegex, search)) {
-    return [
-      (search.match(bibleRegex) as RegExpMatchArray).map((s) => capitalize(s)).join(' ').replace(/\s+/g, ' ').trim(),
-      queryWithoutFacetFilters,
-    ];
-  }
-  return ['', queryWithoutFacetFilters];
-};
+// strips the facet grammar out of a search string, leaving the free-text
+// keyword query that goes to Algolia as `query`.
+export const removeFacetSyntax = (search: string): string => search
+  .replace(regexV2, '')
+  .replace(bibleRegex, '')
+  .replace(keyWords, '')
+  .trim();
 
 export const getDocumentId = (id: string): string => id.split('-')[0];
 

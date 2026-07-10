@@ -6,12 +6,12 @@ import {
   generateCanonicalEntryLink,
   generateNavLink,
   generateSearchLink,
-  getPageTitle,
   groupContentByChapter,
   isChapter,
   parseFacets,
   truncateForMeta,
 } from '@/lib/helpers';
+import { getPageTitle } from '@/lib/pageTitle';
 import type { ConfessionEntry, ContentById } from '@/lib/domain';
 import { defineCases } from './support/defineCases';
 
