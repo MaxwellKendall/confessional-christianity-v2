@@ -1,0 +1,1 @@
+This migration changes the new fields from 001 to be numbers

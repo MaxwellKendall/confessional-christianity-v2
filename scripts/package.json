@@ -1,0 +1,35 @@
+{
+  "name": "confessional-christianity",
+  "version": "1.0.0",
+  "description": "Compendium of Reformed Standards",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "populate-content-by-id": "npx babel-node --no-babelrc populate-content-by-id.js",
+    "build-json": "npx babel-node --no-babelrc yaml-to-json.js",
+    "populate-agg": "npx babel-node populate-aggregate-index.js",
+    "populate-bible-verses": "npx babel-node --unhandled-rejections=strict populate-bible-verses.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MaxwellKendall/compendium.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/MaxwellKendall/compendium/issues"
+  },
+  "homepage": "https://github.com/MaxwellKendall/compendium#readme",
+  "dependencies": {
+    "@babel/core": "^7.12.9",
+    "@babel/node": "^7.12.6",
+    "@babel/plugin-proposal-optional-chaining": "^7.12.7",
+    "@babel/preset-env": "^7.12.7",
+    "algoliasearch": "^4.8.3",
+    "isomorphic-fetch": "^3.0.0",
+    "lodash": "^4.17.20",
+    "query-string": "^6.13.7",
+    "yaml": "^1.8.3"
+  }
+}
