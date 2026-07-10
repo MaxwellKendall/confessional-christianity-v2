@@ -23,11 +23,11 @@ export const useChildren = () => {
   const { user } = useAuth();
   const supabase = getSupabaseBrowserClient();
 
-  const fetchChildren = useCallback(async () => {
+  const fetchChildren = useCallback(async (): Promise<ChildWithRole[]> => {
     if (!user || !supabase) {
       setChildren([]);
       setLoading(false);
-      return;
+      return [];
     }
 
     try {
@@ -47,16 +47,19 @@ export const useChildren = () => {
       if (fetchError) throw fetchError;
 
       const rows = (data ?? []) as unknown as UserChildJoinRow[];
-      setChildren(rows
+      const list = rows
         .filter((uc) => uc.child)
         .map((uc) => ({
           ...(uc.child as Omit<ChildWithRole, 'userRole' | 'isOwner'>),
           userRole: uc.role,
           isOwner: uc.role === 'owner',
-        })));
+        }));
+      setChildren(list);
       setError(null);
+      return list;
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
+      return [];
     } finally {
       setLoading(false);
     }
@@ -67,13 +70,14 @@ export const useChildren = () => {
   }, [fetchChildren]);
 
   // name + age only (PRD §12): age drives pacing defaults, not birthdate.
-  const addChild = async (name: string, age: number | null) => {
+  // Returns the refreshed list so callers can find the new child.
+  const addChild = async (name: string, age: number | null): Promise<ChildWithRole[]> => {
     if (!user || !supabase) throw new Error('Must be logged in');
     const { error: insertError } = await supabase
       .from('children')
       .insert({ user_id: user.id, name, age });
     if (insertError) throw insertError;
-    await fetchChildren();
+    return fetchChildren();
   };
 
   const updateChild = async (childId: string, updates: Partial<Pick<ChildWithRole, 'name' | 'age'>>) => {
