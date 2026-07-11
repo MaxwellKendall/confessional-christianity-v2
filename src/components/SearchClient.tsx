@@ -13,7 +13,8 @@ import {
   type CitationHit,
   type SearchOutcome,
 } from '@/lib/algolia';
-import { generateCanonicalEntryLink, generateSearchLink, parseConfessionId } from '@/lib/helpers';
+import { citationToOsis } from '@/lib/bible';
+import { generateCanonicalEntryLink, generateSearchLink, parseCitedById } from '@/lib/helpers';
 import { SearchIcon } from './SearchIcon';
 
 // Algolia highlight values arrive as HTML with <em> markers around matches;
@@ -38,31 +39,59 @@ function ConfessionRow({ hit }: { hit: AggregateHit }) {
   );
 }
 
+const CITED_BY_SHOWN = 4;
+
 function CitationRow({ hit }: { hit: CitationHit }) {
-  const citedBy = (hit.citedBy ?? []).slice(0, 4);
+  const osis = citationToOsis(hit.citation);
+  const scriptureHref = osis ? `/scripture/${osis}` : null;
+  // one link per citing entry, marker suffixes collapsed — the same entry can
+  // cite a verse under several footnotes.
+  const citedBy = Array.from(
+    new Map((hit.citedBy ?? []).map((id) => {
+      const cited = parseCitedById(id);
+      return [cited.entryId, cited];
+    })).values(),
+  );
+  const shown = citedBy.slice(0, CITED_BY_SHOWN);
+  const remainder = citedBy.length - shown.length;
+
   return (
     <div className="border-t border-hairline px-5 py-4 text-ink">
       <div className="label-caps mb-1 text-[9px] tracking-[0.1em] text-ink-3">Scripture</div>
       <div className="mb-1 font-display text-sm font-semibold">
-        <Highlighted value={hit._highlightResult?.citation?.value} fallback={hit.citation} />
+        {scriptureHref ? (
+          <Link href={scriptureHref} className="text-ink no-underline">
+            <Highlighted value={hit._highlightResult?.citation?.value} fallback={hit.citation} />
+          </Link>
+        ) : (
+          <Highlighted value={hit._highlightResult?.citation?.value} fallback={hit.citation} />
+        )}
       </div>
       <div className="search-excerpt line-clamp-4 text-xs leading-relaxed text-ink-2">
         <Highlighted value={hit._highlightResult?.bibleText?.value} fallback={hit.bibleText} />
       </div>
-      {citedBy.length > 0 && (
-        <div className="mt-2 label-caps text-[9px] tracking-[0.08em] text-ink-3">
-          Cited by{' '}
-          {citedBy.map((id, i) => (
-            <span key={id}>
+      {shown.length > 0 && (
+        <div className="mt-2 text-xs leading-relaxed text-ink-2">
+          <span className="label-caps text-[9px] tracking-[0.08em] text-ink-3">Cited by </span>
+          {shown.map((cited, i) => (
+            <span key={cited.entryId}>
               {i > 0 && ' · '}
               <Link
-                href={generateCanonicalEntryLink(id) ?? generateSearchLink(id)}
+                href={generateCanonicalEntryLink(cited.entryId) ?? generateSearchLink(cited.entryId)}
                 className="dotted-link text-ink"
               >
-                {parseConfessionId(id)}
+                {cited.label}
               </Link>
             </span>
           ))}
+          {remainder > 0 && scriptureHref && (
+            <span>
+              {' · '}
+              <Link href={scriptureHref} className="dotted-link text-ink-2">
+                {remainder} more
+              </Link>
+            </span>
+          )}
         </div>
       )}
     </div>
