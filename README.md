@@ -20,11 +20,15 @@ layer, indexing pipeline, and Supabase project were **ported**, the UI was
    [src/lib/programs.ts](src/lib/programs.ts).
 
 2. **Library & Reflections** (the front door, SEO-critical) — fully static
-   RSC pages for every document, entry, and essay.
+   RSC pages for every document, entry, and essay, plus a canonical
+   `/scripture/[osis]` page for every proof-text reference showing the ESV
+   passage and each confession clause that cites it.
    Entry points: [src/app/library/](src/app/library/),
-   [src/app/reflections/](src/app/reflections/), loaders in
+   [src/app/reflections/](src/app/reflections/),
+   [src/app/scripture/](src/app/scripture/), loaders in
    [src/lib/library.ts](src/lib/library.ts) /
-   [src/lib/reflections.ts](src/lib/reflections.ts).
+   [src/lib/reflections.ts](src/lib/reflections.ts) /
+   [src/lib/scripture.ts](src/lib/scripture.ts).
 
 3. **Search** — the existing Algolia indices (`aggregate` + `citations`)
    queried through the ported `parseFacets` grammar.

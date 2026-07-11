@@ -3,6 +3,7 @@ import type { MetadataRoute } from 'next';
 import { confessionSlugs } from '@/lib/confessionContent';
 import { getAllEntryParams } from '@/lib/library';
 import { listAuthors, loadReflections } from '@/lib/reflections';
+import { getAllScriptureParams } from '@/lib/scripture';
 import { PROGRAMS } from '@/lib/programs';
 
 const BASE = 'https://confessionalchristianity.com';
@@ -11,10 +12,11 @@ const BASE = 'https://confessionalchristianity.com';
 // the program landing pages. Transient/auth surfaces (search, session,
 // onboarding, invites) are intentionally absent.
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [entryParams, reflections, authors] = await Promise.all([
+  const [entryParams, reflections, authors, scriptureParams] = await Promise.all([
     getAllEntryParams(),
     loadReflections(),
     listAuthors(),
+    getAllScriptureParams(),
   ]);
 
   return [
@@ -46,6 +48,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${BASE}/authors/${slug}`,
       changeFrequency: 'monthly' as const,
       priority: 0.5,
+    })),
+    ...scriptureParams.map(({ osis }) => ({
+      url: `${BASE}/scripture/${osis}`,
+      changeFrequency: 'yearly' as const,
+      priority: 0.4,
     })),
   ];
 }
