@@ -1,6 +1,7 @@
 // Presentation helpers for confession entries: the mockups render entry
 // titles in short forms ("Q. 1 — What is the chief end of man?", "Chapter 1 ·
 // Article 2") derived from the stored titles documented in docs/DOMAIN.md.
+import { parseOsisBibleReference } from './bible';
 import { stripFootnoteMarkers } from './helpers';
 import type { ConfessionEntry, ContentById } from './domain';
 
@@ -42,8 +43,74 @@ export const entryQuoteLines = (entry: ConfessionEntry): string[] => {
   return [clean];
 };
 
-// flattened, de-duplicated proof-text OSIS refs in footnote order.
-export const proofTextRefs = (entry: ConfessionEntry): string[] => {
+// A run of entry text ending at a footnote marker; the marker's proof texts
+// support exactly this clause, per the source documents' own footnoting.
+export interface TextSegment {
+  text: string;
+  marker?: string;
+}
+
+// Splits stored text ("...being buried,[1] and continuing...") into clause
+// segments keyed by the marker that closes each one; the tail after the last
+// marker comes through markerless.
+export const entryTextSegments = (text = ''): TextSegment[] => {
+  const parts = text.split(/\[([a-zA-Z0-9]+)\]/g);
+  const segments: TextSegment[] = [];
+  for (let i = 0; i < parts.length; i += 2) {
+    const segmentText = parts[i].replace(/\s+/g, ' ');
+    const marker = parts[i + 1];
+    if (!segmentText && !marker) continue;
+    segments.push(marker ? { text: segmentText, marker } : { text: segmentText });
+  }
+  return segments;
+};
+
+// The clause a given footnote marker annotates, for quoting on the scripture
+// canonical page. Leading punctuation belongs to the previous clause (the
+// prior marker sits before the comma), so it is shed along with whitespace.
+export const clauseForMarker = (entry: ConfessionEntry, marker: string): string => (entryTextSegments(entry.text ?? '')
+  .find((segment) => segment.marker === marker)?.text ?? '')
+  .replace(/^[\s,;:.]+/, '')
+  .trim();
+
+// entryQuoteLines with the footnote markers kept in place, as lines of
+// segments — the entry page renders the markers as superscripts anchoring
+// each clause to its proof texts.
+export const entryQuoteSegments = (entry: ConfessionEntry): TextSegment[][] => {
+  const answer = entryTextSegments(entry.text ?? '');
+  const match = entry.title?.match(QUESTION_PREFIX);
+  if (match) {
+    const question = entry.title.replace(QUESTION_PREFIX, '');
+    return [[{ text: `Q. ${question}` }], [{ text: 'A. ' }, ...answer]];
+  }
+  return [answer];
+};
+
+export interface ProofTextRef {
+  osis: string;
+  citation: string;
+}
+
+export interface ProofTextGroup {
+  marker: string;
+  refs: ProofTextRef[];
+}
+
+// Proof texts grouped by footnote marker, in the order the markers appear in
+// the text (falling back to the stored key order for any marker that never
+// appears — a data quirk, not the norm).
+export const proofTextGroups = (entry: ConfessionEntry): ProofTextGroup[] => {
   if (!entry.verses) return [];
-  return Array.from(new Set(Object.values(entry.verses).flat()));
+  const stored = Object.keys(entry.verses);
+  const inTextOrder = entryTextSegments(entry.text ?? '')
+    .map((segment) => segment.marker)
+    .filter((marker): marker is string => Boolean(marker && stored.includes(marker)));
+  const markers = Array.from(new Set([...inTextOrder, ...stored]));
+  return markers.map((marker) => ({
+    marker,
+    refs: entry.verses![marker].map((osis) => ({
+      osis,
+      citation: parseOsisBibleReference(osis),
+    })),
+  }));
 };

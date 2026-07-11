@@ -110,3 +110,30 @@ const toOsisMap: Record<string, string> = Object.entries(bibleBookByAbbreviation
 );
 
 export const toOsis = (str: string): string => toOsisMap[str.toLowerCase()];
+
+// Books the ESV cites without a chapter number ("Jude 4" means Jude 1:4).
+const SINGLE_CHAPTER_BOOKS = new Set(['Obad', 'Phlm', '2John', '3John', 'Jude']);
+
+// Inverse of parseOsisBibleReference for human citations as the ESV API (and
+// therefore the Algolia citations index) canonicalizes them: "Acts 2:24–27",
+// "Psalm 16:10", "1 Corinthians 15:3–4", "Acts 1:1–2:4", chapter-level refs
+// like "Psalm 73" and "Hebrews 8–10". Returns null when the string doesn't
+// fit that shape, so callers can degrade gracefully.
+export const citationToOsis = (citation: string): string | null => {
+  const normalized = citation.replace(/[–—]/g, '-').trim();
+  const match = normalized.match(/^([1-3]?\s?[A-Za-z ]+?)\s+(\d+)(?::(\d+))?(?:\s*-\s*(?:(\d+):)?(\d+))?$/);
+  if (!match) return null;
+  const [, bookName, first, second, endChapter, end] = match;
+  const book = toOsis(bookName);
+  if (!book) return null;
+  // in single-chapter books the leading number is already the verse
+  const [chapter, verse] = SINGLE_CHAPTER_BOOKS.has(book) && !second
+    ? ['1', first]
+    : [first, second];
+  const start = verse ? `${book}.${chapter}.${verse}` : `${book}.${chapter}`;
+  if (!end) return start;
+  // a chapter-only start makes the range end a chapter too ("Hebrews 8–10"),
+  // unless the end carries its own chapter:verse
+  if (!verse && !endChapter) return `${start}-${book}.${end}`;
+  return `${start}-${book}.${endChapter ?? chapter}.${end}`;
+};

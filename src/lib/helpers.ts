@@ -106,6 +106,40 @@ export const parseConfessionId = (id: string): string => {
   }, '');
 };
 
+// The citations index stores `citedBy` ids with a trailing footnote marker
+// ("WLC-50-2", "HC-6-17-d", "WCoF-10-3-a"). How many locator fragments belong
+// to the entry itself is fixed per document grammar (WSC/WLC one, WCoF/HC
+// two); anything beyond that is the marker and is dropped to reach the entry.
+const shortDocumentNameById: Record<string, string> = {
+  WCF: 'Westminster Confession',
+  WCoF: 'Westminster Confession',
+  WCOF: 'Westminster Confession',
+  WSC: 'Shorter Catechism',
+  WLC: 'Larger Catechism',
+  HC: 'Heidelberg Catechism',
+};
+
+export interface CitedByEntry {
+  entryId: string;
+  label: string;
+}
+
+export const parseCitedById = (citedById: string): CitedByEntry => {
+  const [docId, ...rest] = citedById.split('-');
+  // confessionCitationByIndex lists [document, ...locator labels, 'Scripture
+  // Citation'], so the entry's locator count is the array length minus two.
+  const locatorCount = Math.max(1, (confessionCitationByIndex[docId]?.length ?? 3) - 2);
+  const locators = rest.slice(0, locatorCount);
+  const entryId = [docId, ...locators].join('-');
+  const shortName = shortDocumentNameById[docId];
+  if (!shortName) return { entryId, label: parseConfessionId(entryId) };
+  let label: string;
+  if (locators.length === 1) label = `${shortName} Q. ${locators[0]}`;
+  else if (docId === 'HC') label = `${shortName} Q&A ${locators[1]}`;
+  else label = `${shortName} ${locators.join('.')}`;
+  return { entryId, label };
+};
+
 /**
  * getCitationContextById
  * @return a portion of an ID from which the context of the original input can be decided
