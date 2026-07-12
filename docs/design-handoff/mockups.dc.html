@@ -1,0 +1,1778 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&amp;family=Marcellus:ital@0;1&amp;family=Marcellus+SC&amp;display=swap" rel="stylesheet">
+<style>
+  body{ margin:0; background:#e9e6dd; }
+  a{ color:#211e19; }
+  a:hover{ color:#211e19; }
+</style>
+</helmet>
+
+<div style="min-height:100vh; background:#e9e6dd; padding:64px 48px 120px; box-sizing:border-box; font-family:'Marcellus',serif;">
+
+<div style="font-family:'Cinzel',serif; font-size:13px; letter-spacing:0.14em; color:#5c574c; text-transform:uppercase; margin-bottom:14px;">Confessional Christianity v2 · mobile mockups · turn 8 — The Aha Screen, Deepened</div>
+<div style="font-family:'Marcellus',serif; font-style:italic; font-size:14px; color:#5c574c; max-width:760px; margin-bottom:20px; line-height:1.7;">Iterating on <a href="#7c" style="color:#211e19; border-bottom:1px dotted #211e19; text-decoration:none;">7c</a>, the most important screen in the app. <a href="#8a" style="color:#211e19; border-bottom:1px dotted #211e19; text-decoration:none;">8a</a> replaces the single bundled “Scripture Behind It” quote with per-clause citations — each phrase of the answer gets its own small marker, tied in-line to the proof text that stands behind it, so nothing is bundled or hidden. Two new entry points sit below the Scripture, above the existing Save/Next bar: <a href="#8b" style="color:#211e19; border-bottom:1px dotted #211e19; text-decoration:none;">8b</a>, a written prayer that responds directly to this question, and <a href="#8c" style="color:#211e19; border-bottom:1px dotted #211e19; text-decoration:none;">8c</a>, short reflections on it. Both are one tap from the question and one tap back.</div>
+
+<div style="display:flex; flex-wrap:wrap; gap:56px; align-items:flex-start; margin-bottom:64px;">
+
+<!-- ============ 8a THE AHA, DEEPENED: PER-CLAUSE SCRIPTURE + PRAY + REFLECT ============ -->
+<div id="8a" style="width:390px;">
+  <div style="font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.1em; color:#8a8378; margin-bottom:10px;">8a · the aha, deepened — every clause cited in-line, plus prayer and reflection entry points</div>
+  <div style="width:390px; height:844px; background:#faf9f6; border:1px solid #e2ddd0; border-radius:32px; box-shadow:0 16px 44px rgba(33,30,25,0.12); overflow:hidden; display:flex; flex-direction:column;">
+    <div style="height:28px; flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; padding:0 24px; font-family:'Cinzel',serif; font-size:10px; color:#211e19;">
+      <span>9:41</span><span>●●● 100%</span>
+    </div>
+    <div style="flex:0 0 auto; padding:16px 24px 0; text-align:center;">
+      <div style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.12em; color:#8a8378; text-transform:uppercase;">Eli’s Westminster Shorter Catechism</div>
+      <div style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.12em; color:#ab7e2e; text-transform:uppercase; margin-top:3px;">Question 1 of 107</div>
+    </div>
+
+    <div style="flex:1 1 auto; overflow-y:auto; padding:26px 24px 10px;">
+      <blockquote style="margin:0 0 30px; font-family:'Marcellus',serif; font-style:italic; font-size:17px; line-height:1.65; color:#211e19; text-align:center;">Q. What is the chief end of man?<br><br>A. Man’s chief end is to <span onClick="{{ setCite1 }}" style="cursor:pointer; border-bottom:1px dotted {{ cite1Color }}; color:{{ cite1Text }};">glorify God<sup style="font-family:'Cinzel',serif; font-style:normal; font-size:10px; margin-left:1px; color:{{ cite1Color }};">1</sup></span>, and to <span onClick="{{ setCite2 }}" style="cursor:pointer; border-bottom:1px dotted {{ cite2Color }}; color:{{ cite2Text }};">enjoy him forever<sup style="font-family:'Cinzel',serif; font-style:normal; font-size:10px; margin-left:1px; color:{{ cite2Color }};">2</sup></span>.</blockquote>
+
+      <div style="font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.12em; color:#8a8378; text-transform:uppercase; text-align:center; margin-bottom:16px;">The Scripture Behind It</div>
+
+      <div style="min-height:118px; margin-bottom:8px;">
+        <sc-if value="{{ isCite1 }}" hint-placeholder-val="{{ true }}">
+          <div style="text-align:center;">
+            <div style="font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.06em; color:#ab7e2e; text-transform:uppercase; margin-bottom:8px;">On “glorify God”</div>
+            <div style="font-family:'Marcellus',serif; font-style:italic; font-size:14.5px; line-height:1.6; color:#211e19;">“Whether therefore ye eat, or drink, or whatsoever ye do, do all to the glory of God.”</div>
+            <div style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.08em; color:#8a8378; text-transform:uppercase; margin-top:8px;">1 Corinthians 10:31</div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ isCite2 }}" hint-placeholder-val="{{ false }}">
+          <div style="text-align:center;">
+            
+            <div style="font-family:'Marcellus',serif; font-style:italic; font-size:14.5px; line-height:1.6; color:#211e19;">“In thy presence is fulness of joy; at thy right hand there are pleasures for evermore.”</div>
+            <div style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.08em; color:#8a8378; text-transform:uppercase; margin-top:8px;">Psalm 16:11</div>
+          </div>
+        </sc-if>
+      </div>
+      <div style="font-family:'Marcellus',serif; font-style:italic; font-size:11px; color:#c9c4b6; text-align:center; margin-bottom:30px;">Tap the other phrase above to see its verse</div>
+
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <a href="#8b" style="text-decoration:none; color:#211e19; display:flex; align-items:center; gap:12px; background:#f4f2ea; border-radius:2px; padding:13px 14px;">
+          <svg width="14" height="16" viewBox="0 0 14 16" style="flex:0 0 auto;"><line x1="7" y1="2" x2="7" y2="11" stroke="#ab7e2e" stroke-width="1.3"></line><circle cx="7" cy="2" r="2.4" fill="none" stroke="#ab7e2e" stroke-width="1.3"></circle><line x1="1.5" y1="14.5" x2="12.5" y2="14.5" stroke="#ab7e2e" stroke-width="1.3"></line></svg>
+          <div style="flex:1 1 auto;">
+            <div style="font-family:'Cinzel',serif; font-weight:600; font-size:12.5px;">Pray About This</div>
+            <div style="font-family:'Marcellus',serif; font-style:italic; font-size:11.5px; color:#8a8378;">A short prayer for Eli, on this question</div>
+          </div>
+          <span style="font-family:'Cinzel',serif; font-size:13px; color:#8a8378;">›</span>
+        </a>
+        <a href="#8c" style="text-decoration:none; color:#211e19; display:flex; align-items:center; gap:12px; background:#f4f2ea; border-radius:2px; padding:13px 14px;">
+          <svg width="15" height="16" viewBox="0 0 15 16" style="flex:0 0 auto;"><line x1="1" y1="3.5" x2="14" y2="3.5" stroke="#ab7e2e" stroke-width="1.3"></line><line x1="1" y1="8" x2="14" y2="8" stroke="#ab7e2e" stroke-width="1.3"></line><line x1="1" y1="12.5" x2="9" y2="12.5" stroke="#ab7e2e" stroke-width="1.3"></line></svg>
+          <div style="flex:1 1 auto;">
+            <div style="font-family:'Cinzel',serif; font-weight:600; font-size:12.5px;">Reflections</div>
+            <div style="font-family:'Marcellus',serif; font-style:italic; font-size:11.5px; color:#8a8378;">Short writing on what this question means</div>
+          </div>
+          <span style="font-family:'Cinzel',serif; font-size:13px; color:#8a8378;">›</span>
+        </a>
+      </div>
+    </div>
+
+    <div style="flex:0 0 auto; padding:14px 24px 36px; border-top:1px solid #ddd8cd;">
+      <div style="display:flex; align-items:center; justify-content:space-between; padding-top:14px;">
+        <a href="#7d" aria-label="Save Eli's progress" style="text-decoration:none; display:flex; align-items:center; gap:6px; font-family:'Cinzel',serif; font-size:10px; letter-spacing:0.08em; color:#8a8378; text-transform:uppercase;">
+          <svg width="12" height="14" viewBox="0 0 12 14"><path d="M1 1h10v12l-5-3.5L1 13z" fill="none" stroke="#8a8378" stroke-width="1.2"></path></svg>
+          Save Eli’s Progress
+        </a>
+        <a href="#8a" style="text-decoration:none; font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.1em; color:#211e19; text-transform:uppercase; border-bottom:1px dotted #211e19; padding-bottom:2px;">Next Question →</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 8b PRAY ABOUT THIS ============ -->
+<div id="8b" style="width:390px;">
+  <div style="font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.1em; color:#8a8378; margin-bottom:10px;">8b · pray about this — a prayer written directly off the question and its Scripture</div>
+  <div style="width:390px; height:844px; background:#faf9f6; border:1px solid #e2ddd0; border-radius:32px; box-shadow:0 16px 44px rgba(33,30,25,0.12); overflow:hidden; display:flex; flex-direction:column;">
+    <div style="height:28px; flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; padding:0 24px; font-family:'Cinzel',serif; font-size:10px; color:#211e19;">
+      <span>9:41</span><span>●●● 100%</span>
+    </div>
+    <div style="flex:0 0 auto; padding:20px 24px 0; display:flex; align-items:center; justify-content:space-between;">
+      <a href="#8a" aria-label="Back to the question" style="font-family:'Cinzel',serif; font-size:15px; color:#211e19; text-decoration:none;">←</a>
+      <div style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.12em; color:#ab7e2e; text-transform:uppercase;">Question 1 of 107</div>
+    </div>
+
+    <div style="flex:1 1 auto; overflow-y:auto; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:22px 36px; text-align:center;">
+      <div style="font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.14em; color:#8a8378; text-transform:uppercase; margin-bottom:10px;">A Prayer on “The Chief End of Man”</div>
+      <div style="width:36px; height:1px; background:#ddd8cd; margin-bottom:24px;"></div>
+      <div style="font-family:'Marcellus',serif; font-style:italic; font-size:15.5px; line-height:1.85; color:#211e19;">Lord, you made me not by accident but for a purpose — to know your glory and delight in it forever. Give me eyes today to see your worth in what’s ordinary, and a heart un-rushed enough to enjoy you, not only to be useful to you.</div>
+      <div style="font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.1em; color:#ab7e2e; text-transform:uppercase; margin-top:22px;">Amen</div>
+    </div>
+
+    <div style="flex:0 0 auto; padding:18px 24px 40px; border-top:1px solid #ddd8cd; text-align:center;">
+      <a href="#8a" style="text-decoration:none; font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.1em; color:#211e19; text-transform:uppercase; border-bottom:1px dotted #211e19; padding-bottom:2px;">Back to the Question</a>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 8c REFLECTIONS ============ -->
+<div id="8c" style="width:390px;">
+  <div style="font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.1em; color:#8a8378; margin-bottom:10px;">8c · reflections — short writing scoped to this specific question, not the catechism generally</div>
+  <div style="width:390px; height:844px; background:#faf9f6; border:1px solid #e2ddd0; border-radius:32px; box-shadow:0 16px 44px rgba(33,30,25,0.12); overflow:hidden; display:flex; flex-direction:column;">
+    <div style="height:28px; flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; padding:0 24px; font-family:'Cinzel',serif; font-size:10px; color:#211e19;">
+      <span>9:41</span><span>●●● 100%</span>
+    </div>
+    <div style="flex:0 0 auto; padding:20px 24px 0; display:flex; align-items:center; justify-content:space-between;">
+      <a href="#8a" aria-label="Back to the question" style="font-family:'Cinzel',serif; font-size:15px; color:#211e19; text-decoration:none;">←</a>
+      <div style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.12em; color:#ab7e2e; text-transform:uppercase;">Question 1 of 107</div>
+    </div>
+
+    <div style="flex:0 0 auto; padding:20px 24px 4px; text-align:center;">
+      <div style="font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.14em; color:#8a8378; text-transform:uppercase;">Reflections on “The Chief End of Man”</div>
+    </div>
+
+    <div style="flex:1 1 auto; overflow-y:auto; padding:18px 24px 24px; display:flex; flex-direction:column; gap:12px;">
+      <a href="#8c" style="text-decoration:none; color:#211e19; display:block; background:#f4f2ea; border-radius:2px; padding:16px 16px;">
+        <div style="font-family:'Cinzel',serif; font-weight:600; font-size:13.5px; margin-bottom:6px;">Why “Enjoy” Comes Before “Obey”</div>
+        <div style="font-family:'Marcellus',serif; font-style:italic; font-size:12.5px; color:#5c574c; line-height:1.6;">The catechism’s very first answer surprises us — delight, not duty, is where the Christian life begins.</div>
+      </a>
+      <a href="#8c" style="text-decoration:none; color:#211e19; display:block; background:#f4f2ea; border-radius:2px; padding:16px 16px;">
+        <div style="font-family:'Cinzel',serif; font-weight:600; font-size:13.5px; margin-bottom:6px;">Glorifying God in the Ordinary</div>
+        <div style="font-family:'Marcellus',serif; font-style:italic; font-size:12.5px; color:#5c574c; line-height:1.6;">What Paul’s instruction about eating and drinking means for an ordinary afternoon.</div>
+      </a>
+      <a href="#8c" style="text-decoration:none; color:#211e19; display:block; background:#f4f2ea; border-radius:2px; padding:16px 16px;">
+        <div style="font-family:'Cinzel',serif; font-weight:600; font-size:13.5px; margin-bottom:6px;">“Forever” and Why It’s Not an Exaggeration</div>
+        <div style="font-family:'Marcellus',serif; font-style:italic; font-size:12.5px; color:#5c574c; line-height:1.6;">The catechism’s writers meant exactly what they said.</div>
+      </a>
+    </div>
+
+    <div style="flex:0 0 auto; padding:0 24px 40px; text-align:center;">
+      <a href="#8a" style="font-family:'Marcellus',serif; font-style:italic; font-size:12.5px; color:#8a8378; text-decoration:none; border-bottom:1px dotted #8a8378;">Back to the Question</a>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div style="font-family:'Cinzel',serif; font-size:13px; letter-spacing:0.14em; color:#5c574c; text-transform:uppercase; margin-bottom:14px;">Confessional Christianity v2 · mobile mockups · turn 7 — Rebuilt Entry Funnel for Time-to-Value</div>
+<div style="font-family:'Marcellus',serif; font-style:italic; font-size:14px; color:#5c574c; max-width:760px; margin-bottom:20px; line-height:1.7;">The whole funnel is rebuilt around getting to the “aha” — a real question, its own Scripture, the ability to keep it, and what’s next — before asking for anything. Two landing directions are explored: <a href="#7a" style="color:#211e19; border-bottom:1px dotted #211e19; text-decoration:none;">7a</a> lets a visitor browse catechisms and start one with zero input, <a href="#7b" style="color:#211e19; border-bottom:1px dotted #211e19; text-decoration:none;">7b</a> asks only a child’s name up front and picks a sensible default. Both drop straight into <a href="#7c" style="color:#211e19; border-bottom:1px dotted #211e19; text-decoration:none;">7c</a> — the question and its Scripture on one screen, no sign-in wall, with “save progress” and “next question” both sitting quietly at the bottom so all four aha elements are visible together. The account prompt (<a href="#7d" style="color:#211e19; border-bottom:1px dotted #211e19; text-decoration:none;">7d</a>) only appears once they act on saving, and can be dismissed to keep going unsaved. Language throughout drops “plans” for <strong>catechisms</strong> — the Westminster Shorter Catechism, the Heidelberg, a catechism for younger kids — since that’s the thing being personalized, not an abstract plan (<a href="#7e" style="color:#211e19; border-bottom:1px dotted #211e19; text-decoration:none;">7e</a> carries this into the signed-in home, replacing 6c).</div>
+
+<div style="display:flex; flex-wrap:wrap; gap:56px; align-items:flex-start; margin-bottom:64px;">
+
+<!-- ============ 7a LANDING: BROWSE CATECHISMS, ZERO INPUT ============ -->
+<div id="7a" style="width:390px;">
+  <div style="font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.1em; color:#8a8378; margin-bottom:10px;">7a · / (signed out) — browse catechisms, no input required</div>
+  <div style="width:390px; height:844px; background:#faf9f6; border:1px solid #e2ddd0; border-radius:32px; box-shadow:0 16px 44px rgba(33,30,25,0.12); overflow:hidden; display:flex; flex-direction:column;">
+    <div style="height:28px; flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; padding:0 24px; font-family:'Cinzel',serif; font-size:10px; color:#211e19;">
+      <span>9:41</span><span>●●● 100%</span>
+    </div>
+    <div style="flex:0 0 auto; padding:22px 24px 0; text-align:center;">
+      <div style="font-family:'Cinzel',serif; font-weight:600; font-size:13px; letter-spacing:0.13em; text-transform:uppercase;">Confessional Christianity</div>
+    </div>
+
+    <div style="flex:0 0 auto; padding:34px 32px 0; text-align:center;">
+      <div style="font-family:'Cinzel',serif; font-size:10px; letter-spacing:0.14em; color:#ab7e2e; text-transform:uppercase; margin-bottom:14px;">For your child</div>
+      <div style="font-family:'Marcellus',serif; font-style:italic; font-size:22px; line-height:1.5; color:#211e19; margin-bottom:14px;">A catechism, personalized for them.</div>
+      <div style="font-family:'Marcellus',serif; font-size:13px; line-height:1.6; color:#5c574c;">Pick one below to see the first question and the Scripture behind it — free, no account needed.</div>
+    </div>
+
+    <div style="flex:1 1 auto; overflow:hidden; padding:28px 24px 0; display:flex; flex-direction:column; gap:12px;">
+      <a href="#7c" style="text-decoration:none; color:#211e19; display:block; background:#f4f2ea; border-radius:2px; padding:18px 20px;">
+        <div style="font-family:'Cinzel',serif; font-weight:600; font-size:14px; margin-bottom:4px;">Westminster Shorter Catechism</div>
+        <div style="font-family:'Marcellus',serif; font-size:12.5px; color:#5c574c;">107 questions · the classic Reformed catechism</div>
+      </a>
+      <a href="#7c" style="text-decoration:none; color:#211e19; display:block; background:#f4f2ea; border-radius:2px; padding:18px 20px;">
+        <div style="font-family:'Cinzel',serif; font-weight:600; font-size:14px; margin-bottom:4px;">A Catechism for Girls and Boys</div>
+        <div style="font-family:'Marcellus',serif; font-size:12.5px; color:#5c574c;">85 questions · simple language for younger children</div>
+      </a>
+      <a href="#7c" style="text-decoration:none; color:#211e19; display:block; background:#f4f2ea; border-radius:2px; padding:18px 20px;">
+        <div style="font-family:'Cinzel',serif; font-weight:600; font-size:14px; margin-bottom:4px;">Heidelberg Catechism</div>
+        <div style="font-family:'Marcellus',serif; font-size:12.5px; color:#5c574c;">129 questions · in 52 Lord’s Days</div>
+      </a>
+    </div>
+
+    <div style="flex:0 0 auto; padding:22px 24px 32px; text-align:center;">
+      <div style="font-family:'Marcellus',serif; font-style:italic; font-size:12.5px; color:#8a8378;">Already started? <a href="#7e" style="color:#211e19; border-bottom:1px dotted #211e19; text-decoration:none;">Sign in</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 7b LANDING: NAME FIRST, ONE FIELD ============ -->
+<div id="7b" style="width:390px;">
+  <div style="font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.1em; color:#8a8378; margin-bottom:10px;">7b · / (signed out) — name first, one field, sensible default catechism</div>
+  <div style="width:390px; height:844px; background:#faf9f6; border:1px solid #e2ddd0; border-radius:32px; box-shadow:0 16px 44px rgba(33,30,25,0.12); overflow:hidden; display:flex; flex-direction:column;">
+    <div style="height:28px; flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; padding:0 24px; font-family:'Cinzel',serif; font-size:10px; color:#211e19;">
+      <span>9:41</span><span>●●● 100%</span>
+    </div>
+    <div style="flex:0 0 auto; padding:22px 24px 0; text-align:center;">
+      <div style="font-family:'Cinzel',serif; font-weight:600; font-size:13px; letter-spacing:0.13em; text-transform:uppercase;">Confessional Christianity</div>
+    </div>
+
+    <div style="flex:1 1 auto; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0 40px; text-align:center;">
+      <div style="font-family:'Cinzel',serif; font-size:10px; letter-spacing:0.14em; color:#ab7e2e; text-transform:uppercase; margin-bottom:18px;">For your child</div>
+      <div style="font-family:'Marcellus',serif; font-style:italic; font-size:22px; line-height:1.5; color:#211e19; margin-bottom:24px;">What’s your child’s name and age?</div>
+      <div style="display:flex; gap:10px; width:100%; margin-bottom:16px;">
+        <div style="flex:1; border:1px solid #ddd8cd; border-radius:2px; padding:14px 16px; text-align:left; font-family:'Marcellus',serif; font-style:italic; font-size:14px; color:#8a8378; background:#fff;">Eli</div>
+        <div style="width:76px; border:1px solid #ddd8cd; border-radius:2px; padding:14px 16px; text-align:left; font-family:'Marcellus',serif; font-style:italic; font-size:14px; color:#211e19; background:#fff;">7</div>
+      </div>
+      <div style="width:100%; text-align:left; font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.08em; color:#ab7e2e; text-transform:uppercase; margin-bottom:16px;">Since Eli is under 8, we recommend “A Catechism for Girls and Boys”</div>
+      <a href="#7c" style="display:block; width:100%; box-sizing:border-box; text-align:center; text-decoration:none; padding:13px; background:#211e19; border-radius:2px; font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.12em; color:#faf9f6; text-transform:uppercase;">See Eli’s First Question →</a>
+      <div style="font-family:'Marcellus',serif; font-style:italic; font-size:12px; color:#8a8378; margin-top:16px; line-height:1.6;">We’ll start with A Catechism for Girls and Boys — you can change it any time.</div>
+    </div>
+
+    <div style="flex:0 0 auto; padding:22px 24px 32px; text-align:center;">
+      <div style="font-family:'Marcellus',serif; font-style:italic; font-size:12.5px; color:#8a8378;">Already started? <a href="#7e" style="color:#211e19; border-bottom:1px dotted #211e19; text-decoration:none;">Sign in</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 7c THE AHA: QUESTION + SCRIPTURE + SAVE + NEXT, ONE SCREEN ============ -->
+<div id="7c" style="width:390px;">
+  <div style="font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.1em; color:#8a8378; margin-bottom:10px;">7c · the aha moment — question, Scripture, save, and next all visible at once, no wall</div>
+  <div style="width:390px; height:844px; background:#faf9f6; border:1px solid #e2ddd0; border-radius:32px; box-shadow:0 16px 44px rgba(33,30,25,0.12); overflow:hidden; display:flex; flex-direction:column;">
+    <div style="height:28px; flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; padding:0 24px; font-family:'Cinzel',serif; font-size:10px; color:#211e19;">
+      <span>9:41</span><span>●●● 100%</span>
+    </div>
+    <div style="flex:0 0 auto; padding:20px 24px 0; text-align:center;">
+      <div style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.12em; color:#8a8378; text-transform:uppercase;">Eli’s Westminster Shorter Catechism</div>
+      <div style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.12em; color:#ab7e2e; text-transform:uppercase; margin-top:3px;">Question 1 of 107</div>
+    </div>
+
+    <div style="flex:1 1 auto; overflow:hidden; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:22px 34px; text-align:center;">
+      <blockquote style="margin:0 0 26px; font-family:'Marcellus',serif; font-style:italic; font-size:18px; line-height:1.6; color:#211e19;">Q. What is the chief end of man?<br><br>A. Man’s chief end is to glorify God, and to enjoy him forever.</blockquote>
+      <div style="width:36px; height:1px; background:#ddd8cd; margin-bottom:26px;"></div>
+      <div style="font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.12em; color:#8a8378; text-transform:uppercase; margin-bottom:12px;">The Scripture Behind It</div>
+      <blockquote style="margin:0; font-family:'Marcellus',serif; font-style:italic; font-size:14.5px; line-height:1.6; color:#211e19;">“Whether therefore ye eat, or drink, or whatsoever ye do, do all to the glory of God.”<cite style="display:block; margin-top:8px; font-family:'Cinzel',serif; font-style:normal; font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:#8a8378;">1 Corinthians 10:31</cite></blockquote>
+    </div>
+
+    <div style="flex:0 0 auto; padding:18px 24px 40px; border-top:1px solid #ddd8cd;">
+      <div style="display:flex; align-items:center; justify-content:space-between; padding-top:16px;">
+        <a href="#7d" aria-label="Save Eli's progress" style="text-decoration:none; display:flex; align-items:center; gap:6px; font-family:'Cinzel',serif; font-size:10px; letter-spacing:0.08em; color:#8a8378; text-transform:uppercase;">
+          <svg width="12" height="14" viewBox="0 0 12 14"><path d="M1 1h10v12l-5-3.5L1 13z" fill="none" stroke="#8a8378" stroke-width="1.2"></path></svg>
+          Save Eli’s Progress
+        </a>
+        <a href="#7c" style="text-decoration:none; font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.1em; color:#211e19; text-transform:uppercase; border-bottom:1px dotted #211e19; padding-bottom:2px;">Next Question →</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 7d SAVE GATE: APPEARS ONLY WHEN THEY ACT ON SAVING ============ -->
+<div id="7d" style="width:390px;">
+  <div style="font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.1em; color:#8a8378; margin-bottom:10px;">7d · save gate — only reached by choice, dismissable, frames the account as keeping Eli’s place</div>
+  <div style="width:390px; height:844px; background:#faf9f6; border:1px solid #e2ddd0; border-radius:32px; box-shadow:0 16px 44px rgba(33,30,25,0.12); overflow:hidden; display:flex; flex-direction:column;">
+    <div style="height:28px; flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; padding:0 24px; font-family:'Cinzel',serif; font-size:10px; color:#211e19;">
+      <span>9:41</span><span>●●● 100%</span>
+    </div>
+    <div style="flex:0 0 auto; padding:20px 24px 0;">
+      <a href="#7c" aria-label="Back" style="font-family:'Cinzel',serif; font-size:15px; color:#211e19; text-decoration:none;">←</a>
+    </div>
+
+    <div style="flex:1 1 auto; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0 36px; text-align:center;">
+      <div style="font-family:'Cinzel',serif; font-weight:600; font-size:19px; margin-bottom:12px;">Save Eli’s Progress</div>
+      <div style="font-family:'Marcellus',serif; font-style:italic; font-size:13.5px; color:#5c574c; line-height:1.7; margin-bottom:32px;">So you can pick up right where Eli left off, on any device.</div>
+
+      <a href="#7e" style="display:block; width:100%; box-sizing:border-box; text-align:center; text-decoration:none; padding:12px; border:1px solid #211e19; border-radius:2px; font-family:'Cinzel',serif; font-size:10.5px; letter-spacing:0.1em; color:#211e19; text-transform:uppercase; margin-bottom:10px;">Continue with Apple</a>
+      <a href="#7e" style="display:block; width:100%; box-sizing:border-box; text-align:center; text-decoration:none; padding:12px; border:1px solid #211e19; border-radius:2px; font-family:'Cinzel',serif; font-size:10.5px; letter-spacing:0.1em; color:#211e19; text-transform:uppercase; margin-bottom:22px;">Continue with Google</a>
+
+      <div style="display:flex; align-items:center; gap:12px; width:100%; margin-bottom:22px;">
+        <div style="flex:1; height:1px; background:#ddd8cd;"></div>
+        <div style="font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase;">Or</div>
+        <div style="flex:1; height:1px; background:#ddd8cd;"></div>
+      </div>
+
+      <div style="width:100%; border:1px solid #ddd8cd; border-radius:2px; padding:12px 14px; margin-bottom:14px; text-align:left; font-family:'Marcellus',serif; font-style:italic; font-size:13px; color:#8a8378; background:#fff;">Email address</div>
+      <a href="#7e" style="display:block; width:100%; box-sizing:border-box; text-align:center; text-decoration:none; padding:12px; background:#211e19; border-radius:2px; font-family:'Cinzel',serif; font-size:10.5px; letter-spacing:0.1em; color:#faf9f6; text-transform:uppercase;">Save Progress</a>
+    </div>
+
+    <div style="flex:0 0 auto; padding:0 24px 40px; text-align:center;">
+      <a href="#7c" style="font-family:'Marcellus',serif; font-style:italic; font-size:12.5px; color:#8a8378; text-decoration:none; border-bottom:1px dotted #8a8378;">Not now, keep going</a>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 7e SIGNED-IN HOME, REFRAMED: CATECHISMS NOT "PLANS" ============ -->
+<div id="7e" style="width:390px;">
+  <div style="font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.1em; color:#8a8378; margin-bottom:10px;">7e · / (signed in, supersedes 6c) — “catechism,” never “plan,” anywhere in the copy</div>
+  <div style="width:390px; background:#faf9f6; border:1px solid #e2ddd0; border-radius:14px; box-shadow:0 16px 44px rgba(33,30,25,0.12); overflow:hidden;">
+    <div style="height:28px; display:flex; align-items:center; justify-content:space-between; padding:0 20px; font-family:'Cinzel',serif; font-size:10px; color:#211e19;">
+      <span>9:41</span><span>●●● 100%</span>
+    </div>
+    <div style="padding:16px 20px 14px; text-align:center; border-bottom:1px solid #ddd8cd;">
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <button aria-label="Open menu" style="background:none; border:none; padding:4px; display:flex; flex-direction:column; gap:3px; cursor:pointer;">
+          <span style="width:16px; height:1px; background:#211e19;"></span>
+          <span style="width:16px; height:1px; background:#211e19;"></span>
+        </button>
+        <div style="font-family:'Cinzel',serif; font-weight:600; font-size:13.5px; letter-spacing:0.13em; text-transform:uppercase;">Confessional Christianity</div>
+        <button aria-label="Search" style="background:none; border:none; padding:4px; cursor:pointer;">
+          <svg width="14" height="14" viewBox="0 0 20 20"><circle cx="8" cy="8" r="6.5" fill="none" stroke="#211e19" stroke-width="1.4"></circle><line x1="13" y1="13" x2="18" y2="18" stroke="#211e19" stroke-width="1.4"></line></svg>
+        </button>
+      </div>
+      <div style="display:flex; justify-content:center; gap:22px; margin-top:12px; font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase;">
+        <a href="#7e" style="color:#211e19; text-decoration:none;">Catechisms</a>
+        <a href="#1e" style="color:#8a8378; text-decoration:none;">Reflections</a>
+        <a href="#1f" style="color:#8a8378; text-decoration:none;">Library</a>
+      </div>
+    </div>
+
+    <div style="padding:22px 24px 0;">
+      <div style="display:flex; justify-content:center; align-items:center; gap:14px; margin-bottom:24px;">
+        <div role="button" aria-current="true" aria-label="Eli" style="font-family:'Cinzel',serif; font-size:14px; color:#faf9f6; background:#8a6a4f; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 0 0 2px #faf9f6, 0 0 0 3.5px #211e19;">E</div>
+        <a href="#7e" aria-label="Switch to Naomi's catechism" style="text-decoration:none; font-family:'Cinzel',serif; font-size:14px; color:#faf9f6; background:#5c7a6e; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center;">N</a>
+        <a href="#5b" role="button" aria-label="Add a child" style="text-decoration:none; font-family:'Cinzel',serif; font-size:16px; color:#c9c4b6; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:1px dotted #c9c4b6; box-sizing:border-box;">+</a>
+      </div>
+
+      <div style="text-align:center; font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.12em; color:#8a8378; text-transform:uppercase; margin-bottom:14px;">Eli’s Catechism</div>
+      <a href="#7c" style="display:block; text-decoration:none; color:inherit; background:#f4f2ea; border-radius:2px; padding:20px 20px 18px; margin-bottom:22px;">
+        <div style="font-family:'Cinzel',serif; font-weight:600; font-size:14.5px; margin-bottom:6px; color:#211e19;">Westminster Shorter Catechism</div>
+        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;">
+          <span style="font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.08em; color:#8a8378; text-transform:uppercase;">Q. 6 of 107</span>
+        </div>
+        <div style="height:2px; background:#ddd8cd; border-radius:1px; overflow:hidden;">
+          <div style="width:5.6%; height:100%; background:#ab7e2e;"></div>
+        </div>
+      </a>
+
+      <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px;">
+        <div style="font-family:'Cinzel',serif; font-size:10px; letter-spacing:0.14em; color:#8a8378; text-transform:uppercase;">Explore Other Catechisms</div>
+      </div>
+      <div style="display:flex; gap:10px; margin-bottom:24px;">
+        <a href="#7a" style="flex:1; text-decoration:none; color:#211e19; background:#f4f2ea; border-radius:2px; padding:14px 14px;">
+          <div style="font-family:'Cinzel',serif; font-weight:600; font-size:12px; margin-bottom:4px;">Heidelberg</div>
+          <div style="font-family:'Marcellus',serif; font-size:11px; color:#8a8378;">129 Q&amp;A</div>
+        </a>
+        <a href="#7a" style="flex:1; text-decoration:none; color:#211e19; background:#f4f2ea; border-radius:2px; padding:14px 14px;">
+          <div style="font-family:'Cinzel',serif; font-weight:600; font-size:12px; margin-bottom:4px;">For Girls &amp; Boys</div>
+          <div style="font-family:'Marcellus',serif; font-size:11px; color:#8a8378;">85 Q&amp;A</div>
+        </a>
+      </div>
+    </div>
+
+    <div style="margin:0 20px 28px; padding-top:18px; border-top:1px solid #ddd8cd; text-align:center;">
+      <div style="font-family:'Marcellus',serif; font-style:italic; font-size:13px; color:#5c574c;">Or explore the confessions and catechisms directly in the <a href="#1f" style="color:#211e19; border-bottom:1px dotted #211e19; text-decoration:none;">Library</a>.</div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+
+<div style="font-family:'Marcellus',serif; font-style:italic; font-size:14px; color:#5c574c; max-width:680px; margin-bottom:40px; line-height:1.7;">The segmented pill from turn 5 (<a href="#5a" style="color:#211e19; border-bottom:1px dotted #211e19; text-decoration:none;">5a</a>) wasn't it, and the editorial-tabs option is dropped — the winner (<a href="#6c" style="color:#211e19; border-bottom:1px dotted #211e19; text-decoration:none;">6c</a>) over the large "for …" chooser (<a href="#6b" style="color:#211e19; border-bottom:1px dotted #211e19; text-decoration:none;">6b</a>/<a href="#6b-open" style="color:#211e19; border-bottom:1px dotted #211e19; text-decoration:none;">6b-open</a>, kept here for comparison) is now a row of Google-style circular avatars, one color per child, active one ringed. The card below drops the "continue" affordance entirely — no button, no trailing arrow, just the active child's plan and progress, because the whole card is already the tap target. Tapping any other child's avatar skips the switch-then-confirm and drops you straight into <em>their</em> session. Every path from the homepage to an actual session is exactly one tap.</div>
+
+<div style="display:flex; flex-wrap:wrap; gap:56px; align-items:flex-start; margin-bottom:64px;">
+
+<!-- ============ 6b LARGE "FOR ..." CHOOSER, CLOSED ============ -->
+<div id="6b" style="width:390px;">
+  <div style="font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.1em; color:#8a8378; margin-bottom:10px;">6b · large chooser, closed</div>
+  <div style="width:390px; background:#faf9f6; border:1px solid #e2ddd0; border-radius:14px; box-shadow:0 16px 44px rgba(33,30,25,0.12); overflow:hidden;">
+    <div style="height:28px; display:flex; align-items:center; justify-content:space-between; padding:0 20px; font-family:'Cinzel',serif; font-size:10px; color:#211e19;">
+      <span>9:41</span><span>●●● 100%</span>
+    </div>
+    <div style="padding:16px 20px 14px; text-align:center; border-bottom:1px solid #ddd8cd;">
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <button aria-label="Open menu" style="background:none; border:none; padding:4px; display:flex; flex-direction:column; gap:3px; cursor:pointer;">
+          <span style="width:16px; height:1px; background:#211e19;"></span>
+          <span style="width:16px; height:1px; background:#211e19;"></span>
+        </button>
+        <div style="font-family:'Cinzel',serif; font-weight:600; font-size:13.5px; letter-spacing:0.13em; text-transform:uppercase;">Confessional Christianity</div>
+        <button aria-label="Search" style="background:none; border:none; padding:4px; cursor:pointer;">
+          <svg width="14" height="14" viewBox="0 0 20 20"><circle cx="8" cy="8" r="6.5" fill="none" stroke="#211e19" stroke-width="1.4"></circle><line x1="13" y1="13" x2="18" y2="18" stroke="#211e19" stroke-width="1.4"></line></svg>
+        </button>
+      </div>
+      <div style="display:flex; justify-content:center; gap:22px; margin-top:12px; font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase;">
+        <a href="#5d" style="color:#211e19; text-decoration:none;">Programs</a>
+        <a href="#1e" style="color:#8a8378; text-decoration:none;">Reflections</a>
+        <a href="#1f" style="color:#8a8378; text-decoration:none;">Library</a>
+      </div>
+    </div>
+
+    <div style="padding:30px 24px 0; text-align:center;">
+      <a href="#6b-open" role="button" aria-haspopup="true" style="text-decoration:none; display:inline-flex; align-items:baseline; gap:8px; margin-bottom:24px;">
+        <span style="font-family:'Cinzel',serif; font-size:10px; letter-spacing:0.12em; color:#8a8378; text-transform:uppercase;">Catechizing</span>
+        <span style="font-family:'Cinzel',serif; font-weight:600; font-size:20px; color:#211e19;">Eli</span>
+        <span style="font-size:11px; color:#8a8378;">▾</span>
+      </a>
+
+      <div style="text-align:center; font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.12em; color:#8a8378; text-transform:uppercase; margin-bottom:14px;">Continue Where You Left Off</div>
+      <div style="background:#f4f2ea; border-radius:2px; padding:20px 20px 18px; text-align:left;">
+        <div style="font-family:'Cinzel',serif; font-weight:600; font-size:14.5px; margin-bottom:6px;">Eli’s Plan</div>
+        <div style="font-family:'Marcellus',serif; font-style:italic; font-size:13px; color:#5c574c; margin-bottom:10px;">The Shorter Catechism</div>
+        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;">
+          <span style="font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.08em; color:#8a8378; text-transform:uppercase;">Q. 6 of 107</span>
+        </div>
+        <div style="height:2px; background:#ddd8cd; border-radius:1px; overflow:hidden; margin-bottom:14px;">
+          <div style="width:5.6%; height:100%; background:#ab7e2e;"></div>
+        </div>
+        <a href="#4a" style="display:block; text-align:center; text-decoration:none; padding:11px; border:1px solid #211e19; border-radius:2px; font-family:'Cinzel',serif; font-size:10.5px; letter-spacing:0.1em; color:#211e19; text-transform:uppercase;">Continue Today’s Session →</a>
+      </div>
+    </div>
+
+    <div style="margin:24px 20px 28px; padding-top:18px; border-top:1px solid #ddd8cd; text-align:center;">
+      <div style="font-family:'Marcellus',serif; font-style:italic; font-size:13px; color:#5c574c;">Or explore the confessions and catechisms directly in the <a href="#1f" style="color:#211e19; border-bottom:1px dotted #211e19; text-decoration:none;">Library</a>.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 6b-open LARGE CHOOSER, OPEN ============ -->
+<div id="6b-open" style="width:390px;">
+  <div style="font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.1em; color:#8a8378; margin-bottom:10px;">6b-open · large chooser, tapped open</div>
+  <div style="width:390px; background:#faf9f6; border:1px solid #e2ddd0; border-radius:14px; box-shadow:0 16px 44px rgba(33,30,25,0.12); overflow:hidden; position:relative;">
+    <div style="height:28px; display:flex; align-items:center; justify-content:space-between; padding:0 20px; font-family:'Cinzel',serif; font-size:10px; color:#211e19;">
+      <span>9:41</span><span>●●● 100%</span>
+    </div>
+    <div style="padding:16px 20px 14px; text-align:center; border-bottom:1px solid #ddd8cd;">
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <button aria-label="Open menu" style="background:none; border:none; padding:4px; display:flex; flex-direction:column; gap:3px; cursor:pointer;">
+          <span style="width:16px; height:1px; background:#211e19;"></span>
+          <span style="width:16px; height:1px; background:#211e19;"></span>
+        </button>
+        <div style="font-family:'Cinzel',serif; font-weight:600; font-size:13.5px; letter-spacing:0.13em; text-transform:uppercase;">Confessional Christianity</div>
+        <button aria-label="Search" style="background:none; border:none; padding:4px; cursor:pointer;">
+          <svg width="14" height="14" viewBox="0 0 20 20"><circle cx="8" cy="8" r="6.5" fill="none" stroke="#211e19" stroke-width="1.4"></circle><line x1="13" y1="13" x2="18" y2="18" stroke="#211e19" stroke-width="1.4"></line></svg>
+        </button>
+      </div>
+    </div>
+
+    <div style="padding:30px 24px 0; text-align:center;">
+      <div role="button" style="display:inline-flex; align-items:baseline; gap:8px; margin-bottom:18px;">
+        <span style="font-family:'Cinzel',serif; font-size:10px; letter-spacing:0.12em; color:#8a8378; text-transform:uppercase;">Catechizing</span>
+        <span style="font-family:'Cinzel',serif; font-weight:600; font-size:20px; color:#211e19;">Eli</span>
+        <span style="font-size:11px; color:#8a8378;">▴</span>
+      </div>
+    </div>
+
+    <div style="margin:0 24px; padding:6px 0 18px; border-top:1px solid #ddd8cd; border-bottom:1px solid #ddd8cd;">
+      <a href="#5a" style="text-decoration:none; color:#211e19; display:flex; justify-content:space-between; align-items:baseline; padding:12px 4px; background:#f4f2ea; border-radius:2px; margin:6px 0;">
+        <span style="font-family:'Cinzel',serif; font-weight:600; font-size:15px;">Eli</span>
+        <span style="font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.08em; color:#8a8378; text-transform:uppercase;">Current</span>
+      </a>
+      <a href="#5a2" style="text-decoration:none; color:#211e19; display:flex; justify-content:space-between; align-items:baseline; padding:12px 4px;">
+        <span style="font-family:'Cinzel',serif; font-weight:600; font-size:15px;">Naomi</span>
+        <span style="font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.08em; color:#8a8378; text-transform:uppercase;">Q. 22 of 107</span>
+      </a>
+      <a href="#5b" style="text-decoration:none; color:#5c574c; display:block; padding:12px 4px; font-family:'Marcellus',serif; font-style:italic; font-size:13.5px;">+ Add a Child</a>
+    </div>
+    <div style="height:26px;"></div>
+  </div>
+</div>
+
+<!-- ============ 6c INITIAL-CHIP ROW ============ -->
+<div id="6c" style="width:390px;">
+  <div style="font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.1em; color:#8a8378; margin-bottom:10px;">6c · Google-style avatar switcher — no continue button at all</div>
+  <div style="width:390px; background:#faf9f6; border:1px solid #e2ddd0; border-radius:14px; box-shadow:0 16px 44px rgba(33,30,25,0.12); overflow:hidden;">
+    <div style="height:28px; display:flex; align-items:center; justify-content:space-between; padding:0 20px; font-family:'Cinzel',serif; font-size:10px; color:#211e19;">
+      <span>9:41</span><span>●●● 100%</span>
+    </div>
+    <div style="padding:16px 20px 14px; text-align:center; border-bottom:1px solid #ddd8cd;">
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <button aria-label="Open menu" style="background:none; border:none; padding:4px; display:flex; flex-direction:column; gap:3px; cursor:pointer;">
+          <span style="width:16px; height:1px; background:#211e19;"></span>
+          <span style="width:16px; height:1px; background:#211e19;"></span>
+        </button>
+        <div style="font-family:'Cinzel',serif; font-weight:600; font-size:13.5px; letter-spacing:0.13em; text-transform:uppercase;">Confessional Christianity</div>
+        <button aria-label="Search" style="background:none; border:none; padding:4px; cursor:pointer;">
+          <svg width="14" height="14" viewBox="0 0 20 20"><circle cx="8" cy="8" r="6.5" fill="none" stroke="#211e19" stroke-width="1.4"></circle><line x1="13" y1="13" x2="18" y2="18" stroke="#211e19" stroke-width="1.4"></line></svg>
+        </button>
+      </div>
+      <div style="display:flex; justify-content:center; gap:22px; margin-top:12px; font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase;">
+        <a href="#5d" style="color:#211e19; text-decoration:none;">Programs</a>
+        <a href="#1e" style="color:#8a8378; text-decoration:none;">Reflections</a>
+        <a href="#1f" style="color:#8a8378; text-decoration:none;">Library</a>
+      </div>
+    </div>
+
+    <div style="padding:22px 24px 0;">
+      <div style="display:flex; justify-content:center; align-items:center; gap:14px; margin-bottom:24px;">
+        <div role="button" aria-current="true" aria-label="Eli" style="font-family:'Cinzel',serif; font-size:14px; color:#faf9f6; background:#8a6a4f; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 0 0 2px #faf9f6, 0 0 0 3.5px #211e19;">E</div>
+        <a href="#4a" aria-label="Jump straight to Naomi's session" style="text-decoration:none; font-family:'Cinzel',serif; font-size:14px; color:#faf9f6; background:#5c7a6e; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center;">N</a>
+        <a href="#4a" aria-label="Jump straight to Josiah's session" style="text-decoration:none; font-family:'Cinzel',serif; font-size:14px; color:#faf9f6; background:#6d6a8c; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center;">J</a>
+        <a href="#5b" role="button" aria-label="Add a child" style="text-decoration:none; font-family:'Cinzel',serif; font-size:16px; color:#c9c4b6; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:1px dotted #c9c4b6; box-sizing:border-box;">+</a>
+      </div>
+
+      <div style="text-align:center; font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.12em; color:#8a8378; text-transform:uppercase; margin-bottom:14px;">Continue Where You Left Off</div>
+      <a href="#4a" style="display:block; text-decoration:none; color:inherit; background:#f4f2ea; border-radius:2px; padding:20px 20px 18px;">
+        <div style="font-family:'Cinzel',serif; font-weight:600; font-size:14.5px; margin-bottom:6px; color:#211e19;">Eli’s Plan</div>
+        <div style="font-family:'Marcellus',serif; font-style:italic; font-size:13px; color:#5c574c; margin-bottom:10px;">The Shorter Catechism</div>
+        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;">
+          <span style="font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.08em; color:#8a8378; text-transform:uppercase;">Q. 6 of 107</span>
+        </div>
+        <div style="height:2px; background:#ddd8cd; border-radius:1px; overflow:hidden;">
+          <div style="width:5.6%; height:100%; background:#ab7e2e;"></div>
+        </div>
+      </a>
+    </div>
+
+    <div style="margin:24px 20px 28px; padding-top:18px; border-top:1px solid #ddd8cd; text-align:center;">
+      <div style="font-family:'Marcellus',serif; font-style:italic; font-size:13px; color:#5c574c;">Or explore the confessions and catechisms directly in the <a href="#1f" style="color:#211e19; border-bottom:1px dotted #211e19; text-decoration:none;">Library</a>.</div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div style="font-family:'Cinzel',serif; font-size:13px; letter-spacing:0.14em; color:#5c574c; text-transform:uppercase; margin-bottom:14px;">Confessional Christianity v2 · mobile mockups · turn 5 — Built From the Rewritten PRD</div>
+<div style="font-family:'Marcellus',serif; font-style:italic; font-size:14px; color:#5c574c; max-width:680px; margin-bottom:40px; line-height:1.7;">Following the full PRD rewrite: the “tracking for” nav dropdown is gone — a program's child is shown plainly on the program itself (§5.5), the homepage shows one child's context at a time via a visible, one-tap profile selector rather than stacking every child's card (§8) — see <a href="#5a" style="color:#211e19; border-bottom:1px dotted #211e19; text-decoration:none;">5a</a> vs. <a href="#5a2" style="color:#211e19; border-bottom:1px dotted #211e19; text-decoration:none;">5a-2</a>, onboarding a child is a two-field form (§12), starting a program means choosing or adding a child inline, and the first program's scope is deliberately narrow: question, its own proof-text scripture, and a prayer — no devotional notes, books, or illustrations yet (§5.1, deferred in §5.3). A completed program (§5.7) is its own acknowledged state.</div>
+
+<div style="display:flex; flex-wrap:wrap; gap:56px; align-items:flex-start; margin-bottom:64px;">
+
+<!-- ============ 5a HOMEPAGE, PER-CHILD CONTINUE CARDS ============ -->
+<div id="5a" style="width:390px;">
+  <div style="font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.1em; color:#8a8378; margin-bottom:10px;">5a · / (homepage, supersedes 3a)</div>
+  <div style="width:390px; background:#faf9f6; border:1px solid #e2ddd0; border-radius:14px; box-shadow:0 16px 44px rgba(33,30,25,0.12); overflow:hidden;">
+    <div style="height:28px; display:flex; align-items:center; justify-content:space-between; padding:0 20px; font-family:'Cinzel',serif; font-size:10px; color:#211e19;">
+      <span>9:41</span><span>●●● 100%</span>
+    </div>
+    <div style="padding:16px 20px 14px; text-align:center; border-bottom:1px solid #ddd8cd;">
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <button aria-label="Open menu" style="background:none; border:none; padding:4px; display:flex; flex-direction:column; gap:3px; cursor:pointer;">
+          <span style="width:16px; height:1px; background:#211e19;"></span>
+          <span style="width:16px; height:1px; background:#211e19;"></span>
+        </button>
+        <div style="font-family:'Cinzel',serif; font-weight:600; font-size:13.5px; letter-spacing:0.13em; text-transform:uppercase;">Confessional Christianity</div>
+        <button aria-label="Search" style="background:none; border:none; padding:4px; cursor:pointer;">
+          <svg width="14" height="14" viewBox="0 0 20 20"><circle cx="8" cy="8" r="6.5" fill="none" stroke="#211e19" stroke-width="1.4"></circle><line x1="13" y1="13" x2="18" y2="18" stroke="#211e19" stroke-width="1.4"></line></svg>
+        </button>
+      </div>
+      <div style="display:flex; justify-content:center; gap:22px; margin-top:12px; font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase;">
+        <a href="#5d" style="color:#211e19; text-decoration:none;">Programs</a>
+        <a href="#1e" style="color:#8a8378; text-decoration:none;">Reflections</a>
+        <a href="#1f" style="color:#8a8378; text-decoration:none;">Library</a>
+      </div>
+    </div>
+
+    <div style="padding:22px 24px 0;">
+      <div style="display:flex; justify-content:center; gap:8px; margin-bottom:22px;">
+        <div role="button" aria-current="true" style="font-family:'Cinzel',serif; font-size:12px; letter-spacing:0.06em; color:#faf9f6; background:#211e19; padding:8px 18px; border-radius:20px;">Eli</div>
+        <a href="#5a2" role="button" style="text-decoration:none; font-family:'Cinzel',serif; font-size:12px; letter-spacing:0.06em; color:#5c574c; padding:8px 18px; border-radius:20px; border:1px solid #ddd8cd;">Naomi</a>
+        <a href="#5b" role="button" aria-label="Add a child" style="text-decoration:none; font-family:'Cinzel',serif; font-size:14px; color:#8a8378; padding:8px 14px; border-radius:20px; border:1px dotted #ddd8cd;">+</a>
+      </div>
+
+      <div style="text-align:center; font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.12em; color:#8a8378; text-transform:uppercase; margin-bottom:14px;">Continue Where You Left Off</div>
+
+      <div style="background:#f4f2ea; border-radius:2px; padding:20px 20px 18px;">
+        <div style="font-family:'Cinzel',serif; font-weight:600; font-size:14.5px; margin-bottom:6px;">Eli’s Plan</div>
+        <a href="#5d" style="text-decoration:none; color:#211e19;">
+          <div style="font-family:'Marcellus',serif; font-style:italic; font-size:13px; color:#5c574c; margin-bottom:10px;">The Shorter Catechism</div>
+        </a>
+        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;">
+          <span style="font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.08em; color:#8a8378; text-transform:uppercase;">Q. 6 of 107</span>
+        </div>
+        <div style="height:2px; background:#ddd8cd; border-radius:1px; overflow:hidden; margin-bottom:14px;">
+          <div style="width:5.6%; height:100%; background:#ab7e2e;"></div>
+        </div>
+        <a href="#4a" style="display:block; text-align:center; text-decoration:none; padding:11px; border:1px solid #211e19; border-radius:2px; font-family:'Cinzel',serif; font-size:10.5px; letter-spacing:0.1em; color:#211e19; text-transform:uppercase;">Continue Today’s Session →</a>
+      </div>
+    </div>
+
+    <div style="margin:26px 20px 0; padding-top:18px; border-top:1px solid #ddd8cd;">
+      <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px;">
+        <div style="font-family:'Cinzel',serif; font-size:10px; letter-spacing:0.14em; color:#8a8378; text-transform:uppercase;">Programs</div>
+        <a href="#5d" style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase; text-decoration:none; border-bottom:1px dotted #8a8378;">See All</a>
+      </div>
+      <a href="#" style="text-decoration:none; color:#211e19; display:block; padding:10px 0;">
+        <div style="font-family:'Cinzel',serif; font-weight:600; font-size:14px; margin-bottom:4px;">The Bible in a Year</div>
+        <div style="font-family:'Marcellus',serif; font-size:12.5px; color:#5c574c; line-height:1.6;">A daily reading plan through the whole of Scripture.</div>
+      </a>
+    </div>
+
+    <div style="margin:22px 20px 0; padding-top:18px; border-top:1px solid #ddd8cd;">
+      <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px;">
+        <div style="font-family:'Cinzel',serif; font-size:10px; letter-spacing:0.14em; color:#8a8378; text-transform:uppercase;">Latest Reflections</div>
+        <a href="#1e" style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase; text-decoration:none; border-bottom:1px dotted #8a8378;">See All</a>
+      </div>
+      <a href="#1b" style="text-decoration:none; color:#211e19; display:block; padding:10px 0;">
+        <div style="font-family:'Cinzel',serif; font-weight:600; font-size:13.5px;">On Enjoying God Forever</div>
+        <div style="font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase; margin-top:3px;">Thomas Ainsworth · Jul 8</div>
+      </a>
+    </div>
+
+    <div style="margin:22px 20px 28px; padding-top:18px; border-top:1px solid #ddd8cd; text-align:center;">
+      <div style="font-family:'Marcellus',serif; font-style:italic; font-size:13px; color:#5c574c;">Or explore the confessions and catechisms directly in the <a href="#1f" style="color:#211e19; border-bottom:1px dotted #211e19; text-decoration:none;">Library</a>.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 5a-2 HOMEPAGE, SECOND CHILD SELECTED ============ -->
+<div id="5a2" style="width:390px;">
+  <div style="font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.1em; color:#8a8378; margin-bottom:10px;">5a-2 · / (same page, Naomi selected — one tap from 5a)</div>
+  <div style="width:390px; background:#faf9f6; border:1px solid #e2ddd0; border-radius:14px; box-shadow:0 16px 44px rgba(33,30,25,0.12); overflow:hidden;">
+    <div style="height:28px; display:flex; align-items:center; justify-content:space-between; padding:0 20px; font-family:'Cinzel',serif; font-size:10px; color:#211e19;">
+      <span>9:41</span><span>●●● 100%</span>
+    </div>
+    <div style="padding:16px 20px 14px; text-align:center; border-bottom:1px solid #ddd8cd;">
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <button aria-label="Open menu" style="background:none; border:none; padding:4px; display:flex; flex-direction:column; gap:3px; cursor:pointer;">
+          <span style="width:16px; height:1px; background:#211e19;"></span>
+          <span style="width:16px; height:1px; background:#211e19;"></span>
+        </button>
+        <div style="font-family:'Cinzel',serif; font-weight:600; font-size:13.5px; letter-spacing:0.13em; text-transform:uppercase;">Confessional Christianity</div>
+        <button aria-label="Search" style="background:none; border:none; padding:4px; cursor:pointer;">
+          <svg width="14" height="14" viewBox="0 0 20 20"><circle cx="8" cy="8" r="6.5" fill="none" stroke="#211e19" stroke-width="1.4"></circle><line x1="13" y1="13" x2="18" y2="18" stroke="#211e19" stroke-width="1.4"></line></svg>
+        </button>
+      </div>
+      <div style="display:flex; justify-content:center; gap:22px; margin-top:12px; font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase;">
+        <a href="#5d" style="color:#211e19; text-decoration:none;">Programs</a>
+        <a href="#1e" style="color:#8a8378; text-decoration:none;">Reflections</a>
+        <a href="#1f" style="color:#8a8378; text-decoration:none;">Library</a>
+      </div>
+    </div>
+
+    <div style="padding:22px 24px 0;">
+      <div style="display:flex; justify-content:center; gap:8px; margin-bottom:22px;">
+        <a href="#5a" role="button" style="text-decoration:none; font-family:'Cinzel',serif; font-size:12px; letter-spacing:0.06em; color:#5c574c; padding:8px 18px; border-radius:20px; border:1px solid #ddd8cd;">Eli</a>
+        <div role="button" aria-current="true" style="font-family:'Cinzel',serif; font-size:12px; letter-spacing:0.06em; color:#faf9f6; background:#211e19; padding:8px 18px; border-radius:20px;">Naomi</div>
+        <a href="#5b" role="button" aria-label="Add a child" style="text-decoration:none; font-family:'Cinzel',serif; font-size:14px; color:#8a8378; padding:8px 14px; border-radius:20px; border:1px dotted #ddd8cd;">+</a>
+      </div>
+
+      <div style="text-align:center; font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.12em; color:#8a8378; text-transform:uppercase; margin-bottom:14px;">Continue Where You Left Off</div>
+
+      <div style="background:#f4f2ea; border-radius:2px; padding:20px 20px 18px;">
+        <div style="font-family:'Cinzel',serif; font-weight:600; font-size:14.5px; margin-bottom:6px;">Naomi’s Plan</div>
+        <div style="font-family:'Marcellus',serif; font-style:italic; font-size:13px; color:#5c574c; margin-bottom:10px;">The Shorter Catechism</div>
+        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;">
+          <span style="font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.08em; color:#8a8378; text-transform:uppercase;">Q. 22 of 107</span>
+        </div>
+        <div style="height:2px; background:#ddd8cd; border-radius:1px; overflow:hidden; margin-bottom:14px;">
+          <div style="width:20.6%; height:100%; background:#ab7e2e;"></div>
+        </div>
+        <a href="#" style="display:block; text-align:center; text-decoration:none; padding:11px; border:1px solid #211e19; border-radius:2px; font-family:'Cinzel',serif; font-size:10.5px; letter-spacing:0.1em; color:#211e19; text-transform:uppercase;">Continue Today’s Session →</a>
+      </div>
+    </div>
+
+    <div style="margin:26px 20px 0; padding-top:18px; border-top:1px solid #ddd8cd;">
+      <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px;">
+        <div style="font-family:'Cinzel',serif; font-size:10px; letter-spacing:0.14em; color:#8a8378; text-transform:uppercase;">Programs</div>
+        <a href="#5d" style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase; text-decoration:none; border-bottom:1px dotted #8a8378;">See All</a>
+      </div>
+      <a href="#" style="text-decoration:none; color:#211e19; display:block; padding:10px 0;">
+        <div style="font-family:'Cinzel',serif; font-weight:600; font-size:14px; margin-bottom:4px;">The Bible in a Year</div>
+        <div style="font-family:'Marcellus',serif; font-size:12.5px; color:#5c574c; line-height:1.6;">A daily reading plan through the whole of Scripture.</div>
+      </a>
+    </div>
+
+    <div style="margin:22px 20px 28px; padding-top:18px; border-top:1px solid #ddd8cd; text-align:center;">
+      <div style="font-family:'Marcellus',serif; font-style:italic; font-size:13px; color:#5c574c;">Or explore the confessions and catechisms directly in the <a href="#1f" style="color:#211e19; border-bottom:1px dotted #211e19; text-decoration:none;">Library</a>.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 5b ADD A CHILD ============ -->
+<div id="5b" style="width:390px;">
+  <div style="font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.1em; color:#8a8378; margin-bottom:10px;">5b · /onboarding/child (two fields, per §12)</div>
+  <div style="width:390px; background:#faf9f6; border:1px solid #e2ddd0; border-radius:14px; box-shadow:0 16px 44px rgba(33,30,25,0.12); overflow:hidden;">
+    <div style="height:28px; display:flex; align-items:center; justify-content:space-between; padding:0 20px; font-family:'Cinzel',serif; font-size:10px; color:#211e19;">
+      <span>9:41</span><span>●●● 100%</span>
+    </div>
+    <div style="padding:12px 20px; text-align:center; border-bottom:1px solid #ddd8cd;">
+      <div style="font-family:'Cinzel',serif; font-weight:600; font-size:12px; letter-spacing:0.14em; text-transform:uppercase;">Confessional Christianity</div>
+    </div>
+
+    <div style="padding:60px 36px 0; text-align:center;">
+      <div style="font-family:'Cinzel',serif; font-weight:600; font-size:19px; margin-bottom:10px;">Who Are You Catechizing?</div>
+      <div style="font-family:'Marcellus',serif; font-style:italic; font-size:13px; color:#5c574c; line-height:1.6; margin-bottom:40px;">Just a name and an age — age sets a sensible starting pace, nothing more.</div>
+
+      <div style="text-align:left; margin-bottom:30px;">
+        <div style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase; margin-bottom:8px;">Name</div>
+        <div style="font-family:'Marcellus',serif; font-style:italic; font-size:17px; color:#211e19; border-bottom:1px solid #211e19; padding-bottom:8px;">Eli</div>
+      </div>
+
+      <div style="text-align:left; margin-bottom:44px;">
+        <div style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase; margin-bottom:8px;">Age</div>
+        <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #211e19; padding-bottom:8px;">
+          <span style="font-family:'Marcellus',serif; font-style:italic; font-size:17px; color:#211e19;">7</span>
+          <div style="display:flex; gap:16px; font-family:'Cinzel',serif; font-size:13px; color:#211e19;">
+            <span>−</span><span>+</span>
+          </div>
+        </div>
+      </div>
+
+      <a href="#5c" style="display:block; text-align:center; text-decoration:none; padding:13px; border:1px solid #211e19; border-radius:2px; font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.12em; color:#211e19; text-transform:uppercase;">Add Eli</a>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 5c CHOOSE CHILD TO START A PROGRAM ============ -->
+<div id="5c" style="width:390px;">
+  <div style="font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.1em; color:#8a8378; margin-bottom:10px;">5c · /programs/catechizing-shorter-catechism/start — choose child</div>
+  <div style="width:390px; background:#faf9f6; border:1px solid #e2ddd0; border-radius:14px; box-shadow:0 16px 44px rgba(33,30,25,0.12); overflow:hidden;">
+    <div style="height:28px; display:flex; align-items:center; justify-content:space-between; padding:0 20px; font-family:'Cinzel',serif; font-size:10px; color:#211e19;">
+      <span>9:41</span><span>●●● 100%</span>
+    </div>
+    <div style="padding:12px 20px 0 20px; font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase; text-align:center; border-bottom:1px solid #ddd8cd; padding-bottom:12px;">
+      <a href="#5d" style="color:#8a8378; text-decoration:none; border-bottom:1px dotted #8a8378;">Catechizing Your Child</a>
+    </div>
+
+    <div style="padding:36px 30px 0; text-align:center;">
+      <div style="font-family:'Cinzel',serif; font-weight:600; font-size:18px; margin-bottom:8px;">Who Is This Plan For?</div>
+      <div style="font-family:'Marcellus',serif; font-style:italic; font-size:12.5px; color:#5c574c; margin-bottom:34px;">Every plan belongs to one child. Choose who’s starting the Shorter Catechism.</div>
+    </div>
+
+    <div style="padding:0 20px; display:flex; flex-direction:column;">
+      <a href="#5d" style="text-decoration:none; color:#211e19; padding:16px 4px; border-top:1px solid #ddd8cd; display:flex; justify-content:space-between; align-items:baseline;">
+        <span style="font-family:'Cinzel',serif; font-weight:600; font-size:15px;">Naomi</span>
+        <span style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.08em; color:#8a8378; text-transform:uppercase;">Age 9</span>
+      </a>
+      <a href="#5d" style="text-decoration:none; color:#211e19; padding:16px 4px; border-top:1px solid #ddd8cd; display:flex; justify-content:space-between; align-items:baseline;">
+        <span style="font-family:'Cinzel',serif; font-weight:600; font-size:15px;">A Third Child</span>
+        <span style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.08em; color:#8a8378; text-transform:uppercase;">Age 5</span>
+      </a>
+      <a href="#5b" style="text-decoration:none; color:#5c574c; padding:16px 4px 20px; border-top:1px solid #ddd8cd; border-bottom:1px solid #ddd8cd; font-family:'Marcellus',serif; font-style:italic; font-size:13.5px;">+ Add a Child</a>
+    </div>
+    <div style="height:24px;"></div>
+  </div>
+</div>
+
+<!-- ============ 5d PROGRAM LANDING, CHILD-CENTRIC ============ -->
+<div id="5d" style="width:390px;">
+  <div style="font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.1em; color:#8a8378; margin-bottom:10px;">5d · /programs/catechizing-shorter-catechism (supersedes 2b)</div>
+  <div style="width:390px; background:#faf9f6; border:1px solid #e2ddd0; border-radius:14px; box-shadow:0 16px 44px rgba(33,30,25,0.12); overflow:hidden;">
+    <div style="height:28px; display:flex; align-items:center; justify-content:space-between; padding:0 20px; font-family:'Cinzel',serif; font-size:10px; color:#211e19;">
+      <span>9:41</span><span>●●● 100%</span>
+    </div>
+    <div style="padding:12px 20px; text-align:center; border-bottom:1px solid #ddd8cd;">
+      <div style="font-family:'Cinzel',serif; font-weight:600; font-size:12px; letter-spacing:0.14em; text-transform:uppercase;">Confessional Christianity</div>
+    </div>
+    <div style="padding:22px 20px 0 20px; font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase;">
+      <a href="#5a" style="color:#8a8378; text-decoration:none; border-bottom:1px dotted #8a8378;">Programs</a>
+    </div>
+
+    <div style="padding:16px 32px 0; text-align:center;">
+      <div style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.12em; color:#8a8378; text-transform:uppercase; margin-bottom:12px;">Family Catechesis</div>
+      <div style="font-family:'Cinzel',serif; font-weight:600; font-size:21px; line-height:1.3; margin-bottom:8px;">Catechizing Your Child: The Shorter Catechism</div>
+      <div style="font-family:'Marcellus',serif; font-style:italic; font-size:13.5px; color:#5c574c; line-height:1.6; margin-bottom:12px;">Each question paired with its own proof-text scripture and a prayer to close — nothing more added yet.</div>
+      <div style="font-family:'Cinzel',serif; font-size:10px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase;">Configured for age 7 · ~15 minutes · 3 sessions a week</div>
+    </div>
+
+    <div style="margin:24px 20px 0; padding-top:18px; border-top:1px solid #ddd8cd; text-align:center;">
+      <div style="font-family:'Cinzel',serif; font-weight:600; font-size:17px; margin-bottom:12px;">Eli’s Plan</div>
+      <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px;">
+        <span style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase;">Question 7 next</span>
+        <span style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase;">Q. 6 of 107</span>
+      </div>
+      <div style="height:2px; background:#ddd8cd; border-radius:1px; overflow:hidden; margin-bottom:20px;">
+        <div style="width:5.6%; height:100%; background:#ab7e2e;"></div>
+      </div>
+      <a href="#4a" style="display:block; text-align:center; text-decoration:none; padding:13px; border:1px solid #211e19; border-radius:2px; font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.12em; color:#211e19; text-transform:uppercase; margin-bottom:16px;">Continue Today’s Session →</a>
+      <div style="text-align:center; margin-bottom:6px;">
+        <a href="#2e" style="font-family:'Marcellus',serif; font-style:italic; font-size:12.5px; color:#5c574c; text-decoration:none; border-bottom:1px dotted #5c574c;">Configuration</a>
+      </div>
+    </div>
+
+    <div style="margin:24px 20px 0; padding-top:18px; border-top:1px solid #ddd8cd;">
+      <div style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase; margin-bottom:8px;">Contents</div>
+      <div style="display:flex; flex-direction:column;">
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-top:1px solid #ddd8cd;">
+          <span style="font-family:'Cinzel',serif; font-weight:600; font-size:13px;">Q. 1 — What is the chief end of man?</span>
+          <span style="font-size:15px; color:#ab7e2e;">♥</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-top:1px solid #ddd8cd;">
+          <span style="font-family:'Cinzel',serif; font-weight:600; font-size:13px;">Q. 4 — What is God?</span>
+          <span style="font-size:15px; color:#c9a468;">♥</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-top:1px solid #ddd8cd;">
+          <span style="font-family:'Cinzel',serif; font-weight:600; font-size:13px;">Q. 7 — What are the decrees of God?</span>
+          <span style="font-size:15px; color:#c9c4b6;">♡</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-top:1px solid #ddd8cd; border-bottom:1px solid #ddd8cd;">
+          <div>
+            <div style="font-family:'Cinzel',serif; font-weight:600; font-size:13px; color:#8a8378;">Q. 8 — How doth God execute his decrees?</div>
+            <div style="font-family:'Marcellus',serif; font-style:italic; font-size:10.5px; color:#c9a468; margin-top:2px;">Prayer not yet written</div>
+          </div>
+          <span style="font-size:15px; color:#c9c4b6;">♡</span>
+        </div>
+      </div>
+      <div style="text-align:center; padding:14px 0 20px; font-family:'Marcellus',serif; font-style:italic; font-size:12px; color:#8a8378;">♥ mastered · ♥ reviewing · ♡ not yet started</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 5e PROGRAM COMPLETE ============ -->
+<div id="5e" style="width:390px;">
+  <div style="font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.1em; color:#8a8378; margin-bottom:10px;">5e · /programs/catechizing-shorter-catechism — complete (per §5.7)</div>
+  <div style="width:390px; height:844px; background:#faf9f6; border:1px solid #e2ddd0; border-radius:32px; box-shadow:0 16px 44px rgba(33,30,25,0.12); overflow:hidden; display:flex; flex-direction:column;">
+    <div style="height:28px; flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; padding:0 24px; font-family:'Cinzel',serif; font-size:10px; color:#211e19;">
+      <span>9:41</span><span>●●● 100%</span>
+    </div>
+    <div style="flex:0 0 auto; padding:16px 24px 0;">
+      <a href="#5a" aria-label="Back to homepage" style="font-family:'Cinzel',serif; font-size:15px; color:#211e19; text-decoration:none;">←</a>
+    </div>
+
+    <div style="flex:1 1 auto; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0 40px; text-align:center;">
+      <div style="font-size:24px; color:#ab7e2e; margin-bottom:22px;">♥</div>
+      <div style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.12em; color:#8a8378; text-transform:uppercase; margin-bottom:12px;">Eli’s Plan · Complete</div>
+      <div style="font-family:'Cinzel',serif; font-weight:600; font-size:20px; line-height:1.4; margin-bottom:14px;">All 107 Questions of the Shorter Catechism</div>
+      <div style="font-family:'Marcellus',serif; font-style:italic; font-size:13.5px; color:#5c574c; line-height:1.7;">Eli has recited every question, start to finish. Nothing here is lost — his history stays exactly as it is.</div>
+    </div>
+
+    <div style="flex:0 0 auto; padding:0 24px 44px; display:flex; flex-direction:column; align-items:center; gap:18px;">
+      <a href="#5d" style="display:block; width:100%; box-sizing:border-box; text-align:center; text-decoration:none; padding:13px; border:1px solid #211e19; border-radius:2px; font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.12em; color:#211e19; text-transform:uppercase;">Restart From Question 1</a>
+      <a href="#5a" style="font-family:'Marcellus',serif; font-style:italic; font-size:13px; color:#5c574c; text-decoration:none; border-bottom:1px dotted #5c574c;">Start Another Program for Eli</a>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div style="font-family:'Cinzel',serif; font-size:13px; letter-spacing:0.14em; color:#5c574c; text-transform:uppercase; margin-bottom:14px;">Confessional Christianity v2 · mobile mockups · turn 4 — Session, Fit to One Screen</div>
+<div style="font-family:'Marcellus',serif; font-style:italic; font-size:14px; color:#5c574c; max-width:680px; margin-bottom:40px; line-height:1.7;">First pass (<a href="#2c" style="color:#211e19; border-bottom:1px dotted #211e19; text-decoration:none;">2c</a>) tried to fit everything on one screen by shrinking it — wrong instinct. This redraws the session as one thing at a time, the way the rest of the app already treats a single confession entry: centered, spacious, one held thought per screen, a quiet dot-and-arrow rhythm to move through it. Four unhurried screens rather than one crowded one. Each still fits without scrolling; "Notes" in the corner is the only way out to denser material. Codified as the session's design ethos in the PRD (§14.1): a session exists only to serve memorization, reflection, and in-person reference — never a quiz app or a progress dashboard.</div>
+
+<div style="display:flex; flex-wrap:wrap; gap:56px; align-items:flex-start; margin-bottom:64px;">
+
+<!-- ============ 4a STEP 1: NEW QUESTION ============ -->
+<div id="4a" style="width:390px;">
+  <div style="font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.1em; color:#8a8378; margin-bottom:10px;">4a · session · step 1 of 4 — new question</div>
+  <div style="width:390px; height:844px; background:#faf9f6; border:1px solid #e2ddd0; border-radius:32px; box-shadow:0 16px 44px rgba(33,30,25,0.12); overflow:hidden; display:flex; flex-direction:column;">
+    <div style="height:28px; flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; padding:0 24px; font-family:'Cinzel',serif; font-size:10px; color:#211e19;">
+      <span>9:41</span><span>●●● 100%</span>
+    </div>
+    <div style="flex:0 0 auto; padding:20px 24px 0; display:flex; align-items:center; justify-content:space-between;">
+      <a href="#2b" aria-label="Back to program" style="font-family:'Cinzel',serif; font-size:15px; color:#211e19; text-decoration:none;">←</a>
+      <div style="display:flex; gap:7px;">
+        <span style="width:5px; height:5px; border-radius:50%; background:#211e19;"></span>
+        <span style="width:5px; height:5px; border-radius:50%; background:#ddd8cd;"></span>
+        <span style="width:5px; height:5px; border-radius:50%; background:#ddd8cd;"></span>
+        <span style="width:5px; height:5px; border-radius:50%; background:#ddd8cd;"></span>
+      </div>
+      <span style="width:30px;"></span>
+    </div>
+
+    <div style="flex:1 1 auto; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0 40px; text-align:center;">
+      <div style="font-family:'Cinzel',serif; font-size:10px; letter-spacing:0.14em; color:#8a8378; text-transform:uppercase; margin-bottom:6px;">Eli · Session 4</div>
+      <div style="font-family:'Cinzel',serif; font-size:10px; letter-spacing:0.14em; color:#ab7e2e; text-transform:uppercase; margin-bottom:26px;">New · Question 7</div>
+      <blockquote style="margin:0; font-family:'Marcellus',serif; font-style:italic; font-size:19px; line-height:1.6; color:#211e19;">Q. What are the decrees of God?<br><br>A. His eternal purpose, according to the counsel of his will, whereby, for his own glory, he hath foreordained whatsoever comes to pass.</blockquote>
+    </div>
+
+    <div style="flex:0 0 auto; padding:0 24px 44px; text-align:center;">
+      <a href="#4b" style="font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.12em; color:#211e19; text-transform:uppercase; text-decoration:none; border-bottom:1px dotted #211e19; padding-bottom:2px;">Next: Review →</a>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 4b STEP 2: REVIEW ============ -->
+<div id="4b" style="width:390px;">
+  <div style="font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.1em; color:#8a8378; margin-bottom:10px;">4b · session · step 2 of 4 — review</div>
+  <div style="width:390px; height:844px; background:#faf9f6; border:1px solid #e2ddd0; border-radius:32px; box-shadow:0 16px 44px rgba(33,30,25,0.12); overflow:hidden; display:flex; flex-direction:column;">
+    <div style="height:28px; flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; padding:0 24px; font-family:'Cinzel',serif; font-size:10px; color:#211e19;">
+      <span>9:41</span><span>●●● 100%</span>
+    </div>
+    <div style="flex:0 0 auto; padding:20px 24px 0; display:flex; align-items:center; justify-content:space-between;">
+      <a href="#4a" aria-label="Back" style="font-family:'Cinzel',serif; font-size:15px; color:#211e19; text-decoration:none;">←</a>
+      <div style="display:flex; gap:7px;">
+        <span style="width:5px; height:5px; border-radius:50%; background:#ddd8cd;"></span>
+        <span style="width:5px; height:5px; border-radius:50%; background:#211e19;"></span>
+        <span style="width:5px; height:5px; border-radius:50%; background:#ddd8cd;"></span>
+        <span style="width:5px; height:5px; border-radius:50%; background:#ddd8cd;"></span>
+      </div>
+      <span style="width:30px;"></span>
+    </div>
+
+    <div style="flex:1 1 auto; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0 36px; text-align:center;">
+      <div style="font-family:'Cinzel',serif; font-size:10px; letter-spacing:0.14em; color:#8a8378; text-transform:uppercase; margin-bottom:40px;">Review</div>
+      <div style="width:100%; margin-bottom:44px;">
+        <div style="font-family:'Marcellus',serif; font-style:italic; font-size:16px; color:#211e19; margin-bottom:12px;">Q. 1 — the chief end of man</div>
+        <div style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.1em; color:#ab7e2e; text-transform:uppercase;">✓ Recited</div>
+      </div>
+      <div style="width:100%;">
+        <div style="font-family:'Marcellus',serif; font-style:italic; font-size:16px; color:#211e19; margin-bottom:14px;">Q. 4 — what is God</div>
+        <div style="display:flex; justify-content:center; gap:22px; font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.1em; text-transform:uppercase;">
+          <a href="#" style="color:#211e19; text-decoration:none; border-bottom:1px dotted #211e19; padding-bottom:2px;">Recited</a>
+          <a href="#" style="color:#8a8378; text-decoration:none; border-bottom:1px dotted #8a8378; padding-bottom:2px;">Needs Practice</a>
+        </div>
+      </div>
+    </div>
+
+    <div style="flex:0 0 auto; padding:0 24px 44px; text-align:center;">
+      <a href="#4c" style="font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.12em; color:#211e19; text-transform:uppercase; text-decoration:none; border-bottom:1px dotted #211e19; padding-bottom:2px;">Next: Scripture &amp; Prayer →</a>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 4c STEP 3: SCRIPTURE + PRAYER ============ -->
+<div id="4c" style="width:390px;">
+  <div style="font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.1em; color:#8a8378; margin-bottom:10px;">4c · session · step 3 of 4 — scripture &amp; prayer</div>
+  <div style="width:390px; height:844px; background:#faf9f6; border:1px solid #e2ddd0; border-radius:32px; box-shadow:0 16px 44px rgba(33,30,25,0.12); overflow:hidden; display:flex; flex-direction:column;">
+    <div style="height:28px; flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; padding:0 24px; font-family:'Cinzel',serif; font-size:10px; color:#211e19;">
+      <span>9:41</span><span>●●● 100%</span>
+    </div>
+    <div style="flex:0 0 auto; padding:20px 24px 0; display:flex; align-items:center; justify-content:space-between;">
+      <a href="#4b" aria-label="Back" style="font-family:'Cinzel',serif; font-size:15px; color:#211e19; text-decoration:none;">←</a>
+      <div style="display:flex; gap:7px;">
+        <span style="width:5px; height:5px; border-radius:50%; background:#ddd8cd;"></span>
+        <span style="width:5px; height:5px; border-radius:50%; background:#ddd8cd;"></span>
+        <span style="width:5px; height:5px; border-radius:50%; background:#211e19;"></span>
+        <span style="width:5px; height:5px; border-radius:50%; background:#ddd8cd;"></span>
+      </div>
+      <span style="width:30px;"></span>
+    </div>
+
+    <div style="flex:1 1 auto; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0 40px; text-align:center;">
+      <div style="font-family:'Cinzel',serif; font-size:10px; letter-spacing:0.14em; color:#8a8378; text-transform:uppercase; margin-bottom:20px;">Scripture</div>
+      <blockquote style="margin:0 0 48px; font-family:'Marcellus',serif; font-style:italic; font-size:17px; line-height:1.6; color:#211e19;">Known unto God are all his works from the beginning of the world.<br><cite style="display:block; margin-top:10px; font-family:'Cinzel',serif; font-style:normal; font-size:10px; letter-spacing:0.12em; text-transform:uppercase; color:#8a8378;">Acts 15:18</cite></blockquote>
+      <div style="font-family:'Cinzel',serif; font-size:10px; letter-spacing:0.14em; color:#8a8378; text-transform:uppercase; margin-bottom:16px;">A Prayer to Close</div>
+      <div style="font-family:'Marcellus',serif; font-style:italic; font-size:14.5px; line-height:1.7; color:#211e19;">Lord, before the world began, you already knew and planned every good thing for us. Help Eli trust that your plans are kind, even the parts he cannot see yet. Amen.</div>
+    </div>
+
+    <div style="flex:0 0 auto; padding:0 24px 44px; text-align:center;">
+      <a href="#4d" style="font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.12em; color:#211e19; text-transform:uppercase; text-decoration:none; border-bottom:1px dotted #211e19; padding-bottom:2px;">Finish Session →</a>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 4d STEP 4: DONE ============ -->
+<div id="4d" style="width:390px;">
+  <div style="font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.1em; color:#8a8378; margin-bottom:10px;">4d · session · step 4 of 4 — done</div>
+  <div style="width:390px; height:844px; background:#faf9f6; border:1px solid #e2ddd0; border-radius:32px; box-shadow:0 16px 44px rgba(33,30,25,0.12); overflow:hidden; display:flex; flex-direction:column;">
+    <div style="height:28px; flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; padding:0 24px; font-family:'Cinzel',serif; font-size:10px; color:#211e19;">
+      <span>9:41</span><span>●●● 100%</span>
+    </div>
+    <div style="flex:0 0 auto; padding:20px 24px 0; display:flex; justify-content:center;">
+      <div style="display:flex; gap:7px;">
+        <span style="width:5px; height:5px; border-radius:50%; background:#ddd8cd;"></span>
+        <span style="width:5px; height:5px; border-radius:50%; background:#ddd8cd;"></span>
+        <span style="width:5px; height:5px; border-radius:50%; background:#ddd8cd;"></span>
+        <span style="width:5px; height:5px; border-radius:50%; background:#211e19;"></span>
+      </div>
+    </div>
+
+    <div style="flex:1 1 auto; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0 40px; text-align:center;">
+      <div style="font-size:22px; color:#ab7e2e; margin-bottom:22px;">♥</div>
+      <div style="font-family:'Cinzel',serif; font-weight:600; font-size:19px; margin-bottom:12px;">Session Complete</div>
+      <div style="font-family:'Marcellus',serif; font-style:italic; font-size:14px; color:#5c574c; line-height:1.7;">Eli recited Q. 1 and Q. 4 without help, and heard Q. 7 for the first time.</div>
+    </div>
+
+    <div style="flex:0 0 auto; padding:0 24px 44px; text-align:center;">
+      <div style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase; margin-bottom:16px;">Next Session · Thursday</div>
+      <a href="#2b" style="font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.12em; color:#211e19; text-transform:uppercase; text-decoration:none; border-bottom:1px dotted #211e19; padding-bottom:2px;">Back to Program</a>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div style="font-family:'Cinzel',serif; font-size:13px; letter-spacing:0.14em; color:#5c574c; text-transform:uppercase; margin-bottom:14px;">Confessional Christianity v2 · mobile mockups · turn 3 — Programs-led Homepage</div>
+<div style="font-family:'Marcellus',serif; font-style:italic; font-size:14px; color:#5c574c; max-width:680px; margin-bottom:40px; line-height:1.7;">Programs is now the app’s main purpose and entry point, replacing the editorial masthead (<a href="#1a" style="color:#211e19; border-bottom:1px dotted #211e19; text-decoration:none;">1a</a>) as the homepage. A logged-in reader with an active program sees it continued above the fold, first paint; Programs generally is browsable right below. Reflections and the Library remain, but demoted to supporting sections further down the same page. Search stays icon-only, never the front door.</div>
+
+<div style="display:flex; flex-wrap:wrap; gap:56px; align-items:flex-start; margin-bottom:64px;">
+
+<!-- ============ 3a NEW HOMEPAGE ============ -->
+<div id="3a" style="width:390px;">
+  <div style="font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.1em; color:#8a8378; margin-bottom:10px;">3a · / (new homepage, supersedes 1a)</div>
+  <div style="width:390px; background:#faf9f6; border:1px solid #e2ddd0; border-radius:14px; box-shadow:0 16px 44px rgba(33,30,25,0.12); overflow:hidden;">
+    <div style="height:28px; display:flex; align-items:center; justify-content:space-between; padding:0 20px; font-family:'Cinzel',serif; font-size:10px; color:#211e19;">
+      <span>9:41</span><span>●●● 100%</span>
+    </div>
+    <div style="padding:12px 20px 14px; text-align:center; border-bottom:1px solid #ddd8cd;">
+      <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
+        <div role="button" aria-haspopup="true" style="display:flex; align-items:center; gap:4px; font-family:'Cinzel',serif; font-size:10px; letter-spacing:0.08em; color:#5c574c; text-transform:uppercase;">
+          <span>Tracking: Eli</span><span style="font-size:8px;">▾</span>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <button aria-label="Open menu" style="background:none; border:none; padding:4px; display:flex; flex-direction:column; gap:3px; cursor:pointer;">
+          <span style="width:16px; height:1px; background:#211e19;"></span>
+          <span style="width:16px; height:1px; background:#211e19;"></span>
+        </button>
+        <div style="font-family:'Cinzel',serif; font-weight:600; font-size:13.5px; letter-spacing:0.13em; text-transform:uppercase;">Confessional Christianity</div>
+        <button aria-label="Search" style="background:none; border:none; padding:4px; cursor:pointer;">
+          <svg width="14" height="14" viewBox="0 0 20 20"><circle cx="8" cy="8" r="6.5" fill="none" stroke="#211e19" stroke-width="1.4"></circle><line x1="13" y1="13" x2="18" y2="18" stroke="#211e19" stroke-width="1.4"></line></svg>
+        </button>
+      </div>
+      <div style="display:flex; justify-content:center; gap:22px; margin-top:12px; font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase;">
+        <a href="#2a" style="color:#211e19; text-decoration:none;">Programs</a>
+        <a href="#1e" style="color:#8a8378; text-decoration:none;">Reflections</a>
+        <a href="#1f" style="color:#8a8378; text-decoration:none;">Library</a>
+      </div>
+    </div>
+
+    <div style="padding:28px 24px 0;">
+      <div style="text-align:center; font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.12em; color:#8a8378; text-transform:uppercase; margin-bottom:14px;">Continue Where You Left Off</div>
+      <div style="background:#f4f2ea; border-radius:2px; padding:22px 22px 20px;">
+        <div style="font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase; margin-bottom:8px;">Family Catechesis</div>
+        <a href="#2b" style="text-decoration:none; color:#211e19;">
+          <div style="font-family:'Cinzel',serif; font-weight:600; font-size:17px; line-height:1.35; margin-bottom:10px;">Catechizing Your Child: The Shorter Catechism</div>
+        </a>
+        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px;">
+          <span style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase;">Tracking for Eli</span>
+          <span style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase;">Q. 6 of 107</span>
+        </div>
+        <div style="height:2px; background:#ddd8cd; border-radius:1px; overflow:hidden; margin-bottom:18px;">
+          <div style="width:5.6%; height:100%; background:#ab7e2e;"></div>
+        </div>
+        <a href="#2c" style="display:block; text-align:center; text-decoration:none; padding:13px; border:1px solid #211e19; border-radius:2px; font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.12em; color:#211e19; text-transform:uppercase;">Continue Today’s Session →</a>
+      </div>
+    </div>
+
+    <div style="margin:28px 20px 0; padding-top:20px; border-top:1px solid #ddd8cd;">
+      <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px;">
+        <div style="font-family:'Cinzel',serif; font-size:10px; letter-spacing:0.14em; color:#8a8378; text-transform:uppercase;">Programs</div>
+        <a href="#2a" style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase; text-decoration:none; border-bottom:1px dotted #8a8378;">See All</a>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <a href="#" style="text-decoration:none; color:#211e19;">
+          <div style="font-family:'Cinzel',serif; font-weight:600; font-size:14px; margin-bottom:4px;">The Bible in a Year</div>
+          <div style="font-family:'Marcellus',serif; font-size:12.5px; color:#5c574c; line-height:1.6;">A daily reading plan through the whole of Scripture.</div>
+        </a>
+        <a href="#" style="text-decoration:none; color:#211e19;">
+          <div style="font-family:'Cinzel',serif; font-weight:600; font-size:14px; margin-bottom:4px;">On Suffering: A Devotional Path</div>
+          <div style="font-family:'Marcellus',serif; font-size:12.5px; color:#5c574c; line-height:1.6;">Ten short reflections on affliction, drawn from the confessions and Scripture.</div>
+        </a>
+      </div>
+    </div>
+
+    <div style="margin:26px 20px 0; padding-top:20px; border-top:1px solid #ddd8cd;">
+      <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px;">
+        <div style="font-family:'Cinzel',serif; font-size:10px; letter-spacing:0.14em; color:#8a8378; text-transform:uppercase;">Latest Reflections</div>
+        <a href="#1e" style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase; text-decoration:none; border-bottom:1px dotted #8a8378;">See All</a>
+      </div>
+      <a href="#1b" style="text-decoration:none; color:#211e19; display:block; padding:10px 0;">
+        <div style="font-family:'Cinzel',serif; font-weight:600; font-size:13.5px;">On Enjoying God Forever</div>
+        <div style="font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase; margin-top:3px;">Thomas Ainsworth · Jul 8</div>
+      </a>
+    </div>
+
+    <div style="margin:24px 20px 28px; padding-top:20px; border-top:1px solid #ddd8cd; text-align:center;">
+      <div style="font-family:'Marcellus',serif; font-style:italic; font-size:13.5px; color:#5c574c;">Or explore the confessions and catechisms directly in the <a href="#1f" style="color:#211e19; border-bottom:1px dotted #211e19; text-decoration:none;">Library</a>.</div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div style="font-family:'Cinzel',serif; font-size:13px; letter-spacing:0.14em; color:#5c574c; text-transform:uppercase; margin-bottom:14px;">Confessional Christianity v2 · mobile mockups · turn 2 — Programs</div>
+<div style="font-family:'Marcellus',serif; font-style:italic; font-size:14px; color:#5c574c; max-width:680px; margin-bottom:40px; line-height:1.7;">Programs promotes structured, authored plans — a Bible-in-a-year, a topical devotional, or (the driving case here) a parent’s paced plan for catechizing a child — to sit alongside Search as the app’s other primary way in, reachable from the same nav as Reflections and Library. A program is built from any mix of confession/catechism text, scripture, and original devotional writing, and can carry its own pacing rules and memorization tracking.</div>
+
+<div style="display:flex; flex-wrap:wrap; gap:56px; align-items:flex-start; margin-bottom:64px;">
+
+<!-- ============ 2a PROGRAMS INDEX ============ -->
+<div id="2a" style="width:390px;">
+  <div style="font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.1em; color:#8a8378; margin-bottom:10px;">2a · /programs</div>
+  <div style="width:390px; background:#faf9f6; border:1px solid #e2ddd0; border-radius:14px; box-shadow:0 16px 44px rgba(33,30,25,0.12); overflow:hidden;">
+    <div style="height:28px; display:flex; align-items:center; justify-content:space-between; padding:0 20px; font-family:'Cinzel',serif; font-size:10px; color:#211e19;">
+      <span>9:41</span><span>●●● 100%</span>
+    </div>
+    <div style="padding:12px 20px; text-align:center; border-bottom:1px solid #ddd8cd;">
+      <div style="font-family:'Cinzel',serif; font-weight:600; font-size:12px; letter-spacing:0.14em; text-transform:uppercase;">Confessional Christianity</div>
+    </div>
+    <div style="padding:24px 20px 0; text-align:center;">
+      <div style="font-family:'Cinzel',serif; font-weight:600; font-size:20px; margin-bottom:8px;">Programs</div>
+      <div style="font-family:'Marcellus',serif; font-style:italic; font-size:13px; color:#5c574c; line-height:1.6; padding:0 8px;">Structured ways to read, memorize, and teach — at your own pace, or your child’s.</div>
+    </div>
+
+    <div style="padding:24px 20px 6px; display:flex; flex-direction:column;">
+      <a href="#2b" style="text-decoration:none; color:#211e19; padding:16px 0; border-top:1px solid #ddd8cd;">
+        <div style="font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase; margin-bottom:6px;">Family Catechesis</div>
+        <div style="font-family:'Cinzel',serif; font-weight:600; font-size:15px; margin-bottom:5px;">Catechizing Your Child: The Shorter Catechism</div>
+        <div style="font-family:'Marcellus',serif; font-size:12.5px; color:#5c574c; line-height:1.6; margin-bottom:8px;">A paced, scripture-rooted plan for teaching the Westminster Shorter Catechism to a child, one question at a time.</div>
+        <div style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.1em; color:#ab7e2e; text-transform:uppercase;">In progress · tracking for Eli · Q. 6 of 107</div>
+      </a>
+      <a href="#" style="text-decoration:none; color:#211e19; padding:16px 0; border-top:1px solid #ddd8cd;">
+        <div style="font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase; margin-bottom:6px;">Scripture</div>
+        <div style="font-family:'Cinzel',serif; font-weight:600; font-size:15px; margin-bottom:5px;">The Bible in a Year</div>
+        <div style="font-family:'Marcellus',serif; font-size:12.5px; color:#5c574c; line-height:1.6;">A daily reading plan through the whole of Scripture, Old and New Testaments together.</div>
+      </a>
+      <a href="#" style="text-decoration:none; color:#211e19; padding:16px 0 20px; border-top:1px solid #ddd8cd;">
+        <div style="font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase; margin-bottom:6px;">Devotional</div>
+        <div style="font-family:'Cinzel',serif; font-weight:600; font-size:15px; margin-bottom:5px;">On Suffering: A Devotional Path</div>
+        <div style="font-family:'Marcellus',serif; font-size:12.5px; color:#5c574c; line-height:1.6;">Ten short reflections on affliction, drawn from the confessions and Scripture.</div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 2b PROGRAM LANDING ============ -->
+<div id="2b" style="width:390px;">
+  <div style="font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.1em; color:#8a8378; margin-bottom:10px;">2b · /programs/catechizing-shorter-catechism</div>
+  <div style="width:390px; background:#faf9f6; border:1px solid #e2ddd0; border-radius:14px; box-shadow:0 16px 44px rgba(33,30,25,0.12); overflow:hidden;">
+    <div style="height:28px; display:flex; align-items:center; justify-content:space-between; padding:0 20px; font-family:'Cinzel',serif; font-size:10px; color:#211e19;">
+      <span>9:41</span><span>●●● 100%</span>
+    </div>
+    <div style="padding:12px 20px; text-align:center; border-bottom:1px solid #ddd8cd;">
+      <div style="font-family:'Cinzel',serif; font-weight:600; font-size:12px; letter-spacing:0.14em; text-transform:uppercase;">Confessional Christianity</div>
+    </div>
+    <div style="padding:22px 20px 0 20px; font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase;">
+      <a href="#2a" style="color:#8a8378; text-decoration:none; border-bottom:1px dotted #8a8378;">Programs</a>
+    </div>
+
+    <div style="padding:16px 32px 0; text-align:center;">
+      <div style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.12em; color:#8a8378; text-transform:uppercase; margin-bottom:12px;">Family Catechesis</div>
+      <div style="font-family:'Cinzel',serif; font-weight:600; font-size:21px; line-height:1.3; margin-bottom:8px;">Catechizing Your Child: The Shorter Catechism</div>
+      <div style="font-family:'Marcellus',serif; font-style:italic; font-size:13.5px; color:#5c574c; line-height:1.6; margin-bottom:12px;">A paced, scripture-rooted plan for teaching the Westminster Shorter Catechism to a child, one question at a time — each sitting pairs the question with its underlying scripture, a short devotional note, and a closing prayer.</div>
+      <div style="font-family:'Cinzel',serif; font-size:10px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase;">Ages 5–12 · about 15 minutes · 3 sessions a week</div>
+    </div>
+
+    <div style="margin:22px 20px 0; padding-top:18px; border-top:1px solid #ddd8cd;">
+      <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px;">
+        <div style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase;">Tracking for: Eli</div>
+        <div style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase;">Q. 6 of 107</div>
+      </div>
+      <div style="height:2px; background:#ddd8cd; border-radius:1px; overflow:hidden; margin-bottom:20px;">
+        <div style="width:5.6%; height:100%; background:#ab7e2e;"></div>
+      </div>
+      <a href="#2c" style="display:block; text-align:center; text-decoration:none; padding:13px; border:1px solid #211e19; border-radius:2px; font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.12em; color:#211e19; text-transform:uppercase; margin-bottom:16px;">Continue Today’s Session →</a>
+      <div style="text-align:center; margin-bottom:22px;">
+        <a href="#2e" style="font-family:'Marcellus',serif; font-style:italic; font-size:12.5px; color:#5c574c; text-decoration:none; border-bottom:1px dotted #5c574c;">How this plan is paced</a>
+      </div>
+    </div>
+
+    <div style="margin:0 20px; padding-top:18px; border-top:1px solid #ddd8cd;">
+      <div style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase; margin-bottom:8px;">Contents</div>
+      <div style="display:flex; flex-direction:column;">
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-top:1px solid #ddd8cd;">
+          <span style="font-family:'Cinzel',serif; font-weight:600; font-size:13px;">Q. 1 — What is the chief end of man?</span>
+          <span style="font-size:15px; color:#ab7e2e;">♥</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-top:1px solid #ddd8cd;">
+          <span style="font-family:'Cinzel',serif; font-weight:600; font-size:13px;">Q. 4 — What is God?</span>
+          <span style="font-size:15px; color:#c9a468;">♥</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-top:1px solid #ddd8cd;">
+          <a href="#2d" style="font-family:'Cinzel',serif; font-weight:600; font-size:13px; color:#211e19; text-decoration:none;">Q. 7 — What are the decrees of God?</a>
+          <span style="font-size:15px; color:#c9c4b6;">♡</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0 20px; border-top:1px solid #ddd8cd; border-bottom:1px solid #ddd8cd;">
+          <span style="font-family:'Cinzel',serif; font-weight:600; font-size:13px; color:#8a8378;">Q. 8 — How doth God execute his decrees?</span>
+          <span style="font-size:15px; color:#c9c4b6;">♡</span>
+        </div>
+      </div>
+      <div style="text-align:center; padding:14px 0 20px; font-family:'Marcellus',serif; font-style:italic; font-size:12px; color:#8a8378;">♥ mastered · ♥ reviewing · ♡ not yet started</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 2c TODAY'S SESSION ============ -->
+<div id="2c" style="width:390px;">
+  <div style="font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.1em; color:#8a8378; margin-bottom:10px;">2c · /programs/catechizing-shorter-catechism/session</div>
+  <div style="width:390px; background:#faf9f6; border:1px solid #e2ddd0; border-radius:14px; box-shadow:0 16px 44px rgba(33,30,25,0.12); overflow:hidden;">
+    <div style="height:28px; display:flex; align-items:center; justify-content:space-between; padding:0 20px; font-family:'Cinzel',serif; font-size:10px; color:#211e19;">
+      <span>9:41</span><span>●●● 100%</span>
+    </div>
+    <div style="padding:12px 20px; text-align:center; border-bottom:1px solid #ddd8cd;">
+      <div style="font-family:'Cinzel',serif; font-weight:600; font-size:12px; letter-spacing:0.14em; text-transform:uppercase;">Confessional Christianity</div>
+    </div>
+    <div style="padding:22px 20px 0; text-align:center;">
+      <div style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.12em; color:#8a8378; text-transform:uppercase; margin-bottom:8px;">Catechizing Eli · Session 4</div>
+      <div style="font-family:'Cinzel',serif; font-weight:600; font-size:19px;">Tuesday · about 15 minutes</div>
+    </div>
+
+    <div style="margin:22px 20px 0; padding-top:18px; border-top:1px solid #ddd8cd;">
+      <div style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.12em; color:#8a8378; text-transform:uppercase; margin-bottom:10px;">New This Session</div>
+      <div style="background:#f4f2ea; padding:18px 18px; border-radius:2px;">
+        <div style="font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase; margin-bottom:8px;">Q. 7 · first time through</div>
+        <blockquote style="margin:0; font-family:'Marcellus',serif; font-style:italic; font-size:14.5px; line-height:1.6; color:#211e19;">Q. What are the decrees of God?<br>A. The decrees of God are his eternal purpose, according to the counsel of his will, whereby, for his own glory, he hath foreordained whatsoever comes to pass.</blockquote>
+      </div>
+    </div>
+
+    <div style="margin:22px 20px 0; padding-top:18px; border-top:1px solid #ddd8cd;">
+      <div style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.12em; color:#8a8378; text-transform:uppercase; margin-bottom:10px;">Review</div>
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="font-family:'Marcellus',serif; font-size:13px; color:#211e19;">Q. 1 — What is the chief end of man?</div>
+          <div style="display:flex; gap:10px; font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.08em; text-transform:uppercase; white-space:nowrap;">
+            <span style="color:#ab7e2e;">✓ Recited</span>
+          </div>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="font-family:'Marcellus',serif; font-size:13px; color:#211e19;">Q. 4 — What is God?</div>
+          <div style="display:flex; gap:10px; font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.08em; text-transform:uppercase; white-space:nowrap;">
+            <a href="#" style="color:#8a8378; text-decoration:none;">✓ Recited</a>
+            <a href="#" style="color:#8a8378; text-decoration:none;">Needs practice</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin:24px 20px 0; padding-top:18px; border-top:1px solid #ddd8cd;">
+      <div style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.12em; color:#8a8378; text-transform:uppercase; margin-bottom:10px;">Scripture for Today</div>
+      <blockquote style="margin:0; padding-left:14px; border-left:2px solid #211e19; font-family:'Marcellus',serif; font-style:italic; font-size:13.5px; line-height:1.7; color:#211e19;">Known unto God are all his works from the beginning of the world.<br><cite style="display:block; margin-top:6px; font-family:'Cinzel',serif; font-style:normal; font-size:9.5px; letter-spacing:0.1em; text-transform:uppercase; color:#8a8378;">Acts 15:18</cite></blockquote>
+    </div>
+
+    <div style="margin:24px 20px 0; padding-top:18px; border-top:1px solid #ddd8cd;">
+      <div style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.12em; color:#8a8378; text-transform:uppercase; margin-bottom:10px;">A Prayer to Close</div>
+      <div style="font-family:'Marcellus',serif; font-style:italic; font-size:13.5px; line-height:1.75; color:#211e19;">Lord, before the world began, you already knew and planned every good thing for us. Help Eli trust that your plans are kind, even the parts he cannot see yet. Amen.</div>
+    </div>
+
+    <div style="margin:26px 20px 24px; padding-top:18px; border-top:1px solid #ddd8cd;">
+      <a href="#2d" style="display:block; text-align:center; font-family:'Marcellus',serif; font-style:italic; font-size:12.5px; color:#5c574c; text-decoration:none; border-bottom:1px dotted #5c574c; margin-bottom:18px;">Full teaching notes for Q. 7 →</a>
+      <div style="text-align:center; padding:13px; border:1px solid #211e19; border-radius:2px; font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.12em; color:#211e19; text-transform:uppercase;">Finish Session</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 2d TEACHING NOTES / ENRICHMENT ============ -->
+<div id="2d" style="width:390px;">
+  <div style="font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.1em; color:#8a8378; margin-bottom:10px;">2d · /programs/catechizing-shorter-catechism/q7/notes</div>
+  <div style="width:390px; background:#faf9f6; border:1px solid #e2ddd0; border-radius:14px; box-shadow:0 16px 44px rgba(33,30,25,0.12); overflow:hidden; position:relative;">
+    <div style="height:28px; display:flex; align-items:center; justify-content:space-between; padding:0 20px; font-family:'Cinzel',serif; font-size:10px; color:#211e19;">
+      <span>9:41</span><span>●●● 100%</span>
+    </div>
+    <div style="padding:12px 20px; text-align:center; border-bottom:1px solid #ddd8cd;">
+      <div style="font-family:'Cinzel',serif; font-weight:600; font-size:12px; letter-spacing:0.14em; text-transform:uppercase;">Confessional Christianity</div>
+    </div>
+    <div style="padding:22px 20px 0 20px; font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase;">
+      <a href="#2c" style="color:#8a8378; text-decoration:none; border-bottom:1px dotted #8a8378;">Today’s Session</a>
+    </div>
+
+    <div aria-label="Mark Q.7 recited without help" role="button" style="position:absolute; top:78px; right:20px; font-size:20px; color:#c9c4b6; line-height:1;">♡</div>
+
+    <div style="padding:18px 30px 0; text-align:center;">
+      <div style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.12em; color:#8a8378; text-transform:uppercase; margin-bottom:12px;">Teaching Notes · Q. 7</div>
+      <blockquote style="margin:0; font-family:'Marcellus',serif; font-style:italic; font-size:15px; line-height:1.6; color:#211e19;">Q. What are the decrees of God?<br>A. The decrees of God are his eternal purpose, according to the counsel of his will, whereby, for his own glory, he hath foreordained whatsoever comes to pass.</blockquote>
+    </div>
+
+    <div style="margin:22px 20px 0; padding-top:18px; border-top:1px solid #ddd8cd;">
+      <div style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.12em; color:#8a8378; text-transform:uppercase; margin-bottom:10px;">Scripture Underneath</div>
+      <blockquote style="margin:0 0 14px; padding-left:14px; border-left:2px solid #211e19; font-family:'Marcellus',serif; font-style:italic; font-size:13px; line-height:1.7; color:#211e19;">Known unto God are all his works from the beginning of the world.<br><cite style="display:block; margin-top:6px; font-family:'Cinzel',serif; font-style:normal; font-size:9.5px; letter-spacing:0.1em; text-transform:uppercase; color:#8a8378;">Acts 15:18</cite></blockquote>
+      <blockquote style="margin:0; padding-left:14px; border-left:2px solid #211e19; font-family:'Marcellus',serif; font-style:italic; font-size:13px; line-height:1.7; color:#211e19;">My counsel shall stand, and I will do all my pleasure.<br><cite style="display:block; margin-top:6px; font-family:'Cinzel',serif; font-style:normal; font-size:9.5px; letter-spacing:0.1em; text-transform:uppercase; color:#8a8378;">Isaiah 46:10</cite></blockquote>
+    </div>
+
+    <div style="margin:22px 20px 0; padding-top:18px; border-top:1px solid #ddd8cd;">
+      <div style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.12em; color:#8a8378; text-transform:uppercase; margin-bottom:10px;">For the Parent</div>
+      <p style="margin:0; font-family:'Marcellus',serif; font-size:13.5px; line-height:1.75; color:#211e19;">A child’s first instinct is to hear “decree” as distant or cold. Try the opposite: a decree is a plan made in love, before there was anyone to love. Ask Eli what it might mean that God planned good things for him before he could do anything to earn them.</p>
+    </div>
+
+    <div style="margin:22px 20px 0; padding-top:18px; border-top:1px solid #ddd8cd;">
+      <div style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.12em; color:#8a8378; text-transform:uppercase; margin-bottom:10px;">Books &amp; Reading</div>
+      <div style="font-family:'Marcellus',serif; font-size:13px; line-height:1.9; color:#211e19;">
+        <div><em>Big Truths for Young Hearts</em>, ch. on God’s sovereignty</div>
+        <div><em>The Biggest Story</em>, for the arc of God’s plan</div>
+        <div>Psalm 139:13–16, read aloud together</div>
+      </div>
+    </div>
+
+    <div style="margin:22px 20px 0; padding-top:18px; border-top:1px solid #ddd8cd;">
+      <div style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.12em; color:#8a8378; text-transform:uppercase; margin-bottom:10px;">A Picture From Nature</div>
+      <p style="margin:0; font-family:'Marcellus',serif; font-size:13.5px; line-height:1.75; color:#211e19;">Look at a garden planted in early spring, before anything is visible above the soil. The gardener already knows what it will become. Point out that God’s plans for Eli are like that — decided long before they’re seen.</p>
+    </div>
+
+    <div style="margin:22px 20px 24px; padding-top:18px; border-top:1px solid #ddd8cd;">
+      <div style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.12em; color:#8a8378; text-transform:uppercase; margin-bottom:10px;">A Prayer for This Question</div>
+      <div style="font-family:'Marcellus',serif; font-style:italic; font-size:13.5px; line-height:1.75; color:#211e19;">Lord, before the world began, you already knew and planned every good thing for us. Help Eli trust that your plans are kind, even the parts he cannot see yet. Amen.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 2e PLAN & PACING ============ -->
+<div id="2e" style="width:390px;">
+  <div style="font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.1em; color:#8a8378; margin-bottom:10px;">2e · /programs/catechizing-shorter-catechism/pacing</div>
+  <div style="width:390px; background:#faf9f6; border:1px solid #e2ddd0; border-radius:14px; box-shadow:0 16px 44px rgba(33,30,25,0.12); overflow:hidden;">
+    <div style="height:28px; display:flex; align-items:center; justify-content:space-between; padding:0 20px; font-family:'Cinzel',serif; font-size:10px; color:#211e19;">
+      <span>9:41</span><span>●●● 100%</span>
+    </div>
+    <div style="padding:12px 20px; text-align:center; border-bottom:1px solid #ddd8cd;">
+      <div style="font-family:'Cinzel',serif; font-weight:600; font-size:12px; letter-spacing:0.14em; text-transform:uppercase;">Confessional Christianity</div>
+    </div>
+    <div style="padding:22px 20px 0 20px; font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase;">
+      <a href="#2b" style="color:#8a8378; text-decoration:none; border-bottom:1px dotted #8a8378;">Catechizing Your Child</a>
+    </div>
+
+    <div style="padding:16px 24px 0; text-align:center;">
+      <div style="font-family:'Cinzel',serif; font-weight:600; font-size:19px; margin-bottom:8px;">How This Plan Is Paced</div>
+      <div style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase; margin-bottom:10px;">Adjusting for: Eli</div>
+      <p style="margin:0; font-family:'Marcellus',serif; font-style:italic; font-size:12.5px; color:#5c574c; line-height:1.65;">A default pace is set for you — slow enough to let a child dwell, not just recite. Adjust anything below; changes apply to your next session.</p>
+    </div>
+
+    <div style="margin:22px 20px 0; padding-top:18px; border-top:1px solid #ddd8cd;">
+      <div style="display:flex; justify-content:space-between; align-items:center; padding-bottom:14px;">
+        <span style="font-family:'Cinzel',serif; font-size:12.5px; letter-spacing:0.02em;">New questions per session</span>
+        <div style="display:flex; align-items:center; gap:14px; font-family:'Cinzel',serif; font-size:13px;">
+          <span style="color:#c9c4b6;">−</span><span style="min-width:14px; text-align:center;">2</span><span style="color:#211e19;">+</span>
+        </div>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 0; border-top:1px solid #ddd8cd;">
+        <span style="font-family:'Cinzel',serif; font-size:12.5px; letter-spacing:0.02em;">Sessions per week</span>
+        <div style="display:flex; align-items:center; gap:14px; font-family:'Cinzel',serif; font-size:13px;">
+          <span style="color:#211e19;">−</span><span style="min-width:14px; text-align:center;">3</span><span style="color:#211e19;">+</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin:20px 20px 0; padding-top:18px; border-top:1px solid #ddd8cd;">
+      <div style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase; margin-bottom:12px;">Review each session</div>
+      <div style="display:flex; flex-direction:column; gap:10px; font-family:'Marcellus',serif; font-size:13px; color:#211e19;">
+        <div style="display:flex; align-items:baseline; gap:10px;"><span style="font-size:11px;">●</span>Last 5 learned</div>
+        <div style="display:flex; align-items:baseline; gap:10px; color:#211e19;"><span style="font-size:11px;">◉</span><strong>All learned so far, rotating</strong></div>
+        <div style="display:flex; align-items:baseline; gap:10px; color:#8a8378;"><span style="font-size:11px;">○</span>Only what’s still shaky</div>
+      </div>
+    </div>
+
+    <div style="margin:20px 20px 0; padding-top:18px; border-top:1px solid #ddd8cd;">
+      <div style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase; margin-bottom:12px;">Consider a question mastered when—</div>
+      <div style="display:flex; flex-direction:column; gap:10px; font-family:'Marcellus',serif; font-size:13px; color:#211e19;">
+        <div style="display:flex; align-items:baseline; gap:10px;"><span style="font-size:11px;">◉</span><strong>Recited unprompted, 3 sessions running</strong></div>
+        <div style="display:flex; align-items:baseline; gap:10px; color:#8a8378;"><span style="font-size:11px;">○</span>I’ll mark it myself, anytime</div>
+        <div style="display:flex; align-items:baseline; gap:10px; color:#8a8378;"><span style="font-size:11px;">○</span>After 6 exposures, regardless</div>
+      </div>
+    </div>
+
+    <div style="margin:20px 20px 0; padding-top:18px; border-top:1px solid #ddd8cd;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-family:'Cinzel',serif; font-size:12.5px; letter-spacing:0.02em;">Include underlying scripture each time</span>
+        <span style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.1em; color:#211e19; text-transform:uppercase; border:1px solid #211e19; border-radius:10px; padding:3px 10px;">On</span>
+      </div>
+    </div>
+
+    <div style="margin:26px 20px 24px; padding-top:18px; border-top:1px solid #ddd8cd;">
+      <a href="#2b" style="display:block; text-align:center; text-decoration:none; padding:13px; border:1px solid #211e19; border-radius:2px; font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.12em; color:#211e19; text-transform:uppercase;">Save Pacing</a>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div style="font-family:'Cinzel',serif; font-size:13px; letter-spacing:0.14em; color:#5c574c; text-transform:uppercase; margin-bottom:40px;">Confessional Christianity v2 · mobile mockups · turn 1</div>
+
+<div style="display:flex; flex-wrap:wrap; gap:56px; align-items:flex-start;">
+
+<!-- ============ 1a HOMEPAGE ============ -->
+<div id="1a" style="width:390px;">
+  <div style="font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.1em; color:#8a8378; margin-bottom:10px;">1a · HOMEPAGE — EDITORIAL MASTHEAD</div>
+  <div style="width:390px; background:#faf9f6; border:1px solid #e2ddd0; border-radius:14px; box-shadow:0 16px 44px rgba(33,30,25,0.12); overflow:hidden;">
+    <div style="height:28px; display:flex; align-items:center; justify-content:space-between; padding:0 20px; font-family:'Cinzel',serif; font-size:10px; color:#211e19;">
+      <span>9:41</span><span>●●● 100%</span>
+    </div>
+    <div style="padding:12px 20px 14px; text-align:center; border-bottom:1px solid #ddd8cd;">
+      <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
+        <div role="button" aria-haspopup="true" style="display:flex; align-items:center; gap:4px; font-family:'Cinzel',serif; font-size:10px; letter-spacing:0.08em; color:#5c574c; text-transform:uppercase;">
+          <span>Sarah</span><span style="font-size:8px;">▾</span>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <button aria-label="Open menu" style="background:none; border:none; padding:4px; display:flex; flex-direction:column; gap:3px; cursor:pointer;">
+          <span style="width:16px; height:1px; background:#211e19;"></span>
+          <span style="width:16px; height:1px; background:#211e19;"></span>
+        </button>
+        <div style="font-family:'Cinzel',serif; font-weight:600; font-size:13.5px; letter-spacing:0.13em; text-transform:uppercase;">Confessional Christianity</div>
+        <button aria-label="Search" style="background:none; border:none; padding:4px; cursor:pointer;">
+          <svg width="14" height="14" viewBox="0 0 20 20"><circle cx="8" cy="8" r="6.5" fill="none" stroke="#211e19" stroke-width="1.4"></circle><line x1="13" y1="13" x2="18" y2="18" stroke="#211e19" stroke-width="1.4"></line></svg>
+        </button>
+      </div>
+    </div>
+
+    <div style="padding:28px 44px 8px; text-align:center;">
+      <div style="font-family:'Cinzel',serif; font-size:10px; letter-spacing:0.14em; color:#8a8378; text-transform:uppercase; margin-bottom:12px;">Featured</div>
+      <div style="font-family:'Cinzel',serif; font-weight:600; font-size:24px; line-height:1.3; color:#211e19; margin-bottom:8px;">On Enjoying God Forever</div>
+      <div style="font-family:'Marcellus',serif; font-style:italic; font-size:14px; color:#5c574c; margin-bottom:10px;">Notes on the first question of the Shorter Catechism</div>
+      <div style="font-family:'Cinzel',serif; font-size:10px; letter-spacing:0.14em; color:#8a8378; text-transform:uppercase; margin-bottom:16px;">Thomas Ainsworth · July 8, 2026</div>
+      <div style="font-family:'Marcellus',serif; font-style:italic; font-size:15px; line-height:1.6; color:#211e19;">“Man’s chief end is to glorify God, and to enjoy him forever.”</div>
+    </div>
+
+    <div style="margin:26px 20px 0; padding-top:20px; border-top:1px solid #ddd8cd;">
+      <div style="font-family:'Cinzel',serif; font-size:10px; letter-spacing:0.14em; color:#8a8378; text-transform:uppercase; margin-bottom:8px;">Start Here</div>
+      <a href="#1i" style="text-decoration:none; color:#211e19;">
+        <div style="font-family:'Cinzel',serif; font-weight:600; font-size:15px; margin-bottom:4px;">Walking through the Shorter Catechism</div>
+        <div style="font-family:'Marcellus',serif; font-size:13px; color:#5c574c; line-height:1.6;">A ten-part reading plan through the opening questions, one at a time.</div>
+      </a>
+    </div>
+
+    <div style="margin:24px 20px 0; padding-top:20px; border-top:1px solid #ddd8cd;">
+      <div style="font-family:'Cinzel',serif; font-size:10px; letter-spacing:0.14em; color:#8a8378; text-transform:uppercase; margin-bottom:10px;">Latest Reflections</div>
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <a href="#1b" style="text-decoration:none; color:#211e19;">
+          <div style="font-family:'Cinzel',serif; font-weight:600; font-size:14px;">On Enjoying God Forever</div>
+          <div style="font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase; margin:3px 0;">Thomas Ainsworth · Jul 8</div>
+          <div style="font-family:'Marcellus',serif; font-size:12.5px; color:#5c574c; line-height:1.6;">What it means for joy to be the point, not the byproduct, of glorifying God.</div>
+        </a>
+        <a href="#" style="text-decoration:none; color:#211e19;">
+          <div style="font-family:'Cinzel',serif; font-weight:600; font-size:14px;">The Only Rule</div>
+          <div style="font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase; margin:3px 0;">Thomas Ainsworth · Jul 2</div>
+          <div style="font-family:'Marcellus',serif; font-size:12.5px; color:#5c574c; line-height:1.6;">Why the catechism roots everything back in Scripture before it says anything else.</div>
+        </a>
+        <a href="#" style="text-decoration:none; color:#211e19;">
+          <div style="font-family:'Cinzel',serif; font-weight:600; font-size:14px;">A Dutch Confession for an English Reader</div>
+          <div style="font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase; margin:3px 0;">Marguerite Voss · Jun 24</div>
+          <div style="font-family:'Marcellus',serif; font-size:12.5px; color:#5c574c; line-height:1.6;">An introduction to the Belgic Confession for readers new to the Dutch Reformed tradition.</div>
+        </a>
+      </div>
+    </div>
+
+    <div style="margin:24px 20px 28px; padding-top:20px; border-top:1px solid #ddd8cd; text-align:center;">
+      <div style="font-family:'Marcellus',serif; font-style:italic; font-size:13.5px; color:#5c574c;">Or explore the confessions and catechisms directly in the <a href="#1f" style="color:#211e19; border-bottom:1px dotted #211e19; text-decoration:none;">Library</a>.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 1b ENTRY + COMMENTARY ============ -->
+<div id="1b" style="width:390px;">
+  <div style="font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.1em; color:#8a8378; margin-bottom:10px;">1b · ENTRY + COMMENTARY (EPIGRAPH TREATMENT)</div>
+  <div style="width:390px; background:#faf9f6; border:1px solid #e2ddd0; border-radius:14px; box-shadow:0 16px 44px rgba(33,30,25,0.12); overflow:hidden; position:relative;">
+    <div style="height:28px; display:flex; align-items:center; justify-content:space-between; padding:0 20px; font-family:'Cinzel',serif; font-size:10px; color:#211e19;">
+      <span>9:41</span><span>●●● 100%</span>
+    </div>
+    <div style="padding:12px 20px; text-align:center; border-bottom:1px solid #ddd8cd;">
+      <div style="font-family:'Cinzel',serif; font-weight:600; font-size:12px; letter-spacing:0.14em; text-transform:uppercase;">Confessional Christianity</div>
+    </div>
+
+    <div aria-label="Mark Q.1 memorized" role="button" style="position:absolute; top:76px; right:20px; font-size:20px; color:#211e19; line-height:1;">♡</div>
+
+    <div style="padding:26px 44px 0; text-align:center;">
+      <div style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.12em; color:#8a8378; text-transform:uppercase; margin-bottom:14px;">Series: Walking through the Shorter Catechism · Part 1 of 10</div>
+      <div style="font-family:'Cinzel',serif; font-weight:600; font-size:24px; line-height:1.3; color:#211e19; margin-bottom:8px;">On Enjoying God Forever</div>
+      <div style="font-family:'Marcellus',serif; font-style:italic; font-size:14px; color:#5c574c; margin-bottom:10px;">Notes on the first question of the Shorter Catechism</div>
+      <div style="font-family:'Cinzel',serif; font-size:10px; letter-spacing:0.14em; color:#8a8378; text-transform:uppercase;">Thomas Ainsworth · July 8, 2026</div>
+    </div>
+
+    <a href="#1c" style="display:block; text-decoration:none; color:inherit; margin:24px 20px 0; padding:22px 20px; background:#f4f2ea; border-radius:2px;">
+      <div style="text-align:center; font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.12em; color:#8a8378; text-transform:uppercase; margin-bottom:10px;">Westminster Shorter Catechism · Q. 1</div>
+      <blockquote style="margin:0; font-family:'Marcellus',serif; font-style:italic; font-size:17px; line-height:1.55; color:#211e19; text-align:center;">
+        Q. What is the chief end of man?<br>A. Man’s chief end is to glorify God, and to enjoy him forever.
+      </blockquote>
+    </a>
+
+    <div style="padding:24px 20px 8px; font-family:'Marcellus',serif; font-size:14.5px; line-height:1.8; color:#211e19;">
+      <p style="margin:0 0 16px;">Most catechisms open with a question about God or Scripture. The Shorter Catechism opens, instead, with a question about <em>us</em> — and answers it with a claim so bold it is easy to read past: that our end, our purpose, is not obligation but enjoyment.</p>
+      <h2 style="font-family:'Cinzel',serif; font-weight:600; font-size:15px; letter-spacing:0.06em; margin:26px 0 12px;">Joy Is Not the Reward</h2>
+      <p style="margin:0 0 16px;">The answer does not say we glorify God <em>in order to</em> enjoy him, as though joy were a wage paid out afterward. The two verbs sit side by side, undivided. Glorifying and enjoying are one motion, not two.</p>
+      <blockquote style="margin:0 0 16px; padding-left:16px; border-left:2px solid #211e19; font-style:italic; color:#211e19;">In thy presence is fullness of joy; at thy right hand there are pleasures for evermore.<br><cite style="display:block; margin-top:6px; font-family:'Cinzel',serif; font-style:normal; font-size:10px; letter-spacing:0.12em; text-transform:uppercase; color:#8a8378;">Psalm 16:11</cite></blockquote>
+      <p style="margin:0;">This is why the catechism can afford to begin here, before a single doctrine has been stated. Everything that follows is an answer to a question this one already assumes: how, then, shall we enjoy him?</p>
+    </div>
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin:28px 20px 24px; padding-top:18px; border-top:1px solid #ddd8cd; font-family:'Cinzel',serif; font-size:10px; letter-spacing:0.1em; text-transform:uppercase;">
+      <span style="color:#c9c4b6;">← Prev</span>
+      <a href="#" style="color:#211e19; text-decoration:none; border-bottom:1px dotted #211e19;">Part 2: The Only Rule →</a>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 1c ENTRY, NO COMMENTARY ============ -->
+<div id="1c" style="width:390px;">
+  <div style="font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.1em; color:#8a8378; margin-bottom:10px;">1c · ENTRY, NO COMMENTARY (WITH MEMORIZED STATE)</div>
+  <div style="width:390px; background:#faf9f6; border:1px solid #e2ddd0; border-radius:14px; box-shadow:0 16px 44px rgba(33,30,25,0.12); overflow:hidden; position:relative;">
+    <div style="height:28px; display:flex; align-items:center; justify-content:space-between; padding:0 20px; font-family:'Cinzel',serif; font-size:10px; color:#211e19;">
+      <span>9:41</span><span>●●● 100%</span>
+    </div>
+    <div style="padding:12px 20px; text-align:center; border-bottom:1px solid #ddd8cd;">
+      <div style="font-family:'Cinzel',serif; font-weight:600; font-size:12px; letter-spacing:0.14em; text-transform:uppercase;">Confessional Christianity</div>
+    </div>
+
+    <div aria-label="Unmark Q.2 memorized" role="button" style="position:absolute; top:76px; right:20px; font-size:20px; color:#ab7e2e; line-height:1;">♥</div>
+
+    <div style="padding:22px 20px 0 20px; font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase;">
+      <a href="#1g" style="color:#8a8378; text-decoration:none; border-bottom:1px dotted #8a8378;">Library</a> / Westminster Shorter Catechism
+    </div>
+
+    <div style="padding:20px 44px 0; text-align:center;">
+      <div style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.12em; color:#8a8378; text-transform:uppercase; margin-bottom:16px;">Q. 2</div>
+      <blockquote style="margin:0; font-family:'Marcellus',serif; font-style:italic; font-size:17px; line-height:1.55; color:#211e19;">
+        Q. What rule hath God given to direct us how we may glorify and enjoy him?<br>A. The Word of God, which is contained in the Scriptures of the Old and New Testaments, is the only rule to direct us how we may glorify and enjoy him.
+      </blockquote>
+    </div>
+
+    <div style="margin:26px 20px 0; padding-top:18px; border-top:1px solid #ddd8cd;">
+      <div style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.12em; color:#8a8378; text-transform:uppercase; margin-bottom:8px;">Proof Texts</div>
+      <div style="font-family:'Marcellus',serif; font-size:13px; color:#5c574c; line-height:1.9;">2 Timothy 3:16 · 1 John 1:3–4 · Isaiah 8:20</div>
+    </div>
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin:30px 20px 24px; padding-top:18px; border-top:1px solid #ddd8cd; font-family:'Cinzel',serif; font-size:10px; letter-spacing:0.1em; text-transform:uppercase;">
+      <a href="#1b" style="color:#211e19; text-decoration:none; border-bottom:1px dotted #211e19;">← Q. 1</a>
+      <a href="#" style="color:#211e19; text-decoration:none; border-bottom:1px dotted #211e19;">Q. 3 →</a>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 1d SEARCH ============ -->
+<div id="1d" style="width:390px;">
+  <div style="font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.1em; color:#8a8378; margin-bottom:10px;">1d · /search</div>
+  <div style="width:390px; background:#faf9f6; border:1px solid #e2ddd0; border-radius:14px; box-shadow:0 16px 44px rgba(33,30,25,0.12); overflow:hidden;">
+    <div style="height:28px; display:flex; align-items:center; justify-content:space-between; padding:0 20px; font-family:'Cinzel',serif; font-size:10px; color:#211e19;">
+      <span>9:41</span><span>●●● 100%</span>
+    </div>
+    <div style="padding:12px 20px; text-align:center; border-bottom:1px solid #ddd8cd;">
+      <div style="font-family:'Cinzel',serif; font-weight:600; font-size:12px; letter-spacing:0.14em; text-transform:uppercase;">Confessional Christianity</div>
+    </div>
+
+    <div style="padding:24px 20px 0;">
+      <div style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.12em; color:#8a8378; text-transform:uppercase; margin-bottom:10px;">Search</div>
+      <div style="display:flex; align-items:center; gap:10px; border-bottom:1px solid #211e19; padding-bottom:8px; margin-bottom:14px;">
+        <svg width="14" height="14" viewBox="0 0 20 20"><circle cx="8" cy="8" r="6.5" fill="none" stroke="#211e19" stroke-width="1.4"></circle><line x1="13" y1="13" x2="18" y2="18" stroke="#211e19" stroke-width="1.4"></line></svg>
+        <span style="font-family:'Marcellus',serif; font-style:italic; font-size:15px; color:#211e19;">chief end</span>
+      </div>
+      <div style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase; margin-bottom:18px;">Showing 2 of 47 total matches</div>
+    </div>
+
+    <div style="display:flex; flex-direction:column;">
+      <a href="#1c" style="text-decoration:none; color:#211e19; padding:16px 20px; border-top:1px solid #ddd8cd;">
+        <div style="font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase; margin-bottom:4px;">Westminster Shorter Catechism</div>
+        <div style="font-family:'Cinzel',serif; font-weight:600; font-size:14px; margin-bottom:5px;">† Q. 1 — What is the chief end of man?</div>
+        <div style="font-family:'Marcellus',serif; font-size:12.5px; color:#5c574c; line-height:1.6;">Man’s <strong>chief end</strong> is to glorify God, and to enjoy him forever.</div>
+      </a>
+      <a href="#1b" style="text-decoration:none; color:#211e19; padding:16px 20px; border-top:1px solid #ddd8cd;">
+        <div style="font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase; margin-bottom:4px;">Reflection · Thomas Ainsworth</div>
+        <div style="font-family:'Cinzel',serif; font-weight:600; font-size:14px; margin-bottom:5px;">On Enjoying God Forever</div>
+        <div style="font-family:'Marcellus',serif; font-size:12.5px; color:#5c574c; line-height:1.6;">The answer does not say we glorify God in order to enjoy him — the <strong>chief end</strong> is one motion, not two.</div>
+      </a>
+    </div>
+    <div style="height:20px;"></div>
+  </div>
+</div>
+
+<!-- ============ 1e REFLECTIONS INDEX ============ -->
+<div id="1e" style="width:390px;">
+  <div style="font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.1em; color:#8a8378; margin-bottom:10px;">1e · /reflections</div>
+  <div style="width:390px; background:#faf9f6; border:1px solid #e2ddd0; border-radius:14px; box-shadow:0 16px 44px rgba(33,30,25,0.12); overflow:hidden;">
+    <div style="height:28px; display:flex; align-items:center; justify-content:space-between; padding:0 20px; font-family:'Cinzel',serif; font-size:10px; color:#211e19;">
+      <span>9:41</span><span>●●● 100%</span>
+    </div>
+    <div style="padding:12px 20px; text-align:center; border-bottom:1px solid #ddd8cd;">
+      <div style="font-family:'Cinzel',serif; font-weight:600; font-size:12px; letter-spacing:0.14em; text-transform:uppercase;">Confessional Christianity</div>
+    </div>
+    <div style="padding:24px 20px 0; text-align:center;">
+      <div style="font-family:'Cinzel',serif; font-weight:600; font-size:20px;">Reflections</div>
+    </div>
+
+    <div style="padding:22px 20px 0;">
+      <div style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase; margin-bottom:6px;">Series · Walking through the Shorter Catechism</div>
+      <div style="display:flex; flex-direction:column;">
+        <a href="#1b" style="text-decoration:none; color:#211e19; padding:12px 0; border-top:1px solid #ddd8cd;">
+          <div style="font-family:'Cinzel',serif; font-weight:600; font-size:13.5px; margin-bottom:4px;">Part 1: On Enjoying God Forever</div>
+          <div style="font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase; margin-bottom:4px;">Thomas Ainsworth · Jul 8</div>
+          <div style="font-family:'Marcellus',serif; font-size:12px; color:#5c574c; line-height:1.6;">Joy as motion, not reward.</div>
+        </a>
+        <a href="#" style="text-decoration:none; color:#211e19; padding:12px 0; border-top:1px solid #ddd8cd;">
+          <div style="font-family:'Cinzel',serif; font-weight:600; font-size:13.5px; margin-bottom:4px;">Part 2: The Only Rule</div>
+          <div style="font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase; margin-bottom:4px;">Thomas Ainsworth · Jul 2</div>
+          <div style="font-family:'Marcellus',serif; font-size:12px; color:#5c574c; line-height:1.6;">Why everything comes back to Scripture first.</div>
+        </a>
+      </div>
+    </div>
+
+    <div style="padding:20px 20px 0;">
+      <div style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase; margin-bottom:6px;">Standalone Essays</div>
+      <div style="display:flex; flex-direction:column;">
+        <a href="#" style="text-decoration:none; color:#211e19; padding:12px 0; border-top:1px solid #ddd8cd;">
+          <div style="font-family:'Cinzel',serif; font-weight:600; font-size:13.5px; margin-bottom:4px;">A Dutch Confession for an English Reader</div>
+          <div style="font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase; margin-bottom:4px;">Marguerite Voss · Jun 24</div>
+          <div style="font-family:'Marcellus',serif; font-size:12px; color:#5c574c; line-height:1.6;">An introduction to the Belgic Confession.</div>
+        </a>
+        <a href="#" style="text-decoration:none; color:#211e19; padding:12px 0 20px; border-top:1px solid #ddd8cd;">
+          <div style="font-family:'Cinzel',serif; font-weight:600; font-size:13.5px; margin-bottom:4px;">What the Canons of Dort Actually Argue</div>
+          <div style="font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase; margin-bottom:4px;">Thomas Ainsworth · Jun 12</div>
+          <div style="font-family:'Marcellus',serif; font-size:12px; color:#5c574c; line-height:1.6;">Untangling a document more often cited than read.</div>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 1f LIBRARY INDEX ============ -->
+<div id="1f" style="width:390px;">
+  <div style="font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.1em; color:#8a8378; margin-bottom:10px;">1f · /library</div>
+  <div style="width:390px; background:#faf9f6; border:1px solid #e2ddd0; border-radius:14px; box-shadow:0 16px 44px rgba(33,30,25,0.12); overflow:hidden;">
+    <div style="height:28px; display:flex; align-items:center; justify-content:space-between; padding:0 20px; font-family:'Cinzel',serif; font-size:10px; color:#211e19;">
+      <span>9:41</span><span>●●● 100%</span>
+    </div>
+    <div style="padding:12px 20px; text-align:center; border-bottom:1px solid #ddd8cd;">
+      <div style="font-family:'Cinzel',serif; font-weight:600; font-size:12px; letter-spacing:0.14em; text-transform:uppercase;">Confessional Christianity</div>
+    </div>
+    <div style="padding:24px 20px 0; text-align:center;">
+      <div style="font-family:'Cinzel',serif; font-weight:600; font-size:20px;">Library</div>
+    </div>
+
+    <div style="padding:20px 20px 0; display:flex; flex-direction:column;">
+      <a href="#1g" style="text-decoration:none; color:#211e19; padding:13px 0; border-top:1px solid #ddd8cd;">
+        <div style="font-family:'Cinzel',serif; font-weight:600; font-size:14px; margin-bottom:4px;">Westminster Shorter Catechism</div>
+        <div style="font-family:'Marcellus',serif; font-style:italic; font-size:12px; color:#5c574c;">A 1647 primer in question-and-answer form, still used to teach the faith.</div>
+      </a>
+      <a href="#" style="text-decoration:none; color:#211e19; padding:13px 0; border-top:1px solid #ddd8cd;">
+        <div style="font-family:'Cinzel',serif; font-weight:600; font-size:14px; margin-bottom:4px;">Westminster Confession of Faith</div>
+        <div style="font-family:'Marcellus',serif; font-style:italic; font-size:12px; color:#5c574c;">The 1646 confession underlying Presbyterian doctrine.</div>
+      </a>
+      <a href="#" style="text-decoration:none; color:#211e19; padding:13px 0; border-top:1px solid #ddd8cd;">
+        <div style="font-family:'Cinzel',serif; font-weight:600; font-size:14px; margin-bottom:4px;">Heidelberg Catechism</div>
+        <div style="font-family:'Marcellus',serif; font-style:italic; font-size:12px; color:#5c574c;">A 1563 catechism prized for its pastoral warmth.</div>
+      </a>
+      <a href="#" style="text-decoration:none; color:#211e19; padding:13px 0; border-top:1px solid #ddd8cd;">
+        <div style="font-family:'Cinzel',serif; font-weight:600; font-size:14px; margin-bottom:4px;">Belgic Confession</div>
+        <div style="font-family:'Marcellus',serif; font-style:italic; font-size:12px; color:#5c574c;">A 1561 statement of Reformed belief, Dutch tradition.</div>
+      </a>
+      <a href="#" style="text-decoration:none; color:#211e19; padding:13px 0; border-top:1px solid #ddd8cd;">
+        <div style="font-family:'Cinzel',serif; font-weight:600; font-size:14px; margin-bottom:4px;">Canons of Dort</div>
+        <div style="font-family:'Marcellus',serif; font-style:italic; font-size:12px; color:#5c574c;">The 1619 Synod’s judgment on grace and election.</div>
+      </a>
+      <a href="#" style="text-decoration:none; color:#211e19; padding:13px 0; border-top:1px solid #ddd8cd;">
+        <div style="font-family:'Cinzel',serif; font-weight:600; font-size:14px; margin-bottom:4px;">Thirty-Nine Articles</div>
+        <div style="font-family:'Marcellus',serif; font-style:italic; font-size:12px; color:#5c574c;">The doctrinal basis of the Church of England, settled 1571.</div>
+      </a>
+      <a href="#" style="text-decoration:none; color:#211e19; padding:13px 0 20px; border-top:1px solid #ddd8cd;">
+        <div style="font-family:'Cinzel',serif; font-weight:600; font-size:14px; margin-bottom:4px;">Luther’s Ninety-Five Theses</div>
+        <div style="font-family:'Marcellus',serif; font-style:italic; font-size:12px; color:#5c574c;">The 1517 propositions that opened the Reformation.</div>
+      </a>
+    </div>
+    <div style="margin:0 20px 26px; padding-top:16px; border-top:1px solid #ddd8cd; text-align:center;">
+      <a href="#" style="font-family:'Marcellus',serif; font-style:italic; font-size:13px; color:#5c574c; text-decoration:none; border-bottom:1px dotted #5c574c;">New here? Start with “What is a confession?”</a>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 1g LIBRARY / CONFESSION TOC ============ -->
+<div id="1g" style="width:390px;">
+  <div style="font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.1em; color:#8a8378; margin-bottom:10px;">1g · /library/westminster-shorter-catechism</div>
+  <div style="width:390px; background:#faf9f6; border:1px solid #e2ddd0; border-radius:14px; box-shadow:0 16px 44px rgba(33,30,25,0.12); overflow:hidden;">
+    <div style="height:28px; display:flex; align-items:center; justify-content:space-between; padding:0 20px; font-family:'Cinzel',serif; font-size:10px; color:#211e19;">
+      <span>9:41</span><span>●●● 100%</span>
+    </div>
+    <div style="padding:12px 20px; text-align:center; border-bottom:1px solid #ddd8cd;">
+      <div style="font-family:'Cinzel',serif; font-weight:600; font-size:12px; letter-spacing:0.14em; text-transform:uppercase;">Confessional Christianity</div>
+    </div>
+    <div style="padding:22px 20px 0 20px; font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase;">
+      <a href="#1f" style="color:#8a8378; text-decoration:none; border-bottom:1px dotted #8a8378;">Library</a>
+    </div>
+    <div style="padding:10px 20px 0; text-align:center;">
+      <div style="font-family:'Cinzel',serif; font-weight:600; font-size:19px; margin-bottom:8px;">Westminster Shorter Catechism</div>
+      <div style="font-family:'Marcellus',serif; font-style:italic; font-size:12.5px; color:#5c574c;">A 1647 primer in question-and-answer form, still used to teach the faith.</div>
+    </div>
+
+    <div style="padding:20px 20px 20px; display:flex; flex-direction:column;">
+      <a href="#1b" style="text-decoration:none; color:#211e19; padding:11px 0; border-top:1px solid #ddd8cd; display:flex; justify-content:space-between; align-items:baseline;">
+        <span style="font-family:'Cinzel',serif; font-weight:600; font-size:13.5px;">† Q. 1 — What is the chief end of man?</span>
+      </a>
+      <a href="#1c" style="text-decoration:none; color:#211e19; padding:11px 0; border-top:1px solid #ddd8cd;">
+        <span style="font-family:'Cinzel',serif; font-weight:600; font-size:13.5px;">Q. 2 — What rule hath God given?</span>
+      </a>
+      <a href="#" style="text-decoration:none; color:#211e19; padding:11px 0; border-top:1px solid #ddd8cd;">
+        <span style="font-family:'Cinzel',serif; font-weight:600; font-size:13.5px;">Q. 3 — What do the Scriptures principally teach?</span>
+      </a>
+      <a href="#" style="text-decoration:none; color:#211e19; padding:11px 0; border-top:1px solid #ddd8cd;">
+        <span style="font-family:'Cinzel',serif; font-weight:600; font-size:13.5px;">Q. 4 — What is God?</span>
+      </a>
+      <a href="#" style="text-decoration:none; color:#211e19; padding:11px 0; border-top:1px solid #ddd8cd; border-bottom:1px solid #ddd8cd;">
+        <span style="font-family:'Cinzel',serif; font-weight:600; font-size:13.5px;">Q. 5 — Are there more Gods than one?</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 1h MEMORIZATION ============ -->
+<div id="1h" style="width:390px;">
+  <div style="font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.1em; color:#8a8378; margin-bottom:10px;">1h · /memorization</div>
+  <div style="width:390px; background:#faf9f6; border:1px solid #e2ddd0; border-radius:14px; box-shadow:0 16px 44px rgba(33,30,25,0.12); overflow:hidden;">
+    <div style="height:28px; display:flex; align-items:center; justify-content:space-between; padding:0 20px; font-family:'Cinzel',serif; font-size:10px; color:#211e19;">
+      <span>9:41</span><span>●●● 100%</span>
+    </div>
+    <div style="padding:12px 20px; text-align:center; border-bottom:1px solid #ddd8cd;">
+      <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
+        <div role="button" aria-haspopup="true" style="display:flex; align-items:center; gap:4px; font-family:'Cinzel',serif; font-size:10px; letter-spacing:0.08em; color:#5c574c; text-transform:uppercase;">
+          <span>Sarah</span><span style="font-size:8px;">▾</span>
+        </div>
+      </div>
+      <div style="font-family:'Cinzel',serif; font-weight:600; font-size:12px; letter-spacing:0.14em; text-transform:uppercase;">Confessional Christianity</div>
+    </div>
+    <div style="padding:22px 20px 0; text-align:center;">
+      <div style="font-family:'Cinzel',serif; font-weight:600; font-size:20px;">Memorization</div>
+    </div>
+
+    <div style="padding:20px 20px 24px; display:flex; flex-direction:column;">
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 0; border-top:1px solid #ddd8cd;">
+        <a href="#1c" style="text-decoration:none; color:#211e19;">
+          <div style="font-family:'Cinzel',serif; font-weight:600; font-size:13.5px; margin-bottom:3px;">Q. 2 — What rule hath God given?</div>
+          <div style="font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase;">Westminster Shorter Catechism</div>
+        </a>
+        <span aria-label="Unmark Q.2 memorized" role="button" style="font-size:18px; color:#ab7e2e;">♥</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 0; border-top:1px solid #ddd8cd;">
+        <div>
+          <div style="font-family:'Cinzel',serif; font-weight:600; font-size:13.5px; margin-bottom:3px;">Q. 1 — What is thy only comfort?</div>
+          <div style="font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase;">Heidelberg Catechism</div>
+        </div>
+        <span aria-label="Unmark memorized" role="button" style="font-size:18px; color:#ab7e2e;">♥</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 0; border-top:1px solid #ddd8cd; border-bottom:1px solid #ddd8cd;">
+        <div>
+          <div style="font-family:'Cinzel',serif; font-weight:600; font-size:13.5px; margin-bottom:3px;">Article 1 — There Is One Only God</div>
+          <div style="font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase;">Belgic Confession</div>
+        </div>
+        <span aria-label="Unmark memorized" role="button" style="font-size:18px; color:#ab7e2e;">♥</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 1i SERIES ============ -->
+<div id="1i" style="width:390px;">
+  <div style="font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.1em; color:#8a8378; margin-bottom:10px;">1i · /series/shorter-catechism</div>
+  <div style="width:390px; background:#faf9f6; border:1px solid #e2ddd0; border-radius:14px; box-shadow:0 16px 44px rgba(33,30,25,0.12); overflow:hidden;">
+    <div style="height:28px; display:flex; align-items:center; justify-content:space-between; padding:0 20px; font-family:'Cinzel',serif; font-size:10px; color:#211e19;">
+      <span>9:41</span><span>●●● 100%</span>
+    </div>
+    <div style="padding:12px 20px; text-align:center; border-bottom:1px solid #ddd8cd;">
+      <div style="font-family:'Cinzel',serif; font-weight:600; font-size:12px; letter-spacing:0.14em; text-transform:uppercase;">Confessional Christianity</div>
+    </div>
+    <div style="padding:24px 44px 0; text-align:center;">
+      <div style="font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:0.12em; color:#8a8378; text-transform:uppercase; margin-bottom:10px;">Series</div>
+      <div style="font-family:'Cinzel',serif; font-weight:600; font-size:20px; margin-bottom:10px;">Walking through the Shorter Catechism</div>
+      <div style="font-family:'Marcellus',serif; font-style:italic; font-size:13.5px; color:#5c574c; line-height:1.6;">A ten-part reading plan through the opening questions of the Westminster Shorter Catechism, one at a time.</div>
+    </div>
+
+    <div style="padding:22px 20px 20px; display:flex; flex-direction:column;">
+      <a href="#1b" style="text-decoration:none; color:#211e19; padding:13px 0; border-top:1px solid #ddd8cd;">
+        <div style="font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase; margin-bottom:4px;">Part 1</div>
+        <div style="font-family:'Cinzel',serif; font-weight:600; font-size:13.5px;">On Enjoying God Forever</div>
+      </a>
+      <a href="#" style="text-decoration:none; color:#211e19; padding:13px 0; border-top:1px solid #ddd8cd;">
+        <div style="font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase; margin-bottom:4px;">Part 2</div>
+        <div style="font-family:'Cinzel',serif; font-weight:600; font-size:13.5px;">The Only Rule</div>
+      </a>
+      <a href="#" style="text-decoration:none; color:#211e19; padding:13px 0 20px; border-top:1px solid #ddd8cd; border-bottom:1px solid #ddd8cd;">
+        <div style="font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase; margin-bottom:4px;">Part 3</div>
+        <div style="font-family:'Cinzel',serif; font-weight:600; font-size:13.5px; color:#8a8378;">What the Scriptures Teach — coming soon</div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 1j AUTHOR ============ -->
+<div id="1j" style="width:390px;">
+  <div style="font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.1em; color:#8a8378; margin-bottom:10px;">1j · /authors/thomas-ainsworth</div>
+  <div style="width:390px; background:#faf9f6; border:1px solid #e2ddd0; border-radius:14px; box-shadow:0 16px 44px rgba(33,30,25,0.12); overflow:hidden;">
+    <div style="height:28px; display:flex; align-items:center; justify-content:space-between; padding:0 20px; font-family:'Cinzel',serif; font-size:10px; color:#211e19;">
+      <span>9:41</span><span>●●● 100%</span>
+    </div>
+    <div style="padding:12px 20px; text-align:center; border-bottom:1px solid #ddd8cd;">
+      <div style="font-family:'Cinzel',serif; font-weight:600; font-size:12px; letter-spacing:0.14em; text-transform:uppercase;">Confessional Christianity</div>
+    </div>
+    <div style="padding:26px 44px 0; text-align:center;">
+      <div style="font-family:'Cinzel',serif; font-weight:600; font-size:20px; margin-bottom:10px;">Thomas Ainsworth</div>
+      <div style="font-family:'Marcellus',serif; font-style:italic; font-size:13.5px; color:#5c574c; line-height:1.6;">Writes on the Reformed confessions and their devotional use. Contributing essayist since 2024.</div>
+    </div>
+
+    <div style="padding:22px 20px 20px; display:flex; flex-direction:column;">
+      <a href="#1b" style="text-decoration:none; color:#211e19; padding:13px 0; border-top:1px solid #ddd8cd;">
+        <div style="font-family:'Cinzel',serif; font-weight:600; font-size:13.5px; margin-bottom:4px;">On Enjoying God Forever</div>
+        <div style="font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase; margin-bottom:4px;">Jul 8</div>
+        <div style="font-family:'Marcellus',serif; font-size:12px; color:#5c574c; line-height:1.6;">Joy as motion, not reward.</div>
+      </a>
+      <a href="#" style="text-decoration:none; color:#211e19; padding:13px 0 20px; border-top:1px solid #ddd8cd;">
+        <div style="font-family:'Cinzel',serif; font-weight:600; font-size:13.5px; margin-bottom:4px;">The Only Rule</div>
+        <div style="font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.1em; color:#8a8378; text-transform:uppercase; margin-bottom:4px;">Jul 2</div>
+        <div style="font-family:'Marcellus',serif; font-size:12px; color:#5c574c; line-height:1.6;">Why everything comes back to Scripture first.</div>
+      </a>
+    </div>
+  </div>
+</div>
+
+</div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { activeCite: 1 };
+  renderVals() {
+    const a = this.state.activeCite;
+    return {
+      isCite1: a === 1,
+      isCite2: a === 2,
+      setCite1: () => this.setState({ activeCite: 1 }),
+      setCite2: () => this.setState({ activeCite: 2 }),
+      cite1Color: a === 1 ? '#ab7e2e' : '#ddd8cd',
+      cite2Color: a === 2 ? '#ab7e2e' : '#ddd8cd',
+      cite1Text: a === 1 ? '#211e19' : '#8a8378',
+      cite2Text: a === 2 ? '#211e19' : '#8a8378',
+    };
+  }
+}
+</script>
+</body>
+</html>
