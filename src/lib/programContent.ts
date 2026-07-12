@@ -1,12 +1,32 @@
-// Client-safe content access for the first program: WSC questions (the data
-// the session teaches — bundled, it IS the program) and the authored prayers.
+// Client-safe content access for programs: catechism questions (the data a
+// session teaches — bundled, it IS the program) and the authored prayers.
+// Every program is a catechism today (WSC, CfYC, ...); each just points at
+// its own normalized-data document and its own prayers file, statically
+// imported so the bundler traces the data directly — a dynamic fs read
+// breaks in Vercel's serverless bundles (see confessionContent.ts).
 import wsc from '../../normalized-data/westminster/wsc.json';
-import prayers from '../../content/programs/catechizing-shorter-catechism/prayers.json';
+import catechismYoungChildren from '../../normalized-data/miscellany/catechism-young-children.json';
+import wscPrayers from '../../content/programs/catechizing-shorter-catechism/prayers.json';
 import { entryQuoteSegments, proofTextGroups, type ProofTextGroup, type TextSegment } from './entryDisplay';
 import { stripFootnoteMarkers } from './helpers';
 import type { ConfessionDocumentJson, ConfessionEntry } from './domain';
 
-const wscDoc = wsc as unknown as ConfessionDocumentJson;
+// Add an entry here (and to PROGRAMS in programs.ts) for each new catechism
+// program — same two-line shape as CFYC.
+export type ContentId = 'WSC' | 'CFYC';
+
+const DOCS: Record<ContentId, ConfessionDocumentJson> = {
+  WSC: wsc as unknown as ConfessionDocumentJson,
+  CFYC: catechismYoungChildren as unknown as ConfessionDocumentJson,
+};
+
+/** The two `ProgramDefinition` fields this module needs — kept structural
+ * (rather than importing the type from programs.ts) to avoid a circular
+ * import, since programs.ts imports `ContentId` from here. */
+interface ProgramRef {
+  contentId: ContentId;
+  slug: string;
+}
 
 export interface ProgramQuestion {
   number: number;
@@ -18,11 +38,11 @@ export interface ProgramQuestion {
 
 const QUESTION_PREFIX = /^Question\s\d+:\s*/;
 
-const wscEntry = (n: number): ConfessionEntry | null => wscDoc.content
+const findEntry = (contentId: ContentId, n: number): ConfessionEntry | null => DOCS[contentId].content
   .find((e) => e.number === n && !e.isParent) ?? null;
 
-export const getWscQuestion = (n: number): ProgramQuestion | null => {
-  const entry = wscEntry(n);
+export const getQuestion = (program: ProgramRef, n: number): ProgramQuestion | null => {
+  const entry = findEntry(program.contentId, n);
   if (!entry) return null;
   return {
     number: n,
@@ -34,16 +54,18 @@ export const getWscQuestion = (n: number): ProgramQuestion | null => {
 
 /** The catechism entry id (e.g. "WSC-1") a question corresponds to — used to
  * key reflections and clause-level citations, which key off the raw entry. */
-export const wscEntryId = (n: number): string | null => wscEntry(n)?.id ?? null;
+export const entryId = (program: ProgramRef, n: number): string | null => (
+  findEntry(program.contentId, n)?.id ?? null
+);
 
 // Per-clause citation markers for the answer (mockup 8a): the answer's own
 // segments (so markers render inline) plus the proof texts each marker
 // supports, so a tap can swap in that clause's specific verse.
-export const getWscQuestionCitations = (n: number): {
+export const getQuestionCitations = (program: ProgramRef, n: number): {
   answerSegments: TextSegment[];
   groups: ProofTextGroup[];
 } | null => {
-  const entry = wscEntry(n);
+  const entry = findEntry(program.contentId, n);
   if (!entry) return null;
   const [, answerLine] = entryQuoteSegments(entry);
   return {
@@ -52,16 +74,20 @@ export const getWscQuestionCitations = (n: number): {
   };
 };
 
-const prayersByNumber = prayers as Record<string, string>;
+// Each program's authored prayers, keyed by its slug — add an entry here
+// alongside content/programs/<slug>/prayers/ once a program has any.
+const PRAYERS: Record<string, Record<string, string>> = {
+  'catechizing-shorter-catechism': wscPrayers as Record<string, string>,
+};
 
 // Authored prayers are written progressively (PRD §5.1); null means
 // "prayer not yet written", which the program surfaces honestly.
-export const getPrayer = (questionNumber: number, childName: string): string | null => {
-  const raw = prayersByNumber[String(questionNumber)];
+export const getPrayer = (program: ProgramRef, questionNumber: number, childName: string): string | null => {
+  const raw = PRAYERS[program.slug]?.[String(questionNumber)];
   if (!raw || questionNumber.toString().startsWith('_')) return null;
   return raw.replaceAll('{name}', childName);
 };
 
-export const hasPrayer = (questionNumber: number): boolean => Boolean(
-  prayersByNumber[String(questionNumber)],
+export const hasPrayer = (program: ProgramRef, questionNumber: number): boolean => Boolean(
+  PRAYERS[program.slug]?.[String(questionNumber)],
 );

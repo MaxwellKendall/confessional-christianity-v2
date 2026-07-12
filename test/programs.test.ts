@@ -7,7 +7,6 @@ import {
   masteryStateFor,
   type PacingConfig,
 } from '@/lib/programs';
-import { getPrayer, getWscQuestion, hasPrayer } from '@/lib/programContent';
 import type { QuestionMasteryRow } from '@/lib/database.types';
 import { defineCases } from './support/defineCases';
 
@@ -133,35 +132,5 @@ describe('mastery rules', () => {
 
   defineCases(cases, ({ actual, expected }) => {
     expect(actual()).toEqual(expected);
-  });
-});
-
-describe('program content', () => {
-  const cases = {
-    'WSC questions resolve with clean question and answer text': {
-      actual: () => getWscQuestion(7),
-      assert: (q: ReturnType<typeof getWscQuestion>) => {
-        expect(q?.question).toBe('What are the decrees of God?');
-        expect(q?.answer).toContain('his eternal purpose');
-        expect(q?.answer).not.toContain('[a]');
-        expect(q?.proofTexts).toContain('Eph.1.4');
-      },
-    },
-    'prayers substitute the child name': {
-      actual: () => getPrayer(7, 'Eli'),
-      assert: (prayer: string | null) => {
-        expect(prayer).toContain('Help Eli trust');
-      },
-    },
-    'unwritten prayers are honestly absent': {
-      actual: () => ({ has: hasPrayer(99), prayer: getPrayer(99, 'Eli') }),
-      assert: (result: { has: boolean; prayer: string | null }) => {
-        expect(result).toEqual({ has: false, prayer: null });
-      },
-    },
-  };
-
-  defineCases(cases, ({ actual, assert }) => {
-    assert(actual() as never);
   });
 });

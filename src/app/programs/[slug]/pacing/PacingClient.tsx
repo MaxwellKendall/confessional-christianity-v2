@@ -141,7 +141,7 @@ export function PacingClient({ slug }: { slug: string }) {
     <div className="pb-6">
       <div className="border-b border-hairline px-5 pt-4 pb-3 text-center label-caps text-[9.5px] tracking-[0.1em]">
         <Link href={`/programs/${slug}`} className="dotted-link text-ink-3">
-          Westminster Shorter Catechism
+          {program.title}
         </Link>
       </div>
 

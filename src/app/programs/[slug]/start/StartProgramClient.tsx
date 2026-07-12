@@ -39,7 +39,7 @@ export function StartProgramClient({ slug }: { slug: string }) {
       setError(validation);
       return;
     }
-    startLocalCatechismTrack(program.catechismId, startingQuestion);
+    startLocalCatechismTrack(program.contentId, startingQuestion);
     router.push(`/programs/${slug}/session`);
   };
 
@@ -53,7 +53,7 @@ export function StartProgramClient({ slug }: { slug: string }) {
     setStartingId(child.id);
     try {
       const existing = child.catechism_assignments
-        ?.some((a) => a.catechism_id === program.catechismId);
+        ?.some((a) => a.catechism_id === program.contentId);
       if (!existing) await startProgram(child, startingQuestion);
       setActiveChildId(child.id);
       router.push(`/programs/${slug}/session`);
@@ -67,13 +67,13 @@ export function StartProgramClient({ slug }: { slug: string }) {
     <div className="pb-6">
       <div className="border-b border-hairline px-5 pt-4 pb-3 text-center label-caps text-[9.5px] tracking-[0.1em]">
         <Link href={`/programs/${slug}`} className="dotted-link text-ink-3">
-          Westminster Shorter Catechism
+          {program.title}
         </Link>
       </div>
 
       <div className="px-8 pt-9 text-center">
         <div className="label-caps mb-3 text-[9.5px] text-ink-3">Begin</div>
-        <h1 className="mb-2 font-display text-lg font-semibold">Start the Shorter Catechism</h1>
+        <h1 className="mb-2 font-display text-lg font-semibold">Start {program.title}</h1>
         <p className="mx-auto mb-7 max-w-[24rem] text-[12.5px] italic leading-relaxed text-ink-2">
           Begin with Question 1, or jump to the question your family is already
           learning. Progress can be saved on this device before you create an
@@ -91,11 +91,11 @@ export function StartProgramClient({ slug }: { slug: string }) {
         </label>
         <select
           id="catechism"
-          value={program.catechismId}
+          value={program.contentId}
           disabled
           className="w-full rounded-[2px] border border-hairline bg-card px-3 py-3 font-display text-[14px] text-ink"
         >
-          <option value={program.catechismId}>Westminster Shorter Catechism</option>
+          <option value={program.contentId}>{program.title}</option>
         </select>
 
         <label className="label-caps mt-5 mb-2 block text-[9.5px] tracking-[0.1em] text-ink-3" htmlFor="starting-question">

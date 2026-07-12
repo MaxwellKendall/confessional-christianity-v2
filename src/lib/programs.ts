@@ -1,7 +1,7 @@
-// The programs domain (PRD §5). A program is an authored, ordered plan; the
-// flagship instance is the paced walk through the Westminster Shorter
-// Catechism. The session-building and mastery rules here are pure functions
-// so they can be pinned by tests independent of Supabase.
+// The programs domain (PRD §5). A program is an authored, ordered walk
+// through a catechism. The session-building and mastery rules here are pure
+// functions so they can be pinned by tests independent of Supabase.
+import type { ContentId } from './programContent';
 import type { MasteryState, ProgramPacingRow, QuestionMasteryRow } from './database.types';
 
 export interface ProgramDefinition {
@@ -11,14 +11,14 @@ export interface ProgramDefinition {
   title: string;
   /** short landing/browse description — handoff copy */
   description: string;
-  /** the catechism the plan traverses */
-  catechismId: 'WSC';
+  /** the catechism the program traverses */
+  contentId: ContentId;
   totalQuestions: number;
   estimatedMinutes: number;
 }
 
-// The first program (PRD §5.1): question, its own proof-text scripture, and
-// an authored prayer — teaching notes explicitly deferred (§5.3).
+// Question, its own proof-text scripture, and an authored prayer — teaching
+// notes explicitly deferred (§5.3).
 export const PROGRAMS: ProgramDefinition[] = [
   {
     slug: 'catechizing-shorter-catechism',
@@ -27,9 +27,19 @@ export const PROGRAMS: ProgramDefinition[] = [
     description:
       'The Westminster Shorter Catechism paired with Scripture, prayer, and '
       + 'progress for family teaching.',
-    catechismId: 'WSC',
+    contentId: 'WSC',
     totalQuestions: 107,
     estimatedMinutes: 15,
+  },
+  {
+    slug: 'catechism-for-young-children',
+    kind: 'Family Catechesis',
+    title: 'Catechism for Young Children',
+    description:
+      'A simple, memorable introduction to the faith for the youngest learners.',
+    contentId: 'CFYC',
+    totalQuestions: 145,
+    estimatedMinutes: 10,
   },
 ];
 

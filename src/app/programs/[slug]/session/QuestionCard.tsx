@@ -10,7 +10,8 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 
 import { fetchEsvText } from '@/lib/esvClient';
-import { getWscQuestion, getWscQuestionCitations, wscEntryId } from '@/lib/programContent';
+import { entryId as getEntryId, getQuestion, getQuestionCitations } from '@/lib/programContent';
+import type { ProgramDefinition } from '@/lib/programs';
 
 // Keeps the "Now Showing" pill on one line at the session frame's mobile
 // width (390px, per the mockups — the app locks to this width even on wide
@@ -29,14 +30,14 @@ function truncateClause(text: string): string {
 }
 
 export function QuestionCard({
-  slug, questionNumber, childName,
-}: { slug: string; questionNumber: number; childName: string }) {
-  const question = getWscQuestion(questionNumber);
+  program, questionNumber, childName,
+}: { program: ProgramDefinition; questionNumber: number; childName: string }) {
+  const question = getQuestion(program, questionNumber);
   // Memoized so its identity is stable across re-renders within the same
   // question — otherwise the reset effect below (keyed on citations.groups)
   // would fire on every click and snap the active clause back to the first.
-  const citations = useMemo(() => getWscQuestionCitations(questionNumber), [questionNumber]);
-  const entryId = wscEntryId(questionNumber);
+  const citations = useMemo(() => getQuestionCitations(program, questionNumber), [program, questionNumber]);
+  const entryId = getEntryId(program, questionNumber);
 
   const [activeMarker, setActiveMarker] = useState<string | null>(citations?.groups[0]?.marker ?? null);
   const [verseTexts, setVerseTexts] = useState<Record<string, string | null>>({});
@@ -140,7 +141,7 @@ export function QuestionCard({
 
       <div className="flex flex-col gap-2.5">
         <Link
-          href={`/programs/${slug}/prayer/${questionNumber}?child=${encodeURIComponent(childName)}`}
+          href={`/programs/${program.slug}/prayer/${questionNumber}?child=${encodeURIComponent(childName)}`}
           className="flex items-center gap-3 rounded-sm bg-fill px-3.5 py-3 text-left text-ink no-underline"
         >
           <div className="grow">

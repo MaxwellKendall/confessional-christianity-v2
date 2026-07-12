@@ -37,12 +37,12 @@ export function GuestQuestionClient({ slug }: { slug: string }) {
       ? requestedStart
       : 1;
     setTrack(
-      getLocalCatechismTrack(program.catechismId)
-        ?? startLocalCatechismTrack(program.catechismId, validStart),
+      getLocalCatechismTrack(program.contentId)
+        ?? startLocalCatechismTrack(program.contentId, validStart),
     );
     const learner = getLocalLearner();
     setLearnerName(learner.name === DEFAULT_LEARNER_NAME ? null : learner.name);
-  }, [program.catechismId, program.totalQuestions]);
+  }, [program.contentId, program.totalQuestions]);
 
   const questionNumber = track ? Math.min(track.currentQuestion, program.totalQuestions) : null;
 
@@ -80,7 +80,7 @@ export function GuestQuestionClient({ slug }: { slug: string }) {
 
       <div className="flex flex-1 flex-col items-center justify-center px-[34px] py-6 text-center">
         {questionNumber !== null && (
-          <QuestionCard slug={slug} questionNumber={questionNumber} childName={learnerName ?? 'your child'} />
+          <QuestionCard program={program} questionNumber={questionNumber} childName={learnerName ?? 'your child'} />
         )}
       </div>
 
@@ -98,7 +98,7 @@ export function GuestQuestionClient({ slug }: { slug: string }) {
           </Link>
           <button
             type="button"
-            onClick={() => setTrack(advanceLocalQuestion(program.catechismId, program.totalQuestions))}
+            onClick={() => setTrack(advanceLocalQuestion(program.contentId, program.totalQuestions))}
             className="label-caps cursor-pointer border-none bg-transparent pb-0.5 text-[11px] tracking-[0.1em] text-ink"
             style={{ borderBottom: '1px dotted var(--color-ink)' }}
           >

@@ -18,7 +18,7 @@ import {
   nextSessionDayName,
   type ReviewMark,
 } from '@/lib/programs';
-import { getWscQuestion } from '@/lib/programContent';
+import { getQuestion } from '@/lib/programContent';
 import { GuestQuestionClient } from './GuestQuestionClient';
 import { QuestionCard } from './QuestionCard';
 
@@ -218,7 +218,7 @@ export function SessionClient({ slug }: { slug: string }) {
         <div className="label-caps mb-6 text-[10px] tracking-[0.14em] text-ochre">
           New · Question {step.questionNumber}
         </div>
-        <QuestionCard slug={slug} questionNumber={step.questionNumber} childName={displayName} />
+        <QuestionCard program={program} questionNumber={step.questionNumber} childName={displayName} />
       </Frame>
     );
   }
@@ -243,7 +243,7 @@ export function SessionClient({ slug }: { slug: string }) {
         <div className="label-caps mb-10 text-[10px] tracking-[0.14em] text-ink-3">Review</div>
         <div className="flex w-full flex-col gap-10">
           {plan.reviewQuestions.map((n) => {
-            const q = getWscQuestion(n);
+            const q = getQuestion(program, n);
             const marked = n in marks;
             return (
               <div key={n} className="w-full">

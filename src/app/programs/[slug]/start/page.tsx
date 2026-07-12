@@ -4,15 +4,21 @@ import { notFound } from 'next/navigation';
 import { getProgram, PROGRAMS } from '@/lib/programs';
 import { StartProgramClient } from './StartProgramClient';
 
-export const metadata: Metadata = {
-  title: 'Start the Shorter Catechism',
-  robots: { index: false },
-};
-
 export const dynamicParams = false;
 
 export function generateStaticParams(): { slug: string }[] {
   return PROGRAMS.map(({ slug }) => ({ slug }));
+}
+
+export async function generateMetadata(
+  { params }: { params: Promise<{ slug: string }> },
+): Promise<Metadata> {
+  const { slug } = await params;
+  const program = getProgram(slug);
+  return {
+    title: program ? `Start ${program.title}` : 'Start a Catechism',
+    robots: { index: false },
+  };
 }
 
 export default async function StartProgramPage(

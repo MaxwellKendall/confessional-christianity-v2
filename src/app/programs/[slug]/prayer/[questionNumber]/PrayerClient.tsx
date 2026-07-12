@@ -6,17 +6,18 @@
 // expansion under the answer.
 import { useRouter, useSearchParams } from 'next/navigation';
 
-import { getPrayer, getWscQuestion } from '@/lib/programContent';
+import { getPrayer, getQuestion } from '@/lib/programContent';
+import type { ProgramDefinition } from '@/lib/programs';
 
 export function PrayerClient({
-  questionNumber, totalQuestions,
-}: { questionNumber: number; totalQuestions: number }) {
+  program, questionNumber, totalQuestions,
+}: { program: ProgramDefinition; questionNumber: number; totalQuestions: number }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const childName = searchParams.get('child') ?? 'your child';
 
-  const question = getWscQuestion(questionNumber);
-  const prayer = getPrayer(questionNumber, childName);
+  const question = getQuestion(program, questionNumber);
+  const prayer = getPrayer(program, questionNumber, childName);
 
   const goBack = () => router.back();
 

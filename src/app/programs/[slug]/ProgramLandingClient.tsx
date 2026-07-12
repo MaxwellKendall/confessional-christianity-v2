@@ -17,7 +17,7 @@ import {
   type LocalCatechismTrack,
 } from '@/lib/localCatechismProgress';
 import { getProgram, masteryStateFor } from '@/lib/programs';
-import { getWscQuestion, hasPrayer } from '@/lib/programContent';
+import { getQuestion, hasPrayer } from '@/lib/programContent';
 
 const CONTENTS_WINDOW = 6;
 
@@ -36,8 +36,8 @@ export function ProgramLandingClient({ slug }: { slug: string }) {
 
   useEffect(() => {
     if (authLoading || user) return;
-    setLocalTrack(getLocalCatechismTrack(program.catechismId));
-  }, [authLoading, program.catechismId, user]);
+    setLocalTrack(getLocalCatechismTrack(program.contentId));
+  }, [authLoading, program.contentId, user]);
 
   const child = children.find((c) => c.id === activeId) ?? null;
   const {
@@ -190,7 +190,7 @@ export function ProgramLandingClient({ slug }: { slug: string }) {
         <div className="label-caps mb-2 text-[9.5px] text-ink-3">Contents</div>
         <div className="flex flex-col">
           {contentsNumbers.map((n) => {
-            const q = getWscQuestion(n);
+            const q = getQuestion(program, n);
             const row = mastery.find((m) => m.question_number === n);
             const state = masteryStateFor(row);
             const introduced = Boolean(row) || Boolean(localTrack?.milestones[String(n)]);
@@ -204,7 +204,7 @@ export function ProgramLandingClient({ slug }: { slug: string }) {
                   <div className={`font-display text-[13px] font-semibold ${introduced || n === visibleCurrentQuestion ? 'text-ink' : 'text-ink-3'}`}>
                     Q. {n} — {q?.question}
                   </div>
-                  {!hasPrayer(n) && (
+                  {!hasPrayer(program, n) && (
                     <div className="mt-0.5 text-[10.5px] italic text-heart-reviewing">
                       Prayer not yet written
                     </div>

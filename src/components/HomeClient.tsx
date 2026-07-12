@@ -106,8 +106,8 @@ function GuestLanding() {
     e.preventDefault();
     if (!trimmedName) return;
     setLocalLearner(trimmedName, parsedAge);
-    if (!getLocalCatechismTrack(PROGRAM.catechismId)) {
-      startLocalCatechismTrack(PROGRAM.catechismId, 1);
+    if (!getLocalCatechismTrack(PROGRAM.contentId)) {
+      startLocalCatechismTrack(PROGRAM.contentId, 1);
     }
     router.push(`/programs/${PROGRAM.slug}/session`);
   };
@@ -183,7 +183,7 @@ export function HomeClient({ reflections }: { reflections: HomeReflection[] }) {
 
   useEffect(() => {
     if (authLoading || user) return;
-    setLocalTrack(getLocalCatechismTrack(PROGRAM.catechismId));
+    setLocalTrack(getLocalCatechismTrack(PROGRAM.contentId));
     const learner = getLocalLearner();
     setLearnerName(learner.name === DEFAULT_LEARNER_NAME ? null : learner.name);
     setLocalReady(true);
@@ -192,7 +192,7 @@ export function HomeClient({ reflections }: { reflections: HomeReflection[] }) {
   const loading = authLoading || childrenLoading;
   const activeChild = children.find((c) => c.id === activeId) ?? null;
   const assignment = activeChild?.catechism_assignments
-    ?.find((a) => a.catechism_id === PROGRAM.catechismId) ?? null;
+    ?.find((a) => a.catechism_id === PROGRAM.contentId) ?? null;
 
   const switchChild = (child: ChildWithRole) => {
     setActiveChildId(child.id);

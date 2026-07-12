@@ -26,7 +26,7 @@ export function ProgramsIndexClient() {
             .map((child) => ({
               child,
               assignment: child.catechism_assignments
-                ?.find((a) => a.catechism_id === program.catechismId) ?? null,
+                ?.find((a) => a.catechism_id === program.contentId) ?? null,
             }))
             .filter((r) => r.assignment);
           return (

@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 
 import { getProgram, PROGRAMS } from '@/lib/programs';
-import { getWscQuestion } from '@/lib/programContent';
+import { getQuestion } from '@/lib/programContent';
 import { PrayerClient } from './PrayerClient';
 
 export const metadata: Metadata = {
@@ -26,10 +26,10 @@ export default async function PrayerPage(
   const { slug, questionNumber } = await params;
   const program = getProgram(slug);
   const n = Number(questionNumber);
-  if (!program || !Number.isInteger(n) || !getWscQuestion(n)) notFound();
+  if (!program || !Number.isInteger(n) || !getQuestion(program, n)) notFound();
   return (
     <Suspense fallback={<div className="min-h-64" aria-hidden="true" />}>
-      <PrayerClient questionNumber={n} totalQuestions={program.totalQuestions} />
+      <PrayerClient program={program} questionNumber={n} totalQuestions={program.totalQuestions} />
     </Suspense>
   );
 }

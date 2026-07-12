@@ -40,7 +40,7 @@ export const useProgramState = (program: ProgramDefinition, child: ChildWithRole
   const [loading, setLoading] = useState(true);
 
   const assignment = child?.catechism_assignments
-    ?.find((a) => a.catechism_id === program.catechismId) ?? null;
+    ?.find((a) => a.catechism_id === program.contentId) ?? null;
 
   const fetchState = useCallback(async () => {
     if (!supabase || !child || !assignment) {
@@ -84,7 +84,7 @@ export const useProgramState = (program: ProgramDefinition, child: ChildWithRole
       .from('catechism_assignments')
       .insert({
         child_id: targetChild.id,
-        catechism_id: program.catechismId,
+        catechism_id: program.contentId,
         current_question: startingQuestion,
       })
       .select()
