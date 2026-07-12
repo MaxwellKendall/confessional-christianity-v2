@@ -8,6 +8,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { useAuth } from '@/context/AuthContext';
+import { LOCAL_PROGRESS_CLAIMED_EVENT } from '@/lib/claimLocalProgress';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import type { ChildWithRole, GuardianRole } from '@/lib/database.types';
 
@@ -67,6 +68,14 @@ export const useChildren = () => {
 
   useEffect(() => {
     fetchChildren();
+  }, [fetchChildren]);
+
+  // Guest progress claimed into a real child record while this list was
+  // already mounted (LocalProgressMigrator) — pick up the new child.
+  useEffect(() => {
+    const onClaimed = () => { fetchChildren(); };
+    window.addEventListener(LOCAL_PROGRESS_CLAIMED_EVENT, onClaimed);
+    return () => window.removeEventListener(LOCAL_PROGRESS_CLAIMED_EVENT, onClaimed);
   }, [fetchChildren]);
 
   // name + age only (PRD §12): age drives pacing defaults, not birthdate.
