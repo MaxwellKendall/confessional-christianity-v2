@@ -2,7 +2,7 @@
 
 // Add a child (mockup 5b, PRD §12): a name and an age — age sets pacing
 // defaults, nothing more. Reachable from onboarding, the homepage +, and the
-// start-a-program flow.
+// saved catechism flow.
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
@@ -31,7 +31,7 @@ export function AddChildClient() {
           <Link href="/auth/signup" className="dotted-link text-ink">Create an account</Link>
           {' '}or{' '}
           <Link href="/auth/signin" className="dotted-link text-ink">sign in</Link>
-          {' '}first — a child’s plan needs somewhere to live.
+          {' '}first — adding another child needs durable household progress.
         </p>
       </div>
     );
@@ -61,7 +61,7 @@ export function AddChildClient() {
     <div className="px-9 pt-14 pb-10 text-center">
       <h1 className="mb-2.5 font-display text-[19px] font-semibold">Who Are You Catechizing?</h1>
       <p className="mb-10 text-[13px] italic leading-relaxed text-ink-2">
-        Just a name and an age — age sets a sensible starting pace, nothing more.
+        Just a name and an age — age sets a sensible catechism pace, nothing more.
       </p>
 
       <form onSubmit={onSubmit} className="text-left">

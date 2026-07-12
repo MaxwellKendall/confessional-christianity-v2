@@ -5,7 +5,7 @@ import { getProgram, PROGRAMS } from '@/lib/programs';
 import { PacingClient } from './PacingClient';
 
 export const metadata: Metadata = {
-  title: 'Configuration',
+  title: 'Pacing',
   robots: { index: false },
 };
 

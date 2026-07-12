@@ -3,9 +3,9 @@ import type { Metadata } from 'next';
 import { ProgramsIndexClient } from './ProgramsIndexClient';
 
 export const metadata: Metadata = {
-  title: 'Programs',
+  title: 'Catechisms',
   description:
-    'Structured ways to read, memorize, and teach the catechisms — at your own pace, or your child’s.',
+    'Historic catechisms with Scripture, prayer, and saved progress.',
   alternates: { canonical: '/programs' },
 };
 

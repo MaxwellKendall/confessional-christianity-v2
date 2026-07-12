@@ -23,10 +23,10 @@ export const PROGRAMS: ProgramDefinition[] = [
   {
     slug: 'catechizing-shorter-catechism',
     kind: 'Family Catechesis',
-    title: 'Catechizing Your Child: The Shorter Catechism',
+    title: 'Westminster Shorter Catechism',
     description:
-      'A paced, scripture-rooted plan for teaching the Westminster Shorter '
-      + 'Catechism to a child, one question at a time.',
+      'The Westminster Shorter Catechism paired with Scripture, prayer, and '
+      + 'progress for family teaching.',
     catechismId: 'WSC',
     totalQuestions: 107,
     estimatedMinutes: 15,

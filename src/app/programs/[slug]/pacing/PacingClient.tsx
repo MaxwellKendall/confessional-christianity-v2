@@ -1,6 +1,6 @@
 'use client';
 
-// Program configuration (mockup 2e, PRD §5.4): the household's controls —
+// Catechism pacing (mockup 2e, PRD §5.4): the household's controls —
 // new questions per session, review depth, what counts as mastered, sessions
 // per week, whether scripture shows every time. Defaults are sane; nothing
 // is locked. Changes apply to the next session.
@@ -114,12 +114,12 @@ export function PacingClient({ slug }: { slug: string }) {
   if (!child || !assignment) {
     return (
       <div className="px-9 pt-14 text-center">
-        <h1 className="mb-2.5 font-display text-[19px] font-semibold">Nothing to Configure Yet</h1>
+        <h1 className="mb-2.5 font-display text-[19px] font-semibold">No Saved Progress Yet</h1>
         <p className="text-[13px] italic leading-relaxed text-ink-2">
           <Link href={`/programs/${slug}`} className="dotted-link text-ink">
-            Start the program
+            Begin the catechism
           </Link>
-          {' '}for a child first.
+          {' '}for a child before changing pacing.
         </p>
       </div>
     );
@@ -141,12 +141,12 @@ export function PacingClient({ slug }: { slug: string }) {
     <div className="pb-6">
       <div className="border-b border-hairline px-5 pt-4 pb-3 text-center label-caps text-[9.5px] tracking-[0.1em]">
         <Link href={`/programs/${slug}`} className="dotted-link text-ink-3">
-          Catechizing Your Child
+          Westminster Shorter Catechism
         </Link>
       </div>
 
       <div className="px-6 pt-4 text-center">
-        <h1 className="mb-2 font-display text-[19px] font-semibold">How This Plan Is Paced</h1>
+        <h1 className="mb-2 font-display text-[19px] font-semibold">How This Catechism Is Paced</h1>
         <div className="label-caps mb-2.5 text-[9.5px] tracking-[0.1em] text-ink-3">
           Adjusting for: {child.name}
         </div>

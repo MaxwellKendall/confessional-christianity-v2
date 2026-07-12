@@ -1,6 +1,6 @@
 'use client';
 
-// /programs (mockup 2a): a plain list grouped by kind, each row showing what
+// /programs (mockup 2a): a plain catechism list, each row showing what
 // it is, who it's for, and — if in progress — a one-line status.
 import Link from 'next/link';
 
@@ -13,10 +13,10 @@ export function ProgramsIndexClient() {
   return (
     <div className="pb-6">
       <div className="px-5 pt-6 text-center">
-        <h1 className="mb-2 font-display text-xl font-semibold">Programs</h1>
+        <h1 className="mb-2 font-display text-xl font-semibold">Catechisms</h1>
         <p className="px-2 text-[13px] italic leading-relaxed text-ink-2">
-          Structured ways to read, memorize, and teach — at your own pace, or
-          your child’s.
+          Read, memorize, and teach historic catechisms with Scripture,
+          prayer, and saved progress.
         </p>
       </div>
 
@@ -44,7 +44,7 @@ export function ProgramsIndexClient() {
                 <div key={child.id} className="label-caps text-[9.5px] tracking-[0.1em] text-ochre">
                   {assignment!.completed_at
                     ? `Complete · ${child.name}`
-                    : `In progress · ${child.name}’s plan · Q. ${Math.min(assignment!.current_question, program.totalQuestions)} of ${program.totalQuestions}`}
+                    : `In progress · tracking for ${child.name} · Q. ${Math.min(assignment!.current_question - 1, program.totalQuestions)} of ${program.totalQuestions}`}
                 </div>
               ))}
             </Link>

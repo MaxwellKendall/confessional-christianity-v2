@@ -2,8 +2,8 @@ import Link from 'next/link';
 
 import { SearchIcon } from './SearchIcon';
 
-// Primary nav per PRD §4: wordmark, Programs first among small-caps text
-// links (Programs · Reflections · Library), search icon. No per-child
+// Primary nav per PRD §4: wordmark, Catechisms first among small-caps text
+// links (Catechisms · Reflections · Library), search icon. No per-child
 // switcher lives here (§5.5).
 export function SiteHeader() {
   return (
@@ -22,7 +22,7 @@ export function SiteHeader() {
         </Link>
       </div>
       <nav className="mt-3 flex justify-center gap-[22px] label-caps text-[9.5px] tracking-[0.1em] text-ink-3">
-        <Link href="/programs" className="text-ink no-underline">Programs</Link>
+        <Link href="/programs" className="text-ink no-underline">Catechisms</Link>
         <Link href="/reflections" className="text-ink-3 no-underline">Reflections</Link>
         <Link href="/library" className="text-ink-3 no-underline">Library</Link>
       </nav>

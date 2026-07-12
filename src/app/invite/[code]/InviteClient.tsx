@@ -28,7 +28,7 @@ export function InviteClient({ code }: { code: string }) {
 
   return (
     <div className="px-9 pt-14 text-center">
-      <div className="label-caps mb-3 text-[9.5px] text-ink-3">Shared Plan</div>
+      <div className="label-caps mb-3 text-[9.5px] text-ink-3">Shared Progress</div>
       <h1 className="mb-2.5 font-display text-[19px] font-semibold">
         Join {invite.child?.name ?? 'this child'}’s Guardians
       </h1>
