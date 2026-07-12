@@ -149,3 +149,18 @@ body {
   color: var(--color-ink);
   text-transform: uppercase;
 }
+
+/* solid variant — the primary CTAs on the entry funnel (mockups 7b/7d) */
+@utility action-button-solid {
+  display: block;
+  text-align: center;
+  padding: 0.8125rem;
+  border: 1px solid var(--color-ink);
+  border-radius: 2px;
+  background: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 0.6875rem;
+  letter-spacing: 0.12em;
+  color: var(--color-card);
+  text-transform: uppercase;
+}
