@@ -73,6 +73,16 @@ export const entryId = (program: ProgramRef, n: number): string | null => (
   findEntry(program.contentId, n)?.id ?? null
 );
 
+/** Every question's number and text, in order — the index behind "Jump to
+ * Question" (mockup 8d), which browses/searches the whole catechism. */
+export const listQuestions = (program: ProgramRef): { number: number; question: string }[] => (
+  DOCS[program.contentId].content
+    .filter((e) => !e.isParent)
+    .map((e) => ({ number: questionNumberOf(e), question: (e.title ?? '').replace(QUESTION_PREFIX, '') }))
+    .filter((e): e is { number: number; question: string } => e.number !== null)
+    .sort((a, b) => a.number - b.number)
+);
+
 // Per-clause citation markers for the answer (mockup 8a): the answer's own
 // segments (so markers render inline) plus the proof texts each marker
 // supports, so a tap can swap in that clause's specific verse.

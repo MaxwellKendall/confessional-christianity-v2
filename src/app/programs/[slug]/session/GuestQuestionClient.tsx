@@ -14,7 +14,6 @@ import {
   advanceLocalQuestion,
   getLocalCatechismTrack,
   getLocalLearner,
-  jumpToLocalQuestion,
   DEFAULT_LEARNER_NAME,
   startLocalCatechismTrack,
   type LocalCatechismTrack,
@@ -26,8 +25,6 @@ export function GuestQuestionClient({ slug }: { slug: string }) {
   const program = getProgram(slug)!;
   const [track, setTrack] = useState<LocalCatechismTrack | null>(null);
   const [learnerName, setLearnerName] = useState<string | null>(null);
-  const [jumping, setJumping] = useState(false);
-  const [jumpValue, setJumpValue] = useState('');
 
   // Zero extra steps: a visitor with no track starts at Q1 (or a valid
   // ?start=N) the moment they arrive.
@@ -70,54 +67,19 @@ export function GuestQuestionClient({ slug }: { slug: string }) {
 
   const possessive = learnerName ? `${learnerName}’s` : 'Your';
 
-  const goToJumpValue = () => {
-    const n = Number(jumpValue);
-    if (!Number.isInteger(n) || n < 1 || n > program.totalQuestions) return;
-    setTrack(jumpToLocalQuestion(program.contentId, n, program.totalQuestions));
-    setJumping(false);
-    setJumpValue('');
-  };
-
   return (
     <div className="flex min-h-[calc(100dvh-7rem)] flex-col">
       <div className="px-6 pt-5 text-center">
         <div className="label-caps text-[9.5px] tracking-[0.12em] text-ink-3">
           {possessive} {program.title}
         </div>
-        <button
-          type="button"
-          onClick={() => setJumping((v) => !v)}
-          className="label-caps mt-1 cursor-pointer border-none bg-transparent p-0 text-[9.5px] tracking-[0.12em] text-ochre"
+        <Link
+          href={`/programs/${slug}/session/jump`}
+          className="label-caps mt-1 inline-block text-[9.5px] tracking-[0.12em] text-ochre no-underline"
           style={{ borderBottom: '1px dotted var(--color-ochre)' }}
         >
-          Question {questionNumber} of {program.totalQuestions}
-        </button>
-        {jumping && (
-          <form
-            onSubmit={(e) => { e.preventDefault(); goToJumpValue(); }}
-            className="mx-auto mt-2.5 flex max-w-52 items-center gap-2"
-          >
-            <input
-              type="number"
-              inputMode="numeric"
-              min={1}
-              max={program.totalQuestions}
-              value={jumpValue}
-              onChange={(e) => setJumpValue(e.target.value)}
-              aria-label="Jump to question"
-              placeholder="Q. #"
-              autoFocus
-              className="w-full min-w-0 rounded-[2px] border border-hairline bg-white px-2.5 py-1.5 text-center font-body text-[13px] text-ink outline-none placeholder:text-ink-3"
-            />
-            <button
-              type="submit"
-              className="label-caps shrink-0 cursor-pointer border-none bg-transparent p-0 text-[9.5px] tracking-[0.1em] text-ink"
-              style={{ borderBottom: '1px dotted var(--color-ink)' }}
-            >
-              Go
-            </button>
-          </form>
-        )}
+          Question {questionNumber} of {program.totalQuestions} ▾
+        </Link>
       </div>
 
       <div className="flex flex-1 flex-col items-center justify-center px-[34px] py-6 text-center">
