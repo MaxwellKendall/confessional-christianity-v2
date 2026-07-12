@@ -78,14 +78,14 @@ export const useProgramState = (program: ProgramDefinition, child: ChildWithRole
 
   // Starting a program is choosing a child for it (PRD §5.5): one assignment
   // plus its pacing row seeded from the child's age.
-  const startProgram = async (targetChild: ChildWithRole) => {
+  const startProgram = async (targetChild: ChildWithRole, startingQuestion = 1) => {
     if (!supabase) throw new Error('Supabase not configured');
     const { data, error } = await supabase
       .from('catechism_assignments')
       .insert({
         child_id: targetChild.id,
         catechism_id: program.catechismId,
-        current_question: 1,
+        current_question: startingQuestion,
       })
       .select()
       .single();

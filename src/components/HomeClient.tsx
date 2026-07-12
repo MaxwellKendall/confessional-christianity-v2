@@ -1,9 +1,11 @@
 'use client';
 
-// Homepage (mockup 6c + PRD §8): one child's context at a time via the
+// Homepage. Signed in (mockup 7e): one child's context at a time via the
 // circular avatar switcher — tapping another child's avatar goes straight
 // into that child's session; the continue card has no button, the whole card
-// is the tap target.
+// is the tap target. Signed out (mockup 7b): one held screen asking only the
+// child's name and age, then straight to the first question — no account
+// wall anywhere before the save gate.
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -11,6 +13,15 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useChildren } from '@/hooks/useChildren';
 import { getActiveChildId, setActiveChildId } from '@/lib/activeChild';
+import {
+  DEFAULT_LEARNER_NAME,
+  getLocalCatechismTrack,
+  getLocalLearner,
+  localProgressLabel,
+  setLocalLearner,
+  startLocalCatechismTrack,
+  type LocalCatechismTrack,
+} from '@/lib/localCatechismProgress';
 import { PROGRAMS } from '@/lib/programs';
 import { ProgressBar } from './ProgressBar';
 import type { ChildWithRole } from '@/lib/database.types';
@@ -26,21 +37,29 @@ export interface HomeReflection {
   dateShort: string;
 }
 
-function SupportingSections({ reflections }: { reflections: HomeReflection[] }) {
+function SupportingSections({
+  reflections,
+  showCatechisms = true,
+}: {
+  reflections: HomeReflection[];
+  showCatechisms?: boolean;
+}) {
   return (
     <>
-      <div className="mx-5 mt-6 border-t border-hairline pt-4">
-        <div className="mb-2.5 flex items-baseline justify-between">
-          <div className="label-caps text-[10px] tracking-[0.14em] text-ink-3">Programs</div>
-          <Link href="/programs" className="label-caps dotted-link text-[9.5px] tracking-[0.1em] text-ink-3">
-            See All
+      {showCatechisms && (
+        <div className="mx-5 mt-6 border-t border-hairline pt-4">
+          <div className="mb-2.5 flex items-baseline justify-between">
+            <div className="label-caps text-[10px] tracking-[0.14em] text-ink-3">Catechisms</div>
+            <Link href="/programs" className="label-caps dotted-link text-[9.5px] tracking-[0.1em] text-ink-3">
+              See All
+            </Link>
+          </div>
+          <Link href={`/programs/${PROGRAM.slug}`} className="block py-2.5 text-ink no-underline">
+            <div className="mb-1 font-display text-sm font-semibold">{PROGRAM.title}</div>
+            <div className="text-xs leading-relaxed text-ink-2">{PROGRAM.description}</div>
           </Link>
         </div>
-        <Link href={`/programs/${PROGRAM.slug}`} className="block py-2.5 text-ink no-underline">
-          <div className="mb-1 font-display text-sm font-semibold">{PROGRAM.title}</div>
-          <div className="text-xs leading-relaxed text-ink-2">{PROGRAM.description}</div>
-        </Link>
-      </div>
+      )}
 
       {reflections.length > 0 && (
         <div className="mx-5 mt-5 border-t border-hairline pt-4">
@@ -71,17 +90,104 @@ function SupportingSections({ reflections }: { reflections: HomeReflection[] }) 
   );
 }
 
+// Mockup 7b: name + age, nothing else, then straight to the first question.
+// Deviation flagged to product: the mockup's under-8 note recommends "A
+// Catechism for Girls and Boys," which isn't available yet — the note here
+// ties to what the age actually does (one new question per session).
+function GuestLanding() {
+  const router = useRouter();
+  const [name, setName] = useState('');
+  const [age, setAge] = useState('');
+
+  const parsedAge = /^\d+$/.test(age.trim()) ? Number(age.trim()) : null;
+  const trimmedName = name.trim();
+
+  const begin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!trimmedName) return;
+    setLocalLearner(trimmedName, parsedAge);
+    if (!getLocalCatechismTrack(PROGRAM.catechismId)) {
+      startLocalCatechismTrack(PROGRAM.catechismId, 1);
+    }
+    router.push(`/programs/${PROGRAM.slug}/session`);
+  };
+
+  return (
+    <div className="flex min-h-[calc(100dvh-9rem)] flex-col">
+      <form
+        onSubmit={begin}
+        className="flex flex-1 flex-col items-center justify-center px-10 text-center"
+      >
+        <div className="label-caps mb-[18px] text-[10px] tracking-[0.14em] text-ochre">
+          For your child
+        </div>
+        <h1 className="mb-6 font-body text-[22px] font-normal italic leading-[1.5] text-ink">
+          What’s your child’s name and age?
+        </h1>
+        <div className="mb-4 flex w-full max-w-96 gap-2.5">
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            aria-label="Child’s name"
+            placeholder="Name"
+            required
+            className="min-w-0 flex-1 rounded-[2px] border border-hairline bg-white px-4 py-3.5 text-left font-body text-sm italic text-ink outline-none placeholder:text-ink-3"
+          />
+          <input
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            value={age}
+            onChange={(e) => setAge(e.target.value)}
+            aria-label="Child’s age"
+            placeholder="Age"
+            className="w-[76px] rounded-[2px] border border-hairline bg-white px-4 py-3.5 text-left font-body text-sm italic text-ink outline-none placeholder:text-ink-3"
+          />
+        </div>
+        {parsedAge !== null && parsedAge < 8 && (
+          <div className="label-caps mb-4 w-full max-w-96 text-left text-[9.5px] tracking-[0.08em] text-ochre">
+            Since {trimmedName || 'your child'} is under 8, we’ll take it
+            gently — one new question per session
+          </div>
+        )}
+        <button type="submit" className="action-button-solid w-full max-w-96 cursor-pointer">
+          See {trimmedName ? `${trimmedName}’s` : 'the'} First Question →
+        </button>
+      </form>
+
+      <div className="px-6 pb-8 pt-5 text-center">
+        <span className="text-[12.5px] italic text-ink-3">
+          Already started?{' '}
+          <Link href="/auth/signin" className="dotted-link text-ink">Sign in</Link>
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export function HomeClient({ reflections }: { reflections: HomeReflection[] }) {
   const { user, loading: authLoading } = useAuth();
   const { children, loading: childrenLoading } = useChildren();
   const router = useRouter();
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [localTrack, setLocalTrack] = useState<LocalCatechismTrack | null>(null);
+  const [learnerName, setLearnerName] = useState<string | null>(null);
+  const [localReady, setLocalReady] = useState(false);
 
   useEffect(() => {
     if (!children.length) return;
     const stored = getActiveChildId();
     setActiveId(children.some((c) => c.id === stored) ? stored : children[0].id);
   }, [children]);
+
+  useEffect(() => {
+    if (authLoading || user) return;
+    setLocalTrack(getLocalCatechismTrack(PROGRAM.catechismId));
+    const learner = getLocalLearner();
+    setLearnerName(learner.name === DEFAULT_LEARNER_NAME ? null : learner.name);
+    setLocalReady(true);
+  }, [authLoading, user]);
 
   const loading = authLoading || childrenLoading;
   const activeChild = children.find((c) => c.id === activeId) ?? null;
@@ -101,33 +207,55 @@ export function HomeClient({ reflections }: { reflections: HomeReflection[] }) {
     return <div className="min-h-40" aria-hidden="true" />;
   }
 
-  // No account or no children yet: the same page still leads with Programs
-  // (PRD §8), never an essay masthead.
-  if (!user || children.length === 0) {
+  // Signed out, nothing started: 7b — one held screen, name and age only.
+  if (!user && !localReady) {
+    return <div className="min-h-40" aria-hidden="true" />;
+  }
+  if (!user && !localTrack) {
+    return <GuestLanding />;
+  }
+
+  // Signed out with a track on this device: continue where they left off.
+  if (!user) {
     return (
       <div>
         <div className="px-6 pt-9 text-center">
-          <div className="label-caps mb-3 text-[9.5px] text-ink-3">Family Catechesis</div>
+          <div className="label-caps mb-3 text-[9.5px] text-ink-3">For your child</div>
           <h1 className="font-display text-xl font-semibold leading-snug">
-            Catechize Your Child, One Question at a Time
+            {learnerName ? `${learnerName}’s Shorter Catechism` : 'The Shorter Catechism'}
           </h1>
-          <p className="mx-auto mt-3 max-w-[26rem] text-[13.5px] italic leading-relaxed text-ink-2">
-            A paced walk through a historic catechism — each question with its
-            own scripture and a prayer to close.
-          </p>
           <Link
-            href={user ? '/onboarding/child' : '/auth/signup'}
+            href={`/programs/${PROGRAM.slug}/session`}
             className="action-button mx-auto mt-6 max-w-72"
           >
-            {user ? 'Add a Child to Begin' : 'Start a Program'}
+            Continue {learnerName ? `${learnerName}’s` : 'the'} Shorter Catechism
           </Link>
-          {!user && (
-            <div className="mt-4 text-[13px] italic text-ink-2">
-              Already have an account?{' '}
-              <Link href="/auth/signin" className="dotted-link text-ink">Sign in</Link>
-            </div>
-          )}
+          <div className="label-caps mt-3 text-[9px] tracking-[0.1em] text-ink-3">
+            {localProgressLabel} · Q. {Math.min(localTrack!.currentQuestion, PROGRAM.totalQuestions)} next
+          </div>
+          <div className="mt-4 text-[13px] italic text-ink-2">
+            Want progress on every device?{' '}
+            <Link href={`/programs/${PROGRAM.slug}/save`} className="dotted-link text-ink">
+              Save {learnerName ? `${learnerName}’s` : 'this'} progress
+            </Link>
+          </div>
         </div>
+        <SupportingSections reflections={reflections} />
+      </div>
+    );
+  }
+
+  // Signed in but no children yet: add the child first (5b).
+  if (children.length === 0) {
+    return (
+      <div className="px-9 pt-14 text-center">
+        <h1 className="mb-2.5 font-display text-[19px] font-semibold">Who Are You Catechizing?</h1>
+        <p className="text-[13px] italic leading-relaxed text-ink-2">
+          Add a child to begin — just a name and an age.
+        </p>
+        <Link href="/onboarding/child" className="action-button mx-auto mt-6 max-w-72">
+          Add a Child
+        </Link>
         <SupportingSections reflections={reflections} />
       </div>
     );
@@ -170,22 +298,21 @@ export function HomeClient({ reflections }: { reflections: HomeReflection[] }) {
           </Link>
         </div>
 
-        <div className="label-caps mb-3.5 text-center text-[9.5px] text-ink-3">
-          Continue Where You Left Off
+        <div className="label-caps mb-3.5 text-center text-[9.5px] tracking-[0.12em] text-ink-3">
+          {activeChild ? `${activeChild.name}’s Catechism` : 'Your Catechisms'}
         </div>
 
         {activeChild && assignment ? (
           <Link
             href={`/programs/${PROGRAM.slug}/session`}
-            className="block rounded-[2px] bg-fill px-5 pt-5 pb-[18px] text-inherit no-underline"
+            className="mb-[22px] block rounded-[2px] bg-fill px-5 pt-5 pb-[18px] text-inherit no-underline"
           >
             <div className="mb-1.5 font-display text-[14.5px] font-semibold text-ink">
-              {activeChild.name}’s Plan
+              {PROGRAM.title}
             </div>
-            <div className="mb-2.5 text-[13px] italic text-ink-2">The Shorter Catechism</div>
             <div className="mb-1.5 flex items-baseline justify-between">
               <span className="label-caps-sm text-[9px] text-ink-3">
-                Q. {Math.min(assignment.current_question, PROGRAM.totalQuestions)} of {PROGRAM.totalQuestions}
+                Q. {Math.min(assignment.current_question - 1, PROGRAM.totalQuestions)} of {PROGRAM.totalQuestions}
               </span>
             </div>
             <ProgressBar fraction={(assignment.current_question - 1) / PROGRAM.totalQuestions} />
@@ -193,19 +320,40 @@ export function HomeClient({ reflections }: { reflections: HomeReflection[] }) {
         ) : activeChild && (
           <Link
             href={`/programs/${PROGRAM.slug}/start`}
-            className="block rounded-[2px] bg-fill px-5 pt-5 pb-[18px] text-inherit no-underline"
+            className="mb-[22px] block rounded-[2px] bg-fill px-5 pt-5 pb-[18px] text-inherit no-underline"
           >
             <div className="mb-1.5 font-display text-[14.5px] font-semibold text-ink">
-              Start a Plan for {activeChild.name}
+              Start the Shorter Catechism for {activeChild.name}
             </div>
             <div className="text-[13px] italic text-ink-2">
               The Shorter Catechism — each question with its scripture and a prayer.
             </div>
           </Link>
         )}
+
+        {/* 7e: other catechisms surfaced but not yet startable — teasers only
+            until their content exists (deviation from the mockup's live links,
+            decided with product). */}
+        <div className="mb-2.5 flex items-baseline justify-between">
+          <div className="label-caps text-[10px] tracking-[0.14em] text-ink-3">
+            Explore Other Catechisms
+          </div>
+        </div>
+        <div className="flex gap-2.5">
+          <div className="flex-1 rounded-[2px] bg-fill px-3.5 py-3.5">
+            <div className="mb-1 font-display text-xs font-semibold text-ink">Heidelberg</div>
+            <div className="text-[11px] text-ink-3">129 Q&A</div>
+            <div className="label-caps mt-1.5 text-[8.5px] tracking-[0.1em] text-muted">Coming later</div>
+          </div>
+          <div className="flex-1 rounded-[2px] bg-fill px-3.5 py-3.5">
+            <div className="mb-1 font-display text-xs font-semibold text-ink">For Girls & Boys</div>
+            <div className="text-[11px] text-ink-3">85 Q&A</div>
+            <div className="label-caps mt-1.5 text-[8.5px] tracking-[0.1em] text-muted">Coming later</div>
+          </div>
+        </div>
       </div>
 
-      <SupportingSections reflections={reflections} />
+      <SupportingSections reflections={reflections} showCatechisms={false} />
     </div>
   );
 }

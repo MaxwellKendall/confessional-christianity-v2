@@ -15,6 +15,14 @@ const eslintConfig = defineConfig([
     // Design reference bundle, not app code.
     "docs/design-handoff/**",
   ]),
+  {
+    rules: {
+      // The guest landing/session/start flow hydrates local-progress state
+      // from effects (reading localStorage after mount); that's the pattern
+      // this rule flags.
+      "react-hooks/set-state-in-effect": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;

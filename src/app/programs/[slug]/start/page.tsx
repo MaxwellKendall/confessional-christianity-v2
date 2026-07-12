@@ -5,7 +5,7 @@ import { getProgram, PROGRAMS } from '@/lib/programs';
 import { StartProgramClient } from './StartProgramClient';
 
 export const metadata: Metadata = {
-  title: 'Start a Program',
+  title: 'Start the Shorter Catechism',
   robots: { index: false },
 };
 
