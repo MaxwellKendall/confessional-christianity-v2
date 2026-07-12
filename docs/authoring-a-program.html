@@ -246,8 +246,8 @@
     <div class="piece">
       <div class="tag">Authored · content</div>
       <h3>2 · Prayers</h3>
-      <p>One short prayer per question, addressed to the child by name. Written progressively — a missing one renders honestly as “not yet written.”</p>
-      <code class="path">content/programs/&lt;slug&gt;/prayers.json</code>
+      <p>One short prayer per question, addressed to the child by name. Authors review per-question Markdown; approved files compile into the JSON bundle imported by the app.</p>
+      <code class="path">content/programs/&lt;slug&gt;/prayers/*.md → prayers.json</code>
     </div>
     <div class="piece">
       <div class="tag">Deferred</div>
@@ -283,13 +283,15 @@
 
     <li>
       <h3>Author the prayers</h3>
-      <p>Create <code>content/programs/&lt;slug&gt;/prayers.json</code> — a flat map of question number to prayer text. Use <code>{name}</code> where the child’s name should appear. Keys you omit are treated as unwritten, and the session flow skips them gracefully.</p>
-      <pre><code>{
-  <span class="cmt">"_comment": "Written progressively; {name} → the child's name.",</span>
-  <span class="key">"1"</span>: <span class="key">"Father, you made {name} to know you and be glad in you…"</span>,
-  <span class="key">"2"</span>: <span class="key">"Lord, thank you for not leaving us to guess how to live…"</span>
-}</code></pre>
-      <p>You do not need all of them on day one. Ten good prayers ship a usable program; the rest arrive in later commits.</p>
+      <p>Create one Markdown file per question in <code>content/programs/&lt;slug&gt;/prayers/</code>. Use <code>{name}</code> where the child’s name should appear. Only files marked <code>status: approved</code> compile into the app; drafts stay out of runtime content.</p>
+      <pre><code>---
+question: <span class="key">11</span>
+status: <span class="key">approved</span>
+source: <span class="key">human</span>
+---
+Lord, teach {name} to trust your wise care in ordinary days. Amen.</code></pre>
+      <p>You do not need all of them on day one. Ten approved prayers ship a usable program; the rest arrive in later commits. Compile after editing:</p>
+      <pre><code>npm run prayers:compile</code></pre>
     </li>
 
     <li>
@@ -300,7 +302,7 @@
 
     <li>
       <h3>Verify, then commit</h3>
-      <p>Run the suite and the build, click through the landing and a session locally, then commit the metadata and the prayers together as one change. The commit is the editorial record.</p>
+      <p>Run the suite and the build, click through the landing and a session locally, then commit the metadata and the approved prayer sources together as one change. The build runs the compiler first, so the JSON bundle cannot drift from approved Markdown.</p>
       <pre><code>npm test &amp;&amp; npm run build</code></pre>
     </li>
   </ol>
@@ -323,9 +325,18 @@
   <p>Because every question already carries its answer and proof texts, an LLM can draft the prayers for you — with the existing prayers as style anchors. Treat it as a <strong>drafting accelerant, never as autopublish</strong>: generated prayers land as unreviewed drafts, and a human reads, edits, and approves each before it reaches a family. Your commit workflow already is that review gate.</p>
 
   <div class="note proposed">
-    <div class="tag">Proposed · not yet built</div>
-    <p>A clean version of this would author prayers as per-file Markdown (matching the commentary system), keep an <em>approved</em> vs <em>draft</em> split, and add a <code>scripts/</code> step that compiles only approved prayers down to the bundled <code>prayers.json</code> the app imports. This separates authoring ergonomics from the runtime format and keeps unreviewed text out of the product.</p>
+    <div class="tag">Implemented · approved-only compile</div>
+    <p>Prayer authoring now uses per-question Markdown, a <code>draft</code> vs <code>approved</code> frontmatter gate, and a compiler that writes only approved prayers into the bundled <code>prayers.json</code>. The app imports that JSON; authors edit and review the Markdown.</p>
   </div>
+
+  <h3>The generation commands</h3>
+  <p>Dry-run first to see which missing questions would be drafted. Use <code>--questions</code> for ordinary batches, or <code>--all</code> only when you intentionally want every missing prayer drafted.</p>
+  <pre><code>npm run prayers:draft -- --questions 11-15 --dry-run</code></pre>
+  <p>Set <code>ANTHROPIC_API_KEY</code>, optionally set <code>ANTHROPIC_MODEL</code> or pass <code>--model</code>, then generate drafts:</p>
+  <pre><code>ANTHROPIC_API_KEY=... npm run prayers:draft -- --questions 11-15</code></pre>
+  <p>After human review and edits, approve and compile:</p>
+  <pre><code>npm run prayers:approve -- --questions 11-15
+npm run prayers:compile</code></pre>
 
   <h3>The shape of a generation run</h3>
   <ul class="plain">

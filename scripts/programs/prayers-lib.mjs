@@ -171,5 +171,8 @@ export const parseNumberList = (spec) => {
       nums.add(Number(part.trim()));
     }
   }
+  if ([...nums].some((n) => !Number.isInteger(n) || n < 1)) {
+    throw new Error(`Invalid question list: ${spec}`);
+  }
   return [...nums].sort((a, b) => a - b);
 };

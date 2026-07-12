@@ -4,10 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "npm run prayers:compile",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "prayers:compile": "node scripts/programs/compile-prayers.mjs",
+    "prayers:draft": "node scripts/programs/draft-prayers.mjs",
+    "prayers:approve": "node scripts/programs/approve-prayers.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",
