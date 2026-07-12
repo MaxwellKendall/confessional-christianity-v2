@@ -1,9 +1,10 @@
 'use client';
 
-// Today's session (mockups 4a→4d, PRD §5.2): one held thought per screen,
-// centered whitespace, a quiet dot-and-arrow progression — new material, then
-// review, then scripture & prayer, then done. Never a quiz app; deeper
-// material lives one tap away, never inline.
+// Today's session for a signed-in household (mockups 4a→4d, PRD §5.2): one
+// held thought per screen, centered whitespace, a quiet dot-and-arrow
+// progression — new material, then review, then scripture & prayer, then
+// done. Never a quiz app; deeper material lives one tap away, never inline.
+// Signed-out visitors get the single-screen 7c loop instead.
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -17,12 +18,13 @@ import {
   nextSessionDayName,
   type ReviewMark,
 } from '@/lib/programs';
-import { getPrayer, getWscQuestion } from '@/lib/programContent';
+import { getWscQuestion } from '@/lib/programContent';
+import { GuestQuestionClient } from './GuestQuestionClient';
+import { QuestionCard } from './QuestionCard';
 
 type Step =
   | { type: 'new'; questionNumber: number }
   | { type: 'review' }
-  | { type: 'scripture' }
   | { type: 'done' };
 
 function Dots({ count, active }: { count: number; active: number }) {
@@ -85,8 +87,7 @@ export function SessionClient({ slug }: { slug: string }) {
       mastery,
       pacing,
     );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [assignment?.id, stateLoading]);
+  }, [assignment, mastery, pacing, program.totalQuestions]);
 
   const steps: Step[] = useMemo(() => {
     if (!plan || plan.isComplete) return [];
@@ -95,36 +96,22 @@ export function SessionClient({ slug }: { slug: string }) {
       questionNumber,
     }));
     if (plan.reviewQuestions.length) list.push({ type: 'review' });
-    list.push({ type: 'scripture' });
     list.push({ type: 'done' });
     return list;
   }, [plan]);
 
   const [stepIndex, setStepIndex] = useState(0);
   const [marks, setMarks] = useState<Record<number, boolean>>({});
-  const [scripture, setScripture] = useState<{ citation: string; text: string | null } | null>(null);
   const persisted = useRef(false);
 
   const sessionNumber = mastery.length > 0
     ? Math.max(...mastery.map((m) => m.exposures)) + 1
     : 1;
 
-  // Scripture for the session: the first new question's first proof text.
-  const firstNew = plan?.newQuestions[0] ?? null;
-  const firstNewQuestion = firstNew !== null ? getWscQuestion(firstNew) : null;
-  useEffect(() => {
-    const osis = firstNewQuestion?.proofTexts[0];
-    if (!osis) return;
-    fetch(`/api/esv?osis=${encodeURIComponent(osis)}`)
-      .then((r) => r.json())
-      .then((data: { citation: string; text: string | null }) => setScripture(data))
-      .catch(() => setScripture(null));
-  }, [firstNewQuestion?.proofTexts]);
-
   // Persist exactly once when the done step is reached.
   const step = steps[stepIndex];
   useEffect(() => {
-    if (step?.type !== 'done' || persisted.current || !plan) return;
+    if (step?.type !== 'done' || persisted.current || !plan || !assignment) return;
     persisted.current = true;
     const reviewMarks: ReviewMark[] = plan.reviewQuestions.map((q) => ({
       questionNumber: q,
@@ -136,44 +123,60 @@ export function SessionClient({ slug }: { slug: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step?.type]);
 
-  if (authLoading || childrenLoading || stateLoading) {
+  if (authLoading) {
     return <div className="min-h-64" aria-hidden="true" />;
   }
 
-  if (!user || !child || !assignment || !plan) {
+  // Signed-out visitors get the single-screen question loop (7c) — no signup
+  // wall anywhere before or during it.
+  if (!user) {
+    return <GuestQuestionClient slug={slug} />;
+  }
+
+  if (childrenLoading || stateLoading) {
+    return <div className="min-h-64" aria-hidden="true" />;
+  }
+
+  if (!assignment && !plan) {
     return (
       <div className="px-9 pt-14 text-center">
-        <h1 className="mb-2.5 font-display text-[19px] font-semibold">No Session Yet</h1>
+        <h1 className="mb-2.5 font-display text-[19px] font-semibold">Begin the Shorter Catechism</h1>
         <p className="text-[13px] italic leading-relaxed text-ink-2">
-          <Link href={`/programs/${slug}`} className="dotted-link text-ink">
-            Start the program
-          </Link>
-          {' '}for a child first — the session builds itself from their plan.
+          Choose who this catechism is for, and where to begin.
         </p>
+        <Link href={`/programs/${slug}/start`} className="action-button mt-6">
+          Start the Catechism
+        </Link>
       </div>
     );
+  }
+
+  if (!plan) {
+    return <div className="min-h-64" aria-hidden="true" />;
   }
 
   if (plan.isComplete) {
     return (
       <div className="px-9 pt-14 text-center">
-        <h1 className="mb-2.5 font-display text-[19px] font-semibold">The Plan Is Complete</h1>
+        <h1 className="mb-2.5 font-display text-[19px] font-semibold">Catechism Complete</h1>
         <p className="text-[13px] italic leading-relaxed text-ink-2">
           <Link href={`/programs/${slug}`} className="dotted-link text-ink">
-            Back to the program
+            Back to the catechism
           </Link>
-          {' '}to restart it, or start another.
+          {' '}to begin again, or browse another catechism.
         </p>
       </div>
     );
   }
+
+  const displayName = child?.name ?? 'your child';
 
   const backTarget = stepIndex === 0 ? `/programs/${slug}` : null;
   const top = (
     <>
       {step.type !== 'done' ? (
         backTarget ? (
-          <Link href={backTarget} aria-label="Back to program" className="font-display text-[15px] text-ink no-underline">←</Link>
+          <Link href={backTarget} aria-label="Back to catechism" className="font-display text-[15px] text-ink no-underline">←</Link>
         ) : (
           <button
             type="button"
@@ -191,7 +194,10 @@ export function SessionClient({ slug }: { slug: string }) {
   );
 
   if (step.type === 'new') {
-    const q = getWscQuestion(step.questionNumber);
+    const nextStep = steps[stepIndex + 1];
+    const nextLabel = nextStep?.type === 'review'
+      ? 'Next: Review →'
+      : nextStep?.type === 'done' ? 'Finish Session →' : 'Next Question →';
     return (
       <Frame
         top={top}
@@ -202,22 +208,17 @@ export function SessionClient({ slug }: { slug: string }) {
             className="label-caps cursor-pointer border-none bg-transparent pb-0.5 text-[11px] tracking-[0.12em] text-ink"
             style={{ borderBottom: '1px dotted var(--color-ink)' }}
           >
-            {steps[stepIndex + 1]?.type === 'review' ? 'Next: Review →' : 'Next: Scripture & Prayer →'}
+            {nextLabel}
           </button>
         )}
       >
         <div className="label-caps mb-1.5 text-[10px] tracking-[0.14em] text-ink-3">
-          {child.name} · Session {sessionNumber}
+          {child ? `${child.name} · ` : ''}Session {sessionNumber}
         </div>
         <div className="label-caps mb-6 text-[10px] tracking-[0.14em] text-ochre">
           New · Question {step.questionNumber}
         </div>
-        <blockquote className="m-0 font-body text-[19px] italic leading-[1.6] text-ink">
-          Q. {q?.question}
-          <br />
-          <br />
-          A. {q?.answer}
-        </blockquote>
+        <QuestionCard slug={slug} questionNumber={step.questionNumber} childName={displayName} />
       </Frame>
     );
   }
@@ -283,51 +284,12 @@ export function SessionClient({ slug }: { slug: string }) {
     );
   }
 
-  if (step.type === 'scripture') {
-    const prayer = firstNew !== null ? getPrayer(firstNew, child.name) : null;
-    return (
-      <Frame
-        top={top}
-        footer={(
-          <button
-            type="button"
-            onClick={() => setStepIndex((i) => i + 1)}
-            className="label-caps cursor-pointer border-none bg-transparent pb-0.5 text-[11px] tracking-[0.12em] text-ink"
-            style={{ borderBottom: '1px dotted var(--color-ink)' }}
-          >
-            Finish Session →
-          </button>
-        )}
-      >
-        {scripture && (
-          <>
-            <div className="label-caps mb-5 text-[10px] tracking-[0.14em] text-ink-3">Scripture</div>
-            <blockquote className="m-0 mb-12 font-body text-[17px] italic leading-[1.6] text-ink">
-              {scripture.text ?? 'Read together:'}
-              <cite className="label-caps mt-2.5 block text-[10px] not-italic tracking-[0.12em] text-ink-3">
-                {scripture.citation}
-              </cite>
-            </blockquote>
-          </>
-        )}
-        <div className="label-caps mb-4 text-[10px] tracking-[0.14em] text-ink-3">A Prayer to Close</div>
-        {prayer ? (
-          <p className="m-0 font-body text-[14.5px] italic leading-[1.7] text-ink">{prayer}</p>
-        ) : (
-          <p className="m-0 text-[13px] italic text-heart-reviewing">
-            The prayer for this question isn’t written yet — close in your own words.
-          </p>
-        )}
-      </Frame>
-    );
-  }
-
   // done
   const recitedList = plan.reviewQuestions.filter((q) => marks[q]);
   const summaryParts: string[] = [];
   if (recitedList.length) {
     summaryParts.push(
-      `${child.name} recited ${recitedList.map((q) => `Q. ${q}`).join(' and ')} without help`,
+      `${displayName} recited ${recitedList.map((q) => `Q. ${q}`).join(' and ')} without help`,
     );
   }
   if (plan.newQuestions.length) {
@@ -337,7 +299,7 @@ export function SessionClient({ slug }: { slug: string }) {
   }
   const summary = summaryParts.length
     ? `${summaryParts.join(', and ')}.`
-    : `${child.name} sat with today’s questions.`;
+    : `${displayName} sat with today’s questions.`;
 
   return (
     <Frame
@@ -351,7 +313,7 @@ export function SessionClient({ slug }: { slug: string }) {
             href={`/programs/${slug}`}
             className="label-caps dotted-link text-[11px] tracking-[0.12em] text-ink"
           >
-            Back to Program
+            Back to Catechism
           </Link>
         </>
       )}
