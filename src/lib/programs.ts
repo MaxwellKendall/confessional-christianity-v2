@@ -41,6 +41,28 @@ export const PROGRAMS: ProgramDefinition[] = [
     totalQuestions: 145,
     estimatedMinutes: 10,
   },
+  {
+    slug: 'catechizing-larger-catechism',
+    kind: 'Family Catechesis',
+    title: 'Westminster Larger Catechism',
+    description:
+      'A more comprehensive walk through the Westminster Larger Catechism, '
+      + 'paired with Scripture, prayer, and progress.',
+    contentId: 'WLC',
+    totalQuestions: 196,
+    estimatedMinutes: 20,
+  },
+  {
+    slug: 'catechizing-heidelberg-catechism',
+    kind: 'Family Catechesis',
+    title: 'Heidelberg Catechism',
+    description:
+      'The Heidelberg Catechism paired with Scripture, prayer, and progress '
+      + 'for family teaching.',
+    contentId: 'HC',
+    totalQuestions: 129,
+    estimatedMinutes: 15,
+  },
 ];
 
 export const getProgram = (slug: string): ProgramDefinition | null => PROGRAMS

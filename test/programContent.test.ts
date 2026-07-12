@@ -6,6 +6,8 @@ import { defineCases } from './support/defineCases';
 
 const wsc = getProgram('catechizing-shorter-catechism')!;
 const cfyc = getProgram('catechism-for-young-children')!;
+const wlc = getProgram('catechizing-larger-catechism')!;
+const hc = getProgram('catechizing-heidelberg-catechism')!;
 
 describe('program content', () => {
   const cases = {
@@ -55,6 +57,30 @@ describe('program content', () => {
       actual: () => ({ has: hasPrayer(cfyc, 1), prayer: getPrayer(cfyc, 1, 'Eli') }),
       assert: (result: { has: boolean; prayer: string | null }) => {
         expect(result).toEqual({ has: false, prayer: null });
+      },
+    },
+    'WLC questions resolve, including the last one': {
+      actual: () => [getQuestion(wlc, 1), getQuestion(wlc, 196)],
+      assert: ([first, last]: (ReturnType<typeof getQuestion>)[]) => {
+        expect(first?.question).toBe('What is the chief and highest end of man?');
+        expect(last).not.toBeNull();
+      },
+    },
+    // The Heidelberg's underlying entry.number is a raw content-array
+    // position (Lord's Day headers share the sequence with questions), not
+    // the traditional Q number — Question 1's entry.number is actually 2.
+    // findEntry has to resolve by the title's stated number instead.
+    'HC questions resolve by their stated number, not entry.number': {
+      actual: () => getQuestion(hc, 1),
+      assert: (q: ReturnType<typeof getQuestion>) => {
+        expect(q?.question).toBe('What is thy only comfort in life and death?');
+        expect(q?.answer).toContain('not my own');
+      },
+    },
+    'HC resolves every question 1..129 with no gaps': {
+      actual: () => Array.from({ length: 129 }, (_, i) => getQuestion(hc, i + 1)),
+      assert: (questions: (ReturnType<typeof getQuestion>)[]) => {
+        expect(questions.every((q) => q !== null)).toBe(true);
       },
     },
   };

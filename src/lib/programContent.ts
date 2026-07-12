@@ -5,6 +5,8 @@
 // imported so the bundler traces the data directly — a dynamic fs read
 // breaks in Vercel's serverless bundles (see confessionContent.ts).
 import wsc from '../../normalized-data/westminster/wsc.json';
+import wlc from '../../normalized-data/westminster/wlc.json';
+import heidelbergCatechism from '../../normalized-data/three-forms-of-unity/heidelberg-catechism.json';
 import catechismYoungChildren from '../../normalized-data/miscellany/catechism-young-children.json';
 import wscPrayers from '../../content/programs/catechizing-shorter-catechism/prayers.json';
 import { entryQuoteSegments, proofTextGroups, type ProofTextGroup, type TextSegment } from './entryDisplay';
@@ -13,10 +15,12 @@ import type { ConfessionDocumentJson, ConfessionEntry } from './domain';
 
 // Add an entry here (and to PROGRAMS in programs.ts) for each new catechism
 // program — same two-line shape as CFYC.
-export type ContentId = 'WSC' | 'CFYC';
+export type ContentId = 'WSC' | 'WLC' | 'HC' | 'CFYC';
 
 const DOCS: Record<ContentId, ConfessionDocumentJson> = {
   WSC: wsc as unknown as ConfessionDocumentJson,
+  WLC: wlc as unknown as ConfessionDocumentJson,
+  HC: heidelbergCatechism as unknown as ConfessionDocumentJson,
   CFYC: catechismYoungChildren as unknown as ConfessionDocumentJson,
 };
 
@@ -37,9 +41,20 @@ export interface ProgramQuestion {
 }
 
 const QUESTION_PREFIX = /^Question\s\d+:\s*/;
+const QUESTION_NUMBER = /^Question\s(\d+):/;
+
+// The question number lives in `entry.number` for every catechism except the
+// Heidelberg — its `number` is the raw content-array position (Lord's Day
+// headers share the sequence), so the traditional Q number has to come from
+// the title instead. Reading the title everywhere keeps this one lookup, not
+// a per-catechism branch.
+const questionNumberOf = (entry: ConfessionEntry): number | null => {
+  const match = entry.title?.match(QUESTION_NUMBER);
+  return match ? Number(match[1]) : entry.number ?? null;
+};
 
 const findEntry = (contentId: ContentId, n: number): ConfessionEntry | null => DOCS[contentId].content
-  .find((e) => e.number === n && !e.isParent) ?? null;
+  .find((e) => !e.isParent && questionNumberOf(e) === n) ?? null;
 
 export const getQuestion = (program: ProgramRef, n: number): ProgramQuestion | null => {
   const entry = findEntry(program.contentId, n);
