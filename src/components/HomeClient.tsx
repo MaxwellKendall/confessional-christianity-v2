@@ -54,17 +54,19 @@ function SupportingSections({
               See All
             </Link>
           </div>
-          <Link href={`/programs/${PROGRAM.slug}`} className="block py-2.5 text-ink no-underline">
-            <div className="mb-1 font-display text-sm font-semibold">{PROGRAM.title}</div>
-            <div className="text-xs leading-relaxed text-ink-2">{PROGRAM.description}</div>
-          </Link>
+          {PROGRAMS.map((program) => (
+            <Link key={program.slug} href={`/programs/${program.slug}`} className="block py-2.5 text-ink no-underline">
+              <div className="mb-1 font-display text-sm font-semibold">{program.title}</div>
+              <div className="text-xs leading-relaxed text-ink-2">{program.description}</div>
+            </Link>
+          ))}
         </div>
       )}
 
       {reflections.length > 0 && (
         <div className="mx-5 mt-5 border-t border-hairline pt-4">
           <div className="mb-2.5 flex items-baseline justify-between">
-            <div className="label-caps text-[10px] tracking-[0.14em] text-ink-3">Latest Reflections</div>
+            <div className="label-caps text-[10px] tracking-[0.14em] text-ink-3">Latest Resources</div>
             <Link href="/reflections" className="label-caps dotted-link text-[9.5px] tracking-[0.1em] text-ink-3">
               See All
             </Link>
@@ -193,6 +195,7 @@ export function HomeClient({ reflections }: { reflections: HomeReflection[] }) {
   const activeChild = children.find((c) => c.id === activeId) ?? null;
   const assignment = activeChild?.catechism_assignments
     ?.find((a) => a.catechism_id === PROGRAM.contentId) ?? null;
+  const otherPrograms = PROGRAMS.filter((p) => p.slug !== PROGRAM.slug);
 
   const switchChild = (child: ChildWithRole) => {
     setActiveChildId(child.id);
@@ -331,26 +334,27 @@ export function HomeClient({ reflections }: { reflections: HomeReflection[] }) {
           </Link>
         )}
 
-        {/* 7e: other catechisms surfaced but not yet startable — teasers only
-            until their content exists (deviation from the mockup's live links,
-            decided with product). */}
-        <div className="mb-2.5 flex items-baseline justify-between">
-          <div className="label-caps text-[10px] tracking-[0.14em] text-ink-3">
-            Explore Other Catechisms
-          </div>
-        </div>
-        <div className="flex gap-2.5">
-          <div className="flex-1 rounded-[2px] bg-fill px-3.5 py-3.5">
-            <div className="mb-1 font-display text-xs font-semibold text-ink">Heidelberg</div>
-            <div className="text-[11px] text-ink-3">129 Q&A</div>
-            <div className="label-caps mt-1.5 text-[8.5px] tracking-[0.1em] text-muted">Coming later</div>
-          </div>
-          <div className="flex-1 rounded-[2px] bg-fill px-3.5 py-3.5">
-            <div className="mb-1 font-display text-xs font-semibold text-ink">For Girls & Boys</div>
-            <div className="text-[11px] text-ink-3">85 Q&A</div>
-            <div className="label-caps mt-1.5 text-[8.5px] tracking-[0.1em] text-muted">Coming later</div>
-          </div>
-        </div>
+        {otherPrograms.length > 0 && (
+          <>
+            <div className="mb-2.5 flex items-baseline justify-between">
+              <div className="label-caps text-[10px] tracking-[0.14em] text-ink-3">
+                Explore Other Catechisms
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2.5">
+              {otherPrograms.map((program) => (
+                <Link
+                  key={program.slug}
+                  href={`/programs/${program.slug}`}
+                  className="flex-1 min-w-[45%] rounded-[2px] bg-fill px-3.5 py-3.5 text-inherit no-underline"
+                >
+                  <div className="mb-1 font-display text-xs font-semibold text-ink">{program.title}</div>
+                  <div className="text-[11px] text-ink-3">{program.totalQuestions} Q&A</div>
+                </Link>
+              ))}
+            </div>
+          </>
+        )}
       </div>
 
       <SupportingSections reflections={reflections} showCatechisms={false} />
