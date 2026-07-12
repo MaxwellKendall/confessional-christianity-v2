@@ -147,6 +147,29 @@ export const advanceLocalQuestion = (
   return track;
 };
 
+// Jumping to an arbitrary question (e.g. "go back to Q1") repositions the
+// track without touching milestones — it's browsing, not re-introducing
+// material, so it shouldn't mark anything as freshly "introduced".
+export const jumpToLocalQuestion = (
+  catechismId: string,
+  questionNumber: number,
+  totalQuestions: number,
+): LocalCatechismTrack | null => {
+  const progress = readProgress();
+  const existing = progress.tracks[catechismId];
+  if (!existing) return null;
+  const clamped = Math.min(totalQuestions, Math.max(1, questionNumber));
+  const track: LocalCatechismTrack = {
+    ...existing,
+    currentQuestion: clamped,
+    updatedAt: new Date().toISOString(),
+  };
+  progress.activeCatechismId = catechismId;
+  progress.tracks[catechismId] = track;
+  writeProgress(progress);
+  return track;
+};
+
 // Migration snapshot: everything the claim step needs to turn this device's
 // guest progress into a real child record.
 export const getLocalProgressSnapshot = (): {
