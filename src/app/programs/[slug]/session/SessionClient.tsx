@@ -72,7 +72,7 @@ export function SessionClient({ slug }: { slug: string }) {
             className="label-caps cursor-pointer border-none bg-transparent pb-0.5 text-[11px] tracking-[0.1em] text-ink"
             style={{ borderBottom: '1px dotted var(--color-ink)' }}
           >
-            Next Question →
+            Next →
           </button>
         </div>
         <div className="text-center mt-3">
