@@ -2,10 +2,10 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 import { getProgram, PROGRAMS } from '@/lib/programs';
-import { PacingClient } from './PacingClient';
+import { MilestonesClient } from './MilestonesClient';
 
 export const metadata: Metadata = {
-  title: 'Pacing',
+  title: 'Milestones',
   robots: { index: false },
 };
 
@@ -15,10 +15,10 @@ export function generateStaticParams(): { slug: string }[] {
   return PROGRAMS.map(({ slug }) => ({ slug }));
 }
 
-export default async function PacingPage(
+export default async function MilestonesPage(
   { params }: { params: Promise<{ slug: string }> },
 ) {
   const { slug } = await params;
   if (!getProgram(slug)) notFound();
-  return <PacingClient slug={slug} />;
+  return <MilestonesClient slug={slug} />;
 }

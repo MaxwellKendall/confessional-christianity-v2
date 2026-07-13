@@ -41,7 +41,7 @@ export function ProgramLandingClient({ slug }: { slug: string }) {
 
   const child = children.find((c) => c.id === activeId) ?? null;
   const {
-    assignment, mastery, pacing, toggleMastered, restartProgram,
+    assignment, mastery, toggleMastered, restartProgram,
   } = useProgramState(program, child);
 
   const header = (
@@ -63,7 +63,6 @@ export function ProgramLandingClient({ slug }: { slug: string }) {
             {[
               child.age !== null ? `Configured for age ${child.age}` : null,
               `~${program.estimatedMinutes} minutes`,
-              `${pacing.sessionsPerWeek} sessions a week`,
             ].filter(Boolean).join(' · ')}
           </div>
         )}
@@ -139,8 +138,8 @@ export function ProgramLandingClient({ slug }: { slug: string }) {
             Continue Today’s Session →
           </Link>
           <div className="text-center">
-            <Link href={`/programs/${slug}/pacing`} className="dotted-link text-[12.5px] italic text-ink-2">
-              Pacing
+            <Link href={`/programs/${slug}/session/milestones`} className="dotted-link text-[12.5px] italic text-ink-2">
+              See {child.name}’s Milestones →
             </Link>
           </div>
         </div>
@@ -210,7 +209,7 @@ export function ProgramLandingClient({ slug }: { slug: string }) {
                     </div>
                   )}
                 </div>
-                {child && assignment && introduced && pacing.masteryRule === 'manual' ? (
+                {child && assignment && introduced ? (
                   <button
                     type="button"
                     onClick={() => toggleMastered(n)}

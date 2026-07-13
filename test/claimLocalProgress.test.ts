@@ -20,26 +20,8 @@ const track = (partial: Partial<LocalCatechismTrack> = {}): LocalCatechismTrack 
 describe('buildClaimRows (guest → account migration)', () => {
   const cases = {
     'assignment lands at the local position': {
-      actual: () => buildClaimRows(track(), 7).assignment,
+      actual: () => buildClaimRows(track()).assignment,
       expected: { catechism_id: 'WSC', current_question: 3 },
-    },
-    'pacing seeds from an under-8 age': {
-      actual: () => buildClaimRows(track(), 6).pacing,
-      expected: {
-        new_questions_per_session: 1,
-        sessions_per_week: 3,
-        review_depth: 'rotation',
-        mastery_rule: 'streak',
-        show_scripture_every_time: true,
-      },
-    },
-    'pacing seeds from an 8-or-older age': {
-      actual: () => buildClaimRows(track(), 9).pacing.new_questions_per_session,
-      expected: 2,
-    },
-    'pacing seeds sanely with no age given': {
-      actual: () => buildClaimRows(track(), null).pacing.new_questions_per_session,
-      expected: 2,
     },
     'introduced and reviewing milestones enter rotation; mastered carries over': {
       actual: () => buildClaimRows(track({
@@ -48,7 +30,7 @@ describe('buildClaimRows (guest → account migration)', () => {
           1: { state: 'mastered', introducedAt: T0, reviewCount: 4 },
           3: { state: 'introduced', introducedAt: T1, reviewCount: 0 },
         },
-      }), 9).mastery,
+      })).mastery,
       expected: [
         {
           question_number: 1, state: 'mastered', recited_streak: 0, exposures: 5, last_reviewed_at: T0,
@@ -62,7 +44,7 @@ describe('buildClaimRows (guest → account migration)', () => {
       ],
     },
     'a track with no milestones claims no mastery rows': {
-      actual: () => buildClaimRows(track(), 9).mastery,
+      actual: () => buildClaimRows(track()).mastery,
       expected: [],
     },
   };

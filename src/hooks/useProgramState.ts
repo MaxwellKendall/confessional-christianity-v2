@@ -1,31 +1,20 @@
 'use client';
 
-// Data access for one child's run of a program: the catechism assignment,
-// its pacing config, and per-question mastery. All the decision logic lives
-// in src/lib/programs.ts (pure, tested); this hook only moves rows.
+// Data access for one child's run of a program: the catechism assignment
+// and per-question mastery. There's no pacing/scheduling anymore (turn 9) —
+// a session just advances the assignment's position one question at a time.
 import { useCallback, useEffect, useState } from 'react';
 
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
-import {
-  applyReviewMark,
-  defaultPacingForAge,
-  pacingFromRow,
-  type PacingConfig,
-  type ProgramDefinition,
-  type SessionPlan,
-} from '@/lib/programs';
+import type { ProgramDefinition } from '@/lib/programs';
 import type {
   CatechismAssignmentRow,
   ChildWithRole,
-  ProgramPacingRow,
   QuestionMasteryRow,
 } from '@/lib/database.types';
-import type { ReviewMark } from '@/lib/programs';
 
 export interface ProgramRunState {
   assignment: CatechismAssignmentRow | null;
-  pacing: PacingConfig;
-  pacingRow: ProgramPacingRow | null;
   mastery: QuestionMasteryRow[];
 }
 
@@ -33,8 +22,6 @@ export const useProgramState = (program: ProgramDefinition, child: ChildWithRole
   const supabase = getSupabaseBrowserClient();
   const [state, setState] = useState<ProgramRunState>({
     assignment: null,
-    pacing: defaultPacingForAge(child?.age ?? null),
-    pacingRow: null,
     mastery: [],
   });
   const [loading, setLoading] = useState(true);
@@ -46,8 +33,6 @@ export const useProgramState = (program: ProgramDefinition, child: ChildWithRole
     if (!supabase || !child || !assignment) {
       setState({
         assignment: assignment ?? null,
-        pacing: defaultPacingForAge(child?.age ?? null),
-        pacingRow: null,
         mastery: [],
       });
       setLoading(false);
@@ -55,15 +40,12 @@ export const useProgramState = (program: ProgramDefinition, child: ChildWithRole
     }
     setLoading(true);
     try {
-      const [pacingRes, masteryRes] = await Promise.all([
-        supabase.from('program_pacing').select('*').eq('assignment_id', assignment.id).maybeSingle(),
-        supabase.from('question_mastery').select('*').eq('assignment_id', assignment.id),
-      ]);
-      const pacingRow = (pacingRes.data ?? null) as ProgramPacingRow | null;
+      const masteryRes = await supabase
+        .from('question_mastery')
+        .select('*')
+        .eq('assignment_id', assignment.id);
       setState({
         assignment,
-        pacingRow,
-        pacing: pacingFromRow(pacingRow, child.age),
         mastery: (masteryRes.data ?? []) as QuestionMasteryRow[],
       });
     } finally {
@@ -76,8 +58,8 @@ export const useProgramState = (program: ProgramDefinition, child: ChildWithRole
     fetchState();
   }, [fetchState]);
 
-  // Starting a program is choosing a child for it (PRD §5.5): one assignment
-  // plus its pacing row seeded from the child's age.
+  // Starting a program is choosing a child for it (PRD §5.5): just the
+  // assignment now — no pacing row to seed.
   const startProgram = async (targetChild: ChildWithRole, startingQuestion = 1) => {
     if (!supabase) throw new Error('Supabase not configured');
     const { data, error } = await supabase
@@ -90,80 +72,31 @@ export const useProgramState = (program: ProgramDefinition, child: ChildWithRole
       .select()
       .single();
     if (error) throw error;
-    const created = data as CatechismAssignmentRow;
-    const defaults = defaultPacingForAge(targetChild.age);
-    await supabase.from('program_pacing').insert({
-      assignment_id: created.id,
-      new_questions_per_session: defaults.newQuestionsPerSession,
-      sessions_per_week: defaults.sessionsPerWeek,
-      review_depth: defaults.reviewDepth,
-      mastery_rule: defaults.masteryRule,
-      show_scripture_every_time: defaults.showScriptureEveryTime,
-    });
-    return created;
+    return data as CatechismAssignmentRow;
   };
 
-  const savePacing = async (config: PacingConfig) => {
-    if (!supabase || !assignment) throw new Error('No program run to configure');
-    const row = {
-      assignment_id: assignment.id,
-      new_questions_per_session: config.newQuestionsPerSession,
-      sessions_per_week: config.sessionsPerWeek,
-      review_depth: config.reviewDepth,
-      mastery_rule: config.masteryRule,
-      show_scripture_every_time: config.showScriptureEveryTime,
-    };
-    const { error } = await supabase
-      .from('program_pacing')
-      .upsert(row, { onConflict: 'assignment_id' });
-    if (error) throw error;
-    await fetchState();
-  };
-
-  // Persists one finished session: review marks fold into mastery rows, new
-  // questions enter rotation, and the assignment position advances.
-  const completeSession = async (plan: SessionPlan, marks: ReviewMark[]) => {
+  // "Next Question" (mockup 8a): marks the question being left as seen and
+  // advances the position by one, capped one past the end so a finished
+  // track reads as complete — the signed-in twin of advanceLocalQuestion.
+  const advanceProgram = async () => {
     if (!supabase || !assignment) throw new Error('No active program run');
     const now = new Date().toISOString();
-
-    const byNumber = new Map(state.mastery.map((m) => [m.question_number, m]));
-    const upserts: Record<string, unknown>[] = [];
-
-    marks.forEach((mark) => {
-      const row = byNumber.get(mark.questionNumber);
-      const applied = applyReviewMark(
-        row ?? { state: 'reviewing', recited_streak: 0, exposures: 0 },
-        mark.recited,
-        state.pacing.masteryRule,
+    const q = assignment.current_question;
+    if (q <= program.totalQuestions && !state.mastery.some((m) => m.question_number === q)) {
+      const { error } = await supabase.from('question_mastery').upsert(
+        {
+          assignment_id: assignment.id,
+          question_number: q,
+          state: 'reviewing',
+          recited_streak: 0,
+          exposures: 1,
+          last_reviewed_at: now,
+        },
+        { onConflict: 'assignment_id,question_number' },
       );
-      upserts.push({
-        assignment_id: assignment.id,
-        question_number: mark.questionNumber,
-        ...applied,
-        last_reviewed_at: now,
-      });
-    });
-
-    plan.newQuestions.forEach((q) => {
-      if (byNumber.has(q)) return;
-      upserts.push({
-        assignment_id: assignment.id,
-        question_number: q,
-        state: 'reviewing',
-        recited_streak: 0,
-        exposures: 1,
-        last_reviewed_at: now,
-      });
-    });
-
-    if (upserts.length) {
-      const { error } = await supabase
-        .from('question_mastery')
-        .upsert(upserts, { onConflict: 'assignment_id,question_number' });
       if (error) throw error;
     }
-
-    const nextQuestion = assignment.current_question + plan.newQuestions.length;
+    const nextQuestion = Math.min(program.totalQuestions + 1, q + 1);
     const completed = nextQuestion > program.totalQuestions;
     const { error: updateError } = await supabase
       .from('catechism_assignments')
@@ -173,6 +106,20 @@ export const useProgramState = (program: ProgramDefinition, child: ChildWithRole
       })
       .eq('id', assignment.id);
     if (updateError) throw updateError;
+    await fetchState();
+  };
+
+  // Jumping to an arbitrary question (mockup 8d) repositions the assignment
+  // without touching mastery — it's browsing, not re-introducing material,
+  // matching jumpToLocalQuestion's rule for guests.
+  const jumpToProgram = async (questionNumber: number) => {
+    if (!supabase || !assignment) throw new Error('No active program run');
+    const clamped = Math.min(program.totalQuestions, Math.max(1, questionNumber));
+    const { error } = await supabase
+      .from('catechism_assignments')
+      .update({ current_question: clamped })
+      .eq('id', assignment.id);
+    if (error) throw error;
     await fetchState();
   };
 
@@ -206,8 +153,8 @@ export const useProgramState = (program: ProgramDefinition, child: ChildWithRole
     assignment,
     loading,
     startProgram,
-    savePacing,
-    completeSession,
+    advanceProgram,
+    jumpToProgram,
     toggleMastered,
     restartProgram,
     refetch: fetchState,

@@ -2,14 +2,15 @@
 
 // "Jump to Question" (mockup 8d): a searchable index of every question in the
 // catechism, reached by tapping the "Question N of Total" label on the
-// session screen (8a/8b/8c). Browsing here is the same "look, don't lose your
-// place" move as the review step — picking a question repositions the local
-// track (jumpToLocalQuestion), it doesn't re-introduce material.
+// session screen (8a). Identical signed in or out (turn 9) — useSessionTrack
+// carries whichever backing store applies. Browsing here is the same "look,
+// don't lose your place" move as before: picking a question repositions the
+// track (jumpTo), it doesn't re-introduce material.
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
-import { getLocalCatechismTrack, jumpToLocalQuestion } from '@/lib/localCatechismProgress';
+import { useSessionTrack } from '@/hooks/useSessionTrack';
 import { listQuestions } from '@/lib/programContent';
 import { getProgram } from '@/lib/programs';
 import { SearchIcon } from '@/components/SearchIcon';
@@ -19,11 +20,9 @@ const PAGE_SIZE = 10;
 export function JumpToQuestionClient({ slug }: { slug: string }) {
   const program = getProgram(slug)!;
   const router = useRouter();
+  const track = useSessionTrack(program);
   const questions = useMemo(() => listQuestions(program), [program]);
-  const currentQuestion = useMemo(
-    () => getLocalCatechismTrack(program.contentId)?.currentQuestion ?? null,
-    [program.contentId],
-  );
+  const currentQuestion = track.questionNumber;
 
   const [query, setQuery] = useState('');
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
@@ -40,7 +39,7 @@ export function JumpToQuestionClient({ slug }: { slug: string }) {
   const remaining = filtered.length - visible.length;
 
   const goTo = (n: number) => {
-    jumpToLocalQuestion(program.contentId, n, program.totalQuestions);
+    track.jumpTo(n);
     router.push(`/programs/${slug}/session`);
   };
 

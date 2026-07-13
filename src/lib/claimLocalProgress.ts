@@ -2,9 +2,9 @@
 
 // Claiming guest progress (handoff turn 7, PRD "Conversion"): when an account
 // appears on a device that has a local track, that track becomes a real child
-// record — child, assignment, pacing, mastery — and only then is the local
-// store cleared. Any failure leaves the store untouched so the next auth
-// event retries. The row-building is pure so it can be pinned by tests.
+// record — child, assignment, mastery — and only then is the local store
+// cleared. Any failure leaves the store untouched so the next auth event
+// retries. The row-building is pure so it can be pinned by tests.
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { setActiveChildId } from './activeChild';
@@ -13,18 +13,10 @@ import {
   getLocalProgressSnapshot,
   type LocalCatechismTrack,
 } from './localCatechismProgress';
-import { defaultPacingForAge } from './programs';
 import type { CatechismAssignmentRow, ChildRow } from './database.types';
 
 export interface ClaimRows {
   assignment: { catechism_id: string; current_question: number };
-  pacing: {
-    new_questions_per_session: number;
-    sessions_per_week: number;
-    review_depth: 'recent' | 'rotation' | 'weak_only';
-    mastery_rule: 'streak' | 'manual' | 'exposures';
-    show_scripture_every_time: boolean;
-  };
   mastery: {
     question_number: number;
     state: 'reviewing' | 'mastered';
@@ -37,31 +29,21 @@ export interface ClaimRows {
 // Mirrors how the guest session already projected milestones onto mastery
 // rows: mastered carries over, everything else enters as reviewing with at
 // least one exposure.
-export const buildClaimRows = (track: LocalCatechismTrack, age: number | null): ClaimRows => {
-  const pacing = defaultPacingForAge(age);
-  return {
-    assignment: {
-      catechism_id: track.catechismId,
-      current_question: track.currentQuestion,
-    },
-    pacing: {
-      new_questions_per_session: pacing.newQuestionsPerSession,
-      sessions_per_week: pacing.sessionsPerWeek,
-      review_depth: pacing.reviewDepth,
-      mastery_rule: pacing.masteryRule,
-      show_scripture_every_time: pacing.showScriptureEveryTime,
-    },
-    mastery: Object.entries(track.milestones)
-      .map(([questionNumber, milestone]) => ({
-        question_number: Number(questionNumber),
-        state: milestone.state === 'mastered' ? 'mastered' as const : 'reviewing' as const,
-        recited_streak: 0 as const,
-        exposures: Math.max(1, milestone.reviewCount + 1),
-        last_reviewed_at: milestone.introducedAt,
-      }))
-      .sort((a, b) => a.question_number - b.question_number),
-  };
-};
+export const buildClaimRows = (track: LocalCatechismTrack): ClaimRows => ({
+  assignment: {
+    catechism_id: track.catechismId,
+    current_question: track.currentQuestion,
+  },
+  mastery: Object.entries(track.milestones)
+    .map(([questionNumber, milestone]) => ({
+      question_number: Number(questionNumber),
+      state: milestone.state === 'mastered' ? 'mastered' as const : 'reviewing' as const,
+      recited_streak: 0 as const,
+      exposures: Math.max(1, milestone.reviewCount + 1),
+      last_reviewed_at: milestone.introducedAt,
+    }))
+    .sort((a, b) => a.question_number - b.question_number),
+});
 
 interface ClaimJoinRow {
   child: (ChildRow & { catechism_assignments: CatechismAssignmentRow[] }) | null;
@@ -104,7 +86,7 @@ export const claimLocalProgress = async (
     return 'skipped';
   }
 
-  const rows = buildClaimRows(track, learnerAge);
+  const rows = buildClaimRows(track);
 
   // Insert without .select(): the children SELECT policy checks
   // user_children, which the auto_add_child_owner trigger populates after
@@ -126,11 +108,6 @@ export const claimLocalProgress = async (
     .single();
   if (assignmentError) throw assignmentError;
   const assignment = assignmentData as CatechismAssignmentRow;
-
-  const { error: pacingError } = await supabase
-    .from('program_pacing')
-    .insert({ assignment_id: assignment.id, ...rows.pacing });
-  if (pacingError) throw pacingError;
 
   if (rows.mastery.length) {
     const { error: masteryError } = await supabase
