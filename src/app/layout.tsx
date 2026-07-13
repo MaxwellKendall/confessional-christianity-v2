@@ -1,9 +1,7 @@
 import type { Metadata } from 'next';
 import { Cinzel, Marcellus } from 'next/font/google';
 
-import { LocalProgressMigrator } from '@/components/LocalProgressMigrator';
 import { SiteHeader } from '@/components/SiteHeader';
-import { AuthProvider } from '@/context/AuthContext';
 import './globals.css';
 
 const cinzel = Cinzel({
@@ -43,13 +41,10 @@ export default function RootLayout({
           full-bleed on mobile (the mockups' 390px frame), a bordered card
           on wider screens. Reading pages cap their own prose at 44rem.
         */}
-        <AuthProvider>
-          <LocalProgressMigrator />
-          <div className="mx-auto flex min-h-screen w-full max-w-[44rem] flex-col bg-card sm:border-x sm:border-hairline-2">
-            <SiteHeader />
-            <main className="flex flex-1 flex-col">{children}</main>
-          </div>
-        </AuthProvider>
+        <div className="mx-auto flex min-h-screen w-full max-w-[44rem] flex-col bg-card sm:border-x sm:border-hairline-2">
+          <SiteHeader />
+          <main className="flex flex-1 flex-col">{children}</main>
+        </div>
       </body>
     </html>
   );

@@ -2,7 +2,6 @@ import { describe, expect } from 'vitest';
 
 import {
   advanceTrack,
-  DEFAULT_LEARNER_NAME,
   migrateStoredShape,
   type LocalCatechismTrack,
 } from '@/lib/localCatechismProgress';
@@ -62,7 +61,7 @@ describe('advanceTrack (7c "Next Question")', () => {
 describe('migrateStoredShape', () => {
   const v1Track = track({ currentQuestion: 3 });
   const cases = {
-    'carries a v1 store forward with a null learner age': {
+    'carries a v1 store forward, dropping any learner fields': {
       actual: () => migrateStoredShape({
         version: 1,
         activeCatechismId: 'WSC',
@@ -72,12 +71,10 @@ describe('migrateStoredShape', () => {
       expected: {
         version: 2,
         activeCatechismId: 'WSC',
-        learnerName: 'Eli',
-        learnerAge: null,
         tracks: { WSC: v1Track },
       },
     },
-    'passes a v2 store through unchanged': {
+    'passes a v2 store through, dropping any learner fields': {
       actual: () => migrateStoredShape({
         version: 2,
         activeCatechismId: 'WSC',
@@ -88,8 +85,6 @@ describe('migrateStoredShape', () => {
       expected: {
         version: 2,
         activeCatechismId: 'WSC',
-        learnerName: 'Eli',
-        learnerAge: 7,
         tracks: { WSC: v1Track },
       },
     },
@@ -106,8 +101,6 @@ describe('migrateStoredShape', () => {
       expected: {
         version: 2,
         activeCatechismId: null,
-        learnerName: DEFAULT_LEARNER_NAME,
-        learnerAge: null,
         tracks: {},
       },
     },

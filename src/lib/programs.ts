@@ -1,7 +1,6 @@
 // The programs domain (PRD §5). A program is an authored, ordered walk
 // through a catechism.
 import type { ContentId } from './programContent';
-import type { MasteryState, QuestionMasteryRow } from './database.types';
 
 export interface ProgramDefinition {
   slug: string;
@@ -66,13 +65,3 @@ export const PROGRAMS: ProgramDefinition[] = [
 
 export const getProgram = (slug: string): ProgramDefinition | null => PROGRAMS
   .find((p) => p.slug === slug) ?? null;
-
-// ---------------------------------------------------------------------------
-// Mastery (PRD §5.6): a question's state is derived from its mastery row;
-// absence of a row means not started. There's no pacing/scheduling anymore
-// (turn 9) — a question becomes "seen" the moment a session advances past
-// it, and mastery is a manual parent toggle (ProgramLandingClient's Heart).
-// ---------------------------------------------------------------------------
-export const masteryStateFor = (
-  row: Pick<QuestionMasteryRow, 'state'> | undefined,
-): MasteryState => (row ? row.state as MasteryState : 'not_started');

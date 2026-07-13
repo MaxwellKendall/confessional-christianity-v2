@@ -1,4 +1,4 @@
-import type { MasteryState } from '@/lib/database.types';
+export type MasteryState = 'not_started' | 'reviewing' | 'mastered';
 
 // The single mastery glyph (PRD §5.6): outline = not started, muted fill =
 // reviewing, filled ochre = mastered — used identically everywhere progress

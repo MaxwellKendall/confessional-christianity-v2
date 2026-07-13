@@ -2,8 +2,8 @@
 
 // Milestones (mockup 9a, turn 9): replaces the old paced review wizard.
 // Age-labeled checkpoints reached by position alone — no schedule, no
-// steps. One tap off the session screen ("See {name}'s Milestones →"),
-// not a step inside it.
+// steps. One tap off the session screen ("See Milestones →"), not a step
+// inside it.
 import Link from 'next/link';
 
 import { useSessionTrack } from '@/hooks/useSessionTrack';
@@ -49,7 +49,6 @@ export function MilestonesClient({ slug }: { slug: string }) {
   }
 
   const progress = milestoneProgress(definitions, track.questionNumber ?? track.totalQuestions + 1);
-  const possessive = track.childName ? `${track.childName}’s` : 'Your';
 
   return (
     <div className="min-h-[calc(100dvh-4rem)] pb-10">
@@ -65,16 +64,12 @@ export function MilestonesClient({ slug }: { slug: string }) {
       </div>
 
       <div className="px-6 pb-2 text-center">
-        <div className="label-caps text-[9.5px] tracking-[0.12em] text-ink-3">
-          {track.childName ?? 'Milestones'}
-          {track.childAge !== null ? ` · Age ${track.childAge}` : ''}
-        </div>
         <h1 className="mt-1.5 font-display text-[19px] font-semibold">Milestones</h1>
       </div>
 
       {progress.length === 0 ? (
         <p className="px-9 pt-8 text-center text-[13px] italic leading-relaxed text-ink-2">
-          Milestones haven’t been mapped for {possessive.toLowerCase()} catechism yet.
+          Milestones haven’t been mapped for this catechism yet.
         </p>
       ) : (
         <div className="mt-4 flex flex-col gap-2.5 px-6">

@@ -1,48 +1,30 @@
 'use client';
 
-// Program landing (mockup 5d) and its completion state (5e, PRD §5.7).
-// The child the plan belongs to is shown plainly — "Eli's Plan" — per §5.5.
+// Program landing (mockup 5d). Progress is tracked entirely on this device.
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
-import { Heart } from '@/components/Heart';
-import { ProgressBar } from '@/components/ProgressBar';
-import { useAuth } from '@/context/AuthContext';
-import { useChildren } from '@/hooks/useChildren';
-import { useProgramState } from '@/hooks/useProgramState';
-import { getActiveChildId } from '@/lib/activeChild';
 import {
   getLocalCatechismTrack,
   localProgressLabel,
   type LocalCatechismTrack,
 } from '@/lib/localCatechismProgress';
-import { getProgram, masteryStateFor } from '@/lib/programs';
+import { getProgram } from '@/lib/programs';
 import { getQuestion, hasPrayer } from '@/lib/programContent';
+import { Heart } from '@/components/Heart';
+import { ProgressBar } from '@/components/ProgressBar';
 
 const CONTENTS_WINDOW = 6;
 
 export function ProgramLandingClient({ slug }: { slug: string }) {
   const program = getProgram(slug)!;
-  const { user, loading: authLoading } = useAuth();
-  const { children, loading: childrenLoading } = useChildren();
-  const [activeId, setActiveId] = useState<string | null>(null);
   const [localTrack, setLocalTrack] = useState<LocalCatechismTrack | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!children.length) return;
-    const stored = getActiveChildId();
-    setActiveId(children.some((c) => c.id === stored) ? stored : children[0].id);
-  }, [children]);
-
-  useEffect(() => {
-    if (authLoading || user) return;
     setLocalTrack(getLocalCatechismTrack(program.contentId));
-  }, [authLoading, program.contentId, user]);
-
-  const child = children.find((c) => c.id === activeId) ?? null;
-  const {
-    assignment, mastery, toggleMastered, restartProgram,
-  } = useProgramState(program, child);
+    setLoading(false);
+  }, [program.contentId]);
 
   const header = (
     <>
@@ -58,23 +40,17 @@ export function ProgramLandingClient({ slug }: { slug: string }) {
           Each question paired with proof-text Scripture, a closing prayer,
           and progress milestones you can save on this device.
         </p>
-        {child && (
-          <div className="label-caps text-[10px] tracking-[0.1em] text-ink-3">
-            {[
-              child.age !== null ? `Configured for age ${child.age}` : null,
-              `~${program.estimatedMinutes} minutes`,
-            ].filter(Boolean).join(' · ')}
-          </div>
-        )}
+        <div className="label-caps text-[10px] tracking-[0.1em] text-ink-3">
+          {`~${program.estimatedMinutes} minutes`}
+        </div>
       </div>
     </>
   );
 
-  const loading = authLoading || childrenLoading;
   if (loading) return <div>{header}</div>;
 
   // Completed (5e): a real, acknowledged state with two paths forward.
-  if (child && assignment && assignment.current_question > program.totalQuestions) {
+  if (localTrack && localTrack.currentQuestion > program.totalQuestions) {
     return (
       <div className="flex flex-1 flex-col">
         <div className="px-6 pt-4">
@@ -83,34 +59,27 @@ export function ProgramLandingClient({ slug }: { slug: string }) {
         <div className="flex flex-1 flex-col items-center justify-center px-10 py-16 text-center">
           <div className="mb-5 text-2xl text-ochre" aria-hidden="true">♥</div>
           <div className="label-caps mb-3 text-[9.5px] text-ink-3">
-            {child.name}’s Shorter Catechism · Complete
+            Shorter Catechism · Complete
           </div>
           <h1 className="mb-3.5 font-display text-xl font-semibold leading-[1.4]">
             All {program.totalQuestions} Questions of the Shorter Catechism
           </h1>
           <p className="text-[13.5px] italic leading-[1.7] text-ink-2">
-            {child.name} has recited every question, start to finish. Nothing
-            here is lost — the history stays exactly as it is.
+            Every question has been recited, start to finish. Nothing here is
+            lost — the history stays exactly as it is.
           </p>
         </div>
         <div className="flex flex-col items-center gap-4 px-6 pb-11">
-          <button
-            type="button"
-            onClick={() => restartProgram()}
-            className="action-button w-full cursor-pointer bg-transparent"
-          >
-            Restart From Question 1
-          </button>
           <Link href="/programs" className="dotted-link text-[13px] italic text-ink-2">
-            Start Another Catechism for {child.name}
+            Start Another Catechism
           </Link>
         </div>
       </div>
     );
   }
 
-  const visibleCurrentQuestion = assignment?.current_question ?? localTrack?.currentQuestion ?? 1;
-  const contentsStart = assignment || localTrack
+  const visibleCurrentQuestion = localTrack?.currentQuestion ?? 1;
+  const contentsStart = localTrack
     ? Math.max(1, Math.min(visibleCurrentQuestion - 3, program.totalQuestions - CONTENTS_WINDOW + 1))
     : 1;
   const contentsNumbers = Array.from({ length: CONTENTS_WINDOW }, (_, i) => contentsStart + i)
@@ -120,30 +89,7 @@ export function ProgramLandingClient({ slug }: { slug: string }) {
     <div className="pb-7">
       {header}
 
-      {child && assignment ? (
-        <div className="mx-5 mt-6 border-t border-hairline pt-4 text-center">
-          <div className="mb-3 font-display text-[17px] font-semibold">{child.name}’s Shorter Catechism</div>
-          <div className="mb-2.5 flex items-baseline justify-between">
-            <span className="label-caps text-[9.5px] tracking-[0.1em] text-ink-3">
-              Question {assignment.current_question} next
-            </span>
-            <span className="label-caps text-[9.5px] tracking-[0.1em] text-ink-3">
-              Q. {Math.min(assignment.current_question - 1, program.totalQuestions)} of {program.totalQuestions}
-            </span>
-          </div>
-          <div className="mb-5">
-            <ProgressBar fraction={(assignment.current_question - 1) / program.totalQuestions} />
-          </div>
-          <Link href={`/programs/${slug}/session`} className="action-button mb-4">
-            Continue Today’s Session →
-          </Link>
-          <div className="text-center">
-            <Link href={`/programs/${slug}/session/milestones`} className="dotted-link text-[12.5px] italic text-ink-2">
-              See {child.name}’s Milestones →
-            </Link>
-          </div>
-        </div>
-      ) : localTrack ? (
+      {localTrack ? (
         <div className="mx-5 mt-6 border-t border-hairline pt-4 text-center">
           <div className="mb-3 font-display text-[17px] font-semibold">Continue the Shorter Catechism</div>
           <div className="mb-2.5 flex items-baseline justify-between">
@@ -161,27 +107,19 @@ export function ProgramLandingClient({ slug }: { slug: string }) {
             Continue the Shorter Catechism →
           </Link>
           <div className="text-center">
-            <Link href={`/programs/${slug}/save`} className="dotted-link text-[12.5px] italic text-ink-2">
-              Save this progress to keep it safe
+            <Link href={`/programs/${slug}/session/milestones`} className="dotted-link text-[12.5px] italic text-ink-2">
+              See Milestones →
             </Link>
           </div>
         </div>
       ) : (
         <div className="mx-5 mt-6 border-t border-hairline pt-5 text-center">
-          {user ? (
-            <Link href={`/programs/${slug}/start`} className="action-button">
-              Begin the Shorter Catechism
-            </Link>
-          ) : (
-            <>
-              <Link href={`/programs/${slug}/start`} className="action-button">
-                Begin with a Starting Question
-              </Link>
-              <p className="mt-3 text-[12.5px] italic text-ink-2">
-                No account required. Progress saves on this device.
-              </p>
-            </>
-          )}
+          <Link href={`/programs/${slug}/start`} className="action-button">
+            Begin with a Starting Question
+          </Link>
+          <p className="mt-3 text-[12.5px] italic text-ink-2">
+            No account required. Progress saves on this device.
+          </p>
         </div>
       )}
 
@@ -190,10 +128,8 @@ export function ProgramLandingClient({ slug }: { slug: string }) {
         <div className="flex flex-col">
           {contentsNumbers.map((n) => {
             const q = getQuestion(program, n);
-            const row = mastery.find((m) => m.question_number === n);
-            const state = masteryStateFor(row);
-            const introduced = Boolean(row) || Boolean(localTrack?.milestones[String(n)]);
-            const displayState = row ? state : introduced ? 'reviewing' : 'not_started';
+            const introduced = Boolean(localTrack?.milestones[String(n)]);
+            const displayState = introduced ? 'reviewing' : 'not_started';
             return (
               <div
                 key={n}
@@ -209,21 +145,10 @@ export function ProgramLandingClient({ slug }: { slug: string }) {
                     </div>
                   )}
                 </div>
-                {child && assignment && introduced ? (
-                  <button
-                    type="button"
-                    onClick={() => toggleMastered(n)}
-                    aria-label={state === 'mastered' ? `Unmark Q. ${n} mastered` : `Mark Q. ${n} recited without help`}
-                    className="cursor-pointer border-none bg-transparent p-0"
-                  >
-                    <Heart state={state} label="" />
-                  </button>
-                ) : (
-                  <Heart
-                    state={displayState}
-                    label={`Q. ${n}: ${displayState === 'not_started' ? 'not yet started' : displayState}`}
-                  />
-                )}
+                <Heart
+                  state={displayState}
+                  label={`Q. ${n}: ${displayState === 'not_started' ? 'not yet started' : displayState}`}
+                />
               </div>
             );
           })}
