@@ -110,11 +110,12 @@ export function ProgramLandingClient({ slug }: { slug: string }) {
         </div>
       ) : (
         <div className="mx-5 mt-6 border-t border-hairline pt-5 text-center">
-          <Link href={`/programs/${slug}/start`} className="action-button">
-            Begin with a Starting Question
+          <Link href={`/programs/${slug}/session`} className="action-button">
+            Begin the {program.shortTitle} →
           </Link>
           <p className="mt-3 text-[12.5px] italic text-ink-2">
-            No account required. Progress saves on this device.
+            Start at Question 1, or open the question your family is on from the
+            Contents below. No account required — progress saves on this device.
           </p>
         </div>
       )}
