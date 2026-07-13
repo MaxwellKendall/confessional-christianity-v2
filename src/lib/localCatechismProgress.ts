@@ -91,6 +91,21 @@ export const getLocalCatechismTrack = (catechismId: string): LocalCatechismTrack
   readProgress().tracks[catechismId] ?? null
 );
 
+// The track the visitor last worked in: the recorded active catechism when it
+// still has a track, otherwise the most recently updated track (covers stores
+// written before activeCatechismId was kept in sync).
+export const getActiveLocalCatechismTrack = (): LocalCatechismTrack | null => {
+  const progress = readProgress();
+  if (progress.activeCatechismId && progress.tracks[progress.activeCatechismId]) {
+    return progress.tracks[progress.activeCatechismId];
+  }
+  const tracks = Object.values(progress.tracks);
+  if (tracks.length === 0) return null;
+  return tracks.reduce((latest, track) => (
+    track.updatedAt > latest.updatedAt ? track : latest
+  ));
+};
+
 export const startLocalCatechismTrack = (
   catechismId: string,
   startingQuestion: number,

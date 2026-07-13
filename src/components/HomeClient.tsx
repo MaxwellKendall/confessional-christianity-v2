@@ -6,13 +6,14 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 import {
-  getLocalCatechismTrack,
+  getActiveLocalCatechismTrack,
   localProgressLabel,
   type LocalCatechismTrack,
 } from '@/lib/localCatechismProgress';
 import { PROGRAMS } from '@/lib/programs';
 
-const PROGRAM = PROGRAMS[0];
+// With no saved progress the homepage pitches the flagship program (WSC).
+const DEFAULT_PROGRAM = PROGRAMS[0];
 
 export interface HomeReflection {
   slug: string;
@@ -58,7 +59,7 @@ export function HomeClient({ reflections }: { reflections: HomeReflection[] }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    setLocalTrack(getLocalCatechismTrack(PROGRAM.contentId));
+    setLocalTrack(getActiveLocalCatechismTrack());
     setReady(true);
   }, []);
 
@@ -66,25 +67,33 @@ export function HomeClient({ reflections }: { reflections: HomeReflection[] }) {
     return <div className="min-h-40" aria-hidden="true" />;
   }
 
+  // A track whose catechism no longer maps to a program can't be continued;
+  // treat it as a fresh visit.
+  const trackProgram = localTrack
+    ? PROGRAMS.find((p) => p.contentId === localTrack.catechismId) ?? null
+    : null;
+  const track = trackProgram ? localTrack : null;
+  const program = trackProgram ?? DEFAULT_PROGRAM;
+
   return (
     <div>
       <div className="px-8 pt-9 text-center">
         <div className="label-caps mb-3 text-[9.5px] text-ink-3">For your child</div>
         <h1 className="mb-2 font-display text-xl font-semibold leading-snug">
-          {PROGRAM.title}
+          {program.title}
         </h1>
         <p className="mb-6 text-[13px] italic leading-relaxed text-ink-2">
-          {PROGRAM.description}
+          {program.description}
         </p>
         <Link
-          href={`/programs/${PROGRAM.slug}/${localTrack ? 'session' : 'start'}`}
+          href={`/programs/${program.slug}/${track ? 'session' : 'start'}`}
           className="action-button mx-auto max-w-72"
         >
-          {localTrack
-            ? `Continue Question ${Math.min(localTrack.currentQuestion, PROGRAM.totalQuestions)}`
+          {track
+            ? `Continue Question ${Math.min(track.currentQuestion, program.totalQuestions)}`
             : 'Begin the Catechism'}
         </Link>
-        {localTrack && (
+        {track && (
           <div className="label-caps mt-3 text-[9px] tracking-[0.1em] text-ink-3">
             {localProgressLabel}
           </div>

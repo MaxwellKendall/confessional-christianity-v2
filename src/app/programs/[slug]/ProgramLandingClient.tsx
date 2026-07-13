@@ -106,11 +106,6 @@ export function ProgramLandingClient({ slug }: { slug: string }) {
           <Link href={`/programs/${slug}/session`} className="action-button mb-4">
             Continue the Shorter Catechism →
           </Link>
-          <div className="text-center">
-            <Link href={`/programs/${slug}/session/milestones`} className="dotted-link text-[12.5px] italic text-ink-2">
-              See Milestones →
-            </Link>
-          </div>
         </div>
       ) : (
         <div className="mx-5 mt-6 border-t border-hairline pt-5 text-center">
