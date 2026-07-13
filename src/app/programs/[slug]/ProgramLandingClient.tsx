@@ -32,7 +32,9 @@ export function ProgramLandingClient({ slug }: { slug: string }) {
         <Link href="/programs" className="dotted-link text-ink-3">Catechisms</Link>
       </div>
       <div className="px-8 pt-4 text-center">
-        <div className="label-caps mb-3 text-[9.5px] text-ink-3">Westminster Standards</div>
+        {program.tradition && (
+          <div className="label-caps mb-3 text-[9.5px] text-ink-3">{program.tradition}</div>
+        )}
         <h1 className="mb-2 font-display text-[21px] font-semibold leading-[1.3]">
           {program.title}
         </h1>
@@ -59,10 +61,10 @@ export function ProgramLandingClient({ slug }: { slug: string }) {
         <div className="flex flex-1 flex-col items-center justify-center px-10 py-16 text-center">
           <div className="mb-5 text-2xl text-ochre" aria-hidden="true">♥</div>
           <div className="label-caps mb-3 text-[9.5px] text-ink-3">
-            Shorter Catechism · Complete
+            {program.shortTitle} · Complete
           </div>
           <h1 className="mb-3.5 font-display text-xl font-semibold leading-[1.4]">
-            All {program.totalQuestions} Questions of the Shorter Catechism
+            All {program.totalQuestions} Questions of the {program.shortTitle}
           </h1>
           <p className="text-[13.5px] italic leading-[1.7] text-ink-2">
             Every question has been recited, start to finish. Nothing here is
@@ -91,7 +93,7 @@ export function ProgramLandingClient({ slug }: { slug: string }) {
 
       {localTrack ? (
         <div className="mx-5 mt-6 border-t border-hairline pt-4 text-center">
-          <div className="mb-3 font-display text-[17px] font-semibold">Continue the Shorter Catechism</div>
+          <div className="mb-3 font-display text-[17px] font-semibold">Continue the {program.shortTitle}</div>
           <div className="mb-2.5 flex items-baseline justify-between">
             <span className="label-caps text-[9.5px] tracking-[0.1em] text-ink-3">
               Question {Math.min(localTrack.currentQuestion, program.totalQuestions)} next
@@ -104,7 +106,7 @@ export function ProgramLandingClient({ slug }: { slug: string }) {
             <ProgressBar fraction={(localTrack.currentQuestion - 1) / program.totalQuestions} />
           </div>
           <Link href={`/programs/${slug}/session`} className="action-button mb-4">
-            Continue the Shorter Catechism →
+            Continue the {program.shortTitle} →
           </Link>
         </div>
       ) : (

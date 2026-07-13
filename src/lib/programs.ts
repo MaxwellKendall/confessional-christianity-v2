@@ -7,6 +7,11 @@ export interface ProgramDefinition {
   /** loose grouping on /programs (PRD §9): family catechesis, scripture, devotional */
   kind: string;
   title: string;
+  /** conversational short name used in CTAs ("Continue the {shortTitle}") */
+  shortTitle: string;
+  /** confessional tradition shown as the landing eyebrow; omit when the
+   * document belongs to no standard grouping */
+  tradition?: string;
   /** short landing/browse description — handoff copy */
   description: string;
   /** the catechism the program traverses */
@@ -22,6 +27,8 @@ export const PROGRAMS: ProgramDefinition[] = [
     slug: 'catechizing-shorter-catechism',
     kind: 'Family Catechesis',
     title: 'Westminster Shorter Catechism',
+    shortTitle: 'Shorter Catechism',
+    tradition: 'Westminster Standards',
     description:
       'The Westminster Shorter Catechism paired with Scripture, prayer, and '
       + 'progress for family teaching.',
@@ -33,6 +40,7 @@ export const PROGRAMS: ProgramDefinition[] = [
     slug: 'catechism-for-young-children',
     kind: 'Family Catechesis',
     title: 'Catechism for Young Children',
+    shortTitle: 'Catechism for Young Children',
     description:
       'A simple, memorable introduction to the faith for the youngest learners.',
     contentId: 'CFYC',
@@ -43,6 +51,8 @@ export const PROGRAMS: ProgramDefinition[] = [
     slug: 'catechizing-larger-catechism',
     kind: 'Family Catechesis',
     title: 'Westminster Larger Catechism',
+    shortTitle: 'Larger Catechism',
+    tradition: 'Westminster Standards',
     description:
       'A more comprehensive walk through the Westminster Larger Catechism, '
       + 'paired with Scripture, prayer, and progress.',
@@ -54,6 +64,8 @@ export const PROGRAMS: ProgramDefinition[] = [
     slug: 'catechizing-heidelberg-catechism',
     kind: 'Family Catechesis',
     title: 'Heidelberg Catechism',
+    shortTitle: 'Heidelberg Catechism',
+    tradition: 'Three Forms of Unity',
     description:
       'The Heidelberg Catechism paired with Scripture, prayer, and progress '
       + 'for family teaching.',
