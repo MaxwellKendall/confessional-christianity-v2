@@ -53,7 +53,19 @@ export function SessionClient({ slug }: { slug: string }) {
       </div>
 
       <div className="border-t border-hairline px-6 pb-10">
-        <div className="flex items-center justify-end pt-4">
+        <div className="flex items-center justify-between pt-4">
+          {questionNumber > 1 ? (
+            <button
+              type="button"
+              onClick={() => track.jumpTo(questionNumber - 1)}
+              aria-label="Previous question"
+              className="label-caps cursor-pointer border-none bg-transparent p-0 text-[11px] tracking-[0.1em] text-ink-3"
+            >
+              ← Prev
+            </button>
+          ) : (
+            <span />
+          )}
           <button
             type="button"
             onClick={() => track.advance()}
