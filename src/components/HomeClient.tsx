@@ -86,7 +86,7 @@ export function HomeClient({ reflections }: { reflections: HomeReflection[] }) {
           {program.description}
         </p>
         <Link
-          href={`/programs/${program.slug}/${track ? 'session' : 'start'}`}
+          href={`/programs/${program.slug}/session`}
           className="action-button mx-auto max-w-72"
         >
           {track
