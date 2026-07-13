@@ -148,11 +148,6 @@ export function ProgramLandingClient({ slug }: { slug: string }) {
             );
           })}
         </div>
-        <div className="pt-3.5 pb-1 text-center text-xs italic text-ink-3">
-          <span className="text-ochre">♥</span> mastered ·{' '}
-          <span className="text-heart-reviewing">♥</span> reviewing ·{' '}
-          <span className="text-muted">♡</span> not yet started
-        </div>
       </div>
     </div>
   );
