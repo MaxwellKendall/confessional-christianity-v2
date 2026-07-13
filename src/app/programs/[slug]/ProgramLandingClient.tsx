@@ -11,7 +11,6 @@ import {
 } from '@/lib/localCatechismProgress';
 import { getProgram } from '@/lib/programs';
 import { getQuestion, hasPrayer } from '@/lib/programContent';
-import { Heart } from '@/components/Heart';
 import { ProgressBar } from '@/components/ProgressBar';
 
 const CONTENTS_WINDOW = 6;
@@ -125,15 +124,15 @@ export function ProgramLandingClient({ slug }: { slug: string }) {
         <div className="flex flex-col">
           {contentsNumbers.map((n) => {
             const q = getQuestion(program, n);
-            const introduced = Boolean(localTrack?.milestones[String(n)]);
-            const displayState = introduced ? 'reviewing' : 'not_started';
+            const isCurrent = n === visibleCurrentQuestion;
             return (
-              <div
+              <Link
                 key={n}
-                className="flex items-center justify-between gap-3 border-t border-hairline py-2.5 last:border-b"
+                href={`/programs/${slug}/session?start=${n}`}
+                className="group flex items-center justify-between gap-3 border-t border-hairline py-2.5 no-underline last:border-b"
               >
                 <div>
-                  <div className={`font-display text-[13px] font-semibold ${introduced || n === visibleCurrentQuestion ? 'text-ink' : 'text-ink-3'}`}>
+                  <div className={`font-display text-[13px] font-semibold ${isCurrent ? 'text-ink' : 'text-ink-2'} group-hover:text-ink`}>
                     Q. {n} — {q?.question}
                   </div>
                   {!hasPrayer(program, n) && (
@@ -142,11 +141,10 @@ export function ProgramLandingClient({ slug }: { slug: string }) {
                     </div>
                   )}
                 </div>
-                <Heart
-                  state={displayState}
-                  label={`Q. ${n}: ${displayState === 'not_started' ? 'not yet started' : displayState}`}
-                />
-              </div>
+                <span aria-hidden="true" className="shrink-0 font-display text-[13px] text-ink-3 group-hover:text-ink">
+                  →
+                </span>
+              </Link>
             );
           })}
         </div>

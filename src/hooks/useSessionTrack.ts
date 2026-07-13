@@ -27,8 +27,11 @@ export interface SessionTrack {
 export const useSessionTrack = (program: ProgramDefinition): SessionTrack => {
   const [localTrack, setLocalTrack] = useState<LocalCatechismTrack | null>(null);
 
-  // No track yet means starting at Q1 (or a valid ?start=N) the moment
-  // someone arrives — zero extra steps.
+  // Arriving with a valid ?start=N positions the session there: a fresh
+  // visitor starts a track at N, while someone with a track jumps to N
+  // (browsing — milestones untouched). This is how the landing's Contents
+  // links open a specific question. Without the param, an existing track
+  // resumes where it left off and a fresh visitor begins at Q1.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const requestedStart = Number(params.get('start'));
@@ -36,11 +39,17 @@ export const useSessionTrack = (program: ProgramDefinition): SessionTrack => {
       && requestedStart >= 1
       && requestedStart <= program.totalQuestions
       ? requestedStart
-      : 1;
-    setLocalTrack(
-      getLocalCatechismTrack(program.contentId)
-        ?? startLocalCatechismTrack(program.contentId, validStart),
-    );
+      : null;
+    const existing = getLocalCatechismTrack(program.contentId);
+    if (validStart !== null) {
+      setLocalTrack(
+        existing
+          ? jumpToLocalQuestion(program.contentId, validStart, program.totalQuestions)
+          : startLocalCatechismTrack(program.contentId, validStart),
+      );
+    } else {
+      setLocalTrack(existing ?? startLocalCatechismTrack(program.contentId, 1));
+    }
   }, [program.contentId, program.totalQuestions]);
 
   const questionNumber = localTrack
