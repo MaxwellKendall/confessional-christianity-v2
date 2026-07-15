@@ -85,14 +85,20 @@ export function HomeClient({ reflections }: { reflections: HomeReflection[] }) {
         <p className="mb-6 text-[13px] italic leading-relaxed text-ink-2">
           {program.description}
         </p>
-        <Link
-          href={`/programs/${program.slug}/session`}
-          className="action-button mx-auto max-w-72"
-        >
-          {track
-            ? `Continue Question ${Math.min(track.currentQuestion, program.totalQuestions)}`
-            : 'Begin the Catechism'}
+        <Link href="/worship" className="action-button mx-auto max-w-72">
+          Begin Family Worship
         </Link>
+        <div className="mt-3.5">
+          <Link
+            href={`/programs/${program.slug}/session`}
+            className="font-body text-[12px] italic text-ink-3 no-underline"
+            style={{ borderBottom: '1px dotted var(--color-ink-3)' }}
+          >
+            {track
+              ? `Just answer today’s question — continue Question ${Math.min(track.currentQuestion, program.totalQuestions)} →`
+              : 'Just answer today’s question →'}
+          </Link>
+        </div>
         {track && (
           <div className="label-caps mt-3 text-[9px] tracking-[0.1em] text-ink-3">
             {localProgressLabel}
