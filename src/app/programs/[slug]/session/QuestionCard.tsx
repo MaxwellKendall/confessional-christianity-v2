@@ -41,7 +41,7 @@ export function QuestionCard({
 
   const [activeMarker, setActiveMarker] = useState<string | null>(citations?.groups[0]?.marker ?? null);
   const [verseTexts, setVerseTexts] = useState<Record<string, string | null>>({});
-  const [reflection, setReflection] = useState<{ slug: string; title: string } | null>(null);
+  const [hasResources, setHasResources] = useState(false);
 
   useEffect(() => {
     setActiveMarker(citations?.groups[0]?.marker ?? null);
@@ -61,17 +61,17 @@ export function QuestionCard({
 
   useEffect(() => {
     if (!entryId) {
-      setReflection(null);
+      setHasResources(false);
       return;
     }
     let stale = false;
-    fetch(`/api/reflection?entryId=${encodeURIComponent(entryId)}`)
+    fetch(`/api/resources?entryId=${encodeURIComponent(entryId)}`)
       .then((r) => r.json())
-      .then((data: { slug: string | null; title: string | null }) => {
-        if (!stale) setReflection(data.slug && data.title ? { slug: data.slug, title: data.title } : null);
+      .then((data: { resources: unknown[] }) => {
+        if (!stale) setHasResources((data.resources ?? []).length > 0);
       })
       .catch(() => {
-        if (!stale) setReflection(null);
+        if (!stale) setHasResources(false);
       });
     return () => {
       stale = true;
@@ -153,21 +153,19 @@ export function QuestionCard({
           <span className="font-display text-[13px] text-ink-3" aria-hidden="true">›</span>
         </Link>
 
-        {reflection && (
-          <>
-            <a
-              href={`/reflections/${reflection.slug}`}
-              className="flex items-center gap-3 rounded-sm bg-fill px-3.5 py-3 text-left text-ink no-underline"
-            >
-              <div className="grow">
-                <div className="font-display text-[12.5px] font-semibold text-ink">Resources</div>
-                <div className="font-body text-[11.5px] italic text-ink-3">
-                  We&rsquo;ve curated resources to help you understand this question and answer
-                </div>
+        {hasResources && (
+          <Link
+            href={`/programs/${program.slug}/session/resources`}
+            className="flex items-center gap-3 rounded-sm bg-fill px-3.5 py-3 text-left text-ink no-underline"
+          >
+            <div className="grow">
+              <div className="font-display text-[12.5px] font-semibold text-ink">Resources</div>
+              <div className="font-body text-[11.5px] italic text-ink-3">
+                We&rsquo;ve curated resources to help you understand this question and answer
               </div>
-              <span className="font-display text-[13px] text-ink-3" aria-hidden="true">›</span>
-            </a>
-          </>
+            </div>
+            <span className="font-display text-[13px] text-ink-3" aria-hidden="true">›</span>
+          </Link>
         )}
       </div>
     </div>
