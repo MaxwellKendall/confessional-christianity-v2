@@ -1,0 +1,146 @@
+[
+  {
+    "role": "Call to Worship",
+    "elements": [
+      {
+        "type": "rotation",
+        "options": [
+          {
+            "type": "scripture",
+            "citation": "Psalm 100:2",
+            "osis": "Ps.100.2",
+            "text": "Serve the Lord with gladness: come before his presence with singing."
+          },
+          {
+            "type": "scripture",
+            "citation": "Psalm 118:24",
+            "osis": "Ps.118.24",
+            "text": "This is the day which the Lord hath made; we will rejoice and be glad in it."
+          },
+          {
+            "type": "scripture",
+            "citation": "Psalm 95:6",
+            "osis": "Ps.95.6",
+            "text": "O come, let us worship and bow down: let us kneel before the Lord our maker."
+          }
+        ]
+      },
+      {
+        "type": "prayer",
+        "lede": "Respond by praying together",
+        "text": "Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. Lead us not into temptation, but deliver us from evil. For thine is the kingdom, and the power, and the glory, forever. Amen."
+      }
+    ]
+  },
+  {
+    "role": "Confessing Sin",
+    "elements": [
+      {
+        "type": "prayer",
+        "lede": "Take a quiet moment to examine your heart as this day begins. Return to the Lord by confessing what he brings to mind.",
+        "text": "Merciful Father, we confess that we have not loved you with our whole heart, nor our neighbor as ourselves. We have gone our own way instead of yours. Forgive what we have done, and what we have left undone, for the sake of your Son, who bore it all. Turn us back to you."
+      }
+    ]
+  },
+  {
+    "role": "Receiving Forgiveness",
+    "elements": [
+      {
+        "type": "scripture",
+        "citation": "1 John 1:9",
+        "osis": "1John.1.9",
+        "text": "If we confess our sins, he is faithful and just to forgive us our sins, and to cleanse us from all unrighteousness."
+      }
+    ]
+  },
+  {
+    "role": "Singing Praise",
+    "elements": [
+      {
+        "type": "rotation",
+        "options": [
+          {
+            "type": "song",
+            "title": "The Doxology",
+            "lyrics": "Praise God, from whom all blessings flow;\nPraise him, all creatures here below;\nPraise him above, ye heavenly host;\nPraise Father, Son, and Holy Ghost.",
+            "source": {
+              "label": "Hear it · Spotify",
+              "href": "https://open.spotify.com/search/Doxology%20Sovereign%20Grace%20Music",
+              "external": true
+            }
+          },
+          {
+            "type": "song",
+            "title": "Holy, Holy, Holy",
+            "lyrics": "Holy, holy, holy! Lord God Almighty!\nEarly in the morning our song shall rise to thee;\nHoly, holy, holy! merciful and mighty!\nGod in three persons, blessed Trinity!"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "Professing Faith",
+    "elements": [
+      {
+        "type": "catechism",
+        "lede": "The next question in the catechism — the same question, Scripture, and per-clause detail as always."
+      }
+    ]
+  },
+  {
+    "role": "Reading Scripture",
+    "elements": [
+      {
+        "type": "rotation",
+        "options": [
+          {
+            "type": "scripture",
+            "citation": "1 John 1:2–4",
+            "osis": "1John.1.2-1John.1.4",
+            "text": "The life was manifested, and we have seen it, and bear witness, and shew unto you that eternal life... and these things write we unto you, that your joy may be full."
+          },
+          {
+            "type": "scripture",
+            "citation": "Psalm 23:1–3",
+            "osis": "Ps.23.1-Ps.23.3",
+            "text": "The Lord is my shepherd; I shall not want. He maketh me to lie down in green pastures: he leadeth me beside the still waters. He restoreth my soul: he leadeth me in the paths of righteousness for his name's sake."
+          },
+          {
+            "type": "scripture",
+            "citation": "John 1:1, 4–5",
+            "osis": "John.1.1-John.1.5",
+            "text": "In the beginning was the Word, and the Word was with God, and the Word was God... In him was life; and the life was the light of men. And the light shineth in darkness; and the darkness comprehended it not."
+          }
+        ]
+      },
+      {
+        "type": "instruction",
+        "text": "The head of the household may offer a brief word of instruction or encouragement on what was just read."
+      }
+    ]
+  },
+  {
+    "role": "Making Requests",
+    "elements": [
+      {
+        "type": "prompts",
+        "lede": "Pray for one another as the Lord leads. A few prompts, if it helps:",
+        "items": [
+          { "label": "Our Family", "text": "Give thanks for one thing; ask for one thing." },
+          { "label": "Friends & Neighbors", "text": "Who is struggling that we can carry to God?" },
+          { "label": "The Church & The World", "text": "Pray for our church, and for the spread of the gospel." }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "Closing Prayer",
+    "elements": [
+      {
+        "type": "prayer",
+        "amen": true,
+        "text": "Lord, send us now into this day carrying what we've prayed. Make us patient with each other, honest about our sin, and quick to remember your mercy. Keep our hearts toward you until we gather again tonight."
+      }
+    ]
+  }
+]

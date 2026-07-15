@@ -1,0 +1,129 @@
+[
+  {
+    "role": "Call to Worship",
+    "elements": [
+      {
+        "type": "rotation",
+        "options": [
+          {
+            "type": "scripture",
+            "citation": "Psalm 134:1–2",
+            "osis": "Ps.134.1-Ps.134.2",
+            "text": "Behold, bless ye the Lord, all ye servants of the Lord, which by night stand in the house of the Lord. Lift up your hands in the sanctuary, and bless the Lord."
+          },
+          {
+            "type": "scripture",
+            "citation": "Psalm 113:3",
+            "osis": "Ps.113.3",
+            "text": "From the rising of the sun unto the going down of the same the Lord's name is to be praised."
+          }
+        ]
+      },
+      {
+        "type": "prayer",
+        "lede": "Respond by praying together",
+        "text": "Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. Lead us not into temptation, but deliver us from evil. For thine is the kingdom, and the power, and the glory, forever. Amen."
+      }
+    ]
+  },
+  {
+    "role": "Confessing Sin",
+    "elements": [
+      {
+        "type": "prayer",
+        "lede": "Take a quiet moment to examine your thoughts, words, and actions since worship this morning. Return to the Lord by confessing what he brings to mind.",
+        "text": "Merciful Father, we confess that we have not loved you with our whole heart, nor our neighbor as ourselves. We have gone our own way instead of yours. Forgive what we have done, and what we have left undone, for the sake of your Son, who bore it all. Turn us back to you."
+      }
+    ]
+  },
+  {
+    "role": "Receiving Forgiveness",
+    "elements": [
+      {
+        "type": "scripture",
+        "citation": "Psalm 103:12",
+        "osis": "Ps.103.12",
+        "text": "As far as the east is from the west, so far hath he removed our transgressions from us."
+      }
+    ]
+  },
+  {
+    "role": "Singing Praise",
+    "elements": [
+      {
+        "type": "rotation",
+        "options": [
+          {
+            "type": "song",
+            "title": "Psalm 134",
+            "lyrics": "Behold, bless ye the Lord,\nAll ye servants of the Lord,\nWhich by night stand in the house of the Lord.\nLift up your hands in the sanctuary,\nAnd bless the Lord."
+          },
+          {
+            "type": "song",
+            "title": "All Praise to Thee, My God, This Night",
+            "lyrics": "All praise to thee, my God, this night,\nFor all the blessings of the light:\nKeep me, O keep me, King of kings,\nBeneath thine own almighty wings."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "Professing Faith",
+    "elements": [
+      {
+        "type": "catechism",
+        "lede": "This morning's question, professed once more — the same question, Scripture, and per-clause detail as always."
+      }
+    ]
+  },
+  {
+    "role": "Reading Scripture",
+    "elements": [
+      {
+        "type": "rotation",
+        "options": [
+          {
+            "type": "scripture",
+            "citation": "Psalm 4:8",
+            "osis": "Ps.4.8",
+            "text": "I will both lay me down in peace, and sleep: for thou, Lord, only makest me dwell in safety."
+          },
+          {
+            "type": "scripture",
+            "citation": "Matthew 11:28–29",
+            "osis": "Matt.11.28-Matt.11.29",
+            "text": "Come unto me, all ye that labour and are heavy laden, and I will give you rest. Take my yoke upon you, and learn of me; for I am meek and lowly in heart: and ye shall find rest unto your souls."
+          }
+        ]
+      },
+      {
+        "type": "instruction",
+        "text": "The head of the household may offer a brief word of instruction or encouragement on what was just read."
+      }
+    ]
+  },
+  {
+    "role": "Making Requests",
+    "elements": [
+      {
+        "type": "prompts",
+        "lede": "Pray for one another as the Lord leads. A few prompts, if it helps:",
+        "items": [
+          { "label": "Our Family", "text": "Give thanks for one thing; ask for one thing." },
+          { "label": "Friends & Neighbors", "text": "Who is struggling that we can carry to God?" },
+          { "label": "The Church & The World", "text": "Pray for our church, and for the spread of the gospel." }
+        ]
+      }
+    ]
+  },
+  {
+    "role": "Closing Prayer",
+    "elements": [
+      {
+        "type": "prayer",
+        "amen": true,
+        "text": "Father, as this day closes, we lay down what we have carried and leave it in your hands. Forgive what was lacking, guard us through the night, and wake us ready to serve you. Give us rest, for you alone make us dwell in safety."
+      }
+    ]
+  }
+]
