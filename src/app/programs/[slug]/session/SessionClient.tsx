@@ -2,15 +2,28 @@
 
 // Today's session (mockup 8a): the question, its Scripture cited per-clause,
 // and Pray/Resources entry points (QuestionCard), plus Next Question.
+// Arriving with ?worship= means Family Worship's Professing Faith step (11f)
+// handed off here; the screen is identical — only "Next" returns to the
+// service at the following step instead of staying.
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 import { useSessionTrack } from '@/hooks/useSessionTrack';
 import { getProgram } from '@/lib/programs';
+import type { Daypart } from '@/lib/worship';
 import { QuestionCard } from './QuestionCard';
 
 export function SessionClient({ slug }: { slug: string }) {
   const program = getProgram(slug)!;
   const track = useSessionTrack(program);
+  const router = useRouter();
+
+  const [worshipReturn, setWorshipReturn] = useState<Daypart | null>(null);
+  useEffect(() => {
+    const daypart = new URLSearchParams(window.location.search).get('worship');
+    if (daypart === 'morning' || daypart === 'evening') setWorshipReturn(daypart);
+  }, []);
 
   if (track.loading) {
     return <div className="min-h-64" aria-hidden="true" />;
@@ -68,11 +81,14 @@ export function SessionClient({ slug }: { slug: string }) {
           )}
           <button
             type="button"
-            onClick={() => track.advance()}
+            onClick={() => {
+              track.advance();
+              if (worshipReturn) router.push(`/worship/${worshipReturn}?step=6`);
+            }}
             className="label-caps cursor-pointer border-none bg-transparent pb-0.5 text-[11px] tracking-[0.1em] text-ink"
             style={{ borderBottom: '1px dotted var(--color-ink)' }}
           >
-            Next →
+            {worshipReturn ? 'Continue Worship →' : 'Next →'}
           </button>
         </div>
         <div className="text-center mt-3">
