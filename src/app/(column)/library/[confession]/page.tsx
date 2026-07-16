@@ -58,7 +58,7 @@ export default async function ConfessionTocPage(
         </Link>
       </div>
       <div className="px-5 pt-2.5 text-center">
-        <h1 className="mb-2 font-display text-[19px] font-semibold">{doc.name}</h1>
+        <h1 className="mb-2 heading-page">{doc.name}</h1>
         <p className="text-[12.5px] italic text-ink-2">{doc.blurb}</p>
       </div>
 

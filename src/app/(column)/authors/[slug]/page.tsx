@@ -37,7 +37,7 @@ export default async function AuthorPage({ params }: { params: Promise<Params> }
   return (
     <div className="pb-7">
       <div className="px-11 pt-6 text-center">
-        <h1 className="mb-2.5 font-display text-xl font-semibold">{author.name}</h1>
+        <h1 className="mb-2.5 heading-page">{author.name}</h1>
         <p className="text-[13.5px] italic leading-relaxed text-ink-2">
           Writes on the Reformed confessions and their devotional use.
         </p>

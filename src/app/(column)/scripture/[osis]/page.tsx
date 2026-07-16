@@ -60,7 +60,7 @@ export default async function ScripturePage({ params }: { params: Promise<Params
       </div>
 
       <div className="px-11 pt-5 text-center">
-        <h1 className="mb-4 font-display text-[19px] font-semibold">{citation}</h1>
+        <h1 className="mb-4 heading-page">{citation}</h1>
         <EsvPassage osis={osis} />
       </div>
 

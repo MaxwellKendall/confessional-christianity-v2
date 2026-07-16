@@ -52,7 +52,7 @@ export function WorshipLandingClient() {
     <div className="flex min-h-[calc(100dvh-7rem)] flex-col">
       <div className="px-6 pt-6 text-center">
         <div className="label-caps text-[9.5px] tracking-[0.12em] text-ink-3">For Your Household</div>
-        <h1 className="mt-1.5 mb-1 font-display text-xl font-semibold">Family Worship</h1>
+        <h1 className="mt-1.5 mb-1 heading-page">Family Worship</h1>
         <p className="m-0 font-body text-[12.5px] italic text-ink-3">About 15 minutes, together</p>
       </div>
 

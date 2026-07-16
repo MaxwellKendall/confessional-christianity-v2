@@ -56,7 +56,7 @@ export function WorshipCompleteClient({ daypart }: { daypart: Daypart }) {
             <path d="M1 7l6 6 10-12" fill="none" stroke="var(--color-ochre)" strokeWidth="1.6" />
           </svg>
         </div>
-        <h1 className="mb-2 font-display text-[19px] font-semibold">
+        <h1 className="mb-2 heading-page">
           {daypart === 'morning' ? 'Morning' : 'Evening'} Worship Complete
         </h1>
         <p className="m-0 mb-6 font-body text-[13px] italic leading-relaxed text-ink-3">{summary}</p>

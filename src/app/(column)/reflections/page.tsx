@@ -39,7 +39,7 @@ export default async function ReflectionsPage() {
   return (
     <div className="pb-7">
       <div className="px-5 pt-6 text-center">
-        <h1 className="font-display text-xl font-semibold">Reflections</h1>
+        <h1 className="heading-page">Reflections</h1>
       </div>
 
       {seriesNames.map((series) => (

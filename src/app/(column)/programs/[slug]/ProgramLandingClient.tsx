@@ -34,7 +34,7 @@ export function ProgramLandingClient({ slug }: { slug: string }) {
         {program.tradition && (
           <div className="label-caps mb-3 text-[9.5px] text-ink-3">{program.tradition}</div>
         )}
-        <h1 className="mb-2 font-display text-[21px] font-semibold leading-[1.3]">
+        <h1 className="mb-2 heading-page">
           {program.title}
         </h1>
         <p className="mb-3 text-[13.5px] italic leading-relaxed text-ink-2">
@@ -62,7 +62,7 @@ export function ProgramLandingClient({ slug }: { slug: string }) {
           <div className="label-caps mb-3 text-[9.5px] text-ink-3">
             {program.shortTitle} · Complete
           </div>
-          <h1 className="mb-3.5 font-display text-xl font-semibold leading-[1.4]">
+          <h1 className="mb-3.5 heading-page">
             All {program.totalQuestions} Questions of the {program.shortTitle}
           </h1>
           <p className="text-[13.5px] italic leading-[1.7] text-ink-2">
@@ -92,7 +92,7 @@ export function ProgramLandingClient({ slug }: { slug: string }) {
 
       {localTrack ? (
         <div className="mx-5 mt-6 border-t border-hairline pt-4 text-center">
-          <div className="mb-3 font-display text-[17px] font-semibold">Continue the {program.shortTitle}</div>
+          <div className="mb-3 heading-section">Continue the {program.shortTitle}</div>
           <div className="mb-2.5 flex items-baseline justify-between">
             <span className="label-caps text-[9.5px] tracking-[0.1em] text-ink-3">
               Question {Math.min(localTrack.currentQuestion, program.totalQuestions)} next

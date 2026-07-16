@@ -58,10 +58,10 @@ export function HomeClient() {
           {time} · Family Worship
         </div>
         <div className="flex items-baseline justify-between gap-4">
-          <h1 className="m-0 font-display text-[20px] font-semibold leading-snug sm:text-[30px]">
+          <h1 className="m-0 heading-page">
             Begin {daypart} Worship
           </h1>
-          <span className="font-display text-[18px] text-ochre sm:text-[26px]" aria-hidden="true">→</span>
+          <span className="font-display text-[18px] text-ochre sm:text-[20px]" aria-hidden="true">→</span>
         </div>
         <p className="m-0 mt-1.5 font-body text-[13px] italic text-ink-2 sm:mt-2.5 sm:text-[15.5px]">
           About {program.estimatedMinutes} minutes, together
@@ -76,7 +76,7 @@ export function HomeClient() {
           href={`/programs/${program.slug}/session`}
           className="block rounded-sm bg-fill px-6 py-5.5 text-ink no-underline sm:px-10 sm:py-8"
         >
-          <div className="font-display text-[17px] font-semibold sm:text-[23px]">
+          <div className="heading-section">
             {program.title}
           </div>
           <div className="label-caps mt-2 text-[9.5px] tracking-[0.12em] text-ink-3 sm:mt-3 sm:text-[11px]">
@@ -99,7 +99,7 @@ export function HomeClient() {
               href={`/programs/${p.slug}`}
               className="block rounded-sm bg-fill px-5 py-5 text-ink no-underline sm:px-7 sm:py-7"
             >
-              <div className="font-display text-[14px] font-semibold leading-snug sm:text-[17px]">
+              <div className="font-display text-[14px] font-semibold leading-snug sm:text-[15.5px]">
                 {p.shortTitle}
               </div>
               <div className="label-caps mt-1.5 text-[9px] tracking-[0.1em] text-ink-3 sm:mt-2.5 sm:text-[10.5px]">

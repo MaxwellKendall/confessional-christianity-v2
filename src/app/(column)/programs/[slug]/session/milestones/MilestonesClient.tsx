@@ -64,7 +64,7 @@ export function MilestonesClient({ slug }: { slug: string }) {
       </div>
 
       <div className="px-6 pb-2 text-center">
-        <h1 className="mt-1.5 font-display text-[19px] font-semibold">Milestones</h1>
+        <h1 className="mt-1.5 heading-page">Milestones</h1>
       </div>
 
       {progress.length === 0 ? (

@@ -32,7 +32,7 @@ export function SessionClient({ slug }: { slug: string }) {
   if (track.isComplete) {
     return (
       <div className="px-9 pt-14 text-center">
-        <h1 className="mb-2.5 font-display text-[19px] font-semibold">Catechism Complete</h1>
+        <h1 className="mb-2.5 heading-page">Catechism Complete</h1>
         <p className="text-[13px] italic leading-relaxed text-ink-2">
           Every question has been seen.{' '}
           <Link href={`/programs/${slug}`} className="dotted-link text-ink">

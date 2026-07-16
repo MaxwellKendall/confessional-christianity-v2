@@ -60,7 +60,7 @@ export default async function ReflectionPage({ params }: { params: Promise<Param
             {post.part ? ` · Part ${post.part} of ${siblings.length}` : ''}
           </div>
         )}
-        <h1 className="mb-2 font-display text-2xl font-semibold leading-[1.3]">{post.title}</h1>
+        <h1 className="mb-2 heading-page">{post.title}</h1>
         {post.subtitle && (
           <p className="mb-2.5 text-sm italic text-ink-2">{post.subtitle}</p>
         )}

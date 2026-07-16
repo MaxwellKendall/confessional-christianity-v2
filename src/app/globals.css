@@ -64,6 +64,44 @@ body {
   text-transform: uppercase;
 }
 
+/* Shared display scale: wordmark > page title > section title. */
+.site-wordmark {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1rem;
+  line-height: 1.25;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+
+  @media (min-width: 40rem) {
+    font-size: 1.25rem;
+    letter-spacing: 0.15em;
+  }
+}
+
+.heading-page {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.125rem;
+  line-height: 1.35;
+
+  @media (min-width: 40rem) {
+    font-size: 1.1875rem;
+  }
+}
+
+.heading-section {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1rem;
+  line-height: 1.35;
+
+  @media (min-width: 40rem) {
+    font-size: 1.0625rem;
+  }
+}
+
 /* the quiet dotted-underline link used for tertiary actions */
 @utility dotted-link {
   text-decoration: none;
@@ -91,8 +129,9 @@ body {
 .reading-prose h3 {
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 0.9375rem;
+  font-size: 1rem;
   letter-spacing: 0.06em;
+  line-height: 1.35;
   margin: 1.625rem 0 0.75rem;
 }
 

@@ -16,7 +16,7 @@ export default function LibraryPage() {
   return (
     <div className="pb-7">
       <div className="px-5 pt-6 text-center">
-        <h1 className="font-display text-xl font-semibold">Library</h1>
+        <h1 className="heading-page">Library</h1>
       </div>
 
       <div className="mt-5 flex flex-col px-5">

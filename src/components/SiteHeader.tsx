@@ -14,7 +14,7 @@ export function SiteHeader() {
         <span className="w-[22px]" aria-hidden="true" />
         <Link
           href="/"
-          className="font-display font-semibold text-[13.5px] tracking-[0.13em] uppercase text-ink no-underline sm:text-[19px] sm:tracking-[0.16em]"
+          className="site-wordmark text-ink no-underline"
         >
           Confessional Christianity
         </Link>
