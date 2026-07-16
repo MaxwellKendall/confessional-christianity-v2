@@ -7,7 +7,7 @@ import { entryPageLabel, entryQuoteLines } from '@/lib/entryDisplay';
 import { formatDate } from '@/lib/format';
 import { generateCanonicalEntryLink, parseConfessionId, truncateForMeta } from '@/lib/helpers';
 import { getReflectionBySlug, loadReflections } from '@/lib/reflections';
-import contentByIdJson from '../../../../dataMapping/content-by-id.json';
+import contentByIdJson from '../../../../../dataMapping/content-by-id.json';
 import type { ContentById } from '@/lib/domain';
 
 const contentById = contentByIdJson as unknown as ContentById;

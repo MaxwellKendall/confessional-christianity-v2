@@ -37,11 +37,11 @@ export default function RootLayout({
     <html lang="en" className={`${cinzel.variable} ${marcellus.variable} h-full antialiased`}>
       <body className="min-h-full">
         {/*
-          The app renders as a single centered column on the canvas —
-          full-bleed on mobile (the mockups' 390px frame), a bordered card
-          on wider screens. Reading pages cap their own prose at 44rem.
+          The shell spans the whole viewport; width discipline belongs to the
+          routes — content pages share a centered column via the (column)
+          route group, the homepage manages its own wider measure.
         */}
-        <div className="mx-auto flex min-h-screen w-full max-w-[44rem] flex-col bg-card sm:border-x sm:border-hairline-2">
+        <div className="flex min-h-screen w-full flex-col bg-card">
           <SiteHeader />
           <main className="flex flex-1 flex-col">{children}</main>
         </div>
