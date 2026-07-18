@@ -68,6 +68,17 @@ export function HomeClient() {
         </p>
       </Link>
 
+      {/* the devotions library's entry point (12a): a quiet alternative to
+          the daypart service, never competing with the worship card */}
+      <div className="mt-3.5 text-center sm:mt-5">
+        <Link
+          href="/devotions"
+          className="dotted-link font-body text-[12px] italic text-ink-3 sm:text-[14px]"
+        >
+          Or choose today&rsquo;s devotion →
+        </Link>
+      </div>
+
       <div className="mt-8 sm:mt-12">
         <div className="label-caps mb-2.5 text-[9.5px] tracking-[0.14em] text-ink-3 sm:mb-3.5 sm:text-[11px]">
           Your Catechism
