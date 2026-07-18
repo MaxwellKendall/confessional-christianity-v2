@@ -28,6 +28,12 @@
   --color-ochre: #ab7e2e;
   /* the "reviewing" heart tone sits between muted and ochre */
   --color-heart-reviewing: #c9a468;
+  /*
+   * the devotions library's one deep accent (turn 15): the featured card
+   * and the highlighted range chip; -ink is its muted on-green body text
+   */
+  --color-featured: #3d4f47;
+  --color-featured-ink: #d8ddd8;
   /* child-avatar colors: arbitrary per child, rotated through this set */
   --color-avatar-1: #8a6a4f;
   --color-avatar-2: #5c7a6e;
