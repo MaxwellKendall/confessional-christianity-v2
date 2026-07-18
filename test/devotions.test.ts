@@ -1,8 +1,10 @@
 import { describe, expect, test } from 'vitest';
 
+import { BIBLE_BOOKS } from '@/lib/bible';
 import {
   SEASONS, TOPICS, devotionsGroundedIn, getAllDevotions, getDevotion,
-  getFeaturedDevotion, groundingLabel,
+  getFeaturedDevotion, groundingBookOsis, groundingChapter, groundingLabel,
+  scriptureDevotionsByBook,
 } from '@/lib/devotions';
 import { getService, stepDetail } from '@/lib/worship';
 
@@ -81,6 +83,35 @@ describe('grounding', () => {
   test('labels degrade to the raw value when a registry lookup misses', () => {
     expect(groundingLabel({ kind: 'topic', topic: 'lament' })).toBe('lament');
     expect(groundingLabel({ kind: 'catechism', entryId: 'XYZ-9' })).toBe('XYZ-9');
+  });
+});
+
+describe('the scripture browse (15b)', () => {
+  test('a grounding names its book and starting chapter', () => {
+    const grounding = getDevotion('psalm-130')!.grounding;
+    expect(groundingBookOsis(grounding)).toBe('Ps');
+    expect(groundingChapter(grounding)).toBe(130);
+    expect(groundingBookOsis({ kind: 'topic', topic: 'gratitude' })).toBeNull();
+    expect(groundingChapter({ kind: 'topic', topic: 'gratitude' })).toBeNull();
+  });
+
+  test('devotions group under their OSIS book, in chapter order', () => {
+    const byBook = scriptureDevotionsByBook();
+    expect(byBook.get('Ps')).toEqual([getDevotion('psalm-130')]);
+    for (const [book, devotions] of byBook) {
+      expect(BIBLE_BOOKS.some((b) => b.osis === book)).toBe(true);
+      const chapters = devotions.map((d) => groundingChapter(d.grounding) ?? 0);
+      expect(chapters).toEqual([...chapters].sort((a, b) => a - b));
+    }
+  });
+
+  test('the canon table holds all 66 books and 1,189 chapters, named', () => {
+    expect(BIBLE_BOOKS).toHaveLength(66);
+    expect(BIBLE_BOOKS.filter((b) => b.testament === 'old')).toHaveLength(39);
+    expect(BIBLE_BOOKS.reduce((sum, b) => sum + b.chapters, 0)).toBe(1189);
+    BIBLE_BOOKS.forEach((b) => expect(b.name, b.osis).toBeTruthy());
+    expect(BIBLE_BOOKS[0].name).toBe('Genesis');
+    expect(BIBLE_BOOKS[65].name).toBe('Revelation');
   });
 });
 

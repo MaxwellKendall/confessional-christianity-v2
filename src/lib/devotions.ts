@@ -95,6 +95,37 @@ export const getFeaturedDevotion = (): Devotion => {
 export const devotionsGroundedIn = (kind: GroundingKind): Devotion[] => DEVOTIONS
   .filter((d) => d.grounding.kind === kind);
 
+/** The OSIS book id a scripture-grounded devotion lives in ("Ps.130.1-Ps.130.8"
+ * → "Ps"), keying the 15b book browse; null on every other axis. */
+export const groundingBookOsis = (grounding: DevotionGrounding): string | null => (
+  grounding.kind === 'scripture' ? grounding.osis.split(/[.-]/)[0] : null
+);
+
+/** The chapter a scripture grounding starts in ("Ps.130" → 130) — the 15b
+ * range-chip label; null when the osis is book-level or the axis differs. */
+export const groundingChapter = (grounding: DevotionGrounding): number | null => {
+  if (grounding.kind !== 'scripture') return null;
+  const chapter = Number(grounding.osis.split('-')[0].split('.')[1]);
+  return Number.isInteger(chapter) ? chapter : null;
+};
+
+/** Scripture-grounded devotions per OSIS book, each book's list in chapter
+ * order — the 15b "choose a range" sections. */
+export const scriptureDevotionsByBook = (): Map<string, Devotion[]> => {
+  const byBook = new Map<string, Devotion[]>();
+  for (const devotion of devotionsGroundedIn('scripture')) {
+    const book = groundingBookOsis(devotion.grounding);
+    if (!book) continue;
+    const list = byBook.get(book) ?? [];
+    list.push(devotion);
+    byBook.set(book, list);
+  }
+  for (const list of byBook.values()) {
+    list.sort((a, b) => (groundingChapter(a.grounding) ?? 0) - (groundingChapter(b.grounding) ?? 0));
+  }
+  return byBook;
+};
+
 /** What a devotion is grounded in, for the "Grounded in …" line: "Psalm 130",
  * "Repentance", "WSC Q. 1", "Advent · Day 3". The prefix is the screen's. */
 export const groundingLabel = (grounding: DevotionGrounding): string => {
