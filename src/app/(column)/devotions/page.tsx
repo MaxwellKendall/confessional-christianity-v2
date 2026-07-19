@@ -1,17 +1,19 @@
-// The devotions hub (mockup 15a): an editorial featured pick up top so scale
-// never feels like a database dump, then one distinctly-treated row per
+// The devotions hub (mockup 15a): a featured slot up top so scale never
+// feels like a database dump — the editorial pick, or a Continue card once
+// a series is in progress (turn 16) — then one distinctly-treated row per
 // grounding axis — Scripture, Topic, Confession & Catechism, Season —
 // echoing 10a's "each kind its own treatment" pattern. Groupings that have
 // no authored devotions yet render as quiet, unlinked states; rows light up
-// as the library grows.
+// as the library grows. A season with a series opens onto it.
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import { getDocumentById } from '@/lib/catechisms';
+import { seriesForSeason } from '@/lib/devotionSeries';
 import {
-  SEASONS, TOPICS, devotionsGroundedIn, getFeaturedDevotion, groundingLabel,
-  scriptureDevotionsByBook,
+  SEASONS, TOPICS, devotionsGroundedIn, scriptureDevotionsByBook,
 } from '@/lib/devotions';
+import { FeaturedSlot } from './FeaturedSlot';
 
 export const metadata: Metadata = {
   title: 'Devotions',
@@ -36,7 +38,6 @@ const CATECHISM_ROWS = [
 ];
 
 export default function DevotionsPage() {
-  const featured = getFeaturedDevotion();
   const scriptureCount = devotionsGroundedIn('scripture').length;
   const bookCount = scriptureDevotionsByBook().size;
   const topicCounts = TOPICS.map((topic) => ({
@@ -61,18 +62,7 @@ export default function DevotionsPage() {
       <div className="label-caps px-5 pt-2 pb-1.5 text-[9px] tracking-[0.14em] text-ochre">
         Featured This Week
       </div>
-      <Link
-        href={`/devotions/${featured.slug}`}
-        className="mx-5 mb-4 block rounded-sm bg-featured px-5 py-5.5 text-card no-underline"
-      >
-        <div className="label-caps mb-2 text-[9px] tracking-[0.1em] text-heart-reviewing">
-          Grounded in {groundingLabel(featured.grounding)}
-        </div>
-        <div className="mb-1.5 font-display text-[17px] font-semibold">{featured.title}</div>
-        <div className="font-body text-[12.5px] italic leading-[1.55] text-featured-ink">
-          {featured.summary}
-        </div>
-      </Link>
+      <FeaturedSlot />
 
       <RowLabel>By Scripture</RowLabel>
       <Link
@@ -129,16 +119,34 @@ export default function DevotionsPage() {
 
       <RowLabel>By Season</RowLabel>
       <div className="flex gap-2.5 px-5 pt-2 pb-1">
-        {seasonCounts.map(({ season, count }) => (
-          <div key={season.slug} className="flex-1 rounded-sm bg-fill px-3.5 py-3.5">
-            <div className="mb-0.5 font-display text-[12.5px] font-semibold text-ink-2">{season.name}</div>
-            <div className="font-body text-[11px] text-ink-3">
-              {count > 0
-                ? `${count} of ${season.days} devotions`
-                : `${season.days} daily devotions — in preparation`}
+        {seasonCounts.map(({ season, count }) => {
+          const series = seriesForSeason(season.slug);
+          return series ? (
+            <Link
+              key={season.slug}
+              href={`/devotions/${series.slug}`}
+              className="flex-1 rounded-sm bg-fill px-3.5 py-3.5 text-ink no-underline"
+            >
+              <div className="mb-0.5 font-display text-[12.5px] font-semibold text-ink-2">{season.name}</div>
+              <div className="font-body text-[11px] text-ink-3">
+                {series.title}
+                {' · '}
+                {`a ${season.days}-part series`}
+                {' '}
+                <span className="text-ochre" aria-hidden="true">→</span>
+              </div>
+            </Link>
+          ) : (
+            <div key={season.slug} className="flex-1 rounded-sm bg-fill px-3.5 py-3.5">
+              <div className="mb-0.5 font-display text-[12.5px] font-semibold text-ink-2">{season.name}</div>
+              <div className="font-body text-[11px] text-ink-3">
+                {count > 0
+                  ? `${count} of ${season.days} devotions`
+                  : `${season.days} daily devotions — in preparation`}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
