@@ -1,25 +1,34 @@
-// A single devotion's landing page (mockup 15c): what's inside, why it's
-// grounded this way, and a Begin that hands off to the same eight-step
-// shell Family Worship uses. The catechism step previews as "today's
-// question" — which question that is depends on the household's track,
-// not the devotion.
+// One slug namespace, two landings. A series slug (turn 16, mockup 16a)
+// renders the series landing — the ordered, cumulative arc with its one
+// Continue. A devotion slug renders the single devotion's landing (mockup
+// 15c): what's inside, why it's grounded this way, and a Begin that hands
+// off to the same eight-step shell Family Worship uses. The catechism step
+// previews as "today's question" — which question that is depends on the
+// household's track, not the devotion.
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import { getAllSeries, getSeries, seriesMembership } from '@/lib/devotionSeries';
 import { getAllDevotions, getDevotion, groundingLabel } from '@/lib/devotions';
 import { stepDetail } from '@/lib/worship';
+import { SeriesLandingClient } from './SeriesLandingClient';
 
 export const dynamicParams = false;
 
 export function generateStaticParams(): { slug: string }[] {
-  return getAllDevotions().map(({ slug }) => ({ slug }));
+  return [
+    ...getAllSeries().map(({ slug }) => ({ slug })),
+    ...getAllDevotions().map(({ slug }) => ({ slug })),
+  ];
 }
 
 export async function generateMetadata(
   { params }: { params: Promise<{ slug: string }> },
 ): Promise<Metadata> {
   const { slug } = await params;
+  const series = getSeries(slug);
+  if (series) return { title: series.title, description: series.description };
   const devotion = getDevotion(slug);
   if (!devotion) return {};
   return { title: devotion.title, description: devotion.summary };
@@ -29,15 +38,28 @@ export default async function DevotionPage(
   { params }: { params: Promise<{ slug: string }> },
 ) {
   const { slug } = await params;
+  const series = getSeries(slug);
+  if (series) return <SeriesLandingClient series={series} />;
+
   const devotion = getDevotion(slug);
   if (!devotion) notFound();
+  const membership = seriesMembership(devotion);
 
   return (
     <div className="flex min-h-[calc(100dvh-7rem)] flex-col">
       <div className="flex-1 px-7 pt-7 pb-2.5 text-center">
-        <div className="label-caps mb-2.5 text-[9px] tracking-[0.14em] text-ochre">
-          Grounded in {groundingLabel(devotion.grounding)}
-        </div>
+        {membership ? (
+          <Link
+            href={`/devotions/${membership.series.slug}`}
+            className="label-caps mb-2.5 block text-[9px] tracking-[0.14em] text-ochre no-underline"
+          >
+            Part {membership.part.day} of {membership.series.parts.length} · {membership.series.title}
+          </Link>
+        ) : (
+          <div className="label-caps mb-2.5 text-[9px] tracking-[0.14em] text-ochre">
+            Grounded in {groundingLabel(devotion.grounding)}
+          </div>
+        )}
         <h1 className="m-0 mb-2.5 heading-page">{devotion.title}</h1>
         <p className="m-0 mb-5.5 font-body text-[13px] italic leading-[1.7] text-ink-2">
           {devotion.description}

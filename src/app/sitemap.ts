@@ -2,6 +2,7 @@ import type { MetadataRoute } from 'next';
 
 import { confessionSlugs } from '@/lib/confessionContent';
 import { getAllEntryParams } from '@/lib/library';
+import { getAllSeries } from '@/lib/devotionSeries';
 import { getAllDevotions } from '@/lib/devotions';
 import { listAuthors, loadReflections } from '@/lib/reflections';
 import { getAllScriptureParams } from '@/lib/scripture';
@@ -30,6 +31,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })),
     { url: `${BASE}/devotions`, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${BASE}/devotions/scripture`, changeFrequency: 'weekly', priority: 0.7 },
+    ...getAllSeries().map(({ slug }) => ({
+      url: `${BASE}/devotions/${slug}`,
+      changeFrequency: 'monthly' as const,
+      priority: 0.7,
+    })),
     ...getAllDevotions().map(({ slug }) => ({
       url: `${BASE}/devotions/${slug}`,
       changeFrequency: 'monthly' as const,

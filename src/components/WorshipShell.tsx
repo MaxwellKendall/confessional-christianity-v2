@@ -31,6 +31,9 @@ export interface WorshipShellProps {
   returnName: string;
   finishHref: string;
   finishLabel: string;
+  /** runs as the finish link is followed — completion recording (idempotent
+   * stores, so a repeat is harmless); navigation itself stays the Link's */
+  onFinish?: () => void;
 }
 
 interface Handoff {
@@ -156,7 +159,7 @@ function ElementView({
 }
 
 export function WorshipShell({
-  steps, baseHref, exitHref, handoffQuery, returnName, finishHref, finishLabel,
+  steps, baseHref, exitHref, handoffQuery, returnName, finishHref, finishLabel, onFinish,
 }: WorshipShellProps) {
   const searchParams = useSearchParams();
   const requested = Number(searchParams.get('step') ?? '1');
@@ -240,7 +243,7 @@ export function WorshipShell({
             Continue →
           </Link>
         ) : (
-          <Link href={finishHref} className="action-button">
+          <Link href={finishHref} onClick={onFinish} className="action-button">
             {finishLabel}
           </Link>
         )}
