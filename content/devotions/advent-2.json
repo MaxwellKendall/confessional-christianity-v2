@@ -1,0 +1,110 @@
+{
+  "slug": "advent-2",
+  "title": "The Blessing for All Nations",
+  "summary": "The garden's promise narrows to one family: in Abraham's seed, all the nations of the earth will be blessed.",
+  "description": "The promise made in the garden now narrows to one family. On the mountain where Abraham did not withhold his son, God swears by himself: in thy seed shall all the nations of the earth be blessed. The seed of the woman has a lineage.",
+  "grounding": { "kind": "season", "season": "advent", "day": 2 },
+  "steps": [
+    {
+      "role": "Call to Worship",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Psalm 98:3",
+          "osis": "Ps.98.3",
+          "text": "He hath remembered his mercy and his truth toward the house of Israel: all the ends of the earth have seen the salvation of our God."
+        }
+      ]
+    },
+    {
+      "role": "Confessing Sin",
+      "elements": [
+        {
+          "type": "prayer",
+          "lede": "Abraham did not withhold his only son from God. Take a quiet moment to name what this household still withholds.",
+          "text": "Faithful God, you swore by yourself to bless all nations, yet we confess how small our trust has been. We withhold from you what we love most; we obey when it costs us little; we treat your promises as too slow to build a life on. Forgive our half-given hearts, and give us the faith of Abraham, who judged you faithful who had promised."
+        }
+      ]
+    },
+    {
+      "role": "Receiving Forgiveness",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Galatians 3:13–14",
+          "osis": "Gal.3.13-Gal.3.14",
+          "text": "Christ hath redeemed us from the curse of the law, being made a curse for us... that the blessing of Abraham might come on the Gentiles through Jesus Christ."
+        }
+      ]
+    },
+    {
+      "role": "Singing Praise",
+      "elements": [
+        {
+          "type": "song",
+          "title": "O Come, O Come, Emmanuel",
+          "lyrics": "O come, O come, Emmanuel,\nAnd ransom captive Israel,\nThat mourns in lonely exile here,\nUntil the Son of God appear.\nRejoice! Rejoice! Emmanuel\nShall come to thee, O Israel.",
+          "source": {
+            "label": "Hear it · Spotify",
+            "href": "https://open.spotify.com/search/O%20Come%20O%20Come%20Emmanuel",
+            "external": true
+          }
+        }
+      ]
+    },
+    {
+      "role": "Professing Faith",
+      "elements": [
+        { "type": "catechism" }
+      ]
+    },
+    {
+      "role": "Reading Scripture",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Genesis 22:15–18",
+          "osis": "Gen.22.15-Gen.22.18",
+          "text": "And the angel of the Lord called unto Abraham out of heaven the second time, and said, By myself have I sworn, saith the Lord... That in blessing I will bless thee, and in multiplying I will multiply thy seed as the stars of the heaven, and as the sand which is upon the sea shore... And in thy seed shall all the nations of the earth be blessed; because thou hast obeyed my voice."
+        },
+        {
+          "type": "instruction",
+          "text": "Read aloud together. The promise from the garden now runs through one family's seed. On this same mountain a ram died in Isaac's place — where else will a Son not be withheld?"
+        }
+      ]
+    },
+    {
+      "role": "Making Requests",
+      "elements": [
+        {
+          "type": "prompts",
+          "lede": "Pray for one another as the Lord leads. A few prompts, if it helps:",
+          "items": [
+            {
+              "label": "What We Withhold",
+              "text": "What is hardest to entrust to God? Ask for grace to lay it on the altar as Abraham did."
+            },
+            {
+              "label": "All Nations",
+              "text": "The blessing was always meant to reach every nation. Pray for a people who have not yet heard it."
+            },
+            {
+              "label": "Our Family",
+              "text": "Give thanks for one thing; ask for one thing."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "role": "Closing Prayer",
+      "elements": [
+        {
+          "type": "prayer",
+          "amen": true,
+          "text": "God of Abraham, you swore by yourself because there was no one greater, and in Christ you have kept that oath to the ends of the earth. Number this household among the children of Abraham by faith. What you ask of us, let us not withhold; what you have promised us, let us not doubt — and carry us on toward Bethlehem."
+        }
+      ]
+    }
+  ]
+}

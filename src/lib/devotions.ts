@@ -8,6 +8,9 @@
 // only the wrapper metadata (grounding, summary, description) is new.
 // "Liturgy" stays out of user-facing copy — everywhere it's "Devotions".
 // Statically imported so the bundler traces the data (see programContent.ts).
+import advent1 from '../../content/devotions/advent-1.json';
+import advent2 from '../../content/devotions/advent-2.json';
+import advent3 from '../../content/devotions/advent-3.json';
 import psalm130 from '../../content/devotions/psalm-130.json';
 import { getDocumentById } from './catechisms';
 import type { WorshipStep } from './worship';
@@ -75,6 +78,9 @@ export const SEASONS: DevotionSeason[] = [
 // one-line shape as psalm-130.
 const DEVOTIONS: Devotion[] = [
   psalm130 as unknown as Devotion,
+  advent1 as unknown as Devotion,
+  advent2 as unknown as Devotion,
+  advent3 as unknown as Devotion,
 ];
 
 /** The hub's "Featured This Week" pick (15a) — editorial, rotated by hand. */

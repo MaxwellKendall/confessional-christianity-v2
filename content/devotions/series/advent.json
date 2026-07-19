@@ -1,0 +1,33 @@
+{
+  "slug": "advent",
+  "season": "advent",
+  "title": "Prepare the Way",
+  "tagline": "Waiting, Longing, Fulfillment",
+  "description": "A 24-part devotion moving in order through the prophets, the annunciation, and the nativity — each part builds on the last.",
+  "parts": [
+    { "day": 1, "title": "The Promise in the Garden", "citation": "Genesis 3:8–15" },
+    { "day": 2, "title": "The Blessing for All Nations", "citation": "Genesis 22:15–18" },
+    { "day": 3, "title": "A Star out of Jacob", "citation": "Numbers 24:15–17" },
+    { "day": 4, "title": "A Prophet Like Moses", "citation": "Deuteronomy 18:15–19" },
+    { "day": 5, "title": "The Throne of David", "citation": "2 Samuel 7:12–16" },
+    { "day": 6, "title": "Immanuel, God With Us", "citation": "Isaiah 7:10–14" },
+    { "day": 7, "title": "A Root from Jesse", "citation": "Isaiah 11:1–5" },
+    { "day": 8, "title": "A Voice in the Wilderness", "citation": "Isaiah 40:1–5" },
+    { "day": 9, "title": "The Annunciation", "citation": "Luke 1:26–38" },
+    { "day": 10, "title": "Mary’s Song", "citation": "Luke 1:46–55" },
+    { "day": 11, "title": "Zechariah’s Prophecy", "citation": "Luke 1:67–79" },
+    { "day": 12, "title": "Joseph’s Dream", "citation": "Matthew 1:18–25" },
+    { "day": 13, "title": "Bethlehem Ephratah", "citation": "Micah 5:2–4" },
+    { "day": 14, "title": "The Desert Shall Blossom", "citation": "Isaiah 35:1–6" },
+    { "day": 15, "title": "The Messenger of the Covenant", "citation": "Malachi 3:1–4" },
+    { "day": 16, "title": "The Blessed Hope", "citation": "Titus 2:11–14" },
+    { "day": 17, "title": "The Journey to Bethlehem", "citation": "Luke 2:1–5" },
+    { "day": 18, "title": "Born This Day", "citation": "Luke 2:6–7" },
+    { "day": 19, "title": "Good Tidings of Great Joy", "citation": "Luke 2:8–14" },
+    { "day": 20, "title": "The Shepherds Make Haste", "citation": "Luke 2:15–20" },
+    { "day": 21, "title": "The Star in the East", "citation": "Matthew 2:1–11" },
+    { "day": 22, "title": "Simeon’s Consolation", "citation": "Luke 2:25–32" },
+    { "day": 23, "title": "Anna Gives Thanks", "citation": "Luke 2:36–38" },
+    { "day": 24, "title": "The Word Made Flesh", "citation": "John 1:1–14" }
+  ]
+}
