@@ -1,0 +1,114 @@
+{
+  "slug": "wsc-2",
+  "title": "What rule hath God given to direct us how we may glorify and enjoy him?",
+  "summary": "Professing WSC Q. 2 of the Westminster Shorter Catechism, grounded in 1 John 1:2-4.",
+  "description": "This household worship moves through Psalm 7:17 and 1 John 1:9, and professes WSC Q. 2 — “What rule hath God given to direct us how we may glorify and enjoy him?”, before closing with 1 John 1:2-4.",
+  "grounding": {
+    "kind": "catechism",
+    "entryIds": [
+      "WSC-2"
+    ]
+  },
+  "steps": [
+    {
+      "role": "Call to Worship",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Psalm 7:17",
+          "osis": "Ps.7.17",
+          "text": "17 I will give to the Lord the thanks due to his righteousness,\n and I will sing praise to the name of the Lord, the Most High."
+        },
+        {
+          "type": "prayer",
+          "lede": "Respond to God’s call to worship him by praying the Lord’s Prayer together:",
+          "text": "Our Father who art in heaven, hallowed be thy name. Thy kingdom come. Thy will be done on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us, and lead us not into temptation, but deliver us from evil. For thine is the kingdom and the power, and the glory, forever and ever. Amen."
+        }
+      ]
+    },
+    {
+      "role": "Confessing Sin",
+      "elements": [
+        {
+          "type": "prayer",
+          "lede": "Take a moment to “test and examine” your thoughts, feelings, and actions of the past day. “Return to the Lord” by confessing your sin (Lam 3:40).",
+          "text": "Holy Father, forgive us. Though you should guide us, we inform ourselves. Though you should rule us, we control ourselves. Though you should fulfill us, we console ourselves. For we think your truth too high, your will too hard, your power to remote, your love too free. But they are not! And without them, we are of all people most miserable. Heal our confused mind with your word, heal our divided will with your law, heal our troubled conscience with your love, heal our anxious hearts with your presence, all for the sake of your Son, who loved us and gave himself for us. \nAmen."
+        }
+      ]
+    },
+    {
+      "role": "Receiving Forgiveness",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "1 John 1:9",
+          "osis": "1John.1.9",
+          "text": "9 If we confess our sins, he is faithful and just to forgive us our sins and to cleanse us from all unrighteousness."
+        }
+      ]
+    },
+    {
+      "role": "Singing Praise",
+      "elements": [
+        {
+          "type": "song",
+          "title": "Doxology",
+          "lyrics": "Praise God from whom all blessings flow\nPraise him, all creatures here below, \nPraise him above ye heavenly host\nPraise Father, Son, and Holy Ghost.",
+          "source": {
+            "label": "Hear it · Spotify",
+            "href": "https://open.spotify.com/search/Doxology%20Sovereign%20Grace%20Music",
+            "external": true
+          }
+        }
+      ]
+    },
+    {
+      "role": "Professing Faith",
+      "elements": [
+        {
+          "type": "catechism"
+        }
+      ]
+    },
+    {
+      "role": "Reading Scripture",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "1 John 1:2-4",
+          "osis": "1John.1.2-1John.1.4",
+          "text": "2 The life was made manifest, and we have seen it, and testify to it and proclaim to you the eternal life, which was with the Father and was made manifest to us— 3 that which we have seen and heard we proclaim also to you, so that you too may have fellowship with us; and indeed our fellowship is with the Father and with his Son Jesus Christ. 4 And we are writing these things so that our joy may be complete."
+        },
+        {
+          "type": "instruction",
+          "text": "The head of the household may offer words of instruction, encouragement, and exhortation."
+        }
+      ]
+    },
+    {
+      "role": "Making Requests",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Make your ways known upon the earth, Lord God, your saving power among the peoples. Renew your Church in holiness and help us to serve you with joy. Guide the leaders of all nations that justice may prevail throughout the world. Let not the needy be forgotten, nor the hope of the poor taken away. Make us instruments of your peace and let your glory be over all the earth. Prayers for ourselves, our families, friends, and the world may be offered as the Lord leads."
+        }
+      ]
+    },
+    {
+      "role": "Closing Prayer",
+      "elements": [
+        {
+          "type": "prayer",
+          "lede": "Attributed to Joseph Mercier.",
+          "text": "O Holy Spirit, beloved of my soul, I adore you. Enlighten me, guide me, strengthen me, console me. Tell me what I should do; give me your orders. I promise to submit myself to all that you desire of me and to accept all that you permit to happen to me. Let me only know your will.  \nAmen."
+        },
+        {
+          "type": "scripture",
+          "citation": "Romans 15:13",
+          "osis": "Rom.15.13",
+          "text": "May the God of hope fill us with all joy and peace in believing through the power of the Holy Spirit. \nAmen."
+        }
+      ]
+    }
+  ]
+}

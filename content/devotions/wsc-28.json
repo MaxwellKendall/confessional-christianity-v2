@@ -1,0 +1,108 @@
+{
+  "slug": "wsc-28",
+  "title": "Wherein consisteth Christ's exaltation?",
+  "summary": "Professing WSC Q. 28 of the Westminster Shorter Catechism, grounded in Ephesians 1:16, 18b-21.",
+  "description": "This household worship moves through Psalm 47:5-7 and Malachi 3:17, and professes WSC Q. 28 — “Wherein consisteth Christ's exaltation?”, before closing with Ephesians 1:16, 18b-21.",
+  "grounding": {
+    "kind": "catechism",
+    "entryIds": [
+      "WSC-28"
+    ]
+  },
+  "steps": [
+    {
+      "role": "Call to Worship",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Psalm 47:5-7",
+          "osis": "Ps.47.5-Ps.47.7",
+          "text": "5 God has gone up with a shout, the Lord with the sound of a trumpet.\n6 Sing praises to God, sing praises! Sing praises to our King, sing praises!\n7 For God is the King of all the earth; sing praises with a psalm."
+        },
+        {
+          "type": "prayer",
+          "lede": "Respond to God’s call to worship him by praying the Lord’s Prayer together:",
+          "text": "Our Father who art in heaven, hallowed be thy name. Thy kingdom come. Thy will be done on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us, and lead us not into temptation, but deliver us from evil. For thine is the kingdom and the power, and the glory, forever and ever. Amen."
+        }
+      ]
+    },
+    {
+      "role": "Confessing Sin",
+      "elements": [
+        {
+          "type": "prayer",
+          "lede": "Take a moment to “test and examine” your thoughts, feelings, and actions of the past day. “Return to the Lord” by confessing your sin (Lam 3:40).",
+          "text": "O Father, we are gathered before you, the Maker of Heaven and Earth, whose chosen dwelling place is with the broken and contrite, to confess that\nwe have sinned in thought and word and deed;\nwe have not loved you with all our heart and soul,\nwe have not loved you with all our mind and strength;\nwe have not even loved our neighbor as ourselves.\nIn your mercy, deepen our sorrow for the wrong we have done and for the good we have left undone, so that we may hate our sin with a holy hatred. But, please Father, do not leave us in sorrow. With you, O Lord, there is forgiveness. In your mercy, restore the joy of our salvation; so that we may love you with a holy love. \nAmen."
+        }
+      ]
+    },
+    {
+      "role": "Receiving Forgiveness",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Malachi 3:17",
+          "osis": "Mal.3.17",
+          "text": "17 “They shall be mine, says the Lord of hosts, in the day when I make up my treasured possession, and I will spare them as a man spares his son who serves him."
+        }
+      ]
+    },
+    {
+      "role": "Singing Praise",
+      "elements": [
+        {
+          "type": "song",
+          "title": "Christ Rises Conqueror from the Grave",
+          "lyrics": "Christ rises conqu’ror from the grave,\n From death returning, strong to save,\n With His right hand the tyrant chains, \nAnd paradise for man regains.\n All praise be Thine, O risen Lord, \nFrom death to endless life restored;\n All praise to God the Father be,\n And Holy Ghost eternally."
+        }
+      ]
+    },
+    {
+      "role": "Professing Faith",
+      "elements": [
+        {
+          "type": "catechism"
+        }
+      ]
+    },
+    {
+      "role": "Reading Scripture",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Ephesians 1:16, 18b-21",
+          "osis": "Eph.1.16-Eph.1.21",
+          "text": "16 I do not cease to give thanks for you, remembering you in my prayers, 18 …that you may know what is the hope to which he has called you, what are the riches of his glorious inheritance in the saints, 19 and what is the immeasurable greatness of his power toward us who believe, according to the working of his great might 20 that he worked in Christ when he raised him from the dead and seated him at his right hand in the heavenly places, 21 far above all rule and authority and power and dominion, and above every name that is named, not only in this age but also in the one to come."
+        },
+        {
+          "type": "instruction",
+          "text": "The head of the household may offer words of instruction, encouragement, and exhortation."
+        }
+      ]
+    },
+    {
+      "role": "Making Requests",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Make your ways known upon the earth, Lord God, your saving power among the peoples. Renew your Church in holiness and help us to serve you with joy. Guide the leaders of all nations that justice may prevail throughout the world. Let not the needy be forgotten, nor the hope of the poor taken away. Make us instruments of your peace and let your glory be over all the earth. Prayers for ourselves, our families, friends, and the world may be offered as the Lord leads."
+        }
+      ]
+    },
+    {
+      "role": "Closing Prayer",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "O God, the King of glory, you have exalted your only Son Jesus Christ with great triumph to your kingdom in heaven: Do not leave us comfortless, but send us your Holy Spirit to strengthen us, and exalt us to that place where our Savior Christ has gone before; who lives and reigns with you and the Holy Spirit, one God, in glory everlasting\nAmen."
+        },
+        {
+          "type": "scripture",
+          "citation": "Revelation 22:20-21",
+          "osis": "Rev.22.20-Rev.22.21",
+          "text": "20 He who testifies to these things says, “Surely I am coming soon.” Amen. Come, Lord Jesus!\n21 The grace of the Lord Jesus be with all.\nAmen."
+        }
+      ]
+    }
+  ]
+}

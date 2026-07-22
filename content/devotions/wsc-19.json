@@ -1,0 +1,113 @@
+{
+  "slug": "wsc-19",
+  "title": "What is the misery of that estate whereinto man fell?",
+  "summary": "Professing WSC Q. 19 of the Westminster Shorter Catechism, grounded in Ephesians 2:1-5.",
+  "description": "This household worship moves through Psalm 32:10-11 and Psalm 130:3-4, and professes WSC Q. 19 — “What is the misery of that estate whereinto man fell?”, before closing with Ephesians 2:1-5.",
+  "grounding": {
+    "kind": "catechism",
+    "entryIds": [
+      "WSC-19"
+    ]
+  },
+  "steps": [
+    {
+      "role": "Call to Worship",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Psalm 32:10-11",
+          "osis": "Ps.32.10-Ps.32.11",
+          "text": "10 Many are the sorrows of the wicked,\n but steadfast love surrounds the one who trusts in the Lord.\n11 Be glad in the Lord, and rejoice, O righteous,\n and shout for joy, all you upright in heart!"
+        },
+        {
+          "type": "prayer",
+          "lede": "Respond to God’s call to worship him by praying the Lord’s Prayer together:",
+          "text": "Our Father who art in heaven, hallowed be thy name. Thy kingdom come. Thy will be done on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us, and lead us not into temptation, but deliver us from evil. For thine is the kingdom and the power, and the glory, forever and ever. Amen."
+        }
+      ]
+    },
+    {
+      "role": "Confessing Sin",
+      "elements": [
+        {
+          "type": "prayer",
+          "lede": "Take a moment to “test and examine” your thoughts, feelings, and actions of the past day. “Return to the Lord” by confessing your sin (Lam 3:40).",
+          "text": "Dear Heavenly Father, we bow our heads before you,\n and we confess that we have too often forgotten that we are yours. \nSometimes we carry on our lives as if there was no God,\n and we fall short of being a credible witness to You. \nFor these things we ask your forgiveness,\n and we also ask for your strength. \nGive us clear minds and open hearts so we may witness to You in our world. \nRemind us to be who You would have us to be regardless of what we are doing or who we are with.\n Hold us to You and build our relationship with You and with those You have given us on earth.\nAmen."
+        }
+      ]
+    },
+    {
+      "role": "Receiving Forgiveness",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Psalm 130:3-4",
+          "osis": "Ps.130.3-Ps.130.4",
+          "text": "3 If you, O Lord, should mark iniquities,\n O Lord, who could stand?\n4 But with you there is forgiveness,\n that you may be feared."
+        }
+      ]
+    },
+    {
+      "role": "Singing Praise",
+      "elements": [
+        {
+          "type": "song",
+          "title": "Doxology",
+          "lyrics": "Praise God from whom all blessings flow\nPraise him, all creatures here below,\nPraise him above ye heavenly host\nPraise Father, Son, and Holy Ghost.",
+          "source": {
+            "label": "Hear it · Spotify",
+            "href": "https://open.spotify.com/search/Doxology%20Sovereign%20Grace%20Music",
+            "external": true
+          }
+        }
+      ]
+    },
+    {
+      "role": "Professing Faith",
+      "elements": [
+        {
+          "type": "catechism"
+        }
+      ]
+    },
+    {
+      "role": "Reading Scripture",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Ephesians 2:1-5",
+          "osis": "Eph.2.1-Eph.2.5",
+          "text": "1 And you were dead in the trespasses and sins 2 in which you once walked, following the course of this world, following the prince of the power of the air, the spirit that is now at work in the sons of disobedience— 3 among whom we all once lived in the passions of our flesh, carrying out the desires of the body and the mind, and were by nature children of wrath, like the rest of mankind. 4 But God, being rich in mercy, because of the great love with which he loved us, 5 even when we were dead in our trespasses, made us alive together with Christ—by grace you have been saved."
+        },
+        {
+          "type": "instruction",
+          "text": "The head of the household may offer words of instruction, encouragement, and exhortation."
+        }
+      ]
+    },
+    {
+      "role": "Making Requests",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Make your ways known upon the earth, Lord God, your saving power among the peoples. Renew your Church in holiness and help us to serve you with joy. Guide the leaders of all nations that justice may prevail throughout the world. Let not the needy be forgotten, nor the hope of the poor taken away. Make us instruments of your peace and let your glory be over all the earth. Prayers for ourselves, our families, friends, and the world may be offered as the Lord leads."
+        }
+      ]
+    },
+    {
+      "role": "Closing Prayer",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Almighty and everlasting God, in your tender love for us you sent your Son our Savior Jesus Christ to take upon himself our nature, and to suffer death upon the Cross, giving us the example of his great humility: Mercifully grant that we may walk in the way of his suffering, and come to share in his resurrection; through Jesus Christ our Lord, who lives and reigns with you and the Holy Spirit, one God, for ever and ever.  \nAmen."
+        },
+        {
+          "type": "scripture",
+          "citation": "Colossians 1:11-12",
+          "osis": "Col.1.11-Col.1.12",
+          "text": "11 May you be strengthened with all power, according to his glorious might, for all endurance and patience with joy; 12 giving thanks to the Father, who has qualified you to share in the inheritance of the saints in light. \nAmen."
+        }
+      ]
+    }
+  ]
+}

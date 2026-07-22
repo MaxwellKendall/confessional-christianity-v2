@@ -1,0 +1,108 @@
+{
+  "slug": "wsc-38",
+  "title": "What benefits do believers receive from Christ at the resurrection?",
+  "summary": "Professing WSC Q. 38 of the Westminster Shorter Catechism, grounded in 1 Corinthians 15:20-23, 42-49.",
+  "description": "This household worship moves through Psalm 61:1-3, 8 and 1 John 1:2-3, and professes WSC Q. 38 — “What benefits do believers receive from Christ at the resurrection?”, before closing with 1 Corinthians 15:20-23, 42-49.",
+  "grounding": {
+    "kind": "catechism",
+    "entryIds": [
+      "WSC-38"
+    ]
+  },
+  "steps": [
+    {
+      "role": "Call to Worship",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Psalm 61:1-3, 8",
+          "osis": "Ps.61.1-Ps.61.8",
+          "text": "1 Hear my cry, O God, listen to my prayer;\n2 from the end of the earth I call to you when my heart is faint. Lead me to the rock that is higher than I,\n3 for you have been my refuge, a strong tower against the enemy.\n8 So will I ever sing praises to your name, as I perform my vows day after day."
+        },
+        {
+          "type": "prayer",
+          "lede": "Respond to God’s call to worship him by praying the Lord’s Prayer together:",
+          "text": "Our Father who art in heaven, hallowed be thy name. Thy kingdom come. Thy will be done on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us, and lead us not into temptation, but deliver us from evil. For thine is the kingdom and the power, and the glory, forever and ever. Amen."
+        }
+      ]
+    },
+    {
+      "role": "Confessing Sin",
+      "elements": [
+        {
+          "type": "prayer",
+          "lede": "Take a moment to “test and examine” your thoughts, feelings, and actions of the past day. “Return to the Lord” by confessing your sin (Lam 3:40).",
+          "text": "Almighty and most merciful Father, we are thankful that your mercy is higher than the heavens, wider than our wanderings, deeper than all our sin.\nForgive our careless attitudes toward your purposes, our refusal to relieve the suffering of others, our envy of those who have more than we have, our obsession with creating a life of constant pleasure, our indifference to the treasures of heaven, our neglect of your wise and gracious law.\nHelp us to change our way of life so that we may desire what is good, love what you love, and do what you command, through Jesus Christ our Lord. \nAmen."
+        }
+      ]
+    },
+    {
+      "role": "Receiving Forgiveness",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "1 John 1:2-3",
+          "osis": "1John.1.2-1John.1.3",
+          "text": "2 Beloved, we are God's children now, and what we will be has not yet appeared; but we know that when he appears we shall be like him, because we shall see him as he is. 3 And everyone who thus hopes in him purifies himself as he is pure."
+        }
+      ]
+    },
+    {
+      "role": "Singing Praise",
+      "elements": [
+        {
+          "type": "song",
+          "title": "All Creatures of Our God and King",
+          "lyrics": "Let all things their Creator bless,\nAnd worship him in humbleness.\nO praise him. Alleluia!\nPraise, praise the Father, praise the Son,\nAnd praise the Spirit, Three in One.\nO praise him! O praise him!\nAlleluia! Alleluia! Alleluia!"
+        }
+      ]
+    },
+    {
+      "role": "Professing Faith",
+      "elements": [
+        {
+          "type": "catechism"
+        }
+      ]
+    },
+    {
+      "role": "Reading Scripture",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "1 Corinthians 15:20-23, 42-49",
+          "osis": "1Cor.15.20-1Cor.15.49",
+          "text": "20 But in fact Christ has been raised from the dead, the firstfruits of those who have fallen asleep. 21 For as by a man came death, by a man has come also the resurrection of the dead. 22 For as in Adam all die, so also in Christ shall all be made alive. 23 But each in his own order: Christ the firstfruits, then at his coming those who belong to Christ.\n42 So is it with the resurrection of the dead. What is sown is perishable; what is raised is imperishable. 43 It is sown in dishonor; it is raised in glory. It is sown in weakness; it is raised in power. 44 It is sown a natural body; it is raised a spiritual body. If there is a natural body, there is also a spiritual body. 45 Thus it is written, “The first man Adam became a living being”; the last Adam became a life-giving spirit. 46 But it is not the spiritual that is first but the natural, and then the spiritual. 47 The first man was from the earth, a man of dust; the second man is from heaven. 48 As was the man of dust, so also are those who are of the dust, and as is the man of heaven, so also are those who are of heaven. 49 Just as we have borne the image of the man of dust, we shall also bear the image of the man of heaven."
+        },
+        {
+          "type": "instruction",
+          "text": "The head of the household may offer words of instruction, encouragement, and exhortation."
+        }
+      ]
+    },
+    {
+      "role": "Making Requests",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Make your ways known upon the earth, Lord God, your saving power among the peoples. Renew your Church in holiness and help us to serve you with joy. Guide the leaders of all nations that justice may prevail throughout the world. Let not the needy be forgotten, nor the hope of the poor taken away. Make us instruments of your peace and let your glory be over all the earth. Prayers for ourselves, our families, friends, and the world may be offered as the Lord leads."
+        }
+      ]
+    },
+    {
+      "role": "Closing Prayer",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "O God, who by the glorious resurrection of your Son Jesus Christ destroyed death and brought life and immortality to light: Grant that we, who have been raised with him, may abide in his presence and rejoice in the hope of eternal glory; through Jesus Christ our Lord, to whom, with you and the Holy Spirit, be honor and glory, now and for ever. \nAmen."
+        },
+        {
+          "type": "scripture",
+          "citation": "Hebrews 13:20-21",
+          "osis": "Heb.13.20-Heb.13.21",
+          "text": "20 Now may the God of peace who brought again from the dead our Lord Jesus, the great shepherd of the sheep, by the blood of the eternal covenant, 21 equip you with everything good that you may do his will, working in us that which is pleasing in his sight, through Jesus Christ, to whom be glory forever and ever. Amen."
+        }
+      ]
+    }
+  ]
+}

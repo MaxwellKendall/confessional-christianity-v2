@@ -76,13 +76,14 @@ describe('grounding', () => {
   test('labels name what a devotion is grounded in, per axis', () => {
     expect(groundingLabel({ kind: 'scripture', osis: 'Ps.130', citation: 'Psalm 130' })).toBe('Psalm 130');
     expect(groundingLabel({ kind: 'topic', topic: 'repentance' })).toBe('Repentance');
-    expect(groundingLabel({ kind: 'catechism', entryId: 'WSC-1' })).toBe('WSC Q. 1');
+    expect(groundingLabel({ kind: 'catechism', entryIds: ['WSC-1'] })).toBe('WSC Q. 1');
+    expect(groundingLabel({ kind: 'catechism', entryIds: ['WSC-40', 'WSC-41'] })).toBe('WSC Q. 40–41');
     expect(groundingLabel({ kind: 'season', season: 'advent', day: 3 })).toBe('Advent · Day 3');
   });
 
   test('labels degrade to the raw value when a registry lookup misses', () => {
     expect(groundingLabel({ kind: 'topic', topic: 'lament' })).toBe('lament');
-    expect(groundingLabel({ kind: 'catechism', entryId: 'XYZ-9' })).toBe('XYZ-9');
+    expect(groundingLabel({ kind: 'catechism', entryIds: ['XYZ-9'] })).toBe('XYZ-9');
   });
 });
 

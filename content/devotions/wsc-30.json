@@ -1,0 +1,108 @@
+{
+  "slug": "wsc-30",
+  "title": "How doth the Spirit apply to us the redemption purchased by Christ?",
+  "summary": "Professing WSC Q. 30 of the Westminster Shorter Catechism, grounded in Ephesians 1:11-14.",
+  "description": "This household worship moves through Psalm 50:14-15 and Deuteronomy 4:30-31, and professes WSC Q. 30 — “How doth the Spirit apply to us the redemption purchased by Christ?”, before closing with Ephesians 1:11-14.",
+  "grounding": {
+    "kind": "catechism",
+    "entryIds": [
+      "WSC-30"
+    ]
+  },
+  "steps": [
+    {
+      "role": "Call to Worship",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Psalm 50:14-15",
+          "osis": "Ps.50.14-Ps.50.15",
+          "text": "14 Offer to God a sacrifice of thanksgiving, \n and perform your vows to the Most High,\n15 and call upon me in the day of trouble;\n I will deliver you, and you shall glorify me.”"
+        },
+        {
+          "type": "prayer",
+          "lede": "Respond to God’s call to worship him by praying the Lord’s Prayer together:",
+          "text": "Our Father who art in heaven, hallowed be thy name. Thy kingdom come. Thy will be done on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us, and lead us not into temptation, but deliver us from evil. For thine is the kingdom and the power, and the glory, forever and ever. Amen."
+        }
+      ]
+    },
+    {
+      "role": "Confessing Sin",
+      "elements": [
+        {
+          "type": "prayer",
+          "lede": "Take a moment to “test and examine” your thoughts, feelings, and actions of the past day. “Return to the Lord” by confessing your sin (Lam 3:40).",
+          "text": "Lord Jesus, I have sinned times without number, and been guilty of pride and unbelief, and of neglect to seek you in my daily life. My sins and shortcomings present me with a list of accusations, but I thank you that they will not stand against me, for all have been laid on Christ. Deliver me from every evil habit, every interest of former sins, everything that dims the brightness of your grace in me, everything that prevents me taking delight in you.\nAmen."
+        }
+      ]
+    },
+    {
+      "role": "Receiving Forgiveness",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Deuteronomy 4:30-31",
+          "osis": "Deut.4.30-Deut.4.31",
+          "text": "30 When you are in tribulation, and all these things come upon you in the latter days, you will return to the Lord your God and obey his voice. 31 For the Lord your God is a merciful God. He will not leave you or destroy you or forget the covenant with your fathers that he swore to them."
+        }
+      ]
+    },
+    {
+      "role": "Singing Praise",
+      "elements": [
+        {
+          "type": "song",
+          "title": "The Riches of His Wisdom",
+          "lyrics": "Oh the depths of the riches and wisdom\nKnowledge and truth, hope and glory\nHow unsearchable perfect and loving\nThe One who answers to none\nFrom Him and through Him and to Him belong all things\nTo Him be the glory forever and ever. Amen."
+        }
+      ]
+    },
+    {
+      "role": "Professing Faith",
+      "elements": [
+        {
+          "type": "catechism"
+        }
+      ]
+    },
+    {
+      "role": "Reading Scripture",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Ephesians 1:11-14",
+          "osis": "Eph.1.11-Eph.1.14",
+          "text": "11 In him we have obtained an inheritance, having been predestined according to the purpose of him who works all things according to the counsel of his will, 12 so that we who were the first to hope in Christ might be to the praise of his glory. 13 In him you also, when you heard the word of truth, the gospel of your salvation, and believed in him, were sealed with the promised Holy Spirit, 14 who is the guarantee of our inheritance until we acquire possession of it, to the praise of his glory."
+        },
+        {
+          "type": "instruction",
+          "text": "The head of the household may offer words of instruction, encouragement, and exhortation."
+        }
+      ]
+    },
+    {
+      "role": "Making Requests",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Make your ways known upon the earth, Lord God, your saving power among the peoples. Renew your Church in holiness and help us to serve you with joy. Guide the leaders of all nations that justice may prevail throughout the world. Let not the needy be forgotten, nor the hope of the poor taken away. Make us instruments of your peace and let your glory be over all the earth. Prayers for ourselves, our families, friends, and the world may be offered as the Lord leads."
+        }
+      ]
+    },
+    {
+      "role": "Closing Prayer",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Almighty God, through the outpouring of the Holy Spirit, you revealed the way of eternal life to every race and nation: Pour out this gift anew, that by the preaching of the Gospel your salvation may reach to the ends of the earth; through Jesus Christ our Lord, who lives and reigns with you, in the unity of the Holy Spirit, one God, for ever and ever.  \nAmen."
+        },
+        {
+          "type": "scripture",
+          "citation": "Ephesians 3:16b-19",
+          "osis": "Eph.3.16-Eph.3.19",
+          "text": "May God grant you to be strengthened with power through his Spirit in your inner being, 17 so that Christ may dwell in your hearts through faith—that you, being rooted and grounded in love, 18 may have strength to comprehend with all the saints what is the breadth and length and height and depth, 19 and to know the love of Christ that surpasses knowledge, that you may be filled with all the fullness of God. \nAmen."
+        }
+      ]
+    }
+  ]
+}

@@ -9,8 +9,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
-import { partDevotion, type DevotionSeries } from '@/lib/devotionSeries';
-import { SEASONS } from '@/lib/devotions';
+import { partDevotion, seriesSourceLabel, type DevotionSeries } from '@/lib/devotionSeries';
 import { currentPartDay, getSeriesCompletedDays } from '@/lib/localSeriesProgress';
 
 export function SeriesLandingClient({ series }: { series: DevotionSeries }) {
@@ -19,7 +18,7 @@ export function SeriesLandingClient({ series }: { series: DevotionSeries }) {
     setCompleted(getSeriesCompletedDays(series.slug));
   }, [series.slug]);
 
-  const seasonName = SEASONS.find((s) => s.slug === series.season)?.name ?? series.title;
+  const sourceName = seriesSourceLabel(series);
   const total = series.parts.length;
 
   if (!completed) {
@@ -35,7 +34,7 @@ export function SeriesLandingClient({ series }: { series: DevotionSeries }) {
       <div className="flex-1 px-6 pt-7 pb-2.5">
         <div className="text-center">
           <div className="label-caps mb-2.5 text-[9px] tracking-[0.14em] text-ochre">
-            {seasonName} · A {total}-Part Series · {series.tagline}
+            {sourceName} · A {total}-Part Series · {series.tagline}
           </div>
           <h1 className="m-0 mb-2.5 heading-page">{series.title}</h1>
           <p className="m-0 mb-5 font-body text-[13px] italic leading-[1.7] text-ink-2">

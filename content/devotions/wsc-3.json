@@ -1,0 +1,108 @@
+{
+  "slug": "wsc-3",
+  "title": "What do the Scriptures principally teach?",
+  "summary": "Professing WSC Q. 3 of the Westminster Shorter Catechism, grounded in 2 Timothy 3:16-17.",
+  "description": "This household worship moves through Psalm 9:1-2 and 2 Corinthians 5:21, and professes WSC Q. 3 — “What do the Scriptures principally teach?”, before closing with 2 Timothy 3:16-17.",
+  "grounding": {
+    "kind": "catechism",
+    "entryIds": [
+      "WSC-3"
+    ]
+  },
+  "steps": [
+    {
+      "role": "Call to Worship",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Psalm 9:1-2",
+          "osis": "Ps.9.1-Ps.9.2",
+          "text": "1 I will give thanks to the Lord with my whole heart;\n I will recount all of your wonderful deeds.\n2 I will be glad and exult in you;\n I will sing praise to your name, O Most High."
+        },
+        {
+          "type": "prayer",
+          "lede": "Respond to God’s call to worship him by praying the Lord’s Prayer together:",
+          "text": "Our Father who art in heaven, hallowed be thy name. Thy kingdom come. Thy will be done on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us, and lead us not into temptation, but deliver us from evil. For thine is the kingdom and the power, and the glory, forever and ever. Amen."
+        }
+      ]
+    },
+    {
+      "role": "Confessing Sin",
+      "elements": [
+        {
+          "type": "prayer",
+          "lede": "Take a moment to “test and examine” your thoughts, feelings, and actions of the past day. “Return to the Lord” by confessing your sin (Lam 3:40).",
+          "text": "Jesus, forgive my sins. Forgive the sins that I remember, and the sins I have forgotten. Forgive my many failures in the face of temptation, and those times when I have been stubborn in the face of correction. Forgive the times I have been proud of my own achievements and those when I have failed to boast in your works. Forgive the harsh judgments I have made of others, and the leniency I have shown myself. Forgive the lies I have told to others, and the truths I have avoided. Forgive me the pain I have caused others and the indulgence I have shown myself. Jesus, have mercy on me and make me whole. \nAmen."
+        }
+      ]
+    },
+    {
+      "role": "Receiving Forgiveness",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "2 Corinthians 5:21",
+          "osis": "2Cor.5.21",
+          "text": "21 For our sake he made him to be sin who knew no sin, so that in him we might become the righteousness of God."
+        }
+      ]
+    },
+    {
+      "role": "Singing Praise",
+      "elements": [
+        {
+          "type": "song",
+          "title": "Blessed Be the Lord God of Israel",
+          "lyrics": "Now blessed be the Lord our God, the God of Israel, \nFor He alone does wonderous works in glory that excel. \nAnd blessed be his glorious name to all eternity; \nThe whole earth let His glory fill. \nAmen, so let it be."
+        }
+      ]
+    },
+    {
+      "role": "Professing Faith",
+      "elements": [
+        {
+          "type": "catechism"
+        }
+      ]
+    },
+    {
+      "role": "Reading Scripture",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "2 Timothy 3:16-17",
+          "osis": "2Tim.3.16-2Tim.3.17",
+          "text": "14 But as for you, continue in what you have learned and have firmly believed, knowing from whom you learned it 15 and how from childhood you have been acquainted with the sacred writings, which are able to make you wise for salvation through faith in Christ Jesus. 16 All Scripture is breathed out by God and profitable for teaching, for reproof, for correction, and for training in righteousness, 17 that the man of God may be complete, equipped for every good work."
+        },
+        {
+          "type": "instruction",
+          "text": "The head of the household may offer words of instruction, encouragement, and exhortation."
+        }
+      ]
+    },
+    {
+      "role": "Making Requests",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Make your ways known upon the earth, Lord God, your saving power among the peoples. Renew your Church in holiness and help us to serve you with joy. Guide the leaders of all nations that justice may prevail throughout the world. Let not the needy be forgotten, nor the hope of the poor taken away. Make us instruments of your peace and let your glory be over all the earth. Prayers for ourselves, our families, friends, and the world may be offered as the Lord leads."
+        }
+      ]
+    },
+    {
+      "role": "Closing Prayer",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Go before us, O Lord, in all our doings with your most gracious favor, and further us with your continual help; that in all our works begun, continued, and ended in you, we may glorify your holy Name, and finally, through your mercy, obtain everlasting life; through Jesus Christ our Lord.  \nAmen."
+        },
+        {
+          "type": "scripture",
+          "citation": "2 Peter 1:2",
+          "osis": "2Pet.1.2",
+          "text": "2 May grace and peace be multiplied to you in the knowledge of God and of Jesus our Lord. \nAmen."
+        }
+      ]
+    }
+  ]
+}

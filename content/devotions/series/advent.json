@@ -1,13 +1,13 @@
 {
   "slug": "advent",
-  "season": "advent",
+  "source": { "kind": "season", "season": "advent" },
   "title": "Prepare the Way",
   "tagline": "Waiting, Longing, Fulfillment",
   "description": "A 24-part devotion moving in order through the prophets, the annunciation, and the nativity — each part builds on the last.",
   "parts": [
-    { "day": 1, "title": "The Promise in the Garden", "citation": "Genesis 3:8–15" },
-    { "day": 2, "title": "The Blessing for All Nations", "citation": "Genesis 22:15–18" },
-    { "day": 3, "title": "A Star out of Jacob", "citation": "Numbers 24:15–17" },
+    { "day": 1, "title": "The Promise in the Garden", "citation": "Genesis 3:8–15", "devotionSlug": "advent-1" },
+    { "day": 2, "title": "The Blessing for All Nations", "citation": "Genesis 22:15–18", "devotionSlug": "advent-2" },
+    { "day": 3, "title": "A Star out of Jacob", "citation": "Numbers 24:15–17", "devotionSlug": "advent-3" },
     { "day": 4, "title": "A Prophet Like Moses", "citation": "Deuteronomy 18:15–19" },
     { "day": 5, "title": "The Throne of David", "citation": "2 Samuel 7:12–16" },
     { "day": 6, "title": "Immanuel, God With Us", "citation": "Isaiah 7:10–14" },

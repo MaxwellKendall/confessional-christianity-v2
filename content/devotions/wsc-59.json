@@ -1,0 +1,115 @@
+{
+  "slug": "wsc-59",
+  "title": "Which day of the seven hath God appointed to be the weekly sabbath?",
+  "summary": "Professing WSC Q. 59–60 of the Westminster Shorter Catechism, grounded in Leviticus 23:3.",
+  "description": "This household worship moves through Psalm 68:24-26 and 1 Corinthians 15:54-57, and professes WSC Q. 59–60 together — “Which day of the seven hath God appointed to be the weekly sabbath?” and “How is the sabbath to be sanctified?”, before closing with Leviticus 23:3 and Matthew 12:9-13.",
+  "grounding": {
+    "kind": "catechism",
+    "entryIds": [
+      "WSC-59",
+      "WSC-60"
+    ]
+  },
+  "steps": [
+    {
+      "role": "Call to Worship",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Psalm 68:24-26",
+          "osis": "Ps.68.24-Ps.68.26",
+          "text": "24 Your procession is seen, O God, the procession of my God, my King, into the sanctuary—\n25 the singers in front, the musicians last, between them virgins playing tambourines:\n26 “Bless God in the great congregation, the Lord, O you who are of Israel's fountain!”"
+        },
+        {
+          "type": "prayer",
+          "lede": "Respond to God’s call to worship him by praying the Lord’s Prayer together:",
+          "text": "Our Father who art in heaven, hallowed be thy name. Thy kingdom come. Thy will be done on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us, and lead us not into temptation, but deliver us from evil. For thine is the kingdom and the power, and the glory, forever and ever. Amen."
+        }
+      ]
+    },
+    {
+      "role": "Confessing Sin",
+      "elements": [
+        {
+          "type": "prayer",
+          "lede": "Take a moment to “test and examine” your thoughts, feelings, and actions of the past day. “Return to the Lord” by confessing your sin (Lam 3:40).",
+          "text": "Gracious Father, you sent your son to die and rise to new life in order that death might be brought to an end and that we might live a new life in Him. Yet we confess that we too often have chosen to remain captive to doubt and fear and ways that lead to death. By our thoughts, words, and actions, we have scorned your love, diminished the lives of others, and defaced your image in us. Father, forgive us for Jesus’ sake, and enable us by His resurrection power to live no longer for ourselves but for Him who died and rose again for us. \nAmen."
+        }
+      ]
+    },
+    {
+      "role": "Receiving Forgiveness",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "1 Corinthians 15:54-57",
+          "osis": "1Cor.15.54-1Cor.15.57",
+          "text": "54 When the perishable puts on the imperishable, and the mortal puts on immortality, then shall come to pass the saying that is written: “Death is swallowed up in victory 55 “O death, where is your victory? O death, where is your sting?” 56 The sting of death is sin, and the power of sin is the law. 57 But thanks be to God, who gives us the victory through our Lord Jesus Christ."
+        }
+      ]
+    },
+    {
+      "role": "Singing Praise",
+      "elements": [
+        {
+          "type": "song",
+          "title": "Blessed Be the Lord God of Israel",
+          "lyrics": "Now blessed be the Lord our God, the God of Israel,\nFor He alone does wonderous works in glory that excel.\nAnd blessed be his glorious name to all eternity;\nThe whole earth let His glory fill.\nAmen, so let it be."
+        }
+      ]
+    },
+    {
+      "role": "Professing Faith",
+      "elements": [
+        {
+          "type": "catechism"
+        }
+      ]
+    },
+    {
+      "role": "Reading Scripture",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Leviticus 23:3",
+          "osis": "Lev.23.3",
+          "text": "3 “Six days shall work be done, but on the seventh day is a Sabbath of solemn rest, a holy convocation. You shall do no work. It is a Sabbath to the Lord in all your dwelling places."
+        },
+        {
+          "type": "scripture",
+          "citation": "Matthew 12:9-13",
+          "osis": "Matt.12.9-Matt.12.13",
+          "text": "9 He went on from there and entered their synagogue. 10 And a man was there with a withered hand. And they asked him, “Is it lawful to heal on the Sabbath?”—so that they might accuse him. 11 He said to them, “Which one of you who has a sheep, if it falls into a pit on the Sabbath, will not take hold of it and lift it out? 12 Of how much more value is a man than a sheep! So it is lawful to do good on the Sabbath.” 13 Then he said to the man, “Stretch out your hand.” And the man stretched it out, and it was restored, healthy like the other. 14 But the Pharisees went out and conspired against him, how to destroy him."
+        },
+        {
+          "type": "instruction",
+          "text": "The head of the household may offer words of instruction, encouragement, and exhortation."
+        }
+      ]
+    },
+    {
+      "role": "Making Requests",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Make your ways known upon the earth, Lord God, your saving power among the peoples. Renew your Church in holiness and help us to serve you with joy. Guide the leaders of all nations that justice may prevail throughout the world. Let not the needy be forgotten, nor the hope of the poor taken away. Make us instruments of your peace and let your glory be over all the earth. Prayers for ourselves, our families, friends, and the world may be offered as the Lord leads."
+        }
+      ]
+    },
+    {
+      "role": "Closing Prayer",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "O God, Creator of heaven and earth: Grant that, as the crucified body of your dear Son was laid in the tomb and rested on the holy Sabbath, so we may await with him the coming of the third day, and rise with him to newness of life; through Jesus Christ our Lord.\nAmen."
+        },
+        {
+          "type": "scripture",
+          "citation": "Colossians 1:9-10",
+          "osis": "Col.1.9-Col.1.10",
+          "text": "May you be filled with the knowledge of his will in all spiritual wisdom and understanding, so as to walk in a manner worthy of the Lord, fully pleasing to him: bearing fruit in every good work and increasing in the knowledge of God."
+        }
+      ]
+    }
+  ]
+}

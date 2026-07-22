@@ -1,0 +1,108 @@
+{
+  "slug": "wsc-31",
+  "title": "What is effectual calling?",
+  "summary": "Professing WSC Q. 31 of the Westminster Shorter Catechism, grounded in John 6:43-51.",
+  "description": "This household worship moves through Psalm 51:14-15 and Ezekiel 36:25-26, and professes WSC Q. 31 — “What is effectual calling?”, before closing with John 6:43-51.",
+  "grounding": {
+    "kind": "catechism",
+    "entryIds": [
+      "WSC-31"
+    ]
+  },
+  "steps": [
+    {
+      "role": "Call to Worship",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Psalm 51:14-15",
+          "osis": "Ps.51.14-Ps.51.15",
+          "text": "14 Deliver me from bloodguiltiness, O God,\n O God of my salvation,\n and my tongue will sing aloud of your righteousness.\n15 O Lord, open my lips,\n and my mouth will declare your praise."
+        },
+        {
+          "type": "prayer",
+          "lede": "Respond to God’s call to worship him by praying the Lord’s Prayer together:",
+          "text": "Our Father who art in heaven, hallowed be thy name. Thy kingdom come. Thy will be done on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us, and lead us not into temptation, but deliver us from evil. For thine is the kingdom and the power, and the glory, forever and ever. Amen."
+        }
+      ]
+    },
+    {
+      "role": "Confessing Sin",
+      "elements": [
+        {
+          "type": "prayer",
+          "lede": "Take a moment to “test and examine” your thoughts, feelings, and actions of the past day. “Return to the Lord” by confessing your sin (Lam 3:40).",
+          "text": "Gracious God, our sins are too heavy to carry, too real to hide, and too deep to undo. \nForgive what our lips tremble to name, what our hearts can no longer bear, and what has become for us a consuming fire of judgment. \nSet us free from a past that we cannot change; open to us a future in which we can be changed; and grant us grace to grow more and more in your likeness and image, through Jesus Christ, the light of the world. \nAmen."
+        }
+      ]
+    },
+    {
+      "role": "Receiving Forgiveness",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Ezekiel 36:25-26",
+          "osis": "Ezek.36.25-Ezek.36.26",
+          "text": "25 I will sprinkle clean water on you, and you shall be clean from all your uncleannesses, and from all your idols I will cleanse you. 26 And I will give you a new heart, and a new spirit I will put within you. And I will remove the heart of stone from your flesh and give you a heart of flesh."
+        }
+      ]
+    },
+    {
+      "role": "Singing Praise",
+      "elements": [
+        {
+          "type": "song",
+          "title": "All Creatures of Our God and King",
+          "lyrics": "Let all things their Creator bless,\nAnd worship him in humbleness.\nO praise him. Alleluia!\nPraise, praise the Father, praise the Son,\nAnd praise the Spirit, Three in One.\nO praise him! O praise him!\nAlleluia! Alleluia! Alleluia!"
+        }
+      ]
+    },
+    {
+      "role": "Professing Faith",
+      "elements": [
+        {
+          "type": "catechism"
+        }
+      ]
+    },
+    {
+      "role": "Reading Scripture",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "John 6:43-51",
+          "osis": "John.6.43-John.6.51",
+          "text": "43 Jesus answered them, “Do not grumble among yourselves. 44 No one can come to me unless the Father who sent me draws him. And I will raise him up on the last day. 45 It is written in the Prophets, ‘And they will all be taught by God.’ Everyone who has heard and learned from the Father comes to me— 46 not that anyone has seen the Father except he who is from God; he has seen the Father. 47 Truly, truly, I say to you, whoever believes has eternal life. 48 I am the bread of life. 49 Your fathers ate the manna in the wilderness, and they died. 50 This is the bread that comes down from heaven, so that one may eat of it and not die. 51 I am the living bread that came down from heaven. If anyone eats of this bread, he will live forever. And the bread that I will give for the life of the world is my flesh.”"
+        },
+        {
+          "type": "instruction",
+          "text": "The head of the household may offer words of instruction, encouragement, and exhortation."
+        }
+      ]
+    },
+    {
+      "role": "Making Requests",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Make your ways known upon the earth, Lord God, your saving power among the peoples. Renew your Church in holiness and help us to serve you with joy. Guide the leaders of all nations that justice may prevail throughout the world. Let not the needy be forgotten, nor the hope of the poor taken away. Make us instruments of your peace and let your glory be over all the earth. Prayers for ourselves, our families, friends, and the world may be offered as the Lord leads."
+        }
+      ]
+    },
+    {
+      "role": "Closing Prayer",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Almighty God, you gave such grace to your apostle Andrew that he readily obeyed the call of your Son Jesus Christ, and brought his brother with him: Give us, who are called by your holy Word, grace to follow him without delay, and to bring those near to us into his gracious presence; who lives and reigns with you and the Holy Spirit, one God, now and for ever.\nAmen."
+        },
+        {
+          "type": "scripture",
+          "citation": "Ephesians 6:23-24",
+          "osis": "Eph.6.23-Eph.6.24",
+          "text": "23 Peace be to the brothers, and love with faith, from God the Father and the Lord Jesus Christ. 24 Grace be with all who love our Lord Jesus Christ with love incorruptible.\nAmen."
+        }
+      ]
+    }
+  ]
+}

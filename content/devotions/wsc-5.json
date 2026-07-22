@@ -1,0 +1,108 @@
+{
+  "slug": "wsc-5",
+  "title": "Are there more Gods than one?",
+  "summary": "Professing WSC Q. 5 of the Westminster Shorter Catechism, grounded in Deuteronomy 6:4-9.",
+  "description": "This household worship moves through Psalm 13:5-6 and Micah 7:18-19, and professes WSC Q. 5 — “Are there more Gods than one?”, before closing with Deuteronomy 6:4-9.",
+  "grounding": {
+    "kind": "catechism",
+    "entryIds": [
+      "WSC-5"
+    ]
+  },
+  "steps": [
+    {
+      "role": "Call to Worship",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Psalm 13:5-6",
+          "osis": "Ps.13.5-Ps.13.6",
+          "text": "5 But I have trusted in your steadfast love;\n my heart shall rejoice in your salvation.\n6 I will sing to the Lord,\n because he has dealt bountifully with me."
+        },
+        {
+          "type": "prayer",
+          "lede": "Respond to God’s call to worship him by praying the Lord’s Prayer together:",
+          "text": "Our Father who art in heaven, hallowed be thy name. Thy kingdom come. Thy will be done on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us, and lead us not into temptation, but deliver us from evil. For thine is the kingdom and the power, and the glory, forever and ever. Amen."
+        }
+      ]
+    },
+    {
+      "role": "Confessing Sin",
+      "elements": [
+        {
+          "type": "prayer",
+          "lede": "Take a moment to “test and examine” your thoughts, feelings, and actions of the past day. “Return to the Lord” by confessing your sin (Lam 3:40).",
+          "text": "Most merciful God, we confess that we have sinned against you in thought, word, and deed, by what we have done, and by what we have left undone.\nWe have not loved you with our whole heart; we have not loved our neighbor as ourselves. \nWe are truly sorry, and we humbly repent. \nFor the sake of your Son Jesus Christ, have mercy on us and forgive us; that we may delight in your will, and walk in your ways, to the glory of your name. \nAmen."
+        }
+      ]
+    },
+    {
+      "role": "Receiving Forgiveness",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Micah 7:18-19",
+          "osis": "Mic.7.18-Mic.7.19",
+          "text": "18 Who is a God like you, pardoning iniquity and passing over transgression for the remnant of his inheritance? He does not retain his anger forever, because he delights in steadfast love. 19 He will again have compassion on us; he will tread our iniquities underfoot. You will cast all our sins\n into the depths of the sea."
+        }
+      ]
+    },
+    {
+      "role": "Singing Praise",
+      "elements": [
+        {
+          "type": "song",
+          "title": "All Creatures of Our God and King",
+          "lyrics": "Let all things their Creator bless,\nAnd worship him in humbleness.\nO praise him. Alleluia!\nPraise, praise the Father, praise the Son,\nAnd praise the Spirit, Three in One.\nO praise him! O praise him!\nAlleluia! Alleluia! Alleluia!"
+        }
+      ]
+    },
+    {
+      "role": "Professing Faith",
+      "elements": [
+        {
+          "type": "catechism"
+        }
+      ]
+    },
+    {
+      "role": "Reading Scripture",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Deuteronomy 6:4-9",
+          "osis": "Deut.6.4-Deut.6.9",
+          "text": "4 “Hear, O Israel: The Lord our God, the Lord is one. 5 You shall love the Lord your God with all your heart and with all your soul and with all your might. 6 And these words that I command you today shall be on your heart. 7 You shall teach them diligently to your children, and shall talk of them when you sit in your house, and when you walk by the way, and when you lie down, and when you rise. 8 You shall bind them as a sign on your hand, and they shall be as frontlets between your eyes. 9 You shall write them on the doorposts of your house and on your gates.”"
+        },
+        {
+          "type": "instruction",
+          "text": "The head of the household may offer words of instruction, encouragement, and exhortation."
+        }
+      ]
+    },
+    {
+      "role": "Making Requests",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Make your ways known upon the earth, Lord God, your saving power among the peoples. Renew your Church in holiness and help us to serve you with joy. Guide the leaders of all nations that justice may prevail throughout the world. Let not the needy be forgotten, nor the hope of the poor taken away. Make us instruments of your peace and let your glory be over all the earth. Prayers for ourselves, our families, friends, and the world may be offered as the Lord leads."
+        }
+      ]
+    },
+    {
+      "role": "Closing Prayer",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Almighty God, to you all hearts are open, all desires known, and from you no secrets are hid: Cleanse the thoughts of our hearts by the inspiration of your Holy Spirit, that we may perfectly love you, and worthily magnify your holy name; through Jesus Christ our Lord.\nAmen."
+        },
+        {
+          "type": "scripture",
+          "citation": "Hebrews 13:20-21",
+          "osis": "Heb.13.20-Heb.13.21",
+          "text": "20 Now may the God of peace who brought again from the dead our Lord Jesus, the great shepherd of the sheep, by the blood of the eternal covenant, 21 equip you with everything good that you may do his will, working in us that which is pleasing in his sight, through Jesus Christ, to whom be glory forever and ever. Amen."
+        }
+      ]
+    }
+  ]
+}

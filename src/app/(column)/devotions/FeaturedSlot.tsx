@@ -10,8 +10,8 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
-import { getAllSeries, type DevotionSeries } from '@/lib/devotionSeries';
-import { SEASONS, getFeaturedDevotion, groundingLabel } from '@/lib/devotions';
+import { getAllSeries, seriesSourceLabel, type DevotionSeries } from '@/lib/devotionSeries';
+import { getFeaturedDevotion, groundingLabel } from '@/lib/devotions';
 import { currentPartDay, getSeriesCompletedDays } from '@/lib/localSeriesProgress';
 
 interface InProgress {
@@ -34,7 +34,7 @@ export function FeaturedSlot() {
 
   if (inProgress) {
     const { series, current } = inProgress;
-    const seasonName = SEASONS.find((s) => s.slug === series.season)?.name ?? '';
+    const sourceName = seriesSourceLabel(series);
     const upNext = series.parts[current - 1];
     return (
       <Link
@@ -45,7 +45,7 @@ export function FeaturedSlot() {
           Continue · Part {current} of {series.parts.length}
         </div>
         <div className="mb-1.5 font-display text-[17px] font-semibold">
-          {series.title}{seasonName ? `: ${seasonName}` : ''}
+          {series.title}{sourceName ? `: ${sourceName}` : ''}
         </div>
         <div className="font-body text-[12.5px] italic leading-[1.55] text-featured-ink">
           Up next: {upNext.title} ({upNext.citation}) — the household&rsquo;s

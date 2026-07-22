@@ -1,0 +1,108 @@
+{
+  "slug": "wsc-29",
+  "title": "How are we made partakers of the redemption purchased by Christ?",
+  "summary": "Professing WSC Q. 29 of the Westminster Shorter Catechism, grounded in Titus 3:4-7.",
+  "description": "This household worship moves through Psalm 48:9-11 and Romans 8:1-2, 14, 16-17, and professes WSC Q. 29 — “How are we made partakers of the redemption purchased by Christ?”, before closing with Titus 3:4-7.",
+  "grounding": {
+    "kind": "catechism",
+    "entryIds": [
+      "WSC-29"
+    ]
+  },
+  "steps": [
+    {
+      "role": "Call to Worship",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Psalm 48:9-11",
+          "osis": "Ps.48.9-Ps.48.11",
+          "text": "9 We have thought on your steadfast love, O God,\n in the midst of your temple.\n10 As your name, O God,\n so your praise reaches to the ends of the earth.\nYour right hand is filled with righteousness.\n11 Let Mount Zion be glad!\nLet the daughters of Judah rejoice\n because of your judgments!"
+        },
+        {
+          "type": "prayer",
+          "lede": "Respond to God’s call to worship him by praying the Lord’s Prayer together:",
+          "text": "Our Father who art in heaven, hallowed be thy name. Thy kingdom come. Thy will be done on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us, and lead us not into temptation, but deliver us from evil. For thine is the kingdom and the power, and the glory, forever and ever. Amen."
+        }
+      ]
+    },
+    {
+      "role": "Confessing Sin",
+      "elements": [
+        {
+          "type": "prayer",
+          "lede": "Take a moment to “test and examine” your thoughts, feelings, and actions of the past day. “Return to the Lord” by confessing your sin (Lam 3:40).",
+          "text": "Gracious God, we confess that we have longed too much for the comforts of this world. We have loved the gifts more than the giver. We have avoided the pain of confession and repentance that brings healing. We linger in darkness when you are our light. We would wear our dirt and shame when there is cleansing in the blood of the Lamb. We plead your forgiveness on the merits of Jesus Christ. May His sword penetrate our souls, His light flood our lives, His blood cleanse our every stain. For we pray in his name. \nAmen."
+        }
+      ]
+    },
+    {
+      "role": "Receiving Forgiveness",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Romans 8:1-2, 14, 16-17",
+          "osis": "Rom.8.1-Rom.8.17",
+          "text": "1 There is therefore now no condemnation for those who are in Christ Jesus. 2 For the law of the Spirit of life has set you free in Christ Jesus from the law of sin and death. 14 For all who are led by the Spirit of God are sons of God. 16 The Spirit himself bears witness with our spirit that we are children of God, 17 and if children, then heirs—heirs of God and fellow heirs with Christ, provided we suffer with him in order that we may also be glorified with him."
+        }
+      ]
+    },
+    {
+      "role": "Singing Praise",
+      "elements": [
+        {
+          "type": "song",
+          "title": "Blessed Be the Lord God of Israel",
+          "lyrics": "Now blessed be the Lord our God, the God of Israel,\nFor He alone does wonderous works in glory that excel.\nAnd blessed be his glorious name to all eternity;\nThe whole earth let His glory fill.\nAmen, so let it be."
+        }
+      ]
+    },
+    {
+      "role": "Professing Faith",
+      "elements": [
+        {
+          "type": "catechism"
+        }
+      ]
+    },
+    {
+      "role": "Reading Scripture",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Titus 3:4-7",
+          "osis": "Titus.3.4-Titus.3.7",
+          "text": "4 But when the goodness and loving kindness of God our Savior appeared, 5 he saved us, not because of works done by us in righteousness, but according to his own mercy, by the washing of regeneration and renewal of the Holy Spirit, 6 whom he poured out on us richly through Jesus Christ our Savior, 7 so that being justified by his grace we might become heirs according to the hope of eternal life."
+        },
+        {
+          "type": "instruction",
+          "text": "The head of the household may offer words of instruction, encouragement, and exhortation."
+        }
+      ]
+    },
+    {
+      "role": "Making Requests",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Make your ways known upon the earth, Lord God, your saving power among the peoples. Renew your Church in holiness and help us to serve you with joy. Guide the leaders of all nations that justice may prevail throughout the world. Let not the needy be forgotten, nor the hope of the poor taken away. Make us instruments of your peace and let your glory be over all the earth. Prayers for ourselves, our families, friends, and the world may be offered as the Lord leads."
+        }
+      ]
+    },
+    {
+      "role": "Closing Prayer",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "O God, because without you we are not able to please you, mercifully grant that your Holy Spirit may in all things direct and rule our hearts; through Jesus Christ our Lord, who lives and reigns with you and the Holy Spirit, one God, now and forever.\nAmen."
+        },
+        {
+          "type": "scripture",
+          "citation": "Romans 15:13",
+          "osis": "Rom.15.13",
+          "text": "May the God of hope fill us with all joy and peace in believing through the power of the Holy Spirit. \nAmen."
+        }
+      ]
+    }
+  ]
+}

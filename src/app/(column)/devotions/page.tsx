@@ -9,7 +9,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import { getDocumentById } from '@/lib/catechisms';
-import { seriesForSeason } from '@/lib/devotionSeries';
+import { catechismQuestionsAuthored, seriesForCatechism, seriesForSeason } from '@/lib/devotionSeries';
 import {
   SEASONS, TOPICS, devotionsGroundedIn, scriptureDevotionsByBook,
 } from '@/lib/devotions';
@@ -30,10 +30,10 @@ function RowLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-// The two catechisms the hub previews (mockup 15a); their devotion runs are
-// authored one per question / Lord's Day.
+// The catechisms the hub previews (mockup 15a) that have no run yet; their
+// devotion runs are authored one per question / Lord's Day. WSC has a real
+// run (turn 17) and renders from seriesForCatechism instead of this list.
 const CATECHISM_ROWS = [
-  { documentId: 'WSC', unit: 'One devotion per question, 107 in all' },
   { documentId: 'HC', unit: "One devotion per Lord's Day, 52 in all" },
 ];
 
@@ -103,6 +103,36 @@ export default function DevotionsPage() {
       </p>
 
       <RowLabel>By Confession &amp; Catechism</RowLabel>
+      {(() => {
+        const wscDoc = getDocumentById('WSC');
+        const wscRun = seriesForCatechism('WSC');
+        if (!wscDoc) return null;
+        if (!wscRun) {
+          return (
+            <div className="border-t border-fill px-5 py-2.75 first-of-type:border-t-0">
+              <div className="font-display text-[13.5px] font-semibold text-ink-2">{wscDoc.name}</div>
+              <div className="font-body text-[12px] italic text-ink-3">
+                {`One devotion per question, ${wscDoc.totalItems} in all — in preparation`}
+              </div>
+            </div>
+          );
+        }
+        const authored = catechismQuestionsAuthored(wscRun);
+        return (
+          <Link
+            href={`/devotions/${wscRun.slug}`}
+            className="flex items-center justify-between border-t border-fill px-5 py-2.75 text-ink no-underline first-of-type:border-t-0"
+          >
+            <div>
+              <div className="font-display text-[13.5px] font-semibold">{wscDoc.name}</div>
+              <div className="font-body text-[12px] italic text-ink-3">
+                {`Questions 1–${authored} of ${wscDoc.totalItems}, professed in order`}
+              </div>
+            </div>
+            <span className="font-body text-ochre" aria-hidden="true">→</span>
+          </Link>
+        );
+      })()}
       {CATECHISM_ROWS.map(({ documentId, unit }) => {
         const doc = getDocumentById(documentId);
         if (!doc) return null;

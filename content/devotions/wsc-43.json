@@ -1,0 +1,109 @@
+{
+  "slug": "wsc-43",
+  "title": "What is the preface to the ten commandments?",
+  "summary": "Professing WSC Q. 43–44 of the Westminster Shorter Catechism, grounded in Luke 1:68-75.",
+  "description": "This household worship moves through Psalm 65:1-3 and Isaiah 55:6-7, and professes WSC Q. 43–44 together — “What is the preface to the ten commandments?” and “What doth the preface to the ten commandments teach us?”, before closing with Luke 1:68-75.",
+  "grounding": {
+    "kind": "catechism",
+    "entryIds": [
+      "WSC-43",
+      "WSC-44"
+    ]
+  },
+  "steps": [
+    {
+      "role": "Call to Worship",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Psalm 65:1-3",
+          "osis": "Ps.65.1-Ps.65.3",
+          "text": "1 Praise is due to you, O God, in Zion,\n and to you shall vows be performed.\n2 O you who hear prayer, to you shall all flesh come.\n3 When iniquities prevail against me, \nyou atone for our transgressions."
+        },
+        {
+          "type": "prayer",
+          "lede": "Respond to God’s call to worship him by praying the Lord’s Prayer together:",
+          "text": "Our Father who art in heaven, hallowed be thy name. Thy kingdom come. Thy will be done on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us, and lead us not into temptation, but deliver us from evil. For thine is the kingdom and the power, and the glory, forever and ever. Amen."
+        }
+      ]
+    },
+    {
+      "role": "Confessing Sin",
+      "elements": [
+        {
+          "type": "prayer",
+          "lede": "Take a moment to “test and examine” your thoughts, feelings, and actions of the past day. “Return to the Lord” by confessing your sin (Lam 3:40).",
+          "text": "Father of the Fatherless, Almighty Father, God of gods and Lord of lords, Husband to the widow,\nDefender of the helpless, Judge of all the earth, have mercy on us.\nWe have not sought freedom for the oppressed, even though you freed us. We have not bound up the broken even though you healed us. We have not forgiven others even though you forgave us. We withhold kindness from the needy even though you freely gave us your own Son.\nWe are without excuse, but not without hope. By your power and grace, account our sins to Jesus’ bloody death and amend our ways by the power of his glorious resurrection.\nAmen."
+        }
+      ]
+    },
+    {
+      "role": "Receiving Forgiveness",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Isaiah 55:6-7",
+          "osis": "Isa.55.6-Isa.55.7",
+          "text": "6 “Seek the Lord while he may be found;\n call upon him while he is near;\n7 let the wicked forsake his way,\n and the unrighteous man his thoughts;\nlet him return to the Lord, that he may have compassion on him,\n and to our God, for he will abundantly pardon."
+        }
+      ]
+    },
+    {
+      "role": "Singing Praise",
+      "elements": [
+        {
+          "type": "song",
+          "title": "To Father, Son, and Holy Ghost",
+          "lyrics": "To Father Son and Holy Ghost \nThe God whom heaven and earth adore \nFrom earth and from the angel host \nBe praise and glory evermore"
+        }
+      ]
+    },
+    {
+      "role": "Professing Faith",
+      "elements": [
+        {
+          "type": "catechism"
+        }
+      ]
+    },
+    {
+      "role": "Reading Scripture",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Luke 1:68-75",
+          "osis": "Luke.1.68-Luke.1.75",
+          "text": "68 “Blessed be the Lord God of Israel, for he has visited and redeemed his people 69 and has raised up a horn of salvation for us in the house of his servant David, 70 as he spoke by the mouth of his holy prophets from of old, 71 that we should be saved from our enemies and from the hand of all who hate us; 72 to show the mercy promised to our fathers and to remember his holy covenant, 73 the oath that he swore to our father Abraham, to grant us 74 that we, being delivered from the hand of our enemies, might serve him without fear, 75 in holiness and righteousness before him all our days."
+        },
+        {
+          "type": "instruction",
+          "text": "The head of the household may offer words of instruction, encouragement, and exhortation."
+        }
+      ]
+    },
+    {
+      "role": "Making Requests",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Make your ways known upon the earth, Lord God, your saving power among the peoples. Renew your Church in holiness and help us to serve you with joy. Guide the leaders of all nations that justice may prevail throughout the world. Let not the needy be forgotten, nor the hope of the poor taken away. Make us instruments of your peace and let your glory be over all the earth. Prayers for ourselves, our families, friends, and the world may be offered as the Lord leads."
+        }
+      ]
+    },
+    {
+      "role": "Closing Prayer",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "O God, the strength of all who put their trust in you: Mercifully accept our prayers, and because, through the weakness of our mortal nature, we can do no good thing without you, grant us the help of your grace to keep your commandments, that we may please you in will and deed; through Jesus Christ our Lord, who lives and reigns with you and the Holy Spirit, one God, for ever and ever. \nAmen."
+        },
+        {
+          "type": "scripture",
+          "citation": "Romans 15:13",
+          "osis": "Rom.15.13",
+          "text": "May the God of hope fill us with all joy and peace in believing through the power of the Holy Spirit. \nAmen."
+        }
+      ]
+    }
+  ]
+}

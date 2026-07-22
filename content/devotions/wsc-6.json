@@ -1,0 +1,113 @@
+{
+  "slug": "wsc-6",
+  "title": "How many persons are there in the Godhead?",
+  "summary": "Professing WSC Q. 6 of the Westminster Shorter Catechism, grounded in John 14:6, 16-17.",
+  "description": "This household worship moves through Psalm 14:7 and Psalm 103:8, 10-12, and professes WSC Q. 6 — “How many persons are there in the Godhead?”, before closing with John 14:6, 16-17.",
+  "grounding": {
+    "kind": "catechism",
+    "entryIds": [
+      "WSC-6"
+    ]
+  },
+  "steps": [
+    {
+      "role": "Call to Worship",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Psalm 14:7",
+          "osis": "Ps.14.7",
+          "text": "7 Oh, that salvation for Israel would come out of Zion!\n When the Lord restores the fortunes of his people,\n let Jacob rejoice, let Israel be glad."
+        },
+        {
+          "type": "prayer",
+          "lede": "Respond to God’s call to worship him by praying the Lord’s Prayer together:",
+          "text": "Our Father who art in heaven, hallowed be thy name. Thy kingdom come. Thy will be done on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us, and lead us not into temptation, but deliver us from evil. For thine is the kingdom and the power, and the glory, forever and ever. Amen."
+        }
+      ]
+    },
+    {
+      "role": "Confessing Sin",
+      "elements": [
+        {
+          "type": "prayer",
+          "lede": "Take a moment to “test and examine” your thoughts, feelings, and actions of the past day. “Return to the Lord” by confessing your sin (Lam 3:40).",
+          "text": "Almighty God, who is rich in mercy to all those who call upon You; hear us as we come to You humbly confessing our sins and transgressions, and imploring Your mercy and forgiveness. We have broken Your holy laws by our deeds and by our words, and by the sinful affections of our hearts. Have mercy upon us, most merciful Father; grant that we may hereafter serve and please You in newness of life; through the merit of Jesus Christ our Lord. \nAmen."
+        }
+      ]
+    },
+    {
+      "role": "Receiving Forgiveness",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Psalm 103:8, 10-12",
+          "osis": "Ps.103.8-Ps.103.12",
+          "text": "8 The Lord is merciful and gracious, slow to anger and abounding in steadfast love. 10 He does not deal with us according to our sins, nor repay us according to our iniquities. 11 For as high as the heavens are above the earth, so great is his steadfast love toward those who fear him, 12 as far as the east is from the west, so far does he remove our transgressions from us."
+        }
+      ]
+    },
+    {
+      "role": "Singing Praise",
+      "elements": [
+        {
+          "type": "song",
+          "title": "Doxology",
+          "lyrics": "Praise God from whom all blessings flow\nPraise him, all creatures here below,\nPraise him above ye heavenly host\nPraise Father, Son, and Holy Ghost.",
+          "source": {
+            "label": "Hear it · Spotify",
+            "href": "https://open.spotify.com/search/Doxology%20Sovereign%20Grace%20Music",
+            "external": true
+          }
+        }
+      ]
+    },
+    {
+      "role": "Professing Faith",
+      "elements": [
+        {
+          "type": "catechism"
+        }
+      ]
+    },
+    {
+      "role": "Reading Scripture",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "John 14:6, 16-17",
+          "osis": "John.14.6-John.14.17",
+          "text": "6 Jesus said to him, “I am the way, and the truth, and the life. No one comes to the Father except through me. 16 And I will ask the Father, and he will give you another Helper, to be with you forever, 17 even the Spirit of truth, whom the world cannot receive, because it neither sees him nor knows him. You know him, for he dwells with you and will be in you."
+        },
+        {
+          "type": "instruction",
+          "text": "The head of the household may offer words of instruction, encouragement, and exhortation."
+        }
+      ]
+    },
+    {
+      "role": "Making Requests",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Make your ways known upon the earth, Lord God, your saving power among the peoples. Renew your Church in holiness and help us to serve you with joy. Guide the leaders of all nations that justice may prevail throughout the world. Let not the needy be forgotten, nor the hope of the poor taken away. Make us instruments of your peace and let your glory be over all the earth. Prayers for ourselves, our families, friends, and the world may be offered as the Lord leads."
+        }
+      ]
+    },
+    {
+      "role": "Closing Prayer",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "O God of peace, who hast taught us that in returning and rest we shall be saved, in quietness and in confidence shall be our strength: By the might of thy Spirit lift us, we pray thee, to thy presence, where we may be still and know that thou art God; through Jesus Christ our Lord.  \nAmen."
+        },
+        {
+          "type": "scripture",
+          "citation": "2 Corinthians 13:14",
+          "osis": "2Cor.13.14",
+          "text": "The grace of the Lord Jesus Christ and the love of God and the fellowship of the Holy Spirit be with you all. Amen."
+        }
+      ]
+    }
+  ]
+}

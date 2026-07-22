@@ -1,0 +1,109 @@
+{
+  "slug": "wsc-49",
+  "title": "Which is the second commandment?",
+  "summary": "Professing WSC Q. 49–50 of the Westminster Shorter Catechism, grounded in Deuteronomy 32:45-47.",
+  "description": "This household worship moves through Psalm 66:20 and 1 Peter 1:18, and professes WSC Q. 49–50 together — “Which is the second commandment?” and “What is required in the second commandment?”, before closing with Deuteronomy 32:45-47.",
+  "grounding": {
+    "kind": "catechism",
+    "entryIds": [
+      "WSC-49",
+      "WSC-50"
+    ]
+  },
+  "steps": [
+    {
+      "role": "Call to Worship",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Psalm 66:20",
+          "osis": "Ps.66.20",
+          "text": "20 Blessed be God, because he has not rejected my prayer\n or removed his steadfast love from me!"
+        },
+        {
+          "type": "prayer",
+          "lede": "Respond to God’s call to worship him by praying the Lord’s Prayer together:",
+          "text": "Our Father who art in heaven, hallowed be thy name. Thy kingdom come. Thy will be done on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us, and lead us not into temptation, but deliver us from evil. For thine is the kingdom and the power, and the glory, forever and ever. Amen."
+        }
+      ]
+    },
+    {
+      "role": "Confessing Sin",
+      "elements": [
+        {
+          "type": "prayer",
+          "lede": "Take a moment to “test and examine” your thoughts, feelings, and actions of the past day. “Return to the Lord” by confessing your sin (Lam 3:40).",
+          "text": "Almighty God, we acknowledge and confess that we have sinned against you in thought, word, and deed; we have not loved you with all of our heart, soul, mind, and strength; we have not loved our neighbor as ourselves. Deepen within us our sorrow for the wrong we have done, and the good we have left undone. Lord, you are full of compassion and gracious, slow to anger, and plenteous in mercy; there is always forgiveness with you! Restore to us the joy of your salvation; bind up that which is broken, give light to our minds, strength to our wills, and rest to our souls. Speak to each of us, and let your word abide with us until it has wrought in us your holy will. Amen."
+        }
+      ]
+    },
+    {
+      "role": "Receiving Forgiveness",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "1 Peter 1:18",
+          "osis": "1Pet.1.18",
+          "text": "8 …You were ransomed from the futile ways inherited from your forefathers, not with perishable things such as silver or gold, 19 but with the precious blood of Christ, like that of a lamb without blemish or spot."
+        }
+      ]
+    },
+    {
+      "role": "Singing Praise",
+      "elements": [
+        {
+          "type": "song",
+          "title": "All Creatures of Our God and King",
+          "lyrics": "Let all things their Creator bless,\nAnd worship him in humbleness.\nO praise him. Alleluia!\nPraise, praise the Father, praise the Son,\nAnd praise the Spirit, Three in One.\nO praise him! O praise him!\nAlleluia! Alleluia! Alleluia!"
+        }
+      ]
+    },
+    {
+      "role": "Professing Faith",
+      "elements": [
+        {
+          "type": "catechism"
+        }
+      ]
+    },
+    {
+      "role": "Reading Scripture",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Deuteronomy 32:45-47",
+          "osis": "Deut.32.45-Deut.32.47",
+          "text": "45 And when Moses had finished speaking all these words to all Israel, 46 he said to them, “Take to heart all the words by which I am warning you today, that you may command them to your children, that they may be careful to do all the words of this law. 47 For it is no empty word for you, but your very life, and by this word you shall live long in the land that you are going over the Jordan to possess.”"
+        },
+        {
+          "type": "instruction",
+          "text": "The head of the household may offer words of instruction, encouragement, and exhortation."
+        }
+      ]
+    },
+    {
+      "role": "Making Requests",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Make your ways known upon the earth, Lord God, your saving power among the peoples. Renew your Church in holiness and help us to serve you with joy. Guide the leaders of all nations that justice may prevail throughout the world. Let not the needy be forgotten, nor the hope of the poor taken away. Make us instruments of your peace and let your glory be over all the earth. Prayers for ourselves, our families, friends, and the world may be offered as the Lord leads."
+        }
+      ]
+    },
+    {
+      "role": "Closing Prayer",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Almighty God, your blessed Son fulfilled the covenant of circumcision for our sake, and was given the Name that is above every name: Give us grace faithfully to bear his Name, and to worship him with pure hearts according to the New Covenant; who lives and reigns with you, in the unity of the Holy Spirit, one God, now and for ever.\nAmen."
+        },
+        {
+          "type": "scripture",
+          "citation": "Psalm 67:1-2",
+          "osis": "Ps.67.1-Ps.67.2",
+          "text": "1 May God be gracious to us and bless us\n and make his face to shine upon us, \n2 that your way may be known on earth,\n your saving power among all nations."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,108 @@
+{
+  "slug": "wsc-14",
+  "title": "What is sin?",
+  "summary": "Professing WSC Q. 14 of the Westminster Shorter Catechism, grounded in 1 John 3:4-5.",
+  "description": "This household worship moves through Psalm 29:1b-2 and 1 John 2:1-2, and professes WSC Q. 14 — “What is sin?”, before closing with 1 John 3:4-5.",
+  "grounding": {
+    "kind": "catechism",
+    "entryIds": [
+      "WSC-14"
+    ]
+  },
+  "steps": [
+    {
+      "role": "Call to Worship",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Psalm 29:1b-2",
+          "osis": "Ps.29.1-Ps.29.2",
+          "text": "1 Ascribe to the Lord glory and strength.\n2 Ascribe to the Lord the glory due his name;\n worship the Lord in the splendor of holiness."
+        },
+        {
+          "type": "prayer",
+          "lede": "Respond to God’s call to worship him by praying the Lord’s Prayer together:",
+          "text": "Our Father who art in heaven, hallowed be thy name. Thy kingdom come. Thy will be done on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us, and lead us not into temptation, but deliver us from evil. For thine is the kingdom and the power, and the glory, forever and ever. Amen."
+        }
+      ]
+    },
+    {
+      "role": "Confessing Sin",
+      "elements": [
+        {
+          "type": "prayer",
+          "lede": "Take a moment to “test and examine” your thoughts, feelings, and actions of the past day. “Return to the Lord” by confessing your sin (Lam 3:40).",
+          "text": "O Lord, our great God, all holy, Father most gracious, filled with mercy and steadfast love, we humbly come before you, for we have preferred the ways of this world to your ways. We have rebelled against your wisdom and have invited trouble. We have rejected your fatherly guidance and have gotten lost altogether.\nO Lord, our great God, all holy, filled with awe, Father most gracious, filled with mercy and steadfast love, incline your ear to our troubles.\nHear us as we pour out our sorrows to you. Forgive us, not because of our own righteousness, but because of your great mercy in the gift of your Son, Jesus Christ. It is in his name that we pray, for he is our Savior, and the mediator of the covenant of grace.\nAmen."
+        }
+      ]
+    },
+    {
+      "role": "Receiving Forgiveness",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "1 John 2:1-2",
+          "osis": "1John.2.1-1John.2.2",
+          "text": "1 My little children, I am writing these things to you so that you may not sin. But if anyone does sin, we have an advocate with the Father, Jesus Christ the righteous. 2 He is the propitiation for our sins, and not for ours only but also for the sins of the whole world."
+        }
+      ]
+    },
+    {
+      "role": "Singing Praise",
+      "elements": [
+        {
+          "type": "song",
+          "title": "Christ Rises Conqueror from the Grave",
+          "lyrics": "Christ rises conqu’ror from the grave,\n From death returning, strong to save,\n With His right hand the tyrant chains, \nAnd paradise for man regains.\n All praise be Thine, O risen Lord, \nFrom death to endless life restored;\n All praise to God the Father be,\n And Holy Ghost eternally."
+        }
+      ]
+    },
+    {
+      "role": "Professing Faith",
+      "elements": [
+        {
+          "type": "catechism"
+        }
+      ]
+    },
+    {
+      "role": "Reading Scripture",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "1 John 3:4-5",
+          "osis": "1John.3.4-1John.3.5",
+          "text": "4 Everyone who makes a practice of sinning also practices lawlessness; sin is lawlessness. 5 You know that he appeared in order to take away sins, and in him there is no sin."
+        },
+        {
+          "type": "instruction",
+          "text": "The head of the household may offer words of instruction, encouragement, and exhortation."
+        }
+      ]
+    },
+    {
+      "role": "Making Requests",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Make your ways known upon the earth, Lord God, your saving power among the peoples. Renew your Church in holiness and help us to serve you with joy. Guide the leaders of all nations that justice may prevail throughout the world. Let not the needy be forgotten, nor the hope of the poor taken away. Make us instruments of your peace and let your glory be over all the earth. Prayers for ourselves, our families, friends, and the world may be offered as the Lord leads."
+        }
+      ]
+    },
+    {
+      "role": "Closing Prayer",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Gracious God and most merciful Father, you have granted us the rich and precious jewel of your holy Word: Assist us with your Spirit, that the same Word may be written in our hearts to our everlasting comfort, to reform us, to renew us according to your own image, to build us up and edify us into the perfect dwelling place of your Christ, sanctifying and increasing in us all heavenly virtues; grant this, O heavenly Father, for Jesus Christ’s sake. \nAmen."
+        },
+        {
+          "type": "scripture",
+          "citation": "1 Thessalonians 5:23-24",
+          "osis": "1Thess.5.23-1Thess.5.24",
+          "text": "23 Now may the God of peace himself sanctify you completely, and may your whole spirit and soul and body be kept blameless at the coming of our Lord Jesus Christ. 24 He who calls you is faithful; he will surely do it. \nAmen."
+        }
+      ]
+    }
+  ]
+}

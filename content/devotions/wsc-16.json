@@ -1,0 +1,108 @@
+{
+  "slug": "wsc-16",
+  "title": "Did all mankind fall in Adam's first transgression?",
+  "summary": "Professing WSC Q. 16 of the Westminster Shorter Catechism, grounded in 1 Corinthians 15:20-24.",
+  "description": "This household worship moves through Psalm 30:4-5 and Hosea 2:16, 19-20, and professes WSC Q. 16 — “Did all mankind fall in Adam's first transgression?”, before closing with 1 Corinthians 15:20-24.",
+  "grounding": {
+    "kind": "catechism",
+    "entryIds": [
+      "WSC-16"
+    ]
+  },
+  "steps": [
+    {
+      "role": "Call to Worship",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Psalm 30:4-5",
+          "osis": "Ps.30.4-Ps.30.5",
+          "text": "4 Sing praises to the Lord, O you his saints,\n and give thanks to his holy name. \n5 For his anger is but for a moment,\n and his favor is for a lifetime. \nWeeping may tarry for the night,\n but joy comes with the morning."
+        },
+        {
+          "type": "prayer",
+          "lede": "Respond to God’s call to worship him by praying the Lord’s Prayer together:",
+          "text": "Our Father who art in heaven, hallowed be thy name. Thy kingdom come. Thy will be done on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us, and lead us not into temptation, but deliver us from evil. For thine is the kingdom and the power, and the glory, forever and ever. Amen."
+        }
+      ]
+    },
+    {
+      "role": "Confessing Sin",
+      "elements": [
+        {
+          "type": "prayer",
+          "lede": "Take a moment to “test and examine” your thoughts, feelings, and actions of the past day. “Return to the Lord” by confessing your sin (Lam 3:40).",
+          "text": "Merciful Lord, we confess that with us there is an abundance of sin, but in you there is the fullness of righteousness and abundance of mercy. We are spiritually poor, but you are rich and in Jesus Christ came to be merciful to the poor. Strengthen our faith and trust in you. We are empty vessels that need to be filled; fill us. We are weak in faith; strengthen us. We are cold in love; warm us, and make our hearts fervent for you that our love may go out to one another and to our neighbors. Through Jesus Christ our Lord.\n Amen."
+        }
+      ]
+    },
+    {
+      "role": "Receiving Forgiveness",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Hosea 2:16, 19-20",
+          "osis": "Hos.2.16-Hos.2.20",
+          "text": "16 “And in that day,” declares the Lord, “you will call me ‘My Husband,’ and no longer will you call me ‘My Baal.’ 19 And I will betroth you to me forever. I will betroth you to me in righteousness and in justice, in steadfast love and in mercy. 20 I will betroth you to me in faithfulness. And you shall know the Lord.”"
+        }
+      ]
+    },
+    {
+      "role": "Singing Praise",
+      "elements": [
+        {
+          "type": "song",
+          "title": "Blessed Be the Lord God of Israel",
+          "lyrics": "Now blessed be the Lord our God, the God of Israel,\nFor He alone does wonderous works in glory that excel.\nAnd blessed be his glorious name to all eternity;\nThe whole earth let His glory fill.\nAmen, so let it be."
+        }
+      ]
+    },
+    {
+      "role": "Professing Faith",
+      "elements": [
+        {
+          "type": "catechism"
+        }
+      ]
+    },
+    {
+      "role": "Reading Scripture",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "1 Corinthians 15:20-24",
+          "osis": "1Cor.15.20-1Cor.15.24",
+          "text": "20 But in fact Christ has been raised from the dead, the firstfruits of those who have fallen asleep. 21 For as by a man came death, by a man has come also the resurrection of the dead. 22 For as in Adam all die, so also in Christ shall all be made alive. 23 But each in his own order: Christ the firstfruits, then at his coming those who belong to Christ. 24 Then comes the end, when he delivers the kingdom to God the Father after destroying every rule and every authority and power."
+        },
+        {
+          "type": "instruction",
+          "text": "The head of the household may offer words of instruction, encouragement, and exhortation."
+        }
+      ]
+    },
+    {
+      "role": "Making Requests",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Make your ways known upon the earth, Lord God, your saving power among the peoples. Renew your Church in holiness and help us to serve you with joy. Guide the leaders of all nations that justice may prevail throughout the world. Let not the needy be forgotten, nor the hope of the poor taken away. Make us instruments of your peace and let your glory be over all the earth. Prayers for ourselves, our families, friends, and the world may be offered as the Lord leads."
+        }
+      ]
+    },
+    {
+      "role": "Closing Prayer",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Almighty God, you alone can bring into order the unruly wills and affections of sinners: Grant your people grace to love what you command and desire what you promise; that, among the swift and varied changes of this world, our hearts may surely there be fixed where true joys are to be found; through Jesus Christ our Lord, who lives and reigns with you and the Holy Spirit, one God, now and forever. \nAmen."
+        },
+        {
+          "type": "scripture",
+          "citation": "2 Corinthians 13:14",
+          "osis": "2Cor.13.14",
+          "text": "The grace of the Lord Jesus Christ and the love of God and the fellowship of the Holy Spirit be with you all. Amen."
+        }
+      ]
+    }
+  ]
+}

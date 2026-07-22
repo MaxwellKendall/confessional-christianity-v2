@@ -1,0 +1,109 @@
+{
+  "slug": "wsc-45",
+  "title": "Which is the first commandment?",
+  "summary": "Professing WSC Q. 45–46 of the Westminster Shorter Catechism, grounded in 1 Chronicles 28:8-9.",
+  "description": "This household worship moves through Psalm 66:1-3 and John 8:34-36, and professes WSC Q. 45–46 together — “Which is the first commandment?” and “What is required in the first commandment?”, before closing with 1 Chronicles 28:8-9.",
+  "grounding": {
+    "kind": "catechism",
+    "entryIds": [
+      "WSC-45",
+      "WSC-46"
+    ]
+  },
+  "steps": [
+    {
+      "role": "Call to Worship",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Psalm 66:1-3",
+          "osis": "Ps.66.1-Ps.66.3",
+          "text": "1 Shout for joy to God, all the earth;\n2 sing the glory of his name;\n give to him glorious praise!\n3 Say to God, “How awesome are your deeds!\n So great is your power that your enemies come cringing to you."
+        },
+        {
+          "type": "prayer",
+          "lede": "Respond to God’s call to worship him by praying the Lord’s Prayer together:",
+          "text": "Our Father who art in heaven, hallowed be thy name. Thy kingdom come. Thy will be done on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us, and lead us not into temptation, but deliver us from evil. For thine is the kingdom and the power, and the glory, forever and ever. Amen."
+        }
+      ]
+    },
+    {
+      "role": "Confessing Sin",
+      "elements": [
+        {
+          "type": "prayer",
+          "lede": "Take a moment to “test and examine” your thoughts, feelings, and actions of the past day. “Return to the Lord” by confessing your sin (Lam 3:40).",
+          "text": "Dear Heavenly Father, we bow our heads before you,\nand we confess that we have too often forgotten that we are yours. \nSometimes we carry on our lives as if there was no God,\nand we fall short of being a credible witness to You. \nFor these things we ask your forgiveness,\nand we also ask for your strength. \nGive us clear minds and open hearts so we may witness to You in our world. \nRemind us to be who You would have us to be regardless of what we are doing or who we are with.\nHold us to You and build our relationship with You and with those You have given us on earth.\nAmen."
+        }
+      ]
+    },
+    {
+      "role": "Receiving Forgiveness",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "John 8:34-36",
+          "osis": "John.8.34-John.8.36",
+          "text": "34 Jesus answered them, “Truly, truly, I say to you, everyone who practices sin is a slave to sin. 35 The slave does not remain in the house forever; the son remains forever. 36 So if the Son sets you free, you will be free indeed."
+        }
+      ]
+    },
+    {
+      "role": "Singing Praise",
+      "elements": [
+        {
+          "type": "song",
+          "title": "Blessed Be the Lord God of Israel",
+          "lyrics": "Now blessed be the Lord our God, the God of Israel,\nFor He alone does wonderous works in glory that excel.\nAnd blessed be his glorious name to all eternity;\nThe whole earth let His glory fill.\nAmen, so let it be."
+        }
+      ]
+    },
+    {
+      "role": "Professing Faith",
+      "elements": [
+        {
+          "type": "catechism"
+        }
+      ]
+    },
+    {
+      "role": "Reading Scripture",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "1 Chronicles 28:8-9",
+          "osis": "1Chr.28.8-1Chr.28.9",
+          "text": "8 “Now therefore in the sight of all Israel, the assembly of the Lord, and in the hearing of our God, observe and seek out all the commandments of the Lord your God, that you may possess this good land and leave it for an inheritance to your children after you forever.”\n9 “And you, Solomon my son, know the God of your father and serve him with a whole heart and with a willing mind, for the Lord searches all hearts and understands every plan and thought. If you seek him, he will be found by you, but if you forsake him, he will cast you off forever."
+        },
+        {
+          "type": "instruction",
+          "text": "The head of the household may offer words of instruction, encouragement, and exhortation."
+        }
+      ]
+    },
+    {
+      "role": "Making Requests",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Make your ways known upon the earth, Lord God, your saving power among the peoples. Renew your Church in holiness and help us to serve you with joy. Guide the leaders of all nations that justice may prevail throughout the world. Let not the needy be forgotten, nor the hope of the poor taken away. Make us instruments of your peace and let your glory be over all the earth. Prayers for ourselves, our families, friends, and the world may be offered as the Lord leads."
+        }
+      ]
+    },
+    {
+      "role": "Closing Prayer",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "O Lord God, grant your people grace to withstand the temptations of the world, the flesh, and the devil, and with pure hearts and minds to follow you, the only God; through Jesus Christ our Lord, who lives and reigns with you and the Holy Spirit, one God, now and for ever.  \nAmen."
+        },
+        {
+          "type": "scripture",
+          "citation": "Numbers 6:24-26",
+          "osis": "Num.6.24-Num.6.26",
+          "text": "24 The Lord bless you and keep you;\n25 the Lord make his face to shine upon you and be gracious to you;\n26 the Lord lift up his countenance upon you and give you peace."
+        }
+      ]
+    }
+  ]
+}
