@@ -10,7 +10,7 @@ describe('currentPartDay', () => {
       totalParts: 24,
       expected: 1,
     },
-    'finishing part 1 unlocks part 2': {
+    'finishing part 1 advances the suggested part to 2': {
       completed: [1],
       totalParts: 24,
       expected: 2,

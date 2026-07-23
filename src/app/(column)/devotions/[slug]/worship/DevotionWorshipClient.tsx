@@ -3,9 +3,10 @@
 // A devotion run (mockup 15c's "Begin This Devotion"): the same eight-step
 // shell as Family Worship, fed the devotion's fixed steps — nothing rotates,
 // so the shell needs no date. A standalone devotion finishes back on its own
-// landing; a series part records its completion — unlocking the next part
-// (turn 16) — and finishes on the series page, where the household sees the
-// order advance.
+// landing; a series part records its completion — advancing the series'
+// suggested next part (turn 16) — and finishes on the series page, where
+// the household sees the order move forward. Nothing was ever locked behind
+// it; every part stays reachable from the series page regardless.
 import { WorshipShell } from '@/components/WorshipShell';
 import { seriesMembership } from '@/lib/devotionSeries';
 import { getDevotion } from '@/lib/devotions';

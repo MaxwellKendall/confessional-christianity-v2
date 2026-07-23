@@ -6,8 +6,11 @@
 // season's days, or a catechism's questions). The manifest names every part
 // up front (title and citation) and points at its devotion by slug — a
 // direct reference rather than a grounding-field match, since a catechism
-// part can span more than one entry id. Order is purely sequential: a part
-// unlocks when the one before it is finished, with no date attached.
+// part can span more than one entry id. Order is purely sequential and
+// suggested, never enforced: "current" is just the first part without a
+// completion, so Continue always has somewhere to send the household, but
+// nothing is locked — every authored part stays reachable straight from the
+// series page. No date attached anywhere.
 import adventSeries from '../../content/devotions/series/advent.json';
 import wscSeries from '../../content/devotions/series/wsc.json';
 import { getDocumentById } from './catechisms';
@@ -22,7 +25,7 @@ export interface SeriesPart {
   day: number;
   title: string;
   /** The passage or question the part moves through, named even before
-   * it's authored — the 16a part list shows the whole arc, locked parts
+   * it's authored — the 16a part list shows the whole arc, unauthored parts
    * included. */
   citation: string;
   /** The devotion carrying this part's content — absent while the part is

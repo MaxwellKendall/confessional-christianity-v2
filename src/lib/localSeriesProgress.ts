@@ -25,9 +25,9 @@ const migrateStoredShape = (parsed: unknown): LocalSeriesProgress | null => {
   return { version: 1, completions: candidate.completions ?? {} };
 };
 
-/** The part to continue with: the first of the series' days without a
- * completion — parts unlock strictly in order, so this is also the highest
- * unlocked part. Null once every part is complete. */
+/** The part Continue should jump to: the first of the series' days without a
+ * completion. A suggestion, not a gate — every authored part stays reachable
+ * regardless of this value. Null once every part is complete. */
 export const currentPartDay = (
   completedDays: readonly number[],
   totalParts: number,

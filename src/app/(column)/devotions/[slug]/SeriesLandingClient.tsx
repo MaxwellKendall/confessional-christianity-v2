@@ -1,11 +1,14 @@
 'use client';
 
 // A series landing (mockup 16a): the whole arc laid out in order — parts
-// done, the current part, and the locked parts ahead — with one Continue
-// that always resumes exactly where the household left off, never a
-// re-pick from a list. A part unlocks when the one before it is finished;
-// no dates anywhere. Progress is device state, so the list's states and
-// the button render after mount, like every other local-progress surface.
+// done, the next one up, and whatever's still ahead — with one Continue
+// that jumps to wherever the household left off, and every authored part
+// also reachable directly from the list. Nothing is locked: order is a
+// suggestion the sequence makes, not a gate the household has to clear —
+// a household can read part 12 before part 3 if that's what they want. Only
+// an unauthored part is unreachable, and that's a content gap, not a lock.
+// No dates anywhere. Progress is device state, so the list's states and the
+// button render after mount, like every other local-progress surface.
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
@@ -50,31 +53,27 @@ export function SeriesLandingClient({ series }: { series: DevotionSeries }) {
 
         <ol className="m-0 list-none p-0 text-left">
           {series.parts.map((part) => {
-            const state = done.has(part.day) ? 'done'
-              : part.day === current ? 'current'
-                : 'locked';
-            const devotion = state === 'locked' ? null : partDevotion(series, part.day);
+            const devotion = partDevotion(series, part.day);
+            const isDone = done.has(part.day);
+            const isCurrent = part.day === current;
             const label = `Part ${part.day} — ${part.title} (${part.citation})`;
-            return (
-              <li key={part.day}>
-                {state === 'current' ? (
-                  devotion ? (
-                    <Link
-                      href={`/devotions/${devotion.slug}`}
-                      className="my-0.5 flex items-center gap-3 rounded-sm bg-fill px-3 py-3 text-ink no-underline"
-                    >
-                      <span className="w-4 shrink-0 text-center text-[10px] text-ochre" aria-hidden="true">●</span>
-                      <span className="font-body text-[13px] font-semibold">{label}</span>
-                    </Link>
-                  ) : (
-                    <div className="my-0.5 flex items-center gap-3 rounded-sm bg-fill px-3 py-3">
-                      <span className="w-4 shrink-0 text-center text-[10px] text-ochre" aria-hidden="true">●</span>
-                      <span className="font-body text-[13px] text-ink-2">
-                        {label} — in preparation
-                      </span>
-                    </div>
-                  )
-                ) : state === 'done' && devotion ? (
+
+            if (!devotion) {
+              return (
+                <li key={part.day}>
+                  <div className="flex items-center gap-3 border-b border-fill px-3 py-2.5">
+                    <span className="w-4 shrink-0" aria-hidden="true" />
+                    <span className="font-body text-[13px] text-muted">
+                      {label} — in preparation
+                    </span>
+                  </div>
+                </li>
+              );
+            }
+
+            if (isDone) {
+              return (
+                <li key={part.day}>
                   <Link
                     href={`/devotions/${devotion.slug}`}
                     className="flex items-center gap-3 border-b border-fill px-3 py-2.5 text-ink-3 no-underline"
@@ -82,20 +81,33 @@ export function SeriesLandingClient({ series }: { series: DevotionSeries }) {
                     <span className="w-4 shrink-0 text-center font-display text-[11px] text-ochre" aria-hidden="true">✓</span>
                     <span className="font-body text-[13px]">{label}</span>
                   </Link>
-                ) : (
-                  <div className="flex items-center gap-3 border-b border-fill px-3 py-2.5">
-                    <span className="w-4 shrink-0 text-center text-[10px] text-muted" aria-hidden="true">🔒</span>
-                    <span className="font-body text-[13px] text-muted">{label}</span>
-                  </div>
-                )}
+                </li>
+              );
+            }
+
+            return (
+              <li key={part.day}>
+                <Link
+                  href={`/devotions/${devotion.slug}`}
+                  className={isCurrent
+                    ? 'my-0.5 flex items-center gap-3 rounded-sm bg-fill px-3 py-3 text-ink no-underline'
+                    : 'flex items-center gap-3 border-b border-fill px-3 py-2.5 text-ink no-underline'}
+                >
+                  <span
+                    className={`w-4 shrink-0 text-center text-[10px] text-ochre ${isCurrent ? '' : 'opacity-60'}`}
+                    aria-hidden="true"
+                  >
+                    {isCurrent ? '●' : '○'}
+                  </span>
+                  <span className={`font-body text-[13px] ${isCurrent ? 'font-semibold' : ''}`}>{label}</span>
+                </Link>
               </li>
             );
           })}
         </ol>
 
         <p className="m-0 px-3 pt-4 text-center font-body text-[11px] italic leading-[1.6] text-muted">
-          Later parts unlock only once the one before is complete — the
-          sequence, not the calendar, sets the pace.
+          Every part is open — read in order, or jump to any part directly.
         </p>
       </div>
 

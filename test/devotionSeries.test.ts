@@ -76,7 +76,7 @@ describe('parts and their devotions', () => {
     expect(partDevotion(advent(), 24)).toBeNull();
   });
 
-  test('authored parts run contiguously from day 1 — sequential unlock never strands', () => {
+  test('authored parts run contiguously from day 1 — the Continue suggestion never strands behind a gap', () => {
     getAllSeries().forEach((series) => {
       const authored = series.parts.map((p) => partDevotion(series, p.day) !== null);
       const frontier = authored.indexOf(false);
