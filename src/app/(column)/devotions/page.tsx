@@ -1,10 +1,13 @@
 // The devotions hub (mockup 15a): a featured slot up top so scale never
 // feels like a database dump — the editorial pick, or a Continue card once
 // a series is in progress (turn 16) — then one distinctly-treated row per
-// grounding axis — Scripture, Topic, Confession & Catechism, Season —
-// echoing 10a's "each kind its own treatment" pattern. Groupings that have
-// no authored devotions yet render as quiet, unlinked states; rows light up
-// as the library grows. A season with a series opens onto it.
+// grounding axis — Confession & Catechism, Scripture, Topic, Season —
+// echoing 10a's "each kind its own treatment" pattern. Catechism leads
+// (turn 17): with the WSC run 66 questions deep, it's the most substantial
+// axis in the library, so it gets the first row after Featured rather than
+// its old spot at the back. Groupings that have no authored devotions yet
+// render as quiet, unlinked states; rows light up as the library grows. A
+// season with a series opens onto it.
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
@@ -64,44 +67,6 @@ export default function DevotionsPage() {
       </div>
       <FeaturedSlot />
 
-      <RowLabel>By Scripture</RowLabel>
-      <Link
-        href="/devotions/scripture"
-        className="flex items-center justify-between px-5 py-3 text-ink no-underline"
-      >
-        <div>
-          <div className="mb-0.5 font-display text-[13.5px] font-semibold">
-            Browse by Book, Chapter &amp; Verse
-          </div>
-          <div className="font-body text-[12px] italic text-ink-3">
-            {scriptureCount === 1 ? '1 devotion' : `${scriptureCount} devotions`}
-            {' across '}
-            {bookCount === 1 ? '1 book' : `${bookCount} books`}
-            , growing toward all 66
-          </div>
-        </div>
-        <span className="font-body text-ochre" aria-hidden="true">→</span>
-      </Link>
-
-      <RowLabel>By Topic</RowLabel>
-      <div className="flex flex-wrap gap-2 px-5 pt-2 pb-1">
-        {topicCounts.map(({ topic, count }) => (count > 0 ? (
-          <span key={topic.slug} className="rounded-full bg-fill px-4 py-2 font-body text-[12.5px] text-ink">
-            {topic.name}
-          </span>
-        ) : (
-          <span
-            key={topic.slug}
-            className="rounded-full border border-dotted border-muted px-4 py-2 font-body text-[12.5px] text-ink-3"
-          >
-            {topic.name}
-          </span>
-        )))}
-      </div>
-      <p className="m-0 px-5 pt-1.5 font-body text-[11px] italic text-muted">
-        Devotions by topic are in preparation
-      </p>
-
       <RowLabel>By Confession &amp; Catechism</RowLabel>
       {(() => {
         const wscDoc = getDocumentById('WSC');
@@ -146,6 +111,44 @@ export default function DevotionsPage() {
           </div>
         );
       })}
+
+      <RowLabel>By Scripture</RowLabel>
+      <Link
+        href="/devotions/scripture"
+        className="flex items-center justify-between px-5 py-3 text-ink no-underline"
+      >
+        <div>
+          <div className="mb-0.5 font-display text-[13.5px] font-semibold">
+            Browse by Book, Chapter &amp; Verse
+          </div>
+          <div className="font-body text-[12px] italic text-ink-3">
+            {scriptureCount === 1 ? '1 devotion' : `${scriptureCount} devotions`}
+            {' across '}
+            {bookCount === 1 ? '1 book' : `${bookCount} books`}
+            , growing toward all 66
+          </div>
+        </div>
+        <span className="font-body text-ochre" aria-hidden="true">→</span>
+      </Link>
+
+      <RowLabel>By Topic</RowLabel>
+      <div className="flex flex-wrap gap-2 px-5 pt-2 pb-1">
+        {topicCounts.map(({ topic, count }) => (count > 0 ? (
+          <span key={topic.slug} className="rounded-full bg-fill px-4 py-2 font-body text-[12.5px] text-ink">
+            {topic.name}
+          </span>
+        ) : (
+          <span
+            key={topic.slug}
+            className="rounded-full border border-dotted border-muted px-4 py-2 font-body text-[12.5px] text-ink-3"
+          >
+            {topic.name}
+          </span>
+        )))}
+      </div>
+      <p className="m-0 px-5 pt-1.5 font-body text-[11px] italic text-muted">
+        Devotions by topic are in preparation
+      </p>
 
       <RowLabel>By Season</RowLabel>
       <div className="flex gap-2.5 px-5 pt-2 pb-1">
