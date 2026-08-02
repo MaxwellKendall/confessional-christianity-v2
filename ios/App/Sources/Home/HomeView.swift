@@ -1,23 +1,24 @@
 // Mirrors the real web home page (src/components/HomeClient.tsx), not the
-// /programs index: a "Your Catechism" continue card with a progress bar for
-// whichever program the visitor last worked in (WSC by default with no
-// saved progress), a grid to the other three catechisms, and a closing line
-// pointing at the Library. The devotion-run card that now leads the web
-// homepage (WSC_RUN) is deliberately deferred — Devotions hasn't been ported
-// to DomainKit yet (that's Phase 3 in the plan) — so this card is the whole
-// homepage for now rather than a partial imitation of that layout.
+// /programs index: the WSC devotion run card leading, a quiet "Or choose
+// today's devotion" link (deferred — it opens the full devotions hub, which
+// hasn't been ported), the "Your Catechism" continue card for whichever
+// program the visitor last worked in, a grid to the other three catechisms,
+// and a closing line pointing at the Library (also deferred — unbuilt).
 import SwiftUI
 import SwiftData
 import DomainKit
 
 struct HomeView: View {
     private let defaultProgram = PROGRAMS[0]
+    private let wscRun = seriesForCatechism("WSC")
 
     @Environment(\.modelContext) private var modelContext
     @State private var path = NavigationPath()
     @State private var track: LocalCatechismTrack?
+    @State private var runCompletedDays: [Int] = []
 
     private var store: LocalProgressStore { LocalProgressStore(context: modelContext) }
+    private var seriesStore: LocalSeriesProgressStore { LocalSeriesProgressStore(context: modelContext) }
 
     private var trackProgram: ProgramDefinition? {
         guard let track else { return nil }
@@ -42,10 +43,49 @@ struct HomeView: View {
         PROGRAMS.filter { $0.slug != program.slug }
     }
 
+    private var runTotal: Int { wscRun?.parts.count ?? 0 }
+    private var runCurrentDay: Int? { wscRun.map { _ in currentPartDay(runCompletedDays, totalParts: runTotal) } ?? nil }
+    private var runCurrentPart: SeriesPart? {
+        guard let wscRun, let runCurrentDay else { return nil }
+        return wscRun.parts.first { $0.day == runCurrentDay }
+    }
+
     var body: some View {
         NavigationStack(path: $path) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
+                    if let wscRun {
+                        Button {
+                            path.append(DevotionRoute.series(wscRun.slug))
+                        } label: {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text(runCurrentDay == nil
+                                     ? "All \(runTotal) Parts Complete"
+                                     : "Part \(runCurrentDay!) of \(runTotal) \u{00B7} Westminster Shorter Catechism")
+                                    .labelCaps(size: 9.5, tracking: 0.14, color: .ccOchre)
+                                HStack(alignment: .firstTextBaseline) {
+                                    Text(runCurrentDay == nil
+                                         ? "The Whole Catechism, Professed"
+                                         : (runCompletedDays.isEmpty ? "Begin \u{2014} Part 1" : "Continue \u{2014} Part \(runCurrentDay!)"))
+                                        .headingPage()
+                                    Spacer()
+                                    Text("\u{2192}").font(.ccDisplay(18)).foregroundStyle(.ccOchre)
+                                }
+                                Text(runCurrentPart.map { "\($0.title) (\($0.citation))" } ?? "Beginning to end, in order")
+                                    .font(.ccBody(13.5))
+                                    .italic()
+                                    .foregroundStyle(.ccInk2)
+                            }
+                            .padding(.horizontal, 24)
+                            .padding(.vertical, 22)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Color.ccFill)
+                            .clipShape(RoundedRectangle(cornerRadius: 3))
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.bottom, 32)
+                    }
+
                     Text("Your Catechism")
                         .labelCaps(size: 9.5, tracking: 0.14)
                         .padding(.bottom, 10)
@@ -128,11 +168,37 @@ struct HomeView: View {
             .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(for: String.self) { slug in
                 if let program = getProgram(slug) {
-                    SessionView(program: program)
+                    SessionView(program: program, path: $path)
+                }
+            }
+            .navigationDestination(for: DevotionRoute.self) { route in
+                switch route {
+                case .series(let slug):
+                    if let series = getSeries(slug) {
+                        DevotionSeriesView(series: series, path: $path)
+                    }
+                case .devotion(let slug):
+                    if let devotion = getDevotion(slug) {
+                        DevotionLandingView(devotion: devotion, path: $path)
+                    }
+                case .worship(let slug, let startStep):
+                    if let devotion = getDevotion(slug) {
+                        DevotionWorshipView(devotion: devotion, startStep: startStep, path: $path)
+                    }
+                case .catechismHandoff(let programSlug, let devotionSlug, let returnStep):
+                    if let program = getProgram(programSlug) {
+                        SessionView(
+                            program: program, path: $path,
+                            handoff: DevotionHandoff(devotionSlug: devotionSlug, returnStep: returnStep)
+                        )
+                    }
                 }
             }
             .task {
                 track = store.activeTrack()
+                if let wscRun {
+                    runCompletedDays = seriesStore.getCompletedDays(wscRun.slug)
+                }
             }
         }
         .tint(.ccInk)

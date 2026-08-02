@@ -9,6 +9,11 @@ import DomainKit
 
 struct SessionView: View {
     let program: ProgramDefinition
+    @Binding var path: NavigationPath
+    /// Set when a devotion's Professing Faith step handed off here — mirrors
+    /// SessionClient's `?devotion=` handling: "Next" becomes "Continue
+    /// Worship" and advancing returns to that devotion's stepper.
+    var handoff: DevotionHandoff?
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
@@ -36,22 +41,35 @@ struct SessionView: View {
             VStack(spacing: 0) {
                 header
 
-                ScrollView {
-                    Group {
-                        if track == nil {
-                            Color.clear.frame(height: 1)
-                        } else if isComplete {
-                            CompletionView(program: program)
-                        } else if let questionNumber, let question = getQuestion(program, questionNumber) {
-                            QuestionCardView(program: program, question: question)
-                        } else {
-                            CompletionView(program: program)
+                // Mirrors SessionClient's `justify-center`: the question
+                // card sits centered between header and footer regardless of
+                // how short the answer is, rather than pinned to the top —
+                // still scrolls normally once content exceeds the viewport.
+                GeometryReader { geo in
+                    ScrollView {
+                        VStack(spacing: 0) {
+                            Spacer(minLength: 0)
+
+                            Group {
+                                if track == nil {
+                                    Color.clear.frame(height: 1)
+                                } else if isComplete {
+                                    CompletionView(program: program)
+                                } else if let questionNumber, let question = getQuestion(program, questionNumber) {
+                                    QuestionCardView(program: program, question: question)
+                                } else {
+                                    CompletionView(program: program)
+                                }
+                            }
+                            .frame(maxWidth: 560)
+                            .frame(maxWidth: .infinity)
+
+                            Spacer(minLength: 0)
                         }
+                        .padding(.horizontal, 34)
+                        .padding(.vertical, 24)
+                        .frame(minHeight: geo.size.height)
                     }
-                    .padding(.horizontal, 34)
-                    .padding(.vertical, 24)
-                    .frame(maxWidth: 560)
-                    .frame(maxWidth: .infinity)
                 }
 
                 if !isComplete, track != nil {
@@ -119,8 +137,11 @@ struct SessionView: View {
                 Spacer()
                 Button {
                     advance()
+                    if let handoff {
+                        path.append(DevotionRoute.worship(slug: handoff.devotionSlug, startStep: handoff.returnStep))
+                    }
                 } label: {
-                    Text("Next \u{2192}")
+                    Text(handoff != nil ? "Continue Worship \u{2192}" : "Next \u{2192}")
                         .labelCaps(size: 11, tracking: 0.1, color: .ccInk)
                         .dottedUnderline(.ccInk)
                 }

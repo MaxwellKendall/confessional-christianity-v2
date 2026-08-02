@@ -7,6 +7,6 @@ struct ConfessionalChristianityApp: App {
         WindowGroup {
             HomeView()
         }
-        .modelContainer(for: [LocalCatechismTrack.self, ProgressSettings.self])
+        .modelContainer(for: [LocalCatechismTrack.self, ProgressSettings.self, SeriesProgressRecord.self])
     }
 }

@@ -35,7 +35,7 @@ struct JumpToQuestionView: View {
                 Spacer()
                 Text("Jump to Question").labelCaps(size: 10, tracking: 0.14)
                 Spacer()
-                Color.clear.frame(width: 15)
+                Color.clear.frame(width: 15, height: 1)
             }
             .padding(.horizontal, 20)
             .padding(.top, 20)
