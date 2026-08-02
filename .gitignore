@@ -42,3 +42,10 @@ next-env.d.ts
 
 # committed template for required env vars
 !.env.example
+
+# iOS / Xcode / Swift Package Manager
+ios/**/.build/
+ios/**/DerivedData/
+ios/**/*.xcodeproj/xcuserdata/
+ios/**/*.xcodeproj/project.xcworkspace/xcuserdata/
+ios/**/.swiftpm/

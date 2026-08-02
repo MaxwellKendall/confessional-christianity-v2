@@ -1,0 +1,11 @@
+{
+  "syncedAt": "2026-08-02T19:59:11.807Z",
+  "sourceCommit": "7b6ee3c78924f7b4560db58e793dc2fd7b1af398",
+  "files": [
+    "normalized-data/westminster/wsc.json",
+    "normalized-data/westminster/wlc.json",
+    "normalized-data/three-forms-of-unity/heidelberg-catechism.json",
+    "normalized-data/miscellany/catechism-young-children.json",
+    "content/programs/catechizing-shorter-catechism/prayers.json"
+  ]
+}

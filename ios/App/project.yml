@@ -1,0 +1,43 @@
+name: ConfessionalChristianity
+options:
+  bundleIdPrefix: com.confessionalchristianity
+  deploymentTarget:
+    iOS: "17.0"
+packages:
+  DomainKit:
+    path: ../DomainKit
+targets:
+  ConfessionalChristianity:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources
+    dependencies:
+      - package: DomainKit
+    info:
+      path: Sources/Info.plist
+      properties:
+        UILaunchScreen: {}
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        CFBundleDisplayName: Confessional Christianity
+        UIAppFonts:
+          - Cinzel-Regular.ttf
+          - Cinzel-SemiBold.ttf
+          - Marcellus-Regular.ttf
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.confessionalchristianity.app
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SWIFT_VERSION: "6.0"
+    schemes:
+      ConfessionalChristianity:
+        build:
+          targets:
+            ConfessionalChristianity: all
+        run:
+          config: Debug
+        test:
+          config: Debug
