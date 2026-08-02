@@ -52,6 +52,51 @@ struct HomeView: View {
 
     var body: some View {
         NavigationStack(path: $path) {
+            VStack(spacing: 0) {
+                SiteHeaderView()
+                homeScrollView
+            }
+            .background(Color.ccCanvas)
+            .toolbar(.hidden, for: .navigationBar)
+            .navigationDestination(for: String.self) { slug in
+                if let program = getProgram(slug) {
+                    SessionView(program: program, path: $path)
+                }
+            }
+            .navigationDestination(for: DevotionRoute.self) { route in
+                switch route {
+                case .series(let slug):
+                    if let series = getSeries(slug) {
+                        DevotionSeriesView(series: series, path: $path)
+                    }
+                case .devotion(let slug):
+                    if let devotion = getDevotion(slug) {
+                        DevotionLandingView(devotion: devotion, path: $path)
+                    }
+                case .worship(let slug, let startStep):
+                    if let devotion = getDevotion(slug) {
+                        DevotionWorshipView(devotion: devotion, startStep: startStep, path: $path)
+                    }
+                case .catechismHandoff(let programSlug, let devotionSlug, let returnStep):
+                    if let program = getProgram(programSlug) {
+                        SessionView(
+                            program: program, path: $path,
+                            handoff: DevotionHandoff(devotionSlug: devotionSlug, returnStep: returnStep)
+                        )
+                    }
+                }
+            }
+            .task {
+                track = store.activeTrack()
+                if let wscRun {
+                    runCompletedDays = seriesStore.getCompletedDays(wscRun.slug)
+                }
+            }
+        }
+        .tint(.ccInk)
+    }
+
+    private var homeScrollView: some View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     if let wscRun {
@@ -164,43 +209,5 @@ struct HomeView: View {
                 .frame(maxWidth: 704)
                 .frame(maxWidth: .infinity)
             }
-            .background(Color.ccCanvas)
-            .toolbar(.hidden, for: .navigationBar)
-            .navigationDestination(for: String.self) { slug in
-                if let program = getProgram(slug) {
-                    SessionView(program: program, path: $path)
-                }
-            }
-            .navigationDestination(for: DevotionRoute.self) { route in
-                switch route {
-                case .series(let slug):
-                    if let series = getSeries(slug) {
-                        DevotionSeriesView(series: series, path: $path)
-                    }
-                case .devotion(let slug):
-                    if let devotion = getDevotion(slug) {
-                        DevotionLandingView(devotion: devotion, path: $path)
-                    }
-                case .worship(let slug, let startStep):
-                    if let devotion = getDevotion(slug) {
-                        DevotionWorshipView(devotion: devotion, startStep: startStep, path: $path)
-                    }
-                case .catechismHandoff(let programSlug, let devotionSlug, let returnStep):
-                    if let program = getProgram(programSlug) {
-                        SessionView(
-                            program: program, path: $path,
-                            handoff: DevotionHandoff(devotionSlug: devotionSlug, returnStep: returnStep)
-                        )
-                    }
-                }
-            }
-            .task {
-                track = store.activeTrack()
-                if let wscRun {
-                    runCompletedDays = seriesStore.getCompletedDays(wscRun.slug)
-                }
-            }
-        }
-        .tint(.ccInk)
     }
 }
