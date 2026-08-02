@@ -1,0 +1,108 @@
+{
+  "slug": "wsc-23",
+  "title": "What offices doth Christ execute as our Redeemer?",
+  "summary": "Professing WSC Q. 23 of the Westminster Shorter Catechism, grounded in Isaiah 9:6-7.",
+  "description": "This household worship moves through Psalm 40:5 and Acts 4:12, and professes WSC Q. 23 — “What offices doth Christ execute as our Redeemer?”, before closing with Isaiah 9:6-7.",
+  "grounding": {
+    "kind": "catechism",
+    "entryIds": [
+      "WSC-23"
+    ]
+  },
+  "steps": [
+    {
+      "role": "Call to Worship",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Psalm 40:5",
+          "osis": "Ps.40.5",
+          "text": "5 You have multiplied, O Lord my God,\n your wondrous deeds and your thoughts toward us;\n none can compare with you!\nI will proclaim and tell of them,\n yet they are more than can be told."
+        },
+        {
+          "type": "prayer",
+          "lede": "Respond to God’s call to worship him by praying the Lord’s Prayer together:",
+          "text": "Our Father who art in heaven, hallowed be thy name. Thy kingdom come. Thy will be done on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us, and lead us not into temptation, but deliver us from evil. For thine is the kingdom and the power, and the glory, forever and ever. Amen."
+        }
+      ]
+    },
+    {
+      "role": "Confessing Sin",
+      "elements": [
+        {
+          "type": "prayer",
+          "lede": "Take a moment to “test and examine” your thoughts, feelings, and actions of the past day. “Return to the Lord” by confessing your sin (Lam 3:40).",
+          "text": "We confess, our Father, that we do not live up to the family name. We are more ready to resent than to forgive, more ready to manipulate than to serve, more ready to fear than to love, more ready to keep our distance than to welcome, more ready to compete than to help. At the root of this behavior is mistrust. We do not love one another as we should, because we do not believe that you love us as you do. Forgive us our cold unbelief. And make more vivid to us the meaning and depth of your love at the cross. Show us what it cost you to give up your Son that we might become your sons and daughters. We ask this in the name of Jesus our righteousness. \nAmen."
+        }
+      ]
+    },
+    {
+      "role": "Receiving Forgiveness",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Acts 4:12",
+          "osis": "Acts.4.12",
+          "text": "12 And there is salvation in no one else, for there is no other name under heaven given among men by which we must be saved."
+        }
+      ]
+    },
+    {
+      "role": "Singing Praise",
+      "elements": [
+        {
+          "type": "song",
+          "title": "Gloria Patri",
+          "lyrics": "Glory be to the Father, and to the Son and to the Holy Ghost; \nAs it was in the beginning, is now, and ever shall be,\nWorld without end. Amen."
+        }
+      ]
+    },
+    {
+      "role": "Professing Faith",
+      "elements": [
+        {
+          "type": "catechism"
+        }
+      ]
+    },
+    {
+      "role": "Reading Scripture",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Isaiah 9:6-7",
+          "osis": "Isa.9.6-Isa.9.7",
+          "text": "6 For to us a child is born, to us a son is given; and the government shall be upon his shoulder, and his name shall be called Wonderful Counselor, Mighty God, Everlasting Father, Prince of Peace.\n7 Of the increase of his government and of peace there will be no end, on the throne of David and over his kingdom, to establish it and to uphold it with justice and with righteousness from this time forth and forevermore. The zeal of the Lord of hosts will do this."
+        },
+        {
+          "type": "instruction",
+          "text": "The head of the household may offer words of instruction, encouragement, and exhortation."
+        }
+      ]
+    },
+    {
+      "role": "Making Requests",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Make your ways known upon the earth, Lord God, your saving power among the peoples. Renew your Church in holiness and help us to serve you with joy. Guide the leaders of all nations that justice may prevail throughout the world. Let not the needy be forgotten, nor the hope of the poor taken away. Make us instruments of your peace and let your glory be over all the earth. Prayers for ourselves, our families, friends, and the world may be offered as the Lord leads."
+        }
+      ]
+    },
+    {
+      "role": "Closing Prayer",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Almighty God, whose Son our Savior Jesus Christ is the light of the world: Grant that your people, illumined by your Word and Sacraments, may shine with the radiance of Christ’s glory, that he may be known, worshiped, and obeyed to the ends of the earth; through Jesus Christ our Lord, who with you and the Holy Spirit lives and reigns, one God, now and forever.\nAmen."
+        },
+        {
+          "type": "scripture",
+          "citation": "Hebrews 13:20-21",
+          "osis": "Heb.13.20-Heb.13.21",
+          "text": "20 Now may the God of peace who brought again from the dead our Lord Jesus, the great shepherd of the sheep, by the blood of the eternal covenant, 21 equip you with everything good that you may do his will, working in us that which is pleasing in his sight, through Jesus Christ, to whom be glory forever and ever. Amen."
+        }
+      ]
+    }
+  ]
+}

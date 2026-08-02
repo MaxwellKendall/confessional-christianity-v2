@@ -1,0 +1,109 @@
+{
+  "slug": "wsc-1",
+  "title": "What is the chief end of man?",
+  "summary": "Professing WSC Q. 1 of the Westminster Shorter Catechism, grounded in Psalm 73:25-28.",
+  "description": "This household worship moves through Psalm 5:11-12 and Colossians 1:13-14, and professes WSC Q. 1 — “What is the chief end of man?”, before closing with Psalm 73:25-28.",
+  "grounding": {
+    "kind": "catechism",
+    "entryIds": [
+      "WSC-1"
+    ]
+  },
+  "steps": [
+    {
+      "role": "Call to Worship",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Psalm 5:11-12",
+          "osis": "Ps.5.11-Ps.5.12",
+          "text": "11 But let all who take refuge in you rejoice;\n let them ever sing for joy,\nand spread your protection over them,\n that those who love your name may exult in you.\n12 For you bless the righteous, O Lord;\n you cover him with favor as with a shield."
+        },
+        {
+          "type": "prayer",
+          "lede": "Respond to God’s call to worship him by praying the Lord’s Prayer together:",
+          "text": "Our Father who art in heaven, hallowed be thy name. Thy kingdom come. Thy will be done on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us, and lead us not into temptation, but deliver us from evil. For thine is the kingdom and the power, and the glory, forever and ever. Amen."
+        }
+      ]
+    },
+    {
+      "role": "Confessing Sin",
+      "elements": [
+        {
+          "type": "prayer",
+          "lede": "Take a moment to “test and examine” your thoughts, feelings, and actions of the past day. “Return to the Lord” by confessing your sin (Lam 3:40).",
+          "text": "Almighty God, we acknowledge and confess that we have sinned against you in thought, word, and deed; we have not loved you with all of our heart, soul, mind, and strength; we have not loved our neighbor as ourselves. Deepen within us our sorrow for the wrong we have done, and the good we have left undone. Lord, you are full of compassion and gracious, slow to anger, and plenteous in mercy; there is always forgiveness with you! Restore to us the joy of your salvation; bind up that which is broken, give light to our minds, strength to our wills, and rest to our souls. Speak to each of us, and let your word abide with us until it has wrought in us your holy will. \nAmen."
+        }
+      ]
+    },
+    {
+      "role": "Receiving Forgiveness",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Colossians 1:13-14",
+          "osis": "Col.1.13-Col.1.14",
+          "text": "13 He has delivered us from the domain of darkness and transferred us to the kingdom of his beloved Son, 14 in whom we have redemption, the forgiveness of sins."
+        }
+      ]
+    },
+    {
+      "role": "Singing Praise",
+      "elements": [
+        {
+          "type": "song",
+          "title": "Gloria Patri",
+          "lyrics": "Glory be to the Father, and to the Son and to the Holy Ghost; \nAs it was in the beginning, is now, and ever shall be,\nWorld without end. Amen."
+        }
+      ]
+    },
+    {
+      "role": "Professing Faith",
+      "elements": [
+        {
+          "type": "catechism"
+        }
+      ]
+    },
+    {
+      "role": "Reading Scripture",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Psalm 73:25-28",
+          "osis": "Ps.73.25-Ps.73.28",
+          "text": "25 Whom have I in heaven but you?\n And earth has nothing I desire besides you.\n26 My flesh and my heart may fail,\n but God is the strength of my heart\n and my portion forever.\n27 Those who are far from you will perish;\n you destroy all who are unfaithful to you.\n28 But as for me, it is good to be near God.\n I have made the Sovereign Lord my refuge;\n I will tell of all your deeds."
+        },
+        {
+          "type": "instruction",
+          "text": "The head of the household may offer words of instruction, encouragement, and exhortation."
+        }
+      ]
+    },
+    {
+      "role": "Making Requests",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Make your ways known upon the earth, Lord God, your saving power among the peoples. Renew your Church in holiness and help us to serve you with joy. Guide the leaders of all nations that justice may prevail throughout the world. Let not the needy be forgotten, nor the hope of the poor taken away. Make us instruments of your peace and let your glory be over all the earth. Prayers for ourselves, our families, friends, and the world may be offered as the Lord leads."
+        }
+      ]
+    },
+    {
+      "role": "Closing Prayer",
+      "elements": [
+        {
+          "type": "prayer",
+          "lede": "Attributed to Julian of Norwich.",
+          "text": "O God, of your goodness, give me yourself, for you are enough for me. I can ask for nothing less that is completely to your honor, and if I do ask anything less, I shall always be in want. Only in you I have all. Amen."
+        },
+        {
+          "type": "scripture",
+          "citation": "2 Corinthians 13:14",
+          "osis": "2Cor.13.14",
+          "text": "The grace of our Lord Jesus Christ and the love of God and the fellowship of the Holy Spirit be with you all. \nAmen."
+        }
+      ]
+    }
+  ]
+}

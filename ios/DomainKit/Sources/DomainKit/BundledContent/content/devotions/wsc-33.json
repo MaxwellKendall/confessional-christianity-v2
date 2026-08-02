@@ -1,0 +1,113 @@
+{
+  "slug": "wsc-33",
+  "title": "What is justification?",
+  "summary": "Professing WSC Q. 33 of the Westminster Shorter Catechism, grounded in Romans 3:19-26.",
+  "description": "This household worship moves through Psalm 54:6-7 and Philippians 3:9, and professes WSC Q. 33 — “What is justification?”, before closing with Romans 3:19-26.",
+  "grounding": {
+    "kind": "catechism",
+    "entryIds": [
+      "WSC-33"
+    ]
+  },
+  "steps": [
+    {
+      "role": "Call to Worship",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Psalm 54:6-7",
+          "osis": "Ps.54.6-Ps.54.7",
+          "text": "6 With a freewill offering I will sacrifice to you;\n I will give thanks to your name, O Lord, for it is good.\n7 For he has delivered me from every trouble,\n and my eye has looked in triumph on my enemies."
+        },
+        {
+          "type": "prayer",
+          "lede": "Respond to God’s call to worship him by praying the Lord’s Prayer together:",
+          "text": "Our Father who art in heaven, hallowed be thy name. Thy kingdom come. Thy will be done on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us, and lead us not into temptation, but deliver us from evil. For thine is the kingdom and the power, and the glory, forever and ever. Amen."
+        }
+      ]
+    },
+    {
+      "role": "Confessing Sin",
+      "elements": [
+        {
+          "type": "prayer",
+          "lede": "Take a moment to “test and examine” your thoughts, feelings, and actions of the past day. “Return to the Lord” by confessing your sin (Lam 3:40).",
+          "text": "Merciful God, we confess that we have not loved you with our whole heart.\n We have failed to be an obedient church. We have not done your will, we have broken your law, we have rebelled against your love, we have not loved our neighbors, and we have not heard the cry of the needy. Forgive us, we pray. Free us for joyful obedience, through Jesus Christ our Lord. \nAmen."
+        }
+      ]
+    },
+    {
+      "role": "Receiving Forgiveness",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Philippians 3:9",
+          "osis": "Phil.3.9",
+          "text": "9 And be found in Him, not having a righteousness of my own that comes from the law, but that which comes through faith in Christ, the righteousness from God that depends on faith."
+        }
+      ]
+    },
+    {
+      "role": "Singing Praise",
+      "elements": [
+        {
+          "type": "song",
+          "title": "Doxology",
+          "lyrics": "Praise God from whom all blessings flow\nPraise him, all creatures here below,\nPraise him above ye heavenly host\nPraise Father, Son, and Holy Ghost.",
+          "source": {
+            "label": "Hear it · Spotify",
+            "href": "https://open.spotify.com/search/Doxology%20Sovereign%20Grace%20Music",
+            "external": true
+          }
+        }
+      ]
+    },
+    {
+      "role": "Professing Faith",
+      "elements": [
+        {
+          "type": "catechism"
+        }
+      ]
+    },
+    {
+      "role": "Reading Scripture",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Romans 3:19-26",
+          "osis": "Rom.3.19-Rom.3.26",
+          "text": "19 Now we know that whatever the law says it speaks to those who are under the law, so that every mouth may be stopped, and the whole world may be held accountable to God. 20 For by works of the law no human being will be justified in his sight, since through the law comes knowledge of sin.\n21 But now the righteousness of God has been manifested apart from the law, although the Law and the Prophets bear witness to it— 22 the righteousness of God through faith in Jesus Christ for all who believe. For there is no distinction: 23 for all have sinned and fall short of the glory of God, 24 and are justified by his grace as a gift, through the redemption that is in Christ Jesus, 25 whom God put forward as a propitiation by his blood, to be received by faith. This was to show God's righteousness, because in his divine forbearance he had passed over former sins. 26 It was to show his righteousness at the present time, so that he might be just and the justifier of the one who has faith in Jesus."
+        },
+        {
+          "type": "instruction",
+          "text": "The head of the household may offer words of instruction, encouragement, and exhortation."
+        }
+      ]
+    },
+    {
+      "role": "Making Requests",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Make your ways known upon the earth, Lord God, your saving power among the peoples. Renew your Church in holiness and help us to serve you with joy. Guide the leaders of all nations that justice may prevail throughout the world. Let not the needy be forgotten, nor the hope of the poor taken away. Make us instruments of your peace and let your glory be over all the earth. Prayers for ourselves, our families, friends, and the world may be offered as the Lord leads."
+        }
+      ]
+    },
+    {
+      "role": "Closing Prayer",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Almighty Father, who gave your only Son to die for our sins and to rise for our justification: Give us grace so to put away the leaven of malice and wickedness, that we may always serve you in purity of life; through Jesus Christ your Son our Lord, who lives and reigns with you and the Holy Spirit, one God, now and for ever. \nAmen."
+        },
+        {
+          "type": "scripture",
+          "citation": "1 Thessalonians 5:23-24",
+          "osis": "1Thess.5.23-1Thess.5.24",
+          "text": "23 Now may the God of peace himself sanctify you completely, and may your whole spirit and soul and body be kept blameless at the coming of our Lord Jesus Christ. 24 He who calls you is faithful; he will surely do it.\nAmen."
+        }
+      ]
+    }
+  ]
+}

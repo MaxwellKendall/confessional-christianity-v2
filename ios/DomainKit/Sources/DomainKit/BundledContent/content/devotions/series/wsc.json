@@ -1,0 +1,330 @@
+{
+  "slug": "wsc",
+  "source": {
+    "kind": "catechism",
+    "documentId": "WSC"
+  },
+  "title": "Professing the Faith",
+  "tagline": "One Question at a Time",
+  "description": "A household worship run through the Westminster Shorter Catechism, question by question — each part presuming the ones before it, so the profession of faith builds the same way the catechism itself does.",
+  "parts": [
+    {
+      "day": 1,
+      "title": "What is the chief end of man?",
+      "citation": "WSC Q. 1",
+      "devotionSlug": "wsc-1"
+    },
+    {
+      "day": 2,
+      "title": "What rule hath God given to direct us how we may glorify and enjoy him?",
+      "citation": "WSC Q. 2",
+      "devotionSlug": "wsc-2"
+    },
+    {
+      "day": 3,
+      "title": "What do the Scriptures principally teach?",
+      "citation": "WSC Q. 3",
+      "devotionSlug": "wsc-3"
+    },
+    {
+      "day": 4,
+      "title": "What is God?",
+      "citation": "WSC Q. 4",
+      "devotionSlug": "wsc-4"
+    },
+    {
+      "day": 5,
+      "title": "Are there more Gods than one?",
+      "citation": "WSC Q. 5",
+      "devotionSlug": "wsc-5"
+    },
+    {
+      "day": 6,
+      "title": "How many persons are there in the Godhead?",
+      "citation": "WSC Q. 6",
+      "devotionSlug": "wsc-6"
+    },
+    {
+      "day": 7,
+      "title": "What are the decrees of God?",
+      "citation": "WSC Q. 7",
+      "devotionSlug": "wsc-7"
+    },
+    {
+      "day": 8,
+      "title": "How doth God execute his decrees?",
+      "citation": "WSC Q. 8",
+      "devotionSlug": "wsc-8"
+    },
+    {
+      "day": 9,
+      "title": "What is the work of creation?",
+      "citation": "WSC Q. 9",
+      "devotionSlug": "wsc-9"
+    },
+    {
+      "day": 10,
+      "title": "How did God create man?",
+      "citation": "WSC Q. 10",
+      "devotionSlug": "wsc-10"
+    },
+    {
+      "day": 11,
+      "title": "What are God's works of providence?",
+      "citation": "WSC Q. 11",
+      "devotionSlug": "wsc-11"
+    },
+    {
+      "day": 12,
+      "title": "What special act of providence did God exercise toward man in the estate wherein he was created?",
+      "citation": "WSC Q. 12",
+      "devotionSlug": "wsc-12"
+    },
+    {
+      "day": 13,
+      "title": "Did our first parents continue in the estate wherein they were created?",
+      "citation": "WSC Q. 13",
+      "devotionSlug": "wsc-13"
+    },
+    {
+      "day": 14,
+      "title": "What is sin?",
+      "citation": "WSC Q. 14",
+      "devotionSlug": "wsc-14"
+    },
+    {
+      "day": 15,
+      "title": "What was the sin whereby our first parents fell from the estate wherein they were created?",
+      "citation": "WSC Q. 15",
+      "devotionSlug": "wsc-15"
+    },
+    {
+      "day": 16,
+      "title": "Did all mankind fall in Adam's first transgression?",
+      "citation": "WSC Q. 16",
+      "devotionSlug": "wsc-16"
+    },
+    {
+      "day": 17,
+      "title": "Into what estate did the fall bring mankind?",
+      "citation": "WSC Q. 17",
+      "devotionSlug": "wsc-17"
+    },
+    {
+      "day": 18,
+      "title": "Wherein consists the sinfulness of that estate whereinto man fell?",
+      "citation": "WSC Q. 18",
+      "devotionSlug": "wsc-18"
+    },
+    {
+      "day": 19,
+      "title": "What is the misery of that estate whereinto man fell?",
+      "citation": "WSC Q. 19",
+      "devotionSlug": "wsc-19"
+    },
+    {
+      "day": 20,
+      "title": "Did God leave all mankind to perish in the estate of sin and misery?",
+      "citation": "WSC Q. 20",
+      "devotionSlug": "wsc-20"
+    },
+    {
+      "day": 21,
+      "title": "Who is the Redeemer of God's elect?",
+      "citation": "WSC Q. 21",
+      "devotionSlug": "wsc-21"
+    },
+    {
+      "day": 22,
+      "title": "How did Christ, being the Son of God, become man?",
+      "citation": "WSC Q. 22",
+      "devotionSlug": "wsc-22"
+    },
+    {
+      "day": 23,
+      "title": "What offices doth Christ execute as our Redeemer?",
+      "citation": "WSC Q. 23",
+      "devotionSlug": "wsc-23"
+    },
+    {
+      "day": 24,
+      "title": "How doth Christ execute the office of a prophet?",
+      "citation": "WSC Q. 24",
+      "devotionSlug": "wsc-24"
+    },
+    {
+      "day": 25,
+      "title": "How doth Christ execute the office of a priest?",
+      "citation": "WSC Q. 25",
+      "devotionSlug": "wsc-25"
+    },
+    {
+      "day": 26,
+      "title": "How doth Christ execute the office of a king?",
+      "citation": "WSC Q. 26",
+      "devotionSlug": "wsc-26"
+    },
+    {
+      "day": 27,
+      "title": "Wherein did Christ's humiliation consist?",
+      "citation": "WSC Q. 27",
+      "devotionSlug": "wsc-27"
+    },
+    {
+      "day": 28,
+      "title": "Wherein consisteth Christ's exaltation?",
+      "citation": "WSC Q. 28",
+      "devotionSlug": "wsc-28"
+    },
+    {
+      "day": 29,
+      "title": "How are we made partakers of the redemption purchased by Christ?",
+      "citation": "WSC Q. 29",
+      "devotionSlug": "wsc-29"
+    },
+    {
+      "day": 30,
+      "title": "How doth the Spirit apply to us the redemption purchased by Christ?",
+      "citation": "WSC Q. 30",
+      "devotionSlug": "wsc-30"
+    },
+    {
+      "day": 31,
+      "title": "What is effectual calling?",
+      "citation": "WSC Q. 31",
+      "devotionSlug": "wsc-31"
+    },
+    {
+      "day": 32,
+      "title": "What benefits do they that are effectually called partake of in this life?",
+      "citation": "WSC Q. 32",
+      "devotionSlug": "wsc-32"
+    },
+    {
+      "day": 33,
+      "title": "What is justification?",
+      "citation": "WSC Q. 33",
+      "devotionSlug": "wsc-33"
+    },
+    {
+      "day": 34,
+      "title": "What is adoption?",
+      "citation": "WSC Q. 34",
+      "devotionSlug": "wsc-34"
+    },
+    {
+      "day": 35,
+      "title": "What is sanctification?",
+      "citation": "WSC Q. 35",
+      "devotionSlug": "wsc-35"
+    },
+    {
+      "day": 36,
+      "title": "What are the benefits which in this life do accompany or flow from justification, adoption, and sanctification?",
+      "citation": "WSC Q. 36",
+      "devotionSlug": "wsc-36"
+    },
+    {
+      "day": 37,
+      "title": "What benefits do believers receive from Christ at death?",
+      "citation": "WSC Q. 37",
+      "devotionSlug": "wsc-37"
+    },
+    {
+      "day": 38,
+      "title": "What benefits do believers receive from Christ at the resurrection?",
+      "citation": "WSC Q. 38",
+      "devotionSlug": "wsc-38"
+    },
+    {
+      "day": 39,
+      "title": "What is the duty which God requireth of man?",
+      "citation": "WSC Q. 39",
+      "devotionSlug": "wsc-39"
+    },
+    {
+      "day": 40,
+      "title": "What did God at first reveal to man for the rule of his obedience?",
+      "citation": "WSC Q. 40–41",
+      "devotionSlug": "wsc-40"
+    },
+    {
+      "day": 41,
+      "title": "What is the sum of the ten commandments?",
+      "citation": "WSC Q. 42",
+      "devotionSlug": "wsc-42"
+    },
+    {
+      "day": 42,
+      "title": "What is the preface to the ten commandments?",
+      "citation": "WSC Q. 43–44",
+      "devotionSlug": "wsc-43"
+    },
+    {
+      "day": 43,
+      "title": "Which is the first commandment?",
+      "citation": "WSC Q. 45–46",
+      "devotionSlug": "wsc-45"
+    },
+    {
+      "day": 44,
+      "title": "What is forbidden in the first commandment?",
+      "citation": "WSC Q. 47–48",
+      "devotionSlug": "wsc-47"
+    },
+    {
+      "day": 45,
+      "title": "Which is the second commandment?",
+      "citation": "WSC Q. 49–50",
+      "devotionSlug": "wsc-49"
+    },
+    {
+      "day": 46,
+      "title": "What is forbidden in the second commandment?",
+      "citation": "WSC Q. 51–52",
+      "devotionSlug": "wsc-51"
+    },
+    {
+      "day": 47,
+      "title": "Which is the third commandment?",
+      "citation": "WSC Q. 53–54",
+      "devotionSlug": "wsc-53"
+    },
+    {
+      "day": 48,
+      "title": "What is forbidden in the third commandment?",
+      "citation": "WSC Q. 55–56",
+      "devotionSlug": "wsc-55"
+    },
+    {
+      "day": 49,
+      "title": "Which is the fourth commandment?",
+      "citation": "WSC Q. 57–58",
+      "devotionSlug": "wsc-57"
+    },
+    {
+      "day": 50,
+      "title": "Which day of the seven hath God appointed to be the weekly sabbath?",
+      "citation": "WSC Q. 59–60",
+      "devotionSlug": "wsc-59"
+    },
+    {
+      "day": 51,
+      "title": "What is forbidden in the fourth commandment?",
+      "citation": "WSC Q. 61–62",
+      "devotionSlug": "wsc-61"
+    },
+    {
+      "day": 52,
+      "title": "Which is the fifth commandment?",
+      "citation": "WSC Q. 63–64",
+      "devotionSlug": "wsc-63"
+    },
+    {
+      "day": 53,
+      "title": "What is forbidden in the fifth commandment?",
+      "citation": "WSC Q. 65–66",
+      "devotionSlug": "wsc-65"
+    }
+  ]
+}

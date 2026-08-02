@@ -1,0 +1,108 @@
+{
+  "slug": "wsc-35",
+  "title": "What is sanctification?",
+  "summary": "Professing WSC Q. 35 of the Westminster Shorter Catechism, grounded in Romans 6:1-14.",
+  "description": "This household worship moves through Psalm 57:1, 5 and Romans 8:1-2, and professes WSC Q. 35 — “What is sanctification?”, before closing with Romans 6:1-14.",
+  "grounding": {
+    "kind": "catechism",
+    "entryIds": [
+      "WSC-35"
+    ]
+  },
+  "steps": [
+    {
+      "role": "Call to Worship",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Psalm 57:1, 5",
+          "osis": "Ps.57.1-Ps.57.5",
+          "text": "1 Be merciful to me, O God, be merciful to me,\n for in you my soul takes refuge;\nin the shadow of your wings I will take refuge,\n till the storms of destruction pass by.\n5 Be exalted, O God, above the heavens!\n Let your glory be over all the earth!"
+        },
+        {
+          "type": "prayer",
+          "lede": "Respond to God’s call to worship him by praying the Lord’s Prayer together:",
+          "text": "Our Father who art in heaven, hallowed be thy name. Thy kingdom come. Thy will be done on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us, and lead us not into temptation, but deliver us from evil. For thine is the kingdom and the power, and the glory, forever and ever. Amen."
+        }
+      ]
+    },
+    {
+      "role": "Confessing Sin",
+      "elements": [
+        {
+          "type": "prayer",
+          "lede": "Take a moment to “test and examine” your thoughts, feelings, and actions of the past day. “Return to the Lord” by confessing your sin (Lam 3:40).",
+          "text": "Almighty God, who does freely pardon all who repent and turn to Him, now fulfill in every contrite heart the promise of redeeming grace; forgiving all our sins and cleansing us from an evil conscience; through the perfect sacrifice of Christ Jesus our Lord.\nAmen."
+        }
+      ]
+    },
+    {
+      "role": "Receiving Forgiveness",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Romans 8:1-2",
+          "osis": "Rom.8.1-Rom.8.2",
+          "text": "1 There is therefore now no condemnation for those who are in Christ Jesus. 2 For the law of the Spirit of life has set you free in Christ Jesus from the law of sin and death."
+        }
+      ]
+    },
+    {
+      "role": "Singing Praise",
+      "elements": [
+        {
+          "type": "song",
+          "title": "Christ Rises Conqueror from the Grave",
+          "lyrics": "Christ rises conqu’ror from the grave,\nFrom death returning, strong to save,\nWith His right hand the tyrant chains,\nAnd paradise for man regains.\nAll praise be Thine, O risen Lord,\nFrom death to endless life restored;\nAll praise to God the Father be,\nAnd Holy Ghost eternally."
+        }
+      ]
+    },
+    {
+      "role": "Professing Faith",
+      "elements": [
+        {
+          "type": "catechism"
+        }
+      ]
+    },
+    {
+      "role": "Reading Scripture",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Romans 6:1-14",
+          "osis": "Rom.6.1-Rom.6.14",
+          "text": "1 What shall we say then? Are we to continue in sin that grace may abound? 2 By no means! How can we who died to sin still live in it? 3 Do you not know that all of us who have been baptized into Christ Jesus were baptized into his death? 4 We were buried therefore with him by baptism into death, in order that, just as Christ was raised from the dead by the glory of the Father, we too might walk in newness of life. 5 For if we have been united with him in a death like his, we shall certainly be united with him in a resurrection like his. 6 We know that our old self was crucified with him in order that the body of sin might be brought to nothing, so that we would no longer be enslaved to sin. 7 For one who has died has been set free from sin. 8 Now if we have died with Christ, we believe that we will also live with him. 9 We know that Christ, being raised from the dead, will never die again; death no longer has dominion over him. 10 For the death he died he died to sin, once for all, but the life he lives he lives to God. 11 So you also must consider yourselves dead to sin and alive to God in Christ Jesus."
+        },
+        {
+          "type": "instruction",
+          "text": "The head of the household may offer words of instruction, encouragement, and exhortation."
+        }
+      ]
+    },
+    {
+      "role": "Making Requests",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Make your ways known upon the earth, Lord God, your saving power among the peoples. Renew your Church in holiness and help us to serve you with joy. Guide the leaders of all nations that justice may prevail throughout the world. Let not the needy be forgotten, nor the hope of the poor taken away. Make us instruments of your peace and let your glory be over all the earth. Prayers for ourselves, our families, friends, and the world may be offered as the Lord leads."
+        }
+      ]
+    },
+    {
+      "role": "Closing Prayer",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Almighty God, whose blessed Son was led by the Spirit to be tempted by Satan: Come quickly to help us who are assaulted by many temptations, and, as you know the weaknesses of each of us, let each one find you mighty to save; through Jesus Christ your Son our Lord, who lives and reigns with you and the Holy Spirit, one God, now and for ever.\nAmen."
+        },
+        {
+          "type": "scripture",
+          "citation": "2 Thessalonians 2:16-17",
+          "osis": "2Thess.2.16-2Thess.2.17",
+          "text": "16 Now may our Lord Jesus Christ himself, and God our Father, who loved us and gave us eternal comfort and good hope through grace, 17 comfort your hearts and establish them in every good work and word.\nAmen."
+        }
+      ]
+    }
+  ]
+}

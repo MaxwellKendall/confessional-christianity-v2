@@ -1,0 +1,109 @@
+{
+  "slug": "wsc-7",
+  "title": "What are the decrees of God?",
+  "summary": "Professing WSC Q. 7 of the Westminster Shorter Catechism, grounded in Ephesians 1:3-6.",
+  "description": "This household worship moves through Psalm 18:1-3 and Romans 6:6, 11, and professes WSC Q. 7 — “What are the decrees of God?”, before closing with Ephesians 1:3-6.",
+  "grounding": {
+    "kind": "catechism",
+    "entryIds": [
+      "WSC-7"
+    ]
+  },
+  "steps": [
+    {
+      "role": "Call to Worship",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Psalm 18:1-3",
+          "osis": "Ps.18.1-Ps.18.3",
+          "text": "1 I love you, O Lord, my strength.\n2 The Lord is my rock and my fortress and my deliverer,\n my God, my rock, in whom I take refuge,\n my shield, and the horn of my salvation, my stronghold.\n3 I call upon the Lord, who is worthy to be praised,\n and I am saved from my enemies."
+        },
+        {
+          "type": "prayer",
+          "lede": "Respond to God’s call to worship him by praying the Lord’s Prayer together:",
+          "text": "Our Father who art in heaven, hallowed be thy name. Thy kingdom come. Thy will be done on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us, and lead us not into temptation, but deliver us from evil. For thine is the kingdom and the power, and the glory, forever and ever. Amen."
+        }
+      ]
+    },
+    {
+      "role": "Confessing Sin",
+      "elements": [
+        {
+          "type": "prayer",
+          "lede": "Take a moment to “test and examine” your thoughts, feelings, and actions of the past day. “Return to the Lord” by confessing your sin (Lam 3:40).",
+          "text": "Holy Father, You see us as we are and know our inmost thoughts. We confess that we are unworthy of Your gracious care. We forget that all life comes from You and that to You all life returns. We have not sought to do Your will with our whole hearts. We have not lived as grateful children, nor loved as Christ loved us. Apart from You, we are nothing. Only Your grace can sustain us. \nLord, in Your mercy, forgive us, heal us, and make us whole. Set us free from our sin and restore us to the joy of Your salvation now and evermore. \nAmen."
+        }
+      ]
+    },
+    {
+      "role": "Receiving Forgiveness",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Romans 6:6, 11",
+          "osis": "Rom.6.6-Rom.6.11",
+          "text": "6 We know that our old self was crucified with him in order that the body of sin might be brought to nothing, so that we would no longer be enslaved to sin. 11 So you also must consider yourselves dead to sin and alive to God in Christ Jesus."
+        }
+      ]
+    },
+    {
+      "role": "Singing Praise",
+      "elements": [
+        {
+          "type": "song",
+          "title": "Christ Rises Conqueror from the Grave",
+          "lyrics": "Christ rises conqu’ror from the grave,\n From death returning, strong to save,\n With His right hand the tyrant chains, \nAnd paradise for man regains.\n All praise be Thine, O risen Lord, \nFrom death to endless life restored;\n All praise to God the Father be,\n And Holy Ghost eternally."
+        }
+      ]
+    },
+    {
+      "role": "Professing Faith",
+      "elements": [
+        {
+          "type": "catechism"
+        }
+      ]
+    },
+    {
+      "role": "Reading Scripture",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Ephesians 1:3-6",
+          "osis": "Eph.1.3-Eph.1.6",
+          "text": "3 Blessed be the God and Father of our Lord Jesus Christ, who has blessed us in Christ with every spiritual blessing in the heavenly places, 4 even as he chose us in him before the foundation of the world, that we should be holy and blameless before him. In love 5 he predestined us for adoption to himself as sons through Jesus Christ, according to the purpose of his will, 6 to the praise of his glorious grace, with which he has blessed us in the Beloved."
+        },
+        {
+          "type": "instruction",
+          "text": "The head of the household may offer words of instruction, encouragement, and exhortation."
+        }
+      ]
+    },
+    {
+      "role": "Making Requests",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Make your ways known upon the earth, Lord God, your saving power among the peoples. Renew your Church in holiness and help us to serve you with joy. Guide the leaders of all nations that justice may prevail throughout the world. Let not the needy be forgotten, nor the hope of the poor taken away. Make us instruments of your peace and let your glory be over all the earth. Prayers for ourselves, our families, friends, and the world may be offered as the Lord leads."
+        }
+      ]
+    },
+    {
+      "role": "Closing Prayer",
+      "elements": [
+        {
+          "type": "prayer",
+          "lede": "Attributed to William Temple.",
+          "text": "Almighty and eternal God, so draw our hearts to you, so guide our minds, so fill our imaginations, so control our wills, that we may be wholly yours, utterly dedicated to you; and then use us, we pray, as you will, and always to your glory and the welfare of your people; through our Lord and Savior Jesus Christ. \nAmen."
+        },
+        {
+          "type": "scripture",
+          "citation": "2 Thessalonians 2:16-17",
+          "osis": "2Thess.2.16-2Thess.2.17",
+          "text": "16 Now may our Lord Jesus Christ himself, and God our Father, who loved us and gave us eternal comfort and good hope through grace, 17 comfort your hearts and establish them in every good work and word.\nAmen."
+        }
+      ]
+    }
+  ]
+}

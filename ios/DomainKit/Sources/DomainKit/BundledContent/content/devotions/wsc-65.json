@@ -1,0 +1,109 @@
+{
+  "slug": "wsc-65",
+  "title": "What is forbidden in the fifth commandment?",
+  "summary": "Professing WSC Q. 65–66 of the Westminster Shorter Catechism, grounded in Romans 13:1, 5-8.",
+  "description": "This household worship moves through Psalm 69:30-33 and Romans 8:15-16, and professes WSC Q. 65–66 together — “What is forbidden in the fifth commandment?” and “What is the reason annexed to the fifth commandment?”, before closing with Romans 13:1, 5-8.",
+  "grounding": {
+    "kind": "catechism",
+    "entryIds": [
+      "WSC-65",
+      "WSC-66"
+    ]
+  },
+  "steps": [
+    {
+      "role": "Call to Worship",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Psalm 69:30-33",
+          "osis": "Ps.69.30-Ps.69.33",
+          "text": "30 I will praise the name of God with a song; I will magnify him with thanksgiving.\n31 This will please the Lord more than an ox or a bull with horns and hoofs.\n32 When the humble see it they will be glad; you who seek God, let your hearts revive.\n33 For the Lord hears the needy and does not despise his own people who are prisoners."
+        },
+        {
+          "type": "prayer",
+          "lede": "Respond to God’s call to worship him by praying the Lord’s Prayer together:",
+          "text": "Our Father who art in heaven, hallowed be thy name. Thy kingdom come. Thy will be done on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us, and lead us not into temptation, but deliver us from evil. For thine is the kingdom and the power, and the glory, forever and ever. Amen."
+        }
+      ]
+    },
+    {
+      "role": "Confessing Sin",
+      "elements": [
+        {
+          "type": "prayer",
+          "lede": "Take a moment to “test and examine” your thoughts, feelings, and actions of the past day. “Return to the Lord” by confessing your sin (Lam 3:40).",
+          "text": "We confess, our Father, that we do not live up to the family name. We are more ready to resent than to forgive, more ready to manipulate than to serve, more ready to fear than to love, more ready to keep our distance than to welcome, more ready to compete than to help. At the root of this behavior is mistrust. We do not love one another as we should, because we do not believe that you love us as you do. Forgive us our cold unbelief. And make more vivid to us the meaning and depth of your love at the cross. Show us what it cost you to give up your Son that we might become your sons and daughters. We ask this in the name of Jesus our righteousness. Amen."
+        }
+      ]
+    },
+    {
+      "role": "Receiving Forgiveness",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Romans 8:15-16",
+          "osis": "Rom.8.15-Rom.8.16",
+          "text": "15 For you did not receive the spirit of slavery to fall back into fear, but you have received the Spirit of adoption as sons, by whom we cry, “Abba! Father!” 16 The Spirit himself bears witness with our spirit that we are children of God."
+        }
+      ]
+    },
+    {
+      "role": "Singing Praise",
+      "elements": [
+        {
+          "type": "song",
+          "title": "Gloria Patri",
+          "lyrics": "Glory be to the Father, and to the Son and to the Holy Ghost;\nAs it was in the beginning, is now, and ever shall be,\nWorld without end."
+        }
+      ]
+    },
+    {
+      "role": "Professing Faith",
+      "elements": [
+        {
+          "type": "catechism"
+        }
+      ]
+    },
+    {
+      "role": "Reading Scripture",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Romans 13:1, 5-8",
+          "osis": "Rom.13.1-Rom.13.8",
+          "text": "1 Let every person be subject to the governing authorities. For there is no authority except from God, and those that exist have been instituted by God… 5 Therefore one must be in subjection, not only to avoid God's wrath but also for the sake of conscience. 6 For because of this you also pay taxes, for the authorities are ministers of God, attending to this very thing. 7 Pay to all what is owed to them: taxes to whom taxes are owed, revenue to whom revenue is owed, respect to whom respect is owed, honor to whom honor is owed.\n8 Owe no one anything, except to love each other, for the one who loves another has fulfilled the law."
+        },
+        {
+          "type": "instruction",
+          "text": "The head of the household may offer words of instruction, encouragement, and exhortation."
+        }
+      ]
+    },
+    {
+      "role": "Making Requests",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Make your ways known upon the earth, Lord God, your saving power among the peoples. Renew your Church in holiness and help us to serve you with joy. Guide the leaders of all nations that justice may prevail throughout the world. Let not the needy be forgotten, nor the hope of the poor taken away. Make us instruments of your peace and let your glory be over all the earth. Prayers for ourselves, our families, friends, and the world may be offered as the Lord leads."
+        }
+      ]
+    },
+    {
+      "role": "Closing Prayer",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Almighty and merciful God, it is only by your grace that your faithful people offer you true and laudable service: Grant that we may run without stumbling to obtain your heavenly promises; through Jesus Christ our Lord, who lives and reigns with you and the Holy Spirit, one God, now and for ever.  Amen."
+        },
+        {
+          "type": "scripture",
+          "citation": "Romans 15:5-6",
+          "osis": "Rom.15.5-Rom.15.6",
+          "text": "5 May the God of endurance and encouragement grant you to live in such harmony with one another, in accord with Christ Jesus, 6 that together you may with one voice glorify the God and Father of our Lord Jesus Christ."
+        }
+      ]
+    }
+  ]
+}

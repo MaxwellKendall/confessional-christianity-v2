@@ -1,0 +1,110 @@
+{
+  "slug": "advent-3",
+  "title": "A Star out of Jacob",
+  "summary": "Even a hired prophet cannot curse the promise: Balaam sees a star rise out of Jacob, distant but certain.",
+  "description": "A pagan king hires a prophet to curse the promised family, and God puts a blessing in his mouth instead. Balaam sees him — not now, not nigh, but certain: a star out of Jacob, a sceptre out of Israel. The promise cannot be cursed, only awaited.",
+  "grounding": { "kind": "season", "season": "advent", "day": 3 },
+  "steps": [
+    {
+      "role": "Call to Worship",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Isaiah 60:1",
+          "osis": "Isa.60.1",
+          "text": "Arise, shine; for thy light is come, and the glory of the Lord is risen upon thee."
+        }
+      ]
+    },
+    {
+      "role": "Confessing Sin",
+      "elements": [
+        {
+          "type": "prayer",
+          "lede": "Balaam saw the star from far off and blessed what he was paid to curse. Take a quiet moment to ask whether this household still watches for what God has promised.",
+          "text": "Lord God, we confess that our eyes drift from your promise to nearer, dimmer lights. We have loved what pays and flattered what is strong, like the prophet for hire; we have let the certainty of your word feel distant because its fulfillment was not yet. Forgive our wandering eyes, and fix them on the star you have made to rise."
+        }
+      ]
+    },
+    {
+      "role": "Receiving Forgiveness",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Luke 1:78–79",
+          "osis": "Luke.1.78-Luke.1.79",
+          "text": "Through the tender mercy of our God; whereby the dayspring from on high hath visited us, to give light to them that sit in darkness and in the shadow of death, to guide our feet into the way of peace."
+        }
+      ]
+    },
+    {
+      "role": "Singing Praise",
+      "elements": [
+        {
+          "type": "song",
+          "title": "Brightest and Best of the Sons of the Morning",
+          "lyrics": "Brightest and best of the sons of the morning,\nDawn on our darkness, and lend us thine aid;\nStar of the East, the horizon adorning,\nGuide where our infant Redeemer is laid.",
+          "source": {
+            "label": "Hear it · Spotify",
+            "href": "https://open.spotify.com/search/Brightest%20and%20Best%20of%20the%20Sons%20of%20the%20Morning",
+            "external": true
+          }
+        }
+      ]
+    },
+    {
+      "role": "Professing Faith",
+      "elements": [
+        { "type": "catechism" }
+      ]
+    },
+    {
+      "role": "Reading Scripture",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Numbers 24:15–17",
+          "osis": "Num.24.15-Num.24.17",
+          "text": "And he took up his parable, and said... I shall see him, but not now: I shall behold him, but not nigh: there shall come a Star out of Jacob, and a Sceptre shall rise out of Israel."
+        },
+        {
+          "type": "instruction",
+          "text": "Read aloud together. Balaam was hired to curse Israel and could not. What does it mean that God's promise survives even the schemes of its enemies — and that wise men from the east would one day follow this star?"
+        }
+      ]
+    },
+    {
+      "role": "Making Requests",
+      "elements": [
+        {
+          "type": "prompts",
+          "lede": "Pray for one another as the Lord leads. A few prompts, if it helps:",
+          "items": [
+            {
+              "label": "Not Now, Not Nigh",
+              "text": "What promise of God feels distant to us tonight? Ask for Balaam's certainty about what is not yet seen."
+            },
+            {
+              "label": "Those in Darkness",
+              "text": "Who do we know who sits in darkness? Pray that the dayspring from on high would visit them."
+            },
+            {
+              "label": "Our Family",
+              "text": "Give thanks for one thing; ask for one thing."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "role": "Closing Prayer",
+      "elements": [
+        {
+          "type": "prayer",
+          "amen": true,
+          "text": "Sovereign Lord, no curse can touch what you have blessed, and no delay can dim what you have promised. Like Balaam we have seen him from afar; unlike Balaam, let us love what we see. Keep this household steady through the long middle of the waiting, until the Star out of Jacob stands over the place where the child lies."
+        }
+      ]
+    }
+  ]
+}

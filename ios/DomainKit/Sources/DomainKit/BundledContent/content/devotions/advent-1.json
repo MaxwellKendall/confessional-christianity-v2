@@ -1,0 +1,110 @@
+{
+  "slug": "advent-1",
+  "title": "The Promise in the Garden",
+  "summary": "The series opens where the longing began: the first sin, and the first promise of the seed who will crush the serpent.",
+  "description": "Advent begins where the longing began. On the day sin entered the garden, God spoke the first promise of a Redeemer — the seed of the woman who would crush the serpent's head. Every part that follows waits on this word.",
+  "grounding": { "kind": "season", "season": "advent", "day": 1 },
+  "steps": [
+    {
+      "role": "Call to Worship",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Psalm 24:7",
+          "osis": "Ps.24.7",
+          "text": "Lift up your heads, O ye gates; and be ye lift up, ye everlasting doors; and the King of glory shall come in."
+        }
+      ]
+    },
+    {
+      "role": "Confessing Sin",
+      "elements": [
+        {
+          "type": "prayer",
+          "lede": "When the Lord came walking in the garden, Adam and his wife hid themselves. Take a quiet moment to name what this household would rather hide.",
+          "text": "Holy Father, we confess that we are children of Adam: when you draw near, our first instinct is to hide. We have doubted your word, reached for what you forbade, and covered ourselves with excuses. Call to us as you called in the garden — and when you ask where we are, bring us out of hiding, for the sake of the promised seed, your Son."
+        }
+      ]
+    },
+    {
+      "role": "Receiving Forgiveness",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "1 John 3:8",
+          "osis": "1John.3.8",
+          "text": "For this purpose the Son of God was manifested, that he might destroy the works of the devil."
+        }
+      ]
+    },
+    {
+      "role": "Singing Praise",
+      "elements": [
+        {
+          "type": "song",
+          "title": "Come, Thou Long Expected Jesus",
+          "lyrics": "Come, Thou long expected Jesus,\nBorn to set Thy people free;\nFrom our fears and sins release us,\nLet us find our rest in Thee.\nIsrael's strength and consolation,\nHope of all the earth Thou art;\nDear Desire of every nation,\nJoy of every longing heart.",
+          "source": {
+            "label": "Hear it · Spotify",
+            "href": "https://open.spotify.com/search/Come%20Thou%20Long%20Expected%20Jesus",
+            "external": true
+          }
+        }
+      ]
+    },
+    {
+      "role": "Professing Faith",
+      "elements": [
+        { "type": "catechism" }
+      ]
+    },
+    {
+      "role": "Reading Scripture",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Genesis 3:8–15",
+          "osis": "Gen.3.8-Gen.3.15",
+          "text": "And they heard the voice of the Lord God walking in the garden in the cool of the day: and Adam and his wife hid themselves from the presence of the Lord God amongst the trees of the garden. And the Lord God called unto Adam, and said unto him, Where art thou?... And I will put enmity between thee and the woman, and between thy seed and her seed; it shall bruise thy head, and thou shalt bruise his heel."
+        },
+        {
+          "type": "instruction",
+          "text": "Read aloud together. Before God speaks one word of the curse to Adam, he promises the serpent's defeat. What does it mean that the first gospel was preached on the day of the first sin?"
+        }
+      ]
+    },
+    {
+      "role": "Making Requests",
+      "elements": [
+        {
+          "type": "prompts",
+          "lede": "Pray for one another as the Lord leads. A few prompts, if it helps:",
+          "items": [
+            {
+              "label": "Out of Hiding",
+              "text": "What are we still covering over instead of confessing? Ask for the honesty the garden lacked."
+            },
+            {
+              "label": "The Long Wait",
+              "text": "Eve waited, and every mother after her. Ask God to teach this household to wait on his promise this season."
+            },
+            {
+              "label": "Our Family",
+              "text": "Give thanks for one thing; ask for one thing."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "role": "Closing Prayer",
+      "elements": [
+        {
+          "type": "prayer",
+          "amen": true,
+          "text": "Father, you did not abandon the garden to the serpent: before the day of the first sin was over, you had promised the seed who would crush his head. As this season begins, teach us to wait like those who have your word. Keep this promise before our eyes each part of the way, until we stand at the manger where you kept it."
+        }
+      ]
+    }
+  ]
+}

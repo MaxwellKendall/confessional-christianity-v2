@@ -1,0 +1,114 @@
+{
+  "slug": "wsc-18",
+  "title": "Wherein consists the sinfulness of that estate whereinto man fell?",
+  "summary": "Professing WSC Q. 18 of the Westminster Shorter Catechism, grounded in James 1:13-15.",
+  "description": "This household worship moves through Psalm 31:23 and Isaiah 43:25, and professes WSC Q. 18 — “Wherein consists the sinfulness of that estate whereinto man fell?”, before closing with James 1:13-15 and Matthew 15:19.",
+  "grounding": {
+    "kind": "catechism",
+    "entryIds": [
+      "WSC-18"
+    ]
+  },
+  "steps": [
+    {
+      "role": "Call to Worship",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Psalm 31:23",
+          "osis": "Ps.31.23",
+          "text": "23 Love the Lord, all you his saints!\n The Lord preserves the faithful\n but abundantly repays the one who acts in pride."
+        },
+        {
+          "type": "prayer",
+          "lede": "Respond to God’s call to worship him by praying the Lord’s Prayer together:",
+          "text": "Our Father who art in heaven, hallowed be thy name. Thy kingdom come. Thy will be done on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us, and lead us not into temptation, but deliver us from evil. For thine is the kingdom and the power, and the glory, forever and ever. Amen."
+        }
+      ]
+    },
+    {
+      "role": "Confessing Sin",
+      "elements": [
+        {
+          "type": "prayer",
+          "lede": "Take a moment to “test and examine” your thoughts, feelings, and actions of the past day. “Return to the Lord” by confessing your sin (Lam 3:40).",
+          "text": "Father of the Fatherless, Almighty Father, God of gods and Lord of lords, Husband to the widow,\nDefender of the helpless, Judge of all the earth, have mercy on us.\nWe have not sought freedom for the oppressed, even though you freed us.\nWe have not bound up the broken even though you healed us.\nWe have not forgiven others even though you forgave us.\nWe withhold kindness from the needy even though you freely gave us your own Son.\nWe are without excuse, but not without hope.\nBy your power and grace, account our sins to Jesus’ bloody death \nand amend our ways by the power of his glorious resurrection.\nAmen."
+        }
+      ]
+    },
+    {
+      "role": "Receiving Forgiveness",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Isaiah 43:25",
+          "osis": "Isa.43.25",
+          "text": "25 “I, I am he who blots out your transgressions for my own sake,\n and I will not remember your sins.”"
+        }
+      ]
+    },
+    {
+      "role": "Singing Praise",
+      "elements": [
+        {
+          "type": "song",
+          "title": "Gloria Patri",
+          "lyrics": "Glory be to the Father, and to the Son and to the Holy Ghost; \nAs it was in the beginning, is now, and ever shall be,\nWorld without end. Amen."
+        }
+      ]
+    },
+    {
+      "role": "Professing Faith",
+      "elements": [
+        {
+          "type": "catechism"
+        }
+      ]
+    },
+    {
+      "role": "Reading Scripture",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "James 1:13-15",
+          "osis": "Jas.1.13-Jas.1.15",
+          "text": "13 Let no one say when he is tempted, “I am being tempted by God,” for God cannot be tempted with evil, and he himself tempts no one. 14 But each person is tempted when he is lured and enticed by his own desire. 15 Then desire when it has conceived gives birth to sin, and sin when it is fully grown brings forth death."
+        },
+        {
+          "type": "scripture",
+          "citation": "Matthew 15:19",
+          "osis": "Matt.15.19",
+          "text": "19 For out of the heart come evil thoughts, murder, adultery, sexual immorality, theft, false witness, slander."
+        },
+        {
+          "type": "instruction",
+          "text": "The head of the household may offer words of instruction, encouragement, and exhortation."
+        }
+      ]
+    },
+    {
+      "role": "Making Requests",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Make your ways known upon the earth, Lord God, your saving power among the peoples. Renew your Church in holiness and help us to serve you with joy. Guide the leaders of all nations that justice may prevail throughout the world. Let not the needy be forgotten, nor the hope of the poor taken away. Make us instruments of your peace and let your glory be over all the earth. Prayers for ourselves, our families, friends, and the world may be offered as the Lord leads."
+        }
+      ]
+    },
+    {
+      "role": "Closing Prayer",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Almighty and everlasting God, you hate nothing you have made, and you forgive the sins of all who are penitent: Create and make in us new and contrite hearts, that we, worthily lamenting our sins and acknowledging our wretchedness, may obtain of you, the God of all mercy, perfect remission and forgiveness; through Jesus Christ our Lord, who lives and reigns with you and the Holy Spirit, one God, for ever and ever. Amen."
+        },
+        {
+          "type": "scripture",
+          "citation": "Ephesians 3:16b-19",
+          "osis": "Eph.3.16-Eph.3.19",
+          "text": "May God grant you to be strengthened with power through his Spirit in your inner being, 17 so that Christ may dwell in your hearts through faith—that you, being rooted and grounded in love, 18 may have strength to comprehend with all the saints what is the breadth and length and height and depth, 19 and to know the love of Christ that surpasses knowledge, that you may be filled with all the fullness of God. \nAmen."
+        }
+      ]
+    }
+  ]
+}

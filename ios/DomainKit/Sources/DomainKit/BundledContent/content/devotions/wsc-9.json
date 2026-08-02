@@ -1,0 +1,108 @@
+{
+  "slug": "wsc-9",
+  "title": "What is the work of creation?",
+  "summary": "Professing WSC Q. 9 of the Westminster Shorter Catechism, grounded in Colossians 1:15-17.",
+  "description": "This household worship moves through Psalm 21:13 and Titus 3:4-7, and professes WSC Q. 9 — “What is the work of creation?”, before closing with Colossians 1:15-17.",
+  "grounding": {
+    "kind": "catechism",
+    "entryIds": [
+      "WSC-9"
+    ]
+  },
+  "steps": [
+    {
+      "role": "Call to Worship",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Psalm 21:13",
+          "osis": "Ps.21.13",
+          "text": "13 Be exalted, O Lord, in your strength!\n We will sing and praise your power."
+        },
+        {
+          "type": "prayer",
+          "lede": "Respond to God’s call to worship him by praying the Lord’s Prayer together:",
+          "text": "Our Father who art in heaven, hallowed be thy name. Thy kingdom come. Thy will be done on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us, and lead us not into temptation, but deliver us from evil. For thine is the kingdom and the power, and the glory, forever and ever. Amen."
+        }
+      ]
+    },
+    {
+      "role": "Confessing Sin",
+      "elements": [
+        {
+          "type": "prayer",
+          "lede": "Take a moment to “test and examine” your thoughts, feelings, and actions of the past day. “Return to the Lord” by confessing your sin (Lam 3:40).",
+          "text": "O Father, we are gathered before you, the Maker of Heaven and Earth, whose chosen dwelling place is with the broken and contrite, to confess that\nwe have sinned in thought and word and deed;\nwe have not loved you with all our heart and soul,\nwe have not loved you with all our mind and strength;\nwe have not even loved our neighbor as ourselves.\nIn your mercy, deepen our sorrow for the wrong we have done and for the good we have left undone, so that we may hate our sin with a holy hatred. But, please Father, do not leave us in sorrow. With you, O Lord, there is forgiveness. In your mercy, restore the joy of our salvation; so that we may love you with a holy love. \nAmen."
+        }
+      ]
+    },
+    {
+      "role": "Receiving Forgiveness",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Titus 3:4-7",
+          "osis": "Titus.3.4-Titus.3.7",
+          "text": "4 But when the goodness and loving kindness of God our Savior appeared, 5 he saved us, not because of works done by us in righteousness, but according to his own mercy, by the washing of regeneration and renewal of the Holy Spirit, 6 whom he poured out on us richly through Jesus Christ our Savior, 7 so that being justified by his grace we might become heirs according to the hope of eternal life."
+        }
+      ]
+    },
+    {
+      "role": "Singing Praise",
+      "elements": [
+        {
+          "type": "song",
+          "title": "Gloria Patri",
+          "lyrics": "Glory be to the Father, and to the Son and to the Holy Ghost; \nAs it was in the beginning, is now, and ever shall be,\nWorld without end. Amen."
+        }
+      ]
+    },
+    {
+      "role": "Professing Faith",
+      "elements": [
+        {
+          "type": "catechism"
+        }
+      ]
+    },
+    {
+      "role": "Reading Scripture",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Colossians 1:15-17",
+          "osis": "Col.1.15-Col.1.17",
+          "text": "15 He is the image of the invisible God, the firstborn of all creation. 16 For by him all things were created, in heaven and on earth, visible and invisible, whether thrones or dominions or rulers or authorities—all things were created through him and for him. 17 And he is before all things, and in him all things hold together."
+        },
+        {
+          "type": "instruction",
+          "text": "The head of the household may offer words of instruction, encouragement, and exhortation."
+        }
+      ]
+    },
+    {
+      "role": "Making Requests",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Make your ways known upon the earth, Lord God, your saving power among the peoples. Renew your Church in holiness and help us to serve you with joy. Guide the leaders of all nations that justice may prevail throughout the world. Let not the needy be forgotten, nor the hope of the poor taken away. Make us instruments of your peace and let your glory be over all the earth. Prayers for ourselves, our families, friends, and the world may be offered as the Lord leads."
+        }
+      ]
+    },
+    {
+      "role": "Closing Prayer",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "O heavenly Father, you have filled the world with beauty: Open our eyes to behold your gracious hand in all your works; that, rejoicing in your whole creation, we may learn to serve you with gladness; for the sake of him through whom all things were made, your Son Jesus Christ our Lord. \nAmen."
+        },
+        {
+          "type": "scripture",
+          "citation": "Ephesians 3:16b-19",
+          "osis": "Eph.3.16-Eph.3.19",
+          "text": "May God grant you to be strengthened with power through his Spirit in your inner being, 17 so that Christ may dwell in your hearts through faith—that you, being rooted and grounded in love, 18 may have strength to comprehend with all the saints what is the breadth and length and height and depth, 19 and to know the love of Christ that surpasses knowledge, that you may be filled with all the fullness of God. \nAmen."
+        }
+      ]
+    }
+  ]
+}

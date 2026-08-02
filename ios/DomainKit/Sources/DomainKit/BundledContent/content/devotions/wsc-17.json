@@ -1,0 +1,108 @@
+{
+  "slug": "wsc-17",
+  "title": "Into what estate did the fall bring mankind?",
+  "summary": "Professing WSC Q. 17 of the Westminster Shorter Catechism, grounded in Romans 5:12, 15.",
+  "description": "This household worship moves through Psalm 30:11-12 and Psalm 118:5, 14, 17, and professes WSC Q. 17 — “Into what estate did the fall bring mankind?”, before closing with Romans 5:12, 15.",
+  "grounding": {
+    "kind": "catechism",
+    "entryIds": [
+      "WSC-17"
+    ]
+  },
+  "steps": [
+    {
+      "role": "Call to Worship",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Psalm 30:11-12",
+          "osis": "Ps.30.11-Ps.30.12",
+          "text": "11 You have turned for me my mourning into dancing;\n you have loosed my sackcloth\n and clothed me with gladness,\n12 that my glory may sing your praise and not be silent.\n O Lord my God, I will give thanks to you forever!"
+        },
+        {
+          "type": "prayer",
+          "lede": "Respond to God’s call to worship him by praying the Lord’s Prayer together:",
+          "text": "Our Father who art in heaven, hallowed be thy name. Thy kingdom come. Thy will be done on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us, and lead us not into temptation, but deliver us from evil. For thine is the kingdom and the power, and the glory, forever and ever. Amen."
+        }
+      ]
+    },
+    {
+      "role": "Confessing Sin",
+      "elements": [
+        {
+          "type": "prayer",
+          "lede": "Take a moment to “test and examine” your thoughts, feelings, and actions of the past day. “Return to the Lord” by confessing your sin (Lam 3:40).",
+          "text": "Have mercy on me, O God, according to your steadfast love;\naccording to your abundant mercy, blot out my transgressions.\nWash me thoroughly from my iniquity, and cleanse me from my sin!\nFor I know my transgressions, and my sin is ever before me.\nPurge me with hyssop, and I shall be clean;\nwash me, and I shall be whiter than snow.\nLet me hear joy and gladness;\nlet the bones that you have broken rejoice.\nHide your face from my sins, and blot out all my iniquities.\nCreate in me a clean heart, O God, and renew a right spirit within me.\nCast me not away from your presence, and take not your Holy Spirit from me.\nRestore to me the joy of your salvation, and uphold me with a willing spirit. \nAmen."
+        }
+      ]
+    },
+    {
+      "role": "Receiving Forgiveness",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Psalm 118:5, 14, 17",
+          "osis": "Ps.118.5-Ps.118.17",
+          "text": "5 Out of my distress I called on the Lord; the Lord answered me and set me free.\n 14 The Lord is my strength and my song; he has become my salvation. \n17 I shall not die, but I shall live, and recount the deeds of the Lord."
+        }
+      ]
+    },
+    {
+      "role": "Singing Praise",
+      "elements": [
+        {
+          "type": "song",
+          "title": "All Creatures of Our God and King",
+          "lyrics": "Let all things their Creator bless,\nAnd worship him in humbleness.\nO praise him. Alleluia!\nPraise, praise the Father, praise the Son,\nAnd praise the Spirit, Three in One.\nO praise him! O praise him!\nAlleluia! Alleluia! Alleluia!"
+        }
+      ]
+    },
+    {
+      "role": "Professing Faith",
+      "elements": [
+        {
+          "type": "catechism"
+        }
+      ]
+    },
+    {
+      "role": "Reading Scripture",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Romans 5:12, 15",
+          "osis": "Rom.5.12-Rom.5.15",
+          "text": "12 Therefore, just as sin came into the world through one man, and death through sin, and so death spread to all men because all sinned. 15 But the free gift is not like the trespass. For if many died through one man's trespass, much more have the grace of God and the free gift by the grace of that one man Jesus Christ abounded for many."
+        },
+        {
+          "type": "instruction",
+          "text": "The head of the household may offer words of instruction, encouragement, and exhortation."
+        }
+      ]
+    },
+    {
+      "role": "Making Requests",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Make your ways known upon the earth, Lord God, your saving power among the peoples. Renew your Church in holiness and help us to serve you with joy. Guide the leaders of all nations that justice may prevail throughout the world. Let not the needy be forgotten, nor the hope of the poor taken away. Make us instruments of your peace and let your glory be over all the earth. Prayers for ourselves, our families, friends, and the world may be offered as the Lord leads."
+        }
+      ]
+    },
+    {
+      "role": "Closing Prayer",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Heavenly Father, you have made us for yourself, and our hearts are restless until they rest in you: Look with compassion upon the heartfelt desires of your servants, and purify our disordered affections, that we may behold your eternal glory in the face of Christ Jesus; who lives and reigns with you and the Holy Spirit, one God, for ever and ever\nAmen."
+        },
+        {
+          "type": "scripture",
+          "citation": "Romans 15:13",
+          "osis": "Rom.15.13",
+          "text": "May the God of hope fill us with all joy and peace in believing through the power of the Holy Spirit. \nAmen."
+        }
+      ]
+    }
+  ]
+}

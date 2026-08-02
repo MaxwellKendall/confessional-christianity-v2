@@ -27,6 +27,13 @@ const FILES = [
   ['content/programs/catechizing-shorter-catechism/prayers.json', 'content/programs/catechizing-shorter-catechism/prayers.json'],
 ];
 
+// content/devotions holds every authored devotion and series manifest — the
+// whole directory is needed (unlike normalized-data above, there's no subset
+// to pick), so it's copied recursively rather than enumerated file-by-file.
+const DIRECTORIES = [
+  ['content/devotions', 'content/devotions'],
+];
+
 for (const [src, dest] of FILES) {
   const srcPath = path.join(repoRoot, src);
   const destPath = path.join(resourcesRoot, dest);
@@ -34,11 +41,30 @@ for (const [src, dest] of FILES) {
   await fs.copyFile(srcPath, destPath);
 }
 
+const copiedDirFiles = [];
+for (const [src, dest] of DIRECTORIES) {
+  const srcPath = path.join(repoRoot, src);
+  const destPath = path.join(resourcesRoot, dest);
+  await fs.rm(destPath, { recursive: true, force: true });
+  await fs.cp(srcPath, destPath, { recursive: true });
+  for await (const entry of walk(srcPath)) {
+    copiedDirFiles.push(path.join(src, path.relative(srcPath, entry)));
+  }
+}
+
+async function* walk(dir) {
+  for (const entry of await fs.readdir(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) yield* walk(full);
+    else yield full;
+  }
+}
+
 const commit = execSync('git rev-parse HEAD', { cwd: repoRoot }).toString().trim();
 const version = {
   syncedAt: new Date().toISOString(),
   sourceCommit: commit,
-  files: FILES.map(([src]) => src),
+  files: [...FILES.map(([src]) => src), ...copiedDirFiles],
 };
 await fs.writeFile(
   path.join(resourcesRoot, 'content-version.json'),
@@ -46,4 +72,4 @@ await fs.writeFile(
   'utf8',
 );
 
-console.log(`Synced ${FILES.length} files into ${path.relative(repoRoot, resourcesRoot)} at ${commit.slice(0, 7)}`);
+console.log(`Synced ${FILES.length + copiedDirFiles.length} files into ${path.relative(repoRoot, resourcesRoot)} at ${commit.slice(0, 7)}`);

@@ -1,0 +1,108 @@
+{
+  "slug": "wsc-27",
+  "title": "Wherein did Christ's humiliation consist?",
+  "summary": "Professing WSC Q. 27 of the Westminster Shorter Catechism, grounded in Philippians 2:5-8.",
+  "description": "This household worship moves through Psalm 47:1-2 and Isaiah 53:3-5, and professes WSC Q. 27 — “Wherein did Christ's humiliation consist?”, before closing with Philippians 2:5-8.",
+  "grounding": {
+    "kind": "catechism",
+    "entryIds": [
+      "WSC-27"
+    ]
+  },
+  "steps": [
+    {
+      "role": "Call to Worship",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Psalm 47:1-2",
+          "osis": "Ps.47.1-Ps.47.2",
+          "text": "1 Clap your hands, all peoples!\n Shout to God with loud songs of joy!\n2 For the Lord, the Most High, is to be feared,\n a great king over all the earth."
+        },
+        {
+          "type": "prayer",
+          "lede": "Respond to God’s call to worship him by praying the Lord’s Prayer together:",
+          "text": "Our Father who art in heaven, hallowed be thy name. Thy kingdom come. Thy will be done on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us, and lead us not into temptation, but deliver us from evil. For thine is the kingdom and the power, and the glory, forever and ever. Amen."
+        }
+      ]
+    },
+    {
+      "role": "Confessing Sin",
+      "elements": [
+        {
+          "type": "prayer",
+          "lede": "Take a moment to “test and examine” your thoughts, feelings, and actions of the past day. “Return to the Lord” by confessing your sin (Lam 3:40).",
+          "text": "Gracious Father, you sent your son to die and rise to new life in order that death might be brought to an end and that we might live a new life in Him. Yet we confess that we too often have chosen to remain captive to doubt and fear and ways that lead to death. By our thoughts, words, and actions, we have scorned your love, diminished the lives of others, and defaced your image in us. Father, forgive us for Jesus’ sake, and enable us by His resurrection power to live no longer for ourselves but for Him who died and rose again for us. \nAmen."
+        }
+      ]
+    },
+    {
+      "role": "Receiving Forgiveness",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Isaiah 53:3-5",
+          "osis": "Isa.53.3-Isa.53.5",
+          "text": "3 He was despised and rejected by men, a man of sorrows and acquainted with grief; and as one from whom men hide their faces he was despised, and we esteemed him not. 4 Surely he has borne our griefs and carried our sorrows; yet we esteemed him stricken, smitten by God, and afflicted. 5 But he was pierced for our transgressions; he was crushed for our iniquities; upon him was the chastisement that brought us peace, and with his wounds we are healed."
+        }
+      ]
+    },
+    {
+      "role": "Singing Praise",
+      "elements": [
+        {
+          "type": "song",
+          "title": "Gloria Patri",
+          "lyrics": "Glory be to the Father, and to the Son and to the Holy Ghost; \nAs it was in the beginning, is now, and ever shall be,\nWorld without end. Amen."
+        }
+      ]
+    },
+    {
+      "role": "Professing Faith",
+      "elements": [
+        {
+          "type": "catechism"
+        }
+      ]
+    },
+    {
+      "role": "Reading Scripture",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Philippians 2:5-8",
+          "osis": "Phil.2.5-Phil.2.8",
+          "text": "5 Have this mind among yourselves, which is yours in Christ Jesus, 6 who, though he was in the form of God, did not count equality with God a thing to be grasped, 7 but emptied himself, by taking the form of a servant, being born in the likeness of men. 8 And being found in human form, he humbled himself by becoming obedient to the point of death, even death on a cross."
+        },
+        {
+          "type": "instruction",
+          "text": "The head of the household may offer words of instruction, encouragement, and exhortation."
+        }
+      ]
+    },
+    {
+      "role": "Making Requests",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Make your ways known upon the earth, Lord God, your saving power among the peoples. Renew your Church in holiness and help us to serve you with joy. Guide the leaders of all nations that justice may prevail throughout the world. Let not the needy be forgotten, nor the hope of the poor taken away. Make us instruments of your peace and let your glory be over all the earth. Prayers for ourselves, our families, friends, and the world may be offered as the Lord leads."
+        }
+      ]
+    },
+    {
+      "role": "Closing Prayer",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Almighty and everlasting God, in your tender love for us you sent your Son our Savior Jesus Christ to take upon himself our nature, and to suffer death upon the Cross, giving us the example of his great humility: Mercifully grant that we may walk in the way of his suffering, and come to share in his resurrection; through Jesus Christ our Lord, who lives and reigns with you and the Holy Spirit, one God, for ever and ever.  \nAmen."
+        },
+        {
+          "type": "scripture",
+          "citation": "1 Thessalonians 5:28",
+          "osis": "1Thess.5.28",
+          "text": "28 The grace of our Lord Jesus Christ be with you.\nAmen."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,114 @@
+{
+  "slug": "wsc-12",
+  "title": "What special act of providence did God exercise toward man in the estate wherein he was created?",
+  "summary": "Professing WSC Q. 12 of the Westminster Shorter Catechism, grounded in Genesis 2:17.",
+  "description": "This household worship moves through Psalm 26:11-12 and Galatians 4:4-5, 7, and professes WSC Q. 12 — “What special act of providence did God exercise toward man in the estate wherein he was created?”, before closing with Genesis 2:17 and Galatians 3:22.",
+  "grounding": {
+    "kind": "catechism",
+    "entryIds": [
+      "WSC-12"
+    ]
+  },
+  "steps": [
+    {
+      "role": "Call to Worship",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Psalm 26:11-12",
+          "osis": "Ps.26.11-Ps.26.12",
+          "text": "11 But as for me, I shall walk in my integrity;\n redeem me, and be gracious to me.\n12 My foot stands on level ground;\n in the great assembly I will bless the Lord."
+        },
+        {
+          "type": "prayer",
+          "lede": "Respond to God’s call to worship him by praying the Lord’s Prayer together:",
+          "text": "Our Father who art in heaven, hallowed be thy name. Thy kingdom come. Thy will be done on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us, and lead us not into temptation, but deliver us from evil. For thine is the kingdom and the power, and the glory, forever and ever. Amen."
+        }
+      ]
+    },
+    {
+      "role": "Confessing Sin",
+      "elements": [
+        {
+          "type": "prayer",
+          "lede": "Take a moment to “test and examine” your thoughts, feelings, and actions of the past day. “Return to the Lord” by confessing your sin (Lam 3:40).",
+          "text": "Almighty God, who does freely pardon all who repent and turn to Him, now fulfill in every contrite heart the promise of redeeming grace; forgiving all our sins, and cleansing us from an evil conscience; through the perfect sacrifice of Christ Jesus our Lord.\nAmen."
+        }
+      ]
+    },
+    {
+      "role": "Receiving Forgiveness",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Galatians 4:4-5, 7",
+          "osis": "Gal.4.4-Gal.4.7",
+          "text": "4 But when the fullness of time had come, God sent forth his Son, born of woman, born under the law, 5 to redeem those who were under the law, so that we might receive adoption as sons. 7 So you are no longer a slave, but a son, and if a son, then an heir through God."
+        }
+      ]
+    },
+    {
+      "role": "Singing Praise",
+      "elements": [
+        {
+          "type": "song",
+          "title": "Blessed Be the Lord God of Israel",
+          "lyrics": "Now blessed be the Lord our God, the God of Israel,\nFor He alone does wonderous works in glory that excel.\nAnd blessed be his glorious name to all eternity;\nThe whole earth let His glory fill.\nAmen, so let it be."
+        }
+      ]
+    },
+    {
+      "role": "Professing Faith",
+      "elements": [
+        {
+          "type": "catechism"
+        }
+      ]
+    },
+    {
+      "role": "Reading Scripture",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Genesis 2:17",
+          "osis": "Gen.2.17",
+          "text": "16 And the Lord God commanded the man, saying, “You may surely eat of every tree of the garden, 17 but of the tree of the knowledge of good and evil you shall not eat, for in the day that you eat of it you shall surely die.”"
+        },
+        {
+          "type": "scripture",
+          "citation": "Galatians 3:22",
+          "osis": "Gal.3.22",
+          "text": "22 But the Scripture imprisoned everything under sin, so that the promise by faith in Jesus Christ might be given to those who believe."
+        },
+        {
+          "type": "instruction",
+          "text": "The head of the household may offer words of instruction, encouragement, and exhortation."
+        }
+      ]
+    },
+    {
+      "role": "Making Requests",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Make your ways known upon the earth, Lord God, your saving power among the peoples. Renew your Church in holiness and help us to serve you with joy. Guide the leaders of all nations that justice may prevail throughout the world. Let not the needy be forgotten, nor the hope of the poor taken away. Make us instruments of your peace and let your glory be over all the earth. Prayers for ourselves, our families, friends, and the world may be offered as the Lord leads."
+        }
+      ]
+    },
+    {
+      "role": "Closing Prayer",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Stir up, O Lord, the wills of your faithful people, that bringing forth in abundance the fruit of good works, they may be abundantly rewarded when our Savior Jesus Christ comes to restore all things; who lives and reigns with you and the Holy Spirit, one God, for ever and ever. \nAmen."
+        },
+        {
+          "type": "scripture",
+          "citation": "Numbers 6:24-26",
+          "osis": "Num.6.24-Num.6.26",
+          "text": "24 The Lord bless you and keep you;\n25 the Lord make his face to shine upon you and be gracious to you;\n26 the Lord lift up his countenance upon you and give you peace.\nAmen."
+        }
+      ]
+    }
+  ]
+}

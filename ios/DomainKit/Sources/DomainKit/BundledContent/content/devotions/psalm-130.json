@@ -1,0 +1,110 @@
+{
+  "slug": "psalm-130",
+  "title": "Out of the Depths",
+  "summary": "A devotion for evenings when hope feels thin — waiting, confession, and the promise of steadfast love.",
+  "description": "For evenings when hope feels thin: a psalm of waiting, a confession that names the depths honestly, and the promise of steadfast love and plenteous redemption.",
+  "grounding": { "kind": "scripture", "osis": "Ps.130", "citation": "Psalm 130" },
+  "steps": [
+    {
+      "role": "Call to Worship",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Psalm 130:1–2",
+          "osis": "Ps.130.1-Ps.130.2",
+          "text": "Out of the depths have I cried unto thee, O Lord. Lord, hear my voice: let thine ears be attentive to the voice of my supplications."
+        }
+      ]
+    },
+    {
+      "role": "Confessing Sin",
+      "elements": [
+        {
+          "type": "prayer",
+          "lede": "The psalmist prays from the depths, not from the shallows. Take a quiet moment to name yours honestly before the Lord.",
+          "text": "Merciful Father, out of our own depths we cry to you. We confess the sins we can name and the ones we have grown used to; we have wearied of waiting for you and looked for hope elsewhere. If you kept a record of our iniquities, we could not stand. Hear our voice, and be attentive to our plea, for the sake of your Son."
+        }
+      ]
+    },
+    {
+      "role": "Receiving Forgiveness",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Psalm 130:3–4",
+          "osis": "Ps.130.3-Ps.130.4",
+          "text": "If thou, Lord, shouldest mark iniquities, O Lord, who shall stand? But there is forgiveness with thee, that thou mayest be feared."
+        }
+      ]
+    },
+    {
+      "role": "Singing Praise",
+      "elements": [
+        {
+          "type": "song",
+          "title": "Out of the Depths I Cry to Thee",
+          "lyrics": "Out of the depths I cry to Thee,\nLord God, O hear my prayer!\nIncline a gracious ear to me,\nAnd bid me not despair:\nIf Thou rememberest each misdeed,\nIf each should have its rightful meed,\nWho may abide Thy presence?",
+          "source": {
+            "label": "Hear it · Spotify",
+            "href": "https://open.spotify.com/search/Out%20of%20the%20Depths%20I%20Cry%20to%20Thee",
+            "external": true
+          }
+        }
+      ]
+    },
+    {
+      "role": "Professing Faith",
+      "elements": [
+        { "type": "catechism" }
+      ]
+    },
+    {
+      "role": "Reading Scripture",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Psalm 130:5–8",
+          "osis": "Ps.130.5-Ps.130.8",
+          "text": "I wait for the Lord, my soul doth wait, and in his word do I hope. My soul waiteth for the Lord more than they that watch for the morning: I say, more than they that watch for the morning. Let Israel hope in the Lord: for with the Lord there is mercy, and with him is plenteous redemption. And he shall redeem Israel from all his iniquities."
+        },
+        {
+          "type": "instruction",
+          "text": "Read aloud together. Where is this household still waiting on the Lord? Name it, and let the promise of verse 7 answer it."
+        }
+      ]
+    },
+    {
+      "role": "Making Requests",
+      "elements": [
+        {
+          "type": "prompts",
+          "lede": "Pray for one another as the Lord leads. A few prompts, if it helps:",
+          "items": [
+            {
+              "label": "The Waiting",
+              "text": "What are we still waiting on God for? Ask for patience to wait more than watchmen for the morning."
+            },
+            {
+              "label": "The Weary",
+              "text": "Who do we know whose hope feels thin tonight? Carry them to the God of steadfast love."
+            },
+            {
+              "label": "Our Family",
+              "text": "Give thanks for one thing; ask for one thing."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "role": "Closing Prayer",
+      "elements": [
+        {
+          "type": "prayer",
+          "amen": true,
+          "text": "Lord, with you there is mercy, and with you is plenteous redemption. Keep us hoping in your word while we wait, as watchmen for the morning, and redeem us from all our iniquities. We rest tonight not in our own standing, but in your forgiveness."
+        }
+      ]
+    }
+  ]
+}

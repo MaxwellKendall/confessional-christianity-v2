@@ -1,0 +1,113 @@
+{
+  "slug": "wsc-24",
+  "title": "How doth Christ execute the office of a prophet?",
+  "summary": "Professing WSC Q. 24 of the Westminster Shorter Catechism, grounded in John 15:15-16.",
+  "description": "This household worship moves through Psalm 40:16 and Isaiah 44:21-22, and professes WSC Q. 24 — “How doth Christ execute the office of a prophet?”, before closing with John 15:15-16.",
+  "grounding": {
+    "kind": "catechism",
+    "entryIds": [
+      "WSC-24"
+    ]
+  },
+  "steps": [
+    {
+      "role": "Call to Worship",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Psalm 40:16",
+          "osis": "Ps.40.16",
+          "text": "16 But may all who seek you\n rejoice and be glad in you;\nmay those who love your salvation\n say continually, “Great is the Lord!”"
+        },
+        {
+          "type": "prayer",
+          "lede": "Respond to God’s call to worship him by praying the Lord’s Prayer together:",
+          "text": "Our Father who art in heaven, hallowed be thy name. Thy kingdom come. Thy will be done on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us, and lead us not into temptation, but deliver us from evil. For thine is the kingdom and the power, and the glory, forever and ever. Amen."
+        }
+      ]
+    },
+    {
+      "role": "Confessing Sin",
+      "elements": [
+        {
+          "type": "prayer",
+          "lede": "Take a moment to “test and examine” your thoughts, feelings, and actions of the past day. “Return to the Lord” by confessing your sin (Lam 3:40).",
+          "text": "Most merciful God, we confess that we have sinned against you in thought, word, and deed, by what we have done, and by what we have left undone.\nWe have not loved you with our whole heart; we have not loved our neighbor as ourselves. \nWe are truly sorry, and we humbly repent. \nFor the sake of your Son Jesus Christ, have mercy on us and forgive us; that we may delight in your will, and walk in your ways, to the glory of your name. \nAmen."
+        }
+      ]
+    },
+    {
+      "role": "Receiving Forgiveness",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Isaiah 44:21-22",
+          "osis": "Isa.44.21-Isa.44.22",
+          "text": "21 Remember these things, O Jacob,\n and Israel, for you are my servant;\nI formed you; you are my servant;\n O Israel, you will not be forgotten by me.\n22 I have blotted out your transgressions like a cloud\n and your sins like mist;\nreturn to me, for I have redeemed you."
+        }
+      ]
+    },
+    {
+      "role": "Singing Praise",
+      "elements": [
+        {
+          "type": "song",
+          "title": "Doxology",
+          "lyrics": "Praise God from whom all blessings flow\nPraise him, all creatures here below,\nPraise him above ye heavenly host\nPraise Father, Son, and Holy Ghost.",
+          "source": {
+            "label": "Hear it · Spotify",
+            "href": "https://open.spotify.com/search/Doxology%20Sovereign%20Grace%20Music",
+            "external": true
+          }
+        }
+      ]
+    },
+    {
+      "role": "Professing Faith",
+      "elements": [
+        {
+          "type": "catechism"
+        }
+      ]
+    },
+    {
+      "role": "Reading Scripture",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "John 15:15-16",
+          "osis": "John.15.15-John.15.16",
+          "text": "15 No longer do I call you servants, for the servant does not know what his master is doing; but I have called you friends, for all that I have heard from my Father I have made known to you. 16 You did not choose me, but I chose you and appointed you that you should go and bear fruit and that your fruit should abide, so that whatever you ask the Father in my name, he may give it to you."
+        },
+        {
+          "type": "instruction",
+          "text": "The head of the household may offer words of instruction, encouragement, and exhortation."
+        }
+      ]
+    },
+    {
+      "role": "Making Requests",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Make your ways known upon the earth, Lord God, your saving power among the peoples. Renew your Church in holiness and help us to serve you with joy. Guide the leaders of all nations that justice may prevail throughout the world. Let not the needy be forgotten, nor the hope of the poor taken away. Make us instruments of your peace and let your glory be over all the earth. Prayers for ourselves, our families, friends, and the world may be offered as the Lord leads."
+        }
+      ]
+    },
+    {
+      "role": "Closing Prayer",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Give us grace, O Lord, to answer readily the call of our Savior Jesus Christ and proclaim to all people the Good News of his salvation, that we and the whole world may perceive the glory of his marvelous works; who lives and reigns with you and the Holy Spirit, one God, for ever and ever.\nAmen."
+        },
+        {
+          "type": "scripture",
+          "citation": "1 Thessalonians 5:23-24",
+          "osis": "1Thess.5.23-1Thess.5.24",
+          "text": "23 Now may the God of peace himself sanctify you completely, and may your whole spirit and soul and body be kept blameless at the coming of our Lord Jesus Christ. 24 He who calls you is faithful; he will surely do it. \nAmen."
+        }
+      ]
+    }
+  ]
+}

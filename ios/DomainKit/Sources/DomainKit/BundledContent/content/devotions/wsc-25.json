@@ -1,0 +1,108 @@
+{
+  "slug": "wsc-25",
+  "title": "How doth Christ execute the office of a priest?",
+  "summary": "Professing WSC Q. 25 of the Westminster Shorter Catechism, grounded in Hebrews 9:11-14.",
+  "description": "This household worship moves through Psalm 43:3-4 and Hebrews 7:23-25, and professes WSC Q. 25 — “How doth Christ execute the office of a priest?”, before closing with Hebrews 9:11-14.",
+  "grounding": {
+    "kind": "catechism",
+    "entryIds": [
+      "WSC-25"
+    ]
+  },
+  "steps": [
+    {
+      "role": "Call to Worship",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Psalm 43:3-4",
+          "osis": "Ps.43.3-Ps.43.4",
+          "text": "3 Send out your light and your truth, let them lead me; let them bring me to your holy hill and to your dwelling!\n4 Then I will go to the altar of God, to God my exceeding joy, and I will praise you with the lyre, O God, my God."
+        },
+        {
+          "type": "prayer",
+          "lede": "Respond to God’s call to worship him by praying the Lord’s Prayer together:",
+          "text": "Our Father who art in heaven, hallowed be thy name. Thy kingdom come. Thy will be done on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us, and lead us not into temptation, but deliver us from evil. For thine is the kingdom and the power, and the glory, forever and ever. Amen."
+        }
+      ]
+    },
+    {
+      "role": "Confessing Sin",
+      "elements": [
+        {
+          "type": "prayer",
+          "lede": "Take a moment to “test and examine” your thoughts, feelings, and actions of the past day. “Return to the Lord” by confessing your sin (Lam 3:40).",
+          "text": "Almighty God, we acknowledge and confess that we have sinned against you in thought, word, and deed; we have not loved you with all of our heart, soul, mind, and strength; we have not loved our neighbor as ourselves. Deepen within us our sorrow for the wrong we have done, and the good we have left undone. Lord, you are full of compassion and gracious, slow to anger, and plenteous in mercy; there is always forgiveness with you! Restore to us the joy of your salvation; bind up that which is broken, give light to our minds, strength to our wills, and rest to our souls. Speak to each of us, and let your word abide with us until it has wrought in us your holy will. \nAmen."
+        }
+      ]
+    },
+    {
+      "role": "Receiving Forgiveness",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Hebrews 7:23-25",
+          "osis": "Heb.7.23-Heb.7.25",
+          "text": "23 The former priests were many in number, because they were prevented by death from continuing in office, 24 but he holds his priesthood permanently, because he continues forever. 25 Consequently, he is able to save to the uttermost those who draw near to God through him, since he always lives to make intercession for them."
+        }
+      ]
+    },
+    {
+      "role": "Singing Praise",
+      "elements": [
+        {
+          "type": "song",
+          "title": "All Creatures of Our God and King",
+          "lyrics": "Let all things their Creator bless,\nAnd worship him in humbleness.\nO praise him. Alleluia!\nPraise, praise the Father, praise the Son,\nAnd praise the Spirit, Three in One.\nO praise him! O praise him!\nAlleluia! Alleluia! Alleluia!"
+        }
+      ]
+    },
+    {
+      "role": "Professing Faith",
+      "elements": [
+        {
+          "type": "catechism"
+        }
+      ]
+    },
+    {
+      "role": "Reading Scripture",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Hebrews 9:11-14",
+          "osis": "Heb.9.11-Heb.9.14",
+          "text": "11 But when Christ appeared as a high priest of the good things that have come, then through the greater and more perfect tent (not made with hands, that is, not of this creation) 12 he entered once for all into the holy places, not by means of the blood of goats and calves but by means of his own blood, thus securing an eternal redemption. 13 For if the blood of goats and bulls, and the sprinkling of defiled persons with the ashes of a heifer, sanctify for the purification of the flesh, 14 how much more will the blood of Christ, who through the eternal Spirit offered himself without blemish to God, purify our conscience from dead works to serve the living God."
+        },
+        {
+          "type": "instruction",
+          "text": "The head of the household may offer words of instruction, encouragement, and exhortation."
+        }
+      ]
+    },
+    {
+      "role": "Making Requests",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Make your ways known upon the earth, Lord God, your saving power among the peoples. Renew your Church in holiness and help us to serve you with joy. Guide the leaders of all nations that justice may prevail throughout the world. Let not the needy be forgotten, nor the hope of the poor taken away. Make us instruments of your peace and let your glory be over all the earth. Prayers for ourselves, our families, friends, and the world may be offered as the Lord leads."
+        }
+      ]
+    },
+    {
+      "role": "Closing Prayer",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Almighty God, you gave your only Son to be for us both a sacrifice for sin and an example of godly living: Give us grace thankfully to receive his inestimable benefits, and daily to follow the blessed steps of his most holy life; through Jesus Christ our Lord, who lives and reigns with you and the Holy Spirit, one God, for ever and ever.\nAmen."
+        },
+        {
+          "type": "scripture",
+          "citation": "2 Corinthians 13:14",
+          "osis": "2Cor.13.14",
+          "text": "The grace of our Lord Jesus Christ and the love of God and the fellowship of the Holy Spirit be with you all. \nAmen."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,108 @@
+{
+  "slug": "wsc-22",
+  "title": "How did Christ, being the Son of God, become man?",
+  "summary": "Professing WSC Q. 22 of the Westminster Shorter Catechism, grounded in Luke 1:30-35.",
+  "description": "This household worship moves through Psalm 35:27-28 and Galatians 4:4-7, and professes WSC Q. 22 — “How did Christ, being the Son of God, become man?”, before closing with Luke 1:30-35.",
+  "grounding": {
+    "kind": "catechism",
+    "entryIds": [
+      "WSC-22"
+    ]
+  },
+  "steps": [
+    {
+      "role": "Call to Worship",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Psalm 35:27-28",
+          "osis": "Ps.35.27-Ps.35.28",
+          "text": "27 Let those who delight in my righteousness\n shout for joy and be glad\n and say evermore,\n“Great is the Lord,\n who delights in the welfare of his servant!”\n28 Then my tongue shall tell of your righteousness\n and of your praise all the day long."
+        },
+        {
+          "type": "prayer",
+          "lede": "Respond to God’s call to worship him by praying the Lord’s Prayer together:",
+          "text": "Our Father who art in heaven, hallowed be thy name. Thy kingdom come. Thy will be done on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us, and lead us not into temptation, but deliver us from evil. For thine is the kingdom and the power, and the glory, forever and ever. Amen."
+        }
+      ]
+    },
+    {
+      "role": "Confessing Sin",
+      "elements": [
+        {
+          "type": "prayer",
+          "lede": "Take a moment to “test and examine” your thoughts, feelings, and actions of the past day. “Return to the Lord” by confessing your sin (Lam 3:40).",
+          "text": "Jesus, forgive my sins. Forgive the sins that I remember, and the sins I have forgotten. Forgive my many failures in the face of temptation, and those times when I have been stubborn in the face of correction. Forgive the times I have been proud of my own achievements and those when I have failed to boast in your works. Forgive the harsh judgments I have made of others, and the leniency I have shown myself. Forgive the lies I have told to others, and the truths I have avoided. Forgive me the pain I have caused others and the indulgence I have shown myself. Jesus, have mercy on me and make me whole. \nAmen."
+        }
+      ]
+    },
+    {
+      "role": "Receiving Forgiveness",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Galatians 4:4-7",
+          "osis": "Gal.4.4-Gal.4.7",
+          "text": "4 But when the fullness of time had come, God sent forth his Son, born of woman, born under the law, 5 to redeem those who were under the law, so that we might receive adoption as sons. 6 And because you are sons, God has sent the Spirit of his Son into our hearts, crying, “Abba! Father!” 7 So you are no longer a slave, but a son, and if a son, then an heir through God."
+        }
+      ]
+    },
+    {
+      "role": "Singing Praise",
+      "elements": [
+        {
+          "type": "song",
+          "title": "The Riches of His Wisdom",
+          "lyrics": "Oh the depths of the riches and wisdom\nKnowledge and truth, hope and glory\nHow unsearchable perfect and loving\nThe One who answers to none\nFrom Him and through Him and to Him belong all things\nTo Him be the glory forever and ever. Amen."
+        }
+      ]
+    },
+    {
+      "role": "Professing Faith",
+      "elements": [
+        {
+          "type": "catechism"
+        }
+      ]
+    },
+    {
+      "role": "Reading Scripture",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Luke 1:30-35",
+          "osis": "Luke.1.30-Luke.1.35",
+          "text": "30 And the angel said to her, “Do not be afraid, Mary, for you have found favor with God. 31 And behold, you will conceive in your womb and bear a son, and you shall call his name Jesus. 32 He will be great and will be called the Son of the Most High. And the Lord God will give to him the throne of his father David, 33 and he will reign over the house of Jacob forever, and of his kingdom there will be no end.”\n34 And Mary said to the angel, “How will this be, since I am a virgin?” \n35 And the angel answered her, “The Holy Spirit will come upon you, and the power of the Most High will overshadow you; therefore the child to be born will be called holy—the Son of God."
+        },
+        {
+          "type": "instruction",
+          "text": "The head of the household may offer words of instruction, encouragement, and exhortation."
+        }
+      ]
+    },
+    {
+      "role": "Making Requests",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Make your ways known upon the earth, Lord God, your saving power among the peoples. Renew your Church in holiness and help us to serve you with joy. Guide the leaders of all nations that justice may prevail throughout the world. Let not the needy be forgotten, nor the hope of the poor taken away. Make us instruments of your peace and let your glory be over all the earth. Prayers for ourselves, our families, friends, and the world may be offered as the Lord leads."
+        }
+      ]
+    },
+    {
+      "role": "Closing Prayer",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Almighty God, you have given your only-begotten Son to take our nature upon him, and to be born of a pure virgin: Grant that we, who have been born again and made your children by adoption and grace, may daily be renewed by your Holy Spirit; through Jesus Christ our Lord, to whom with you and the same Spirit be honor and glory, now and forever.\nAmen."
+        },
+        {
+          "type": "scripture",
+          "citation": "2 Thessalonians 3:16",
+          "osis": "2Thess.3.16",
+          "text": "16 Now may the Lord of peace himself give you peace at all times in every way. The Lord be with you all. \nAmen."
+        }
+      ]
+    }
+  ]
+}

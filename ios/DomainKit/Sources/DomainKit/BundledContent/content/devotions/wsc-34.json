@@ -1,0 +1,108 @@
+{
+  "slug": "wsc-34",
+  "title": "What is adoption?",
+  "summary": "Professing WSC Q. 34 of the Westminster Shorter Catechism, grounded in 1 John 3:1-10.",
+  "description": "This household worship moves through Psalm 56:12-13 and Ephesians 1:4c-7, and professes WSC Q. 34 — “What is adoption?”, before closing with 1 John 3:1-10.",
+  "grounding": {
+    "kind": "catechism",
+    "entryIds": [
+      "WSC-34"
+    ]
+  },
+  "steps": [
+    {
+      "role": "Call to Worship",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Psalm 56:12-13",
+          "osis": "Ps.56.12-Ps.56.13",
+          "text": "12 I must perform my vows to you, O God;\n I will render thank offerings to you.\n13 For you have delivered my soul from death,\n yes, my feet from falling,\nthat I may walk before God\n in the light of life."
+        },
+        {
+          "type": "prayer",
+          "lede": "Respond to God’s call to worship him by praying the Lord’s Prayer together:",
+          "text": "Our Father who art in heaven, hallowed be thy name. Thy kingdom come. Thy will be done on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us, and lead us not into temptation, but deliver us from evil. For thine is the kingdom and the power, and the glory, forever and ever. Amen."
+        }
+      ]
+    },
+    {
+      "role": "Confessing Sin",
+      "elements": [
+        {
+          "type": "prayer",
+          "lede": "Take a moment to “test and examine” your thoughts, feelings, and actions of the past day. “Return to the Lord” by confessing your sin (Lam 3:40).",
+          "text": "O Lord, our great God, all holy, Father most gracious, filled with mercy and steadfast love, we humbly come before you, for we have preferred the ways of this world to your ways. We have rebelled against your wisdom and have invited trouble. We have rejected your fatherly guidance and have gotten lost altogether.\nO Lord, our great God, all holy, filled with awe, Father most gracious, filled with mercy and steadfast love, incline your ear to our troubles. Hear us as we pour out our sorrows to you. Forgive us, not because of our own righteousness, but because of your great mercy in the gift of your Son, Jesus Christ. It is in his name that we pray, for he is our Savior, and the mediator of the covenant of grace.\nAmen."
+        }
+      ]
+    },
+    {
+      "role": "Receiving Forgiveness",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Ephesians 1:4c-7",
+          "osis": "Eph.1.4-Eph.1.7",
+          "text": "In love 5 he predestined us for adoption to himself as sons through Jesus Christ, according to the purpose of his will, 6 to the praise of his glorious grace, with which he has blessed us in the Beloved. 7 In him we have redemption through his blood, the forgiveness of our trespasses, according to the riches of his grace."
+        }
+      ]
+    },
+    {
+      "role": "Singing Praise",
+      "elements": [
+        {
+          "type": "song",
+          "title": "To Father, Son, and Holy Ghost",
+          "lyrics": "To Father Son and Holy Ghost \nThe God whom heaven and earth adore \nFrom earth and from the angel host \nBe praise and glory evermore"
+        }
+      ]
+    },
+    {
+      "role": "Professing Faith",
+      "elements": [
+        {
+          "type": "catechism"
+        }
+      ]
+    },
+    {
+      "role": "Reading Scripture",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "1 John 3:1-10",
+          "osis": "1John.3.1-1John.3.10",
+          "text": "1 See what kind of love the Father has given to us, that we should be called children of God; and so we are. The reason why the world does not know us is that it did not know him. 2 Beloved, we are God's children now, and what we will be has not yet appeared; but we know that when he appears we shall be like him, because we shall see him as he is. 3 And everyone who thus hopes in him purifies himself as he is pure.\n4 Everyone who makes a practice of sinning also practices lawlessness; sin is lawlessness. 5 You know that he appeared in order to take away sins, and in him there is no sin. 6 No one who abides in him keeps on sinning; no one who keeps on sinning has either seen him or known him. 7 Little children, let no one deceive you. Whoever practices righteousness is righteous, as he is righteous. 8 Whoever makes a practice of sinning is of the devil, for the devil has been sinning from the beginning. The reason the Son of God appeared was to destroy the works of the devil. 9 No one born of God makes a practice of sinning, for God's seed abides in him; and he cannot keep on sinning, because he has been born of God. 10 By this it is evident who are the children of God, and who are the children of the devil: whoever does not practice righteousness is not of God, nor is the one who does not love his brother."
+        },
+        {
+          "type": "instruction",
+          "text": "The head of the household may offer words of instruction, encouragement, and exhortation."
+        }
+      ]
+    },
+    {
+      "role": "Making Requests",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Make your ways known upon the earth, Lord God, your saving power among the peoples. Renew your Church in holiness and help us to serve you with joy. Guide the leaders of all nations that justice may prevail throughout the world. Let not the needy be forgotten, nor the hope of the poor taken away. Make us instruments of your peace and let your glory be over all the earth. Prayers for ourselves, our families, friends, and the world may be offered as the Lord leads."
+        }
+      ]
+    },
+    {
+      "role": "Closing Prayer",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "O God, remind us of the glory of the Lord’s resurrection: Stir up in your Church that Spirit of adoption which is given to us in Baptism, that we, being renewed both in body and mind, may worship you in sincerity and truth; through Jesus Christ our Lord, who lives and reigns with you, in the unity of the Holy Spirit, one God, now and for ever. \nAmen."
+        },
+        {
+          "type": "scripture",
+          "citation": "1 Thessalonians 5:28",
+          "osis": "1Thess.5.28",
+          "text": "28 The grace of our Lord Jesus Christ be with you.\nAmen."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,114 @@
+{
+  "slug": "wsc-40",
+  "title": "What did God at first reveal to man for the rule of his obedience?",
+  "summary": "Professing WSC Q. 40–41 of the Westminster Shorter Catechism, grounded in Romans 2:12-16.",
+  "description": "This household worship moves through Psalm 63:5-7 and Zechariah 13:1, and professes WSC Q. 40–41 together — “What did God at first reveal to man for the rule of his obedience?” and “Wherein is the moral law summarily comprehended?”, before closing with Romans 2:12-16.",
+  "grounding": {
+    "kind": "catechism",
+    "entryIds": [
+      "WSC-40",
+      "WSC-41"
+    ]
+  },
+  "steps": [
+    {
+      "role": "Call to Worship",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Psalm 63:5-7",
+          "osis": "Ps.63.5-Ps.63.7",
+          "text": "5 My soul will be satisfied as with fat and rich food,\n and my mouth will praise you with joyful lips,\n6 when I remember you upon my bed,\n and meditate on you in the watches of the night;\n7 for you have been my help,\n and in the shadow of your wings I will sing for joy."
+        },
+        {
+          "type": "prayer",
+          "lede": "Respond to God’s call to worship him by praying the Lord’s Prayer together:",
+          "text": "Our Father who art in heaven, hallowed be thy name. Thy kingdom come. Thy will be done on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us, and lead us not into temptation, but deliver us from evil. For thine is the kingdom and the power, and the glory, forever and ever. Amen."
+        }
+      ]
+    },
+    {
+      "role": "Confessing Sin",
+      "elements": [
+        {
+          "type": "prayer",
+          "lede": "Take a moment to “test and examine” your thoughts, feelings, and actions of the past day. “Return to the Lord” by confessing your sin (Lam 3:40).",
+          "text": "Most merciful God, we confess that we have sinned against you in thought, word, and deed, by what we have done, and by what we have left undone. We have not loved you with our whole heart; we have not loved our neighbor as ourselves. \nWe are truly sorry, and we humbly repent. For the sake of your Son Jesus Christ, have mercy on us and forgive us; that we may delight in your will, and walk in your ways, to the glory of your name.\nAmen."
+        }
+      ]
+    },
+    {
+      "role": "Receiving Forgiveness",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Zechariah 13:1",
+          "osis": "Zech.13.1",
+          "text": "1 On that day there shall be a fountain opened for the house of David and the inhabitants of Jerusalem, to cleanse them from sin and uncleanness."
+        }
+      ]
+    },
+    {
+      "role": "Singing Praise",
+      "elements": [
+        {
+          "type": "song",
+          "title": "Doxology",
+          "lyrics": "Praise God from whom all blessings flow\nPraise him, all creatures here below,\nPraise him above ye heavenly host\nPraise Father, Son, and Holy Ghost.",
+          "source": {
+            "label": "Hear it · Spotify",
+            "href": "https://open.spotify.com/search/Doxology%20Sovereign%20Grace%20Music",
+            "external": true
+          }
+        }
+      ]
+    },
+    {
+      "role": "Professing Faith",
+      "elements": [
+        {
+          "type": "catechism"
+        }
+      ]
+    },
+    {
+      "role": "Reading Scripture",
+      "elements": [
+        {
+          "type": "scripture",
+          "citation": "Romans 2:12-16",
+          "osis": "Rom.2.12-Rom.2.16",
+          "text": "12 For all who have sinned without the law will also perish without the law, and all who have sinned under the law will be judged by the law. 13 For it is not the hearers of the law who are righteous before God, but the doers of the law who will be justified. 14 For when Gentiles, who do not have the law, by nature do what the law requires, they are a law to themselves, even though they do not have the law. 15 They show that the work of the law is written on their hearts, while their conscience also bears witness, and their conflicting thoughts accuse or even excuse them 16 on that day when, according to my gospel, God judges the secrets of men by Christ Jesus."
+        },
+        {
+          "type": "instruction",
+          "text": "The head of the household may offer words of instruction, encouragement, and exhortation."
+        }
+      ]
+    },
+    {
+      "role": "Making Requests",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "Make your ways known upon the earth, Lord God, your saving power among the peoples. Renew your Church in holiness and help us to serve you with joy. Guide the leaders of all nations that justice may prevail throughout the world. Let not the needy be forgotten, nor the hope of the poor taken away. Make us instruments of your peace and let your glory be over all the earth. Prayers for ourselves, our families, friends, and the world may be offered as the Lord leads."
+        }
+      ]
+    },
+    {
+      "role": "Closing Prayer",
+      "elements": [
+        {
+          "type": "prayer",
+          "text": "O God, the strength of all who put their trust in you: Mercifully accept our prayers, and because, through the weakness of our mortal nature, we can do no good thing without you, grant us the help of your grace, that in keeping your commandments we may please you both in will and deed; through Jesus Christ our Lord, who lives and reigns with you and the Holy Spirit, one God, for ever and ever. \nAmen."
+        },
+        {
+          "type": "scripture",
+          "citation": "2 Peter 3:18",
+          "osis": "2Pet.3.18",
+          "text": "18 May God grant you to grow in the grace and knowledge of our Lord and Savior Jesus Christ. To him be the glory both now and to the day of eternity. Amen."
+        }
+      ]
+    }
+  ]
+}
