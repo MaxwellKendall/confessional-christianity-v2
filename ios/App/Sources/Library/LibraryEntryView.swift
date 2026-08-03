@@ -26,6 +26,7 @@ struct LibraryEntryView: View {
     private var page: EntryPage? { getEntryPage(slug, entryId: entryId) }
     private var groups: [ProofTextGroup] { page.map { proofTextGroups($0.item) } ?? [] }
     private var activeGroup: ProofTextGroup? { groups.first { $0.marker == activeMarker } }
+    private var reflection: Reflection? { getReflectionByEntryId(entryId) }
 
     private var activeSegmentLabel: String? {
         guard let page else { return nil }
@@ -54,6 +55,10 @@ struct LibraryEntryView: View {
                     }
                     .padding(.horizontal, 20)
                     .padding(.top, 22)
+
+                    if let reflection {
+                        commentaryLink(reflection)
+                    }
 
                     if !groups.isEmpty {
                         scriptureSection
@@ -98,6 +103,23 @@ struct LibraryEntryView: View {
     private func navigate(to entryId: String) {
         path.removeLast()
         path.append(LibraryRoute.entry(slug: slug, entryId: entryId))
+    }
+
+    @ViewBuilder
+    private func commentaryLink(_ reflection: Reflection) -> some View {
+        Button {
+            path.append(ReflectionsRoute.detail(slug: reflection.slug))
+        } label: {
+            Text("\u{2020} Commentary \u{2014} \(reflection.title)")
+                .labelCaps(size: 9.5, tracking: 0.1, color: .ccInk)
+                .dottedUnderline(.ccInk)
+        }
+        .buttonStyle(.plain)
+        .frame(maxWidth: .infinity)
+        .padding(.top, 22)
+        .overlay(alignment: .top) {
+            Rectangle().fill(Color.ccHairline).frame(height: 1)
+        }
     }
 
     @ViewBuilder

@@ -79,6 +79,12 @@ struct LibraryTabView: View {
                     }
                 }
             }
+            .navigationDestination(for: ReflectionsRoute.self) { route in
+                switch route {
+                case .detail(let slug):
+                    ReflectionDetailView(slug: slug, path: $path)
+                }
+            }
         }
         .tint(.ccInk)
     }

@@ -7,6 +7,9 @@
 // CFYC isn't part of the Library surface), a leaf row deep-links into that
 // SessionView at the tapped question rather than opening a second, read-only
 // copy of the same Q&A — one reading experience, not two.
+//
+// A row is prefixed "†" when a reflection essay exists for that entry,
+// mirroring the web TOC's commentary marker (PRD §10).
 import SwiftUI
 import DomainKit
 
@@ -19,6 +22,7 @@ struct DocumentTocView: View {
     private var doc: LibraryDocument? { getLibraryDocument(slug) }
     private var entries: [ConfessionEntry] { getOrderedEntries(slug) }
     private var linkedProgram: ProgramDefinition? { doc.flatMap { programForContentId($0.documentId) } }
+    private var commentaryIds: Set<String> { listCommentaryIds() }
 
     var body: some View {
         ScrollView {
@@ -68,7 +72,7 @@ struct DocumentTocView: View {
                                     path.append(LibraryRoute.entry(slug: slug, entryId: entry.id))
                                 }
                             } label: {
-                                Text(tocRowTitle(entry))
+                                Text(commentaryIds.contains(entry.id) ? "\u{2020} \(tocRowTitle(entry))" : tocRowTitle(entry))
                                     .font(.ccDisplay(13.5, semibold: true))
                                     .foregroundStyle(.ccInk)
                                     .multilineTextAlignment(.leading)
