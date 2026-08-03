@@ -32,11 +32,14 @@ const FILES = [
   ['content/programs/catechizing-shorter-catechism/prayers.json', 'content/programs/catechizing-shorter-catechism/prayers.json'],
 ];
 
-// content/devotions holds every authored devotion and series manifest — the
-// whole directory is needed (unlike normalized-data above, there's no subset
-// to pick), so it's copied recursively rather than enumerated file-by-file.
+// content/devotions holds every authored devotion and series manifest, and
+// content/commentary holds every authored reflection/commentary essay —
+// both are open-ended (grow as new essays/devotions are authored) rather
+// than a fixed subset, so they're copied recursively rather than enumerated
+// file-by-file.
 const DIRECTORIES = [
   ['content/devotions', 'content/devotions'],
+  ['content/commentary', 'content/commentary'],
 ];
 
 for (const [src, dest] of FILES) {

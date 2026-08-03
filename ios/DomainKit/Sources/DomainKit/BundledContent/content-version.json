@@ -1,6 +1,6 @@
 {
-  "syncedAt": "2026-08-03T02:27:50.196Z",
-  "sourceCommit": "ad79f3a6925fd520ec869ec1da093be223d4dfb3",
+  "syncedAt": "2026-08-03T11:44:21.365Z",
+  "sourceCommit": "791ec7d52912b853c0c5e00f351498cf4be606a9",
   "files": [
     "normalized-data/westminster/wsc.json",
     "normalized-data/westminster/wlc.json",
@@ -70,6 +70,7 @@
     "content/devotions/wsc-65.json",
     "content/devotions/wsc-7.json",
     "content/devotions/wsc-8.json",
-    "content/devotions/wsc-9.json"
+    "content/devotions/wsc-9.json",
+    "content/commentary/WSC-1.md"
   ]
 }
