@@ -1,6 +1,6 @@
-// Ported from src/lib/localSeriesProgress.ts. The persistence itself
-// (SwiftData) lives app-side, same split as LocalCatechismTrack/
-// LocalProgressStore; this is the one pure function the domain layer owns.
+// Ported from src/lib/localSeriesProgress.ts. The pure day-math half of
+// this domain, kept separate from Progress.swift's SwiftData-backed
+// LocalSeriesProgressStore.
 import Foundation
 
 /// The part Continue should jump to: the first of the series' days without a
