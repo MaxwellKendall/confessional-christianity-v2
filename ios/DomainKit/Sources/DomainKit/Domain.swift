@@ -86,3 +86,13 @@ public struct Catechism: Codable, Sendable, Equatable {
     /// Suggested age range, e.g. "8-12".
     public let ageRange: String
 }
+
+/// A single Algolia facetFilters entry: a bare string is an AND term, an
+/// array of strings expresses OR between its filters. Mirrors TS's
+/// `FacetFilter = string | string[]` union.
+public enum FacetFilter: Equatable, Sendable {
+    case and(String)
+    case or([String])
+}
+
+public typealias FacetFilters = [FacetFilter]

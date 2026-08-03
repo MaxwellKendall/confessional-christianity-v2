@@ -1,7 +1,6 @@
-// OSIS bible-reference helpers, ported from src/lib/bible.ts. Only the
-// subset Programs/Library need in this phase (Search's toOsis/citationToOsis
-// and the full BIBLE_BOOKS browse structure are deferred to the Search
-// phase, when they're actually consumed).
+// OSIS bible-reference helpers, ported from src/lib/bible.ts. The full
+// BIBLE_BOOKS browse structure isn't ported — nothing in the app browses by
+// book yet.
 import Foundation
 
 public let bibleBookByAbbreviation: [String: String] = [
@@ -56,4 +55,64 @@ public func parseOsisBibleReference(_ osisStr: String) -> String {
         }
     }
     return acc
+}
+
+private let toOsisMap: [String: String] = {
+    var map: [String: String] = ["psalm": "Ps"]
+    for (key, value) in bibleBookByAbbreviation {
+        map[value.lowercased()] = key
+    }
+    return map
+}()
+
+public func toOsis(_ str: String) -> String? {
+    toOsisMap[str.lowercased()]
+}
+
+// Books the ESV cites without a chapter number ("Jude 4" means Jude 1:4").
+private let singleChapterBooks: Set<String> = ["Obad", "Phlm", "2John", "3John", "Jude"]
+
+private let citationRegex = try! NSRegularExpression(
+    pattern: #"^([1-3]?\s?[A-Za-z ]+?)\s+(\d+)(?::(\d+))?(?:\s*-\s*(?:(\d+):)?(\d+))?$"#
+)
+
+/// Inverse of parseOsisBibleReference for human citations as the ESV API
+/// (and therefore the Algolia citations index) canonicalizes them: "Acts
+/// 2:24–27", "Psalm 16:10", "1 Corinthians 15:3–4", "Acts 1:1–2:4",
+/// chapter-level refs like "Psalm 73" and "Hebrews 8–10". Returns nil when
+/// the string doesn't fit that shape, so callers can degrade gracefully.
+public func citationToOsis(_ citation: String) -> String? {
+    let normalized = citation
+        .replacingOccurrences(of: "[\u{2013}\u{2014}]", with: "-", options: .regularExpression)
+        .trimmingCharacters(in: .whitespacesAndNewlines)
+    let range = NSRange(normalized.startIndex..., in: normalized)
+    guard let match = citationRegex.firstMatch(in: normalized, range: range) else { return nil }
+
+    func group(_ i: Int) -> String? {
+        guard i < match.numberOfRanges, let r = Range(match.range(at: i), in: normalized) else { return nil }
+        return String(normalized[r])
+    }
+
+    guard let bookName = group(1), let book = toOsis(bookName) else { return nil }
+    let first = group(2) ?? ""
+    let second = group(3)
+    let endChapter = group(4)
+    let end = group(5)
+
+    let chapter: String
+    let verse: String?
+    if singleChapterBooks.contains(book), second == nil {
+        chapter = "1"
+        verse = first
+    } else {
+        chapter = first
+        verse = second
+    }
+
+    let start = verse.map { "\(book).\(chapter).\($0)" } ?? "\(book).\(chapter)"
+    guard let end else { return start }
+    if verse == nil, endChapter == nil {
+        return "\(start)-\(book).\(end)"
+    }
+    return "\(start)-\(book).\(endChapter ?? chapter).\(end)"
 }

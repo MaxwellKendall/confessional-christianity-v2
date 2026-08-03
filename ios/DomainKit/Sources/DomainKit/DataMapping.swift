@@ -1,8 +1,31 @@
 // Document-alias vocabularies, ported from src/lib/dataMapping.ts (itself
 // ported from v1 dataMapping/index.js). See docs/DOMAIN.md (in the Next.js
-// repo) before touching anything keyed by these maps. Only the tables
-// Programs/Library need in this phase are ported here — confessionCitationByIndex,
-// facetNamesByCanonicalDocId, and KEYWORDS are Search-phase only.
+// repo) before touching anything keyed by these maps. facetNamesByCanonicalDocId
+// isn't ported — nothing consumes it (Search's parseFacets doesn't need it).
+
+/// [document title, ...locator labels, "Scripture Citation"], keyed by every
+/// alias a document id can appear under.
+public let confessionCitationByIndex: [String: [String]] = [
+    "WCF": ["Westminster Confession of Faith", "Chapter", "Article", "Scripture Citation"],
+    "WCoF": ["Westminster Confession of Faith", "Chapter", "Article", "Scripture Citation"],
+    "WCOF": ["Westminster Confession of Faith", "Chapter", "Article", "Scripture Citation"],
+    "HC": ["Heidelberg Catechism", "LORD's Day", "Question and Answer", "Scripture Citation"],
+    "WSC": ["Westminster Shorter Catechism", "Question and Answer", "Scripture Citation"],
+    "WLC": ["Westminster Larger Catechism", "Question and Answer", "Scripture Citation"],
+    "39A": ["Thirty-nine Articles of Religion", "Chapter"],
+    "TAR": ["Thirty-nine Articles of Religion", "Chapter"],
+    "TAOR": ["Thirty-nine Articles of Religion", "Chapter"],
+    "CD": ["Canons of Dort", "Chapter"],
+    "COD": ["Canons of Dort", "Chapter"],
+    "BCF": ["The Belgic Confession of Faith", "Chapter"],
+    "TBCoF": ["The Belgic Confession of Faith", "Chapter"],
+    "TBCOF": ["The Belgic Confession of Faith", "Chapter"],
+    "BC": ["The Belgic Confession of Faith", "Chapter"],
+    "95T": ["Martin Luther's 95 theses"],
+    "ML9T": ["Martin Luther's 95 theses"],
+    "CFYC": ["Catechism for Young Children"],
+    "ALL": ["ALL"],
+]
 
 /// maps each document's true canonical id (as it appears as the id prefix in
 /// contentById, e.g. "WCoF-1-2") to the URL slug used for its library pages.
