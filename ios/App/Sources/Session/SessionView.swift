@@ -3,6 +3,10 @@
 // centered in the frame, and a hairline-topped footer with Prev/Next plus
 // a "See Milestones →" link. Local progress via LocalProgressStore mirrors
 // useSessionTrack.ts's resume/advance/jump semantics.
+//
+// The question area also responds to a horizontal swipe (left = next,
+// right = prev — same convention as LibraryEntryView's paging), calling the
+// exact same goNext()/goPrev() the footer buttons use.
 import SwiftUI
 import SwiftData
 import DomainKit
@@ -14,6 +18,10 @@ struct SessionView: View {
     /// SessionClient's `?devotion=` handling: "Next" becomes "Continue
     /// Worship" and advancing returns to that devotion's stepper.
     var handoff: DevotionHandoff?
+    /// Set when Library deep-links a specific question into the real
+    /// session — jumped to once on appear, same as tapping "Jump to
+    /// Question", so arriving here also becomes the resume point.
+    var startQuestion: Int?
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
@@ -70,6 +78,20 @@ struct SessionView: View {
                         .padding(.vertical, 24)
                         .frame(minHeight: geo.size.height)
                     }
+                    .simultaneousGesture(
+                        DragGesture(minimumDistance: 24)
+                            .onEnded { value in
+                                guard !isComplete, track != nil else { return }
+                                let horizontal = value.translation.width
+                                let vertical = value.translation.height
+                                guard abs(horizontal) > abs(vertical), abs(horizontal) > 60 else { return }
+                                if horizontal < 0 {
+                                    goNext()
+                                } else {
+                                    goPrev()
+                                }
+                            }
+                    )
                 }
 
                 if !isComplete, track != nil {
@@ -111,6 +133,9 @@ struct SessionView: View {
         }
         .task {
             load()
+            if let startQuestion {
+                jump(to: startQuestion)
+            }
             await offerNotificationsIfNeeded()
         }
     }
@@ -138,7 +163,7 @@ struct SessionView: View {
             HStack {
                 if (track?.currentQuestion ?? 1) > 1 {
                     Button {
-                        jump(to: (track?.currentQuestion ?? 1) - 1)
+                        goPrev()
                     } label: {
                         Text("\u{2190} Prev").labelCaps(size: 11, tracking: 0.1, color: .ccInk3)
                     }
@@ -148,10 +173,7 @@ struct SessionView: View {
                 }
                 Spacer()
                 Button {
-                    advance()
-                    if let handoff {
-                        path.append(DevotionRoute.worship(slug: handoff.devotionSlug, startStep: handoff.returnStep))
-                    }
+                    goNext()
                 } label: {
                     Text(handoff != nil ? "Continue Worship \u{2192}" : "Next \u{2192}")
                         .labelCaps(size: 11, tracking: 0.1, color: .ccInk)
@@ -191,6 +213,18 @@ struct SessionView: View {
         track = store.jumpToQuestion(
             catechismId: program.contentId.rawValue, questionNumber: number, totalQuestions: program.totalQuestions
         )
+    }
+
+    private func goNext() {
+        advance()
+        if let handoff {
+            path.append(DevotionRoute.worship(slug: handoff.devotionSlug, startStep: handoff.returnStep))
+        }
+    }
+
+    private func goPrev() {
+        guard (track?.currentQuestion ?? 1) > 1 else { return }
+        jump(to: (track?.currentQuestion ?? 1) - 1)
     }
 
     // Offered once per session view, not gated behind a settings screen —

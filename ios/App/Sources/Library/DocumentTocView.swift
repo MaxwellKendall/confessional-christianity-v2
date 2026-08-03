@@ -2,6 +2,11 @@
 // src/app/(column)/library/[confession]/page.tsx: section headers for
 // parent (chapter/head-of-doctrine) entries, rows for every leaf entry in
 // canonical document order.
+//
+// For the catechisms that also have a real practice session (WSC/WLC/HC —
+// CFYC isn't part of the Library surface), a leaf row deep-links into that
+// SessionView at the tapped question rather than opening a second, read-only
+// copy of the same Q&A — one reading experience, not two.
 import SwiftUI
 import DomainKit
 
@@ -13,6 +18,7 @@ struct DocumentTocView: View {
 
     private var doc: LibraryDocument? { getLibraryDocument(slug) }
     private var entries: [ConfessionEntry] { getOrderedEntries(slug) }
+    private var linkedProgram: ProgramDefinition? { doc.flatMap { programForContentId($0.documentId) } }
 
     var body: some View {
         ScrollView {
@@ -56,7 +62,11 @@ struct DocumentTocView: View {
                                 }
                         } else {
                             Button {
-                                path.append(LibraryRoute.entry(slug: slug, entryId: entry.id))
+                                if let linkedProgram, let number = questionNumber(linkedProgram, entryId: entry.id) {
+                                    path.append(LibraryRoute.session(programSlug: linkedProgram.slug, questionNumber: number))
+                                } else {
+                                    path.append(LibraryRoute.entry(slug: slug, entryId: entry.id))
+                                }
                             } label: {
                                 Text(tocRowTitle(entry))
                                     .font(.ccDisplay(13.5, semibold: true))
@@ -75,7 +85,7 @@ struct DocumentTocView: View {
                 .padding(.top, 16)
             }
             .padding(.horizontal, 20)
-            .padding(.bottom, 32)
+            .padding(.bottom, 100)
         }
         .background(Color.ccCanvas)
         .toolbar(.hidden, for: .navigationBar)

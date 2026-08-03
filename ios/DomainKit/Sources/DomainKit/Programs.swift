@@ -69,3 +69,10 @@ public let PROGRAMS: [ProgramDefinition] = [
 public func getProgram(_ slug: String) -> ProgramDefinition? {
     PROGRAMS.first { $0.slug == slug }
 }
+
+/// The program (if any) that walks the same catechism as a given content id
+/// string (e.g. Library's `LibraryDocument.documentId`) — lets a Library
+/// document row find its corresponding practice session.
+public func programForContentId(_ id: String) -> ProgramDefinition? {
+    PROGRAMS.first { $0.contentId.rawValue == id }
+}

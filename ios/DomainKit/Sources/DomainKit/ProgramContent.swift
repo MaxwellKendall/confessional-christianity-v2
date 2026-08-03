@@ -115,6 +115,16 @@ public func entryId(_ program: ProgramRef, _ n: Int) -> String? {
     findEntry(program.contentId, n)?.id
 }
 
+/// The inverse of `entryId(_:_:)` — the traditional question number for a raw
+/// entry id, used to deep-link a Library TOC row straight into the real
+/// practice session at that question rather than a separate read-only view.
+public func questionNumber(_ program: ProgramRef, entryId: String) -> Int? {
+    guard let entry = docsByContentId[program.contentId]?.content.first(where: { $0.id == entryId }) else {
+        return nil
+    }
+    return questionNumberOf(entry)
+}
+
 /// Every question's number and text, in order — the index behind "Jump to
 /// Question", which browses/searches the whole catechism.
 public func listQuestions(_ program: ProgramRef) -> [(number: Int, question: String)] {

@@ -73,6 +73,10 @@ struct LibraryTabView: View {
                     DocumentTocView(slug: slug, path: $path)
                 case .entry(let slug, let entryId):
                     LibraryEntryView(slug: slug, entryId: entryId, path: $path)
+                case .session(let programSlug, let questionNumber):
+                    if let program = getProgram(programSlug) {
+                        SessionView(program: program, path: $path, startQuestion: questionNumber)
+                    }
                 }
             }
         }

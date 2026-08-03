@@ -7,4 +7,8 @@ import Foundation
 enum LibraryRoute: Hashable {
     case document(slug: String)
     case entry(slug: String, entryId: String)
+    /// A document row that belongs to a catechism program (WSC/WLC/HC) —
+    /// routes into the real, progress-tracked SessionView at that question
+    /// instead of a parallel read-only entry page.
+    case session(programSlug: String, questionNumber: Int)
 }
