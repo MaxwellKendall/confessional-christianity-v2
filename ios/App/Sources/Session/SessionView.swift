@@ -87,6 +87,18 @@ struct SessionView: View {
             }
             .padding(.leading, 6)
             .padding(.top, 6)
+
+            Button {
+                path.removeLast(path.count)
+            } label: {
+                Image(systemName: "house")
+                    .font(.system(size: 17))
+                    .foregroundStyle(.ccInk)
+                    .frame(width: 44, height: 44, alignment: .center)
+            }
+            .frame(maxWidth: .infinity, alignment: .trailing)
+            .padding(.trailing, 6)
+            .padding(.top, 6)
         }
         .toolbar(.hidden, for: .navigationBar)
         .sheet(isPresented: $showJump) {

@@ -55,7 +55,15 @@ struct DevotionWorshipView: View {
                     }
                 }
                 Spacer()
-                Color.clear.frame(width: 15, height: 1)
+                Button {
+                    path.removeLast(path.count)
+                } label: {
+                    Image(systemName: "house")
+                        .font(.system(size: 15))
+                        .foregroundStyle(.ccInk)
+                        .frame(width: 15, height: 15)
+                }
+                .buttonStyle(.plain)
             }
             .padding(.horizontal, 24)
             .padding(.top, 20)
