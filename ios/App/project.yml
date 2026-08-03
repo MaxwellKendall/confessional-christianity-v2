@@ -23,6 +23,9 @@ targets:
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
         CFBundleDisplayName: Confessional Christianity
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        ITSAppUsesNonExemptEncryption: false
         UIAppFonts:
           - Cinzel-Regular.ttf
           - Cinzel-SemiBold.ttf
@@ -72,6 +75,9 @@ targets:
       path: Widget/Info.plist
       properties:
         CFBundleDisplayName: Confessional Christianity
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        ITSAppUsesNonExemptEncryption: false
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
         UIAppFonts:
