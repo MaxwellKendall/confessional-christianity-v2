@@ -78,7 +78,10 @@ struct FlowText: View {
 
     var body: some View {
         FlowLayout(horizontalSpacing: 4, verticalSpacing: 4) {
-            wordView(Word(id: -1, text: prefix.trimmingCharacters(in: .whitespaces), marker: nil, isLastInSegment: false))
+            let trimmedPrefix = prefix.trimmingCharacters(in: .whitespaces)
+            if !trimmedPrefix.isEmpty {
+                wordView(Word(id: -1, text: trimmedPrefix, marker: nil, isLastInSegment: false))
+            }
             ForEach(words) { word in
                 wordView(word)
             }
