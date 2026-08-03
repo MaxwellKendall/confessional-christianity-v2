@@ -148,6 +148,17 @@ public final class LocalProgressStore {
         return all.max { $0.updatedAt < $1.updatedAt }
     }
 
+    // SwiftData's autosave only flushes to disk on its own schedule (scene
+    // deactivation, memory pressure, etc.), which is fine within a single
+    // process but not for the widget extension — a separate process that
+    // reads Progress.sqlite fresh on every timeline request. Saving
+    // explicitly after every mutation is what makes "answer a question in
+    // the app" show up in the widget on its next refresh instead of
+    // whenever autosave next happens to run.
+    private func save() {
+        try? context.save()
+    }
+
     /// Resumes the existing track for this catechism, or starts a fresh one
     /// at question 1 — the same fallback `useSessionTrack` applies with no
     /// `?start=` param.
@@ -155,6 +166,7 @@ public final class LocalProgressStore {
     public func resumeOrStartTrack(catechismId: String) -> LocalCatechismTrack {
         if let existing = track(for: catechismId) {
             settings().activeCatechismId = catechismId
+            save()
             return existing
         }
         return startTrack(catechismId: catechismId, startingQuestion: 1)
@@ -172,6 +184,7 @@ public final class LocalProgressStore {
             existing.updatedAt = now
             existing.milestones = [:]
             settings().activeCatechismId = catechismId
+            save()
             return existing
         }
         let created = LocalCatechismTrack(
@@ -180,6 +193,7 @@ public final class LocalProgressStore {
         )
         context.insert(created)
         settings().activeCatechismId = catechismId
+        save()
         return created
     }
 
@@ -199,6 +213,7 @@ public final class LocalProgressStore {
         existing.currentQuestion = min(totalQuestions + 1, existing.currentQuestion + 1)
         existing.updatedAt = now
         settings().activeCatechismId = catechismId
+        save()
         return existing
     }
 
@@ -210,6 +225,7 @@ public final class LocalProgressStore {
         existing.currentQuestion = min(totalQuestions, max(1, questionNumber))
         existing.updatedAt = Date()
         settings().activeCatechismId = catechismId
+        save()
         return existing
     }
 }
@@ -242,8 +258,10 @@ public final class LocalSeriesProgressStore {
         if let existing = record(for: seriesSlug) {
             guard !existing.completedDays.contains(day) else { return }
             existing.completedDays.append(day)
+            try? context.save()
             return
         }
         context.insert(SeriesProgressRecord(seriesSlug: seriesSlug, completedDays: [day]))
+        try? context.save()
     }
 }

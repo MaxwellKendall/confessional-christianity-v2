@@ -16,6 +16,11 @@ struct CatechismEntry: TimelineEntry {
     let totalQuestions: Int
     let question: String
     let answer: String
+    // Nil when the question's first proof text isn't in the bundled ESV set
+    // yet (bible-text.json is a partial, append-only cache) — the widget
+    // never makes a network call, so it just omits the scripture block.
+    let scriptureQuote: String?
+    let scriptureRef: String?
 
     var progress: Double {
         guard totalQuestions > 0 else { return 0 }
@@ -33,7 +38,9 @@ struct CatechismEntry: TimelineEntry {
         questionNumber: 1,
         totalQuestions: 107,
         question: "What is the chief end of man?",
-        answer: "Man's chief end is to glorify God, and to enjoy him forever."
+        answer: "Man's chief end is to glorify God, and to enjoy him forever.",
+        scriptureQuote: "So, whether you eat or drink, or whatever you do, do all to the glory of God.",
+        scriptureRef: "1 Corinthians 10:31"
     )
 }
 
@@ -71,6 +78,8 @@ struct CatechismProvider: TimelineProvider {
             ?? PROGRAMS[0]
         let questionNumber = track.map { min($0.currentQuestion, program.totalQuestions) } ?? 1
         let q = getQuestion(program, questionNumber)
+        let firstProofText = q?.proofTexts.first
+        let scriptureQuote = firstProofText.flatMap(bundledEsvText(for:))
         return CatechismEntry(
             date: Date(),
             kind: program.kind,
@@ -78,7 +87,9 @@ struct CatechismProvider: TimelineProvider {
             questionNumber: questionNumber,
             totalQuestions: program.totalQuestions,
             question: q?.question ?? "",
-            answer: q?.answer ?? ""
+            answer: q?.answer ?? "",
+            scriptureQuote: scriptureQuote,
+            scriptureRef: scriptureQuote != nil ? firstProofText.map(parseOsisBibleReference) : nil
         )
     }
 }
@@ -152,30 +163,44 @@ private struct SmallCatechismView: View {
     }
 }
 
+// Centered, stacked layout rather than the two-column one this replaced —
+// there isn't room at this size for the question, the answer, and the
+// scripture together, so the answer is the one dropped (it's a tap away in
+// the app; the proof text is the detail a preview widget can't get anywhere
+// else).
 private struct MediumCatechismView: View {
     let entry: CatechismEntry
 
     var body: some View {
-        HStack(alignment: .top, spacing: 14) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text(entry.title)
-                    .labelCaps(size: 8.5, tracking: 0.1)
-                Text("Q. \(entry.questionNumber) of \(entry.totalQuestions)")
-                    .font(.ccDisplay(15, semibold: true))
-                    .foregroundStyle(.ccInk)
-                ProgressBar(progress: entry.progress)
-                    .padding(.top, 2)
-            }
-            .frame(width: 108, alignment: .leading)
+        VStack(spacing: 6) {
+            Text("Question \(entry.questionNumber) of \(entry.totalQuestions)")
+                .labelCaps(size: 8, tracking: 0.1)
+            ProgressBar(progress: entry.progress)
 
-            Text(entry.question)
-                .font(.ccBody(13))
-                .foregroundStyle(.ccInk)
-                .lineLimit(5)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            VStack(spacing: 3) {
+                Text(entry.question)
+                    .font(.ccDisplay(13, semibold: true))
+                    .foregroundStyle(.ccInk)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
+                if let quote = entry.scriptureQuote, let ref = entry.scriptureRef {
+                    Text(quote)
+                        .font(.ccBody(10.5))
+                        .italic()
+                        .foregroundStyle(.ccInk2)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.center)
+                    Text(ref)
+                        .labelCaps(size: 8, tracking: 0.06, color: .ccOchre)
+                }
+            }
+            .padding(.top, 2)
+            .frame(maxHeight: .infinity)
+
+            ContinueRow()
         }
         .padding(16)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
@@ -183,17 +208,12 @@ private struct LargeCatechismView: View {
     let entry: CatechismEntry
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 9) {
             Text(entry.title)
                 .labelCaps(size: 9, tracking: 0.12)
-            HStack(alignment: .firstTextBaseline) {
-                Text("Q. \(entry.questionNumber) of \(entry.totalQuestions)")
-                    .font(.ccDisplay(16, semibold: true))
-                    .foregroundStyle(.ccInk)
-                Spacer()
-                Text("Continue \u{2192}")
-                    .labelCaps(size: 9, tracking: 0.08, color: .ccOchre)
-            }
+            Text("Q. \(entry.questionNumber) of \(entry.totalQuestions)")
+                .font(.ccDisplay(16, semibold: true))
+                .foregroundStyle(.ccInk)
             ProgressBar(progress: entry.progress)
                 .padding(.bottom, 4)
 
@@ -205,11 +225,48 @@ private struct LargeCatechismView: View {
             Text(entry.answer)
                 .font(.ccBody(13.5))
                 .foregroundStyle(.ccInk2)
-                .lineLimit(5)
+                .lineLimit(4)
+
+            if let quote = entry.scriptureQuote, let ref = entry.scriptureRef {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("The Scripture Behind It")
+                        .labelCaps(size: 7.5, tracking: 0.1)
+                    Text(quote)
+                        .font(.ccBody(11.5))
+                        .italic()
+                        .foregroundStyle(.ccInk2)
+                        .lineLimit(3)
+                    Text(ref)
+                        .labelCaps(size: 8, tracking: 0.06, color: .ccOchre)
+                }
+                .padding(.top, 2)
+            }
 
             Spacer(minLength: 0)
+
+            ContinueRow()
         }
         .padding(18)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+    }
+}
+
+// Shared footer link row for the medium/large layouts — the design doc's
+// bottom CTA, separated from the content above by a hairline rule.
+private struct ContinueRow: View {
+    var body: some View {
+        VStack(spacing: 0) {
+            Rectangle().fill(Color.ccHairline).frame(height: 1)
+            HStack {
+                Text("Continue")
+                    .font(.ccDisplay(12, semibold: true))
+                    .foregroundStyle(.ccInk)
+                Spacer()
+                Text("\u{2192}")
+                    .font(.ccBody(14))
+                    .foregroundStyle(.ccOchre)
+            }
+            .padding(.top, 10)
+        }
     }
 }

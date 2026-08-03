@@ -9,6 +9,7 @@
 // exact same goNext()/goPrev() the footer buttons use.
 import SwiftUI
 import SwiftData
+import WidgetKit
 import DomainKit
 
 struct SessionView: View {
@@ -207,12 +208,14 @@ struct SessionView: View {
 
     private func advance() {
         track = store.advanceQuestion(catechismId: program.contentId.rawValue, totalQuestions: program.totalQuestions)
+        WidgetCenter.shared.reloadTimelines(ofKind: "CatechismWidget")
     }
 
     private func jump(to number: Int) {
         track = store.jumpToQuestion(
             catechismId: program.contentId.rawValue, questionNumber: number, totalQuestions: program.totalQuestions
         )
+        WidgetCenter.shared.reloadTimelines(ofKind: "CatechismWidget")
     }
 
     private func goNext() {
