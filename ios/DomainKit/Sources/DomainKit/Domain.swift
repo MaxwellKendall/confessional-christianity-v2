@@ -33,6 +33,20 @@ public struct ConfessionEntry: Codable, Sendable, Hashable {
         self.text = text
         self.verses = verses
     }
+
+    // Flat documents (e.g. the 95 Theses) omit "isParent" entirely on every
+    // entry rather than writing "isParent": false on each one — default it
+    // to false rather than requiring the source data to spell it out.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        parent = try c.decode(String.self, forKey: .parent)
+        title = try c.decodeIfPresent(String.self, forKey: .title)
+        isParent = try c.decodeIfPresent(Bool.self, forKey: .isParent) ?? false
+        number = try c.decodeIfPresent(Int.self, forKey: .number)
+        text = try c.decodeIfPresent(String.self, forKey: .text)
+        verses = try c.decodeIfPresent([String: [String]].self, forKey: .verses)
+    }
 }
 
 /// The flat id -> entry map most consumers work against.

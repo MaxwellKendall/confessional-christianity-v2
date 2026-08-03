@@ -22,7 +22,12 @@ const resourcesRoot = path.join(repoRoot, 'ios/DomainKit/Sources/DomainKit/Bundl
 const FILES = [
   ['normalized-data/westminster/wsc.json', 'normalized-data/westminster/wsc.json'],
   ['normalized-data/westminster/wlc.json', 'normalized-data/westminster/wlc.json'],
+  ['normalized-data/westminster/wcf.json', 'normalized-data/westminster/wcf.json'],
   ['normalized-data/three-forms-of-unity/heidelberg-catechism.json', 'normalized-data/three-forms-of-unity/heidelberg-catechism.json'],
+  ['normalized-data/three-forms-of-unity/canons-of-dort.json', 'normalized-data/three-forms-of-unity/canons-of-dort.json'],
+  ['normalized-data/three-forms-of-unity/belgic-confession.json', 'normalized-data/three-forms-of-unity/belgic-confession.json'],
+  ['normalized-data/anglican/39-articles.json', 'normalized-data/anglican/39-articles.json'],
+  ['normalized-data/reformation/95-theses.json', 'normalized-data/reformation/95-theses.json'],
   ['normalized-data/miscellany/catechism-young-children.json', 'normalized-data/miscellany/catechism-young-children.json'],
   ['content/programs/catechizing-shorter-catechism/prayers.json', 'content/programs/catechizing-shorter-catechism/prayers.json'],
 ];

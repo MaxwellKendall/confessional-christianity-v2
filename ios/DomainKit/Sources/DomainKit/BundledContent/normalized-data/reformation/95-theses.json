@@ -1,0 +1,671 @@
+{
+  "title": "Martin Luther's 95 theses",
+  "type": "document",
+  "content": [
+    {
+      "title": "Thesis 1",
+      "parent": "ML9t",
+      "id": "ML9t-1",
+      "text": "When our Lord and Master Jesus Christ said, \"Repent\" (Mt 4:17), he willed the entire life of believers to be one of repentance.",
+      "number": 1
+    },
+    {
+      "title": "Thesis 2",
+      "parent": "ML9t",
+      "id": "ML9t-2",
+      "text": "This word cannot be understood as referring to the sacrament of penance, that is, confession and satisfaction, as administered by the clergy.",
+      "number": 2
+    },
+    {
+      "title": "Thesis 3",
+      "parent": "ML9t",
+      "id": "ML9t-3",
+      "text": "Yet it does not mean solely inner repentance; such inner repentance is worthless unless it produces various outward mortification of the flesh.",
+      "number": 3
+    },
+    {
+      "title": "Thesis 4",
+      "parent": "ML9t",
+      "id": "ML9t-4",
+      "text": "The penalty of sin remains as long as the hatred of self (that is, true inner repentance), namely till our entrance into the kingdom of heaven.",
+      "number": 4
+    },
+    {
+      "title": "Thesis 5",
+      "parent": "ML9t",
+      "id": "ML9t-5",
+      "text": "The pope neither desires nor is able to remit any penalties except those imposed by his own authority or that of the canons.",
+      "number": 5
+    },
+    {
+      "title": "Thesis 6",
+      "parent": "ML9t",
+      "id": "ML9t-6",
+      "text": "The pope cannot remit any guilt, except by declaring and showing that it has been remitted by God; or, to be sure, by remitting guilt in cases reserved to his judgment. If his right to grant remission in these cases were disregarded, the guilt would certainly remain unforgiven.",
+      "number": 6
+    },
+    {
+      "title": "Thesis 7",
+      "parent": "ML9t",
+      "id": "ML9t-7",
+      "text": "God remits guilt to no one unless at the same time he humbles him in all things and makes him submissive to the vicar, the priest.",
+      "number": 7
+    },
+    {
+      "title": "Thesis 8",
+      "parent": "ML9t",
+      "id": "ML9t-8",
+      "text": "The penitential canons are imposed only on the living, and, according to the canons themselves, nothing should be imposed on the dying.",
+      "number": 8
+    },
+    {
+      "title": "Thesis 9",
+      "parent": "ML9t",
+      "id": "ML9t-9",
+      "text": "Therefore the Holy Spirit through the pope is kind to us insofar as the pope in his decrees always makes exception of the article of death and of necessity.",
+      "number": 9
+    },
+    {
+      "title": "Thesis 10",
+      "parent": "ML9t",
+      "id": "ML9t-10",
+      "text": "Those priests act ignorantly and wickedly who, in the case of the dying, reserve canonical penalties for purgatory.",
+      "number": 10
+    },
+    {
+      "title": "Thesis 11",
+      "parent": "ML9t",
+      "id": "ML9t-11",
+      "text": "Those tares of changing the canonical penalty to the penalty of purgatory were evidently sown while the bishops slept (Mt 13:25).",
+      "number": 11
+    },
+    {
+      "title": "Thesis 12",
+      "parent": "ML9t",
+      "id": "ML9t-12",
+      "text": "In former times canonical penalties were imposed, not after, but before absolution, as tests of true contrition.",
+      "number": 12
+    },
+    {
+      "title": "Thesis 13",
+      "parent": "ML9t",
+      "id": "ML9t-13",
+      "text": "The dying are freed by death from all penalties, are already dead as far as the canon laws are concerned, and have a right to be released from them.",
+      "number": 13
+    },
+    {
+      "title": "Thesis 14",
+      "parent": "ML9t",
+      "id": "ML9t-14",
+      "text": "Imperfect piety or love on the part of the dying person necessarily brings with it great fear; and the smaller the love, the greater the fear.",
+      "number": 14
+    },
+    {
+      "title": "Thesis 15",
+      "parent": "ML9t",
+      "id": "ML9t-15",
+      "text": "This fear or horror is sufficient in itself, to say nothing of other things, to constitute the penalty of purgatory, since it is very near to the horror of despair.",
+      "number": 15
+    },
+    {
+      "title": "Thesis 16",
+      "parent": "ML9t",
+      "id": "ML9t-16",
+      "text": "Hell, purgatory, and heaven seem to differ the same as despair, fear, and assurance of salvation.",
+      "number": 16
+    },
+    {
+      "title": "Thesis 17",
+      "parent": "ML9t",
+      "id": "ML9t-17",
+      "text": "It seems as though for the souls in purgatory fear should necessarily decrease and love increase.",
+      "number": 17
+    },
+    {
+      "title": "Thesis 18",
+      "parent": "ML9t",
+      "id": "ML9t-18",
+      "text": "Furthermore, it does not seem proved, either by reason or by Scripture, that souls in purgatory are outside the state of merit, that is, unable to grow in love.",
+      "number": 18
+    },
+    {
+      "title": "Thesis 19",
+      "parent": "ML9t",
+      "id": "ML9t-19",
+      "text": "Nor does it seem proved that souls in purgatory, at least not all of them, are certain and assured of their own salvation, even if we ourselves may be entirely certain of it.",
+      "number": 19
+    },
+    {
+      "title": "Thesis 20",
+      "parent": "ML9t",
+      "id": "ML9t-20",
+      "text": "Therefore the pope, when he uses the words \"plenary remission of all penalties,\" does not actually mean \"all penalties,\" but only those imposed by himself.",
+      "number": 20
+    },
+    {
+      "title": "Thesis 21",
+      "parent": "ML9t",
+      "id": "ML9t-21",
+      "text": "Thus those indulgence preachers are in error who say that a man is absolved from every penalty and saved by papal indulgences.",
+      "number": 21
+    },
+    {
+      "title": "Thesis 22",
+      "parent": "ML9t",
+      "id": "ML9t-22",
+      "text": "As a matter of fact, the pope remits to souls in purgatory no penalty which, according to canon law, they should have paid in this life.",
+      "number": 22
+    },
+    {
+      "title": "Thesis 23",
+      "parent": "ML9t",
+      "id": "ML9t-23",
+      "text": "If remission of all penalties whatsoever could be granted to anyone at all, certainly it would be granted only to the most perfect, that is, to very few.",
+      "number": 23
+    },
+    {
+      "title": "Thesis 24",
+      "parent": "ML9t",
+      "id": "ML9t-24",
+      "text": "For this reason most people are necessarily deceived by that indiscriminate and high-sounding promise of release from penalty.",
+      "number": 24
+    },
+    {
+      "title": "Thesis 25",
+      "parent": "ML9t",
+      "id": "ML9t-25",
+      "text": "That power which the pope has in general over purgatory corresponds to the power which any bishop or curate has in a particular way in his own diocese and parish.",
+      "number": 25
+    },
+    {
+      "title": "Thesis 26",
+      "parent": "ML9t",
+      "id": "ML9t-26",
+      "text": "The pope does very well when he grants remission to souls in purgatory, not by the power of the keys, which he does not have, but by way of intercession for them.",
+      "number": 26
+    },
+    {
+      "title": "Thesis 27",
+      "parent": "ML9t",
+      "id": "ML9t-27",
+      "text": "They preach only human doctrines who say that as soon as the money clinks into the money chest, the soul flies out of purgatory.",
+      "number": 27
+    },
+    {
+      "title": "Thesis 28",
+      "parent": "ML9t",
+      "id": "ML9t-28",
+      "text": "It is certain that when money clinks in the money chest, greed and avarice can be increased; but when the church intercedes, the result is in the hands of God alone.",
+      "number": 28
+    },
+    {
+      "title": "Thesis 29",
+      "parent": "ML9t",
+      "id": "ML9t-29",
+      "text": "Who knows whether all souls in purgatory wish to be redeemed, since we have exceptions in St. Severinus and St. Paschal, as related in a legend.",
+      "number": 29
+    },
+    {
+      "title": "Thesis 30",
+      "parent": "ML9t",
+      "id": "ML9t-30",
+      "text": "No one is sure of the integrity of his own contrition, much less of having received plenary remission.",
+      "number": 30
+    },
+    {
+      "title": "Thesis 31",
+      "parent": "ML9t",
+      "id": "ML9t-31",
+      "text": "The man who actually buys indulgences is as rare as he who is really penitent; indeed, he is exceedingly rare.",
+      "number": 31
+    },
+    {
+      "title": "Thesis 32",
+      "parent": "ML9t",
+      "id": "ML9t-32",
+      "text": "Those who believe that they can be certain of their salvation because they have indulgence letters will be eternally damned, together with their teachers.",
+      "number": 32
+    },
+    {
+      "title": "Thesis 33",
+      "parent": "ML9t",
+      "id": "ML9t-33",
+      "text": "Men must especially be on guard against those who say that the pope's pardons are that inestimable gift of God by which man is reconciled to him.",
+      "number": 33
+    },
+    {
+      "title": "Thesis 34",
+      "parent": "ML9t",
+      "id": "ML9t-34",
+      "text": "For the graces of indulgences are concerned only with the penalties of sacramental satisfaction established by man.",
+      "number": 34
+    },
+    {
+      "title": "Thesis 35",
+      "parent": "ML9t",
+      "id": "ML9t-35",
+      "text": "They who teach that contrition is not necessary on the part of those who intend to buy souls out of purgatory or to buy confessional privileges preach unchristian doctrine.",
+      "number": 35
+    },
+    {
+      "title": "Thesis 36",
+      "parent": "ML9t",
+      "id": "ML9t-36",
+      "text": "Any truly repentant Christian has a right to full remission of penalty and guilt, even without indulgence letters.",
+      "number": 36
+    },
+    {
+      "title": "Thesis 37",
+      "parent": "ML9t",
+      "id": "ML9t-37",
+      "text": "Any true Christian, whether living or dead, participates in all the blessings of Christ and the church; and this is granted him by God, even without indulgence letters.",
+      "number": 37
+    },
+    {
+      "title": "Thesis 38",
+      "parent": "ML9t",
+      "id": "ML9t-38",
+      "text": "Nevertheless, papal remission and blessing are by no means to be disregarded, for they are, as I have said (Thesis 6), the proclamation of the divine remission.",
+      "number": 38
+    },
+    {
+      "title": "Thesis 39",
+      "parent": "ML9t",
+      "id": "ML9t-39",
+      "text": "It is very difficult, even for the most learned theologians, at one and the same time to commend to the people the bounty of indulgences and the need of true contrition.",
+      "number": 39
+    },
+    {
+      "title": "Thesis 40",
+      "parent": "ML9t",
+      "id": "ML9t-40",
+      "text": "A Christian who is truly contrite seeks and loves to pay penalties for his sins; the bounty of indulgences, however, relaxes penalties and causes men to hate them -- at least it furnishes occasion for hating them.",
+      "number": 40
+    },
+    {
+      "title": "Thesis 41",
+      "parent": "ML9t",
+      "id": "ML9t-41",
+      "text": "Papal indulgences must be preached with caution, lest people erroneously think that they are preferable to other good works of love.",
+      "number": 41
+    },
+    {
+      "title": "Thesis 42",
+      "parent": "ML9t",
+      "id": "ML9t-42",
+      "text": "Christians are to be taught that the pope does not intend that the buying of indulgences should in any way be compared with works of mercy.",
+      "number": 42
+    },
+    {
+      "title": "Thesis 43",
+      "parent": "ML9t",
+      "id": "ML9t-43",
+      "text": "Christians are to be taught that he who gives to the poor or lends to the needy does a better deed than he who buys indulgences.",
+      "number": 43
+    },
+    {
+      "title": "Thesis 44",
+      "parent": "ML9t",
+      "id": "ML9t-44",
+      "text": "Because love grows by works of love, man thereby becomes better. Man does not, however, become better by means of indulgences but is merely freed from penalties.",
+      "number": 44
+    },
+    {
+      "title": "Thesis 45",
+      "parent": "ML9t",
+      "id": "ML9t-45",
+      "text": "Christians are to be taught that he who sees a needy man and passes him by, yet gives his money for indulgences, does not buy papal indulgences but God's wrath.",
+      "number": 45
+    },
+    {
+      "title": "Thesis 46",
+      "parent": "ML9t",
+      "id": "ML9t-46",
+      "text": "Christians are to be taught that, unless they have more than they need, they must reserve enough for their family needs and by no means squander it on indulgences.",
+      "number": 46
+    },
+    {
+      "title": "Thesis 47",
+      "parent": "ML9t",
+      "id": "ML9t-47",
+      "text": "Christians are to be taught that they buying of indulgences is a matter of free choice, not commanded.",
+      "number": 47
+    },
+    {
+      "title": "Thesis 48",
+      "parent": "ML9t",
+      "id": "ML9t-48",
+      "text": "Christians are to be taught that the pope, in granting indulgences, needs and thus desires their devout prayer more than their money.",
+      "number": 48
+    },
+    {
+      "title": "Thesis 49",
+      "parent": "ML9t",
+      "id": "ML9t-49",
+      "text": "Christians are to be taught that papal indulgences are useful only if they do not put their trust in them, but very harmful if they lose their fear of God because of them.",
+      "number": 49
+    },
+    {
+      "title": "Thesis 50",
+      "parent": "ML9t",
+      "id": "ML9t-50",
+      "text": "Christians are to be taught that if the pope knew the exactions of the indulgence preachers, he would rather that the basilica of St. Peter were burned to ashes than built up with the skin, flesh, and bones of his sheep.",
+      "number": 50
+    },
+    {
+      "title": "Thesis 51",
+      "parent": "ML9t",
+      "id": "ML9t-51",
+      "text": "Christians are to be taught that the pope would and should wish to give of his own money, even though he had to sell the basilica of St. Peter, to many of those from whom certain hawkers of indulgences cajole money.",
+      "number": 51
+    },
+    {
+      "title": "Thesis 52",
+      "parent": "ML9t",
+      "id": "ML9t-52",
+      "text": "It is vain to trust in salvation by indulgence letters, even though the indulgence commissary, or even the pope, were to offer his soul as security.",
+      "number": 52
+    },
+    {
+      "title": "Thesis 53",
+      "parent": "ML9t",
+      "id": "ML9t-53",
+      "text": "They are the enemies of Christ and the pope who forbid altogether the preaching of the Word of God in some churches in order that indulgences may be preached in others.",
+      "number": 53
+    },
+    {
+      "title": "Thesis 54",
+      "parent": "ML9t",
+      "id": "ML9t-54",
+      "text": "Injury is done to the Word of God when, in the same sermon, an equal or larger amount of time is devoted to indulgences than to the Word.",
+      "number": 54
+    },
+    {
+      "title": "Thesis 55",
+      "parent": "ML9t",
+      "id": "ML9t-55",
+      "text": "It is certainly the pope's sentiment that if indulgences, which are a very insignificant thing, are celebrated with one bell, one procession, and one ceremony, then the gospel, which is the very greatest thing, should be preached with a hundred bells, a hundred processions, a hundred ceremonies.",
+      "number": 55
+    },
+    {
+      "title": "Thesis 56",
+      "parent": "ML9t",
+      "id": "ML9t-56",
+      "text": "The true treasures of the church, out of which the pope distributes indulgences, are not sufficiently discussed or known among the people of Christ.",
+      "number": 56
+    },
+    {
+      "title": "Thesis 57",
+      "parent": "ML9t",
+      "id": "ML9t-57",
+      "text": "That indulgences are not temporal treasures is certainly clear, for many indulgence sellers do not distribute them freely but only gather them.",
+      "number": 57
+    },
+    {
+      "title": "Thesis 58",
+      "parent": "ML9t",
+      "id": "ML9t-58",
+      "text": "Nor are they the merits of Christ and the saints, for, even without the pope, the latter always work grace for the inner man, and the cross, death, and hell for the outer man.",
+      "number": 58
+    },
+    {
+      "title": "Thesis 59",
+      "parent": "ML9t",
+      "id": "ML9t-59",
+      "text": "St. Lawrence said that the poor of the church were the treasures of the church, but he spoke according to the usage of the word in his own time.",
+      "number": 59
+    },
+    {
+      "title": "Thesis 60",
+      "parent": "ML9t",
+      "id": "ML9t-60",
+      "text": "Without want of consideration we say that the keys of the church, given by the merits of Christ, are that treasure.",
+      "number": 60
+    },
+    {
+      "title": "Thesis 61",
+      "parent": "ML9t",
+      "id": "ML9t-61",
+      "text": "For it is clear that the pope's power is of itself sufficient for the remission of penalties and cases reserved by himself.",
+      "number": 61
+    },
+    {
+      "title": "Thesis 62",
+      "parent": "ML9t",
+      "id": "ML9t-62",
+      "text": "The true treasure of the church is the most holy gospel of the glory and grace of God.",
+      "number": 62
+    },
+    {
+      "title": "Thesis 63",
+      "parent": "ML9t",
+      "id": "ML9t-63",
+      "text": "But this treasure is naturally most odious, for it makes the first to be last (Mt. 20:16).",
+      "number": 63
+    },
+    {
+      "title": "Thesis 64",
+      "parent": "ML9t",
+      "id": "ML9t-64",
+      "text": "On the other hand, the treasure of indulgences is naturally most acceptable, for it makes the last to be first.",
+      "number": 64
+    },
+    {
+      "title": "Thesis 65",
+      "parent": "ML9t",
+      "id": "ML9t-65",
+      "text": "Therefore the treasures of the gospel are nets with which one formerly fished for men of wealth.",
+      "number": 65
+    },
+    {
+      "title": "Thesis 66",
+      "parent": "ML9t",
+      "id": "ML9t-66",
+      "text": "The treasures of indulgences are nets with which one now fishes for the wealth of men.",
+      "number": 66
+    },
+    {
+      "title": "Thesis 67",
+      "parent": "ML9t",
+      "id": "ML9t-67",
+      "text": "The indulgences which the demagogues acclaim as the greatest graces are actually understood to be such only insofar as they promote gain.",
+      "number": 67
+    },
+    {
+      "title": "Thesis 68",
+      "parent": "ML9t",
+      "id": "ML9t-68",
+      "text": "They are nevertheless in truth the most insignificant graces when compared with the grace of God and the piety of the cross.",
+      "number": 68
+    },
+    {
+      "title": "Thesis 69",
+      "parent": "ML9t",
+      "id": "ML9t-69",
+      "text": "Bishops and curates are bound to admit the commissaries of papal indulgences with all reverence.",
+      "number": 69
+    },
+    {
+      "title": "Thesis 70",
+      "parent": "ML9t",
+      "id": "ML9t-70",
+      "text": "But they are much more bound to strain their eyes and ears lest these men preach their own dreams instead of what the pope has commissioned.",
+      "number": 70
+    },
+    {
+      "title": "Thesis 71",
+      "parent": "ML9t",
+      "id": "ML9t-71",
+      "text": "Let him who speaks against the truth concerning papal indulgences be anathema and accursed.",
+      "number": 71
+    },
+    {
+      "title": "Thesis 72",
+      "parent": "ML9t",
+      "id": "ML9t-72",
+      "text": "But let him who guards against the lust and license of the indulgence preachers be blessed.",
+      "number": 72
+    },
+    {
+      "title": "Thesis 73",
+      "parent": "ML9t",
+      "id": "ML9t-73",
+      "text": "Just as the pope justly thunders against those who by any means whatever contrive harm to the sale of indulgences.",
+      "number": 73
+    },
+    {
+      "title": "Thesis 74",
+      "parent": "ML9t",
+      "id": "ML9t-74",
+      "text": "Much more does he intend to thunder against those who use indulgences as a pretext to contrive harm to holy love and truth.",
+      "number": 74
+    },
+    {
+      "title": "Thesis 75",
+      "parent": "ML9t",
+      "id": "ML9t-75",
+      "text": "To consider papal indulgences so great that they could absolve a man even if he had done the impossible and had violated the mother of God is madness.",
+      "number": 75
+    },
+    {
+      "title": "Thesis 76",
+      "parent": "ML9t",
+      "id": "ML9t-76",
+      "text": "We say on the contrary that papal indulgences cannot remove the very least of venial sins as far as guilt is concerned.",
+      "number": 76
+    },
+    {
+      "title": "Thesis 77",
+      "parent": "ML9t",
+      "id": "ML9t-77",
+      "text": "To say that even St. Peter if he were now pope, could not grant greater graces is blasphemy against St. Peter and the pope.",
+      "number": 77
+    },
+    {
+      "title": "Thesis 78",
+      "parent": "ML9t",
+      "id": "ML9t-78",
+      "text": "We say on the contrary that even the present pope, or any pope whatsoever, has greater graces at his disposal, that is, the gospel, spiritual powers, gifts of healing, etc., as it is written. (1 Co 12[:28])",
+      "number": 78
+    },
+    {
+      "title": "Thesis 79",
+      "parent": "ML9t",
+      "id": "ML9t-79",
+      "text": "To say that the cross emblazoned with the papal coat of arms, and set up by the indulgence preachers is equal in worth to the cross of Christ is blasphemy.",
+      "number": 79
+    },
+    {
+      "title": "Thesis 80",
+      "parent": "ML9t",
+      "id": "ML9t-80",
+      "text": "The bishops, curates, and theologians who permit such talk to be spread among the people will have to answer for this.",
+      "number": 80
+    },
+    {
+      "title": "Thesis 81",
+      "parent": "ML9t",
+      "id": "ML9t-81",
+      "text": "This unbridled preaching of indulgences makes it difficult even for learned men to rescue the reverence which is due the pope from slander or from the shrewd questions of the laity.",
+      "number": 81
+    },
+    {
+      "title": "Thesis 82",
+      "parent": "ML9t",
+      "id": "ML9t-82",
+      "text": "Such as: \"Why does not the pope empty purgatory for the sake of holy love and the dire need of the souls that are there if he redeems an infinite number of souls for the sake of miserable money with which to build a church?\" The former reason would be most just; the latter is most trivial.",
+      "number": 82
+    },
+    {
+      "title": "Thesis 83",
+      "parent": "ML9t",
+      "id": "ML9t-83",
+      "text": "Again, \"Why are funeral and anniversary masses for the dead continued and why does he not return or permit the withdrawal of the endowments founded for them, since it is wrong to pray for the redeemed?\"",
+      "number": 83
+    },
+    {
+      "title": "Thesis 84",
+      "parent": "ML9t",
+      "id": "ML9t-84",
+      "text": "Again, \"What is this new piety of God and the pope that for a consideration of money they permit a man who is impious and their enemy to buy out of purgatory the pious soul of a friend of God and do not rather, beca use of the need of that pious and beloved soul, free it for pure love's sake?\"",
+      "number": 84
+    },
+    {
+      "title": "Thesis 85",
+      "parent": "ML9t",
+      "id": "ML9t-85",
+      "text": "Again, \"Why are the penitential canons, long since abrogated and dead in actual fact and through disuse, now satisfied by the granting of indulgences as though they were still alive and in force?\"",
+      "number": 85
+    },
+    {
+      "title": "Thesis 86",
+      "parent": "ML9t",
+      "id": "ML9t-86",
+      "text": "Again, \"Why does not the pope, whose wealth is today greater than the wealth of the richest Crassus, build this one basilica of St. Peter with his own money rather than with the money of poor believers?\"",
+      "number": 86
+    },
+    {
+      "title": "Thesis 87",
+      "parent": "ML9t",
+      "id": "ML9t-87",
+      "text": "Again, \"What does the pope remit or grant to those who by perfect contrition already have a right to full remission and blessings?\"",
+      "number": 87
+    },
+    {
+      "title": "Thesis 88",
+      "parent": "ML9t",
+      "id": "ML9t-88",
+      "text": "Again, \"What greater blessing could come to the church than if the pope were to bestow these remissions and blessings on every believer a hundred times a day, as he now does but once?\"",
+      "number": 88
+    },
+    {
+      "title": "Thesis 89",
+      "parent": "ML9t",
+      "id": "ML9t-89",
+      "text": "Since the pope seeks the salvation of souls rather than money by his indulgences, why does he suspend the indulgences and pardons previously granted when they have equal efficacy?",
+      "number": 89
+    },
+    {
+      "title": "Thesis 90",
+      "parent": "ML9t",
+      "id": "ML9t-90",
+      "text": "To repress these very sharp arguments of the laity by force alone, and not to resolve them by giving reasons, is to expose the church and the pope to the ridicule of their enemies and to make Christians unhappy.",
+      "number": 90
+    },
+    {
+      "title": "Thesis 91",
+      "parent": "ML9t",
+      "id": "ML9t-91",
+      "text": "If, therefore, indulgences were preached according to the spirit and intention of the pope, all these doubts would be readily resolved. Indeed, they would not exist.",
+      "number": 91
+    },
+    {
+      "title": "Thesis 92",
+      "parent": "ML9t",
+      "id": "ML9t-92",
+      "text": "Away, then, with all those prophets who say to the people of Christ, \"Peace, peace,\" and there is no peace! (Jer 6:14)",
+      "number": 92
+    },
+    {
+      "title": "Thesis 93",
+      "parent": "ML9t",
+      "id": "ML9t-93",
+      "text": "Blessed be all those prophets who say to the people of Christ, \"Cross, cross,\" and there is no cross!",
+      "number": 93
+    },
+    {
+      "title": "Thesis 94",
+      "parent": "ML9t",
+      "id": "ML9t-94",
+      "text": "Christians should be exhorted to be diligent in following Christ, their Head, through penalties, death and hell.",
+      "number": 94
+    },
+    {
+      "title": "Thesis 95",
+      "parent": "ML9t",
+      "id": "ML9t-95",
+      "text": "And thus be confident of entering into heaven through many tribulations rather than through the false security of peace (Acts 14:22).",
+      "number": 95
+    }
+  ]
+}

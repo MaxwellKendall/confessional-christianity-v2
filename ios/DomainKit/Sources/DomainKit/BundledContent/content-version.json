@@ -1,10 +1,15 @@
 {
-  "syncedAt": "2026-08-02T20:49:09.178Z",
-  "sourceCommit": "74f15e39300ac85b34a4564753432ff80ab94772",
+  "syncedAt": "2026-08-03T02:27:50.196Z",
+  "sourceCommit": "ad79f3a6925fd520ec869ec1da093be223d4dfb3",
   "files": [
     "normalized-data/westminster/wsc.json",
     "normalized-data/westminster/wlc.json",
+    "normalized-data/westminster/wcf.json",
     "normalized-data/three-forms-of-unity/heidelberg-catechism.json",
+    "normalized-data/three-forms-of-unity/canons-of-dort.json",
+    "normalized-data/three-forms-of-unity/belgic-confession.json",
+    "normalized-data/anglican/39-articles.json",
+    "normalized-data/reformation/95-theses.json",
     "normalized-data/miscellany/catechism-young-children.json",
     "content/programs/catechizing-shorter-catechism/prayers.json",
     "content/devotions/advent-1.json",

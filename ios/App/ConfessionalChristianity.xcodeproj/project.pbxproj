@@ -12,8 +12,10 @@
 		0FF4D29361392BA8D485D06C /* DevotionSeriesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E37A6F435C2C097A6586109B /* DevotionSeriesView.swift */; };
 		1759D64CAD6C6F870DE4716A /* JumpToQuestionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 943068F9BE1D5E9C1869664E /* JumpToQuestionView.swift */; };
 		1B75F3CE1BEB367636F4159E /* PrayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A18960952FB0E4DF82B9E736 /* PrayerView.swift */; };
+		257B4713F297B37D53200A1E /* LibraryTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74DCA6EEDDCA17FB559A94C1 /* LibraryTabView.swift */; };
 		2DDD25466D165E5802738630 /* DevotionsTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ED5831742D2E28312CC6091 /* DevotionsTabView.swift */; };
 		30DF48B35840FA30269AA83C /* FloatingTabBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFC0F6EBEA55CD22AC8831B1 /* FloatingTabBarView.swift */; };
+		322478282EA26DE9CAF459C3 /* LibraryRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F0B1A13CFCB4351B4180520 /* LibraryRoute.swift */; };
 		3896FF06B372767504CFC88B /* LocalProgressStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A91F75F78A7C8406A81FF628 /* LocalProgressStore.swift */; };
 		4BB3A7BB2DBF57AA67C54B1B /* DevotionWorshipView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C108F4CBFD531B62601AE1E0 /* DevotionWorshipView.swift */; };
 		4BF1AA038DAF23E878D34262 /* SiteHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA107B8B544A9F504E2D6E4F /* SiteHeaderView.swift */; };
@@ -21,6 +23,7 @@
 		744A53A6115745E063B78CE1 /* MilestonesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA5673ACB1419E8AFFF76F5A /* MilestonesView.swift */; };
 		7C611E39E3B058BE6D93D933 /* SessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27A1DF330C4DA1EC70E025A1 /* SessionView.swift */; };
 		94F2A0DB1351CCA796EA6567 /* Cinzel-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E38A936D51B1960620B4EA13 /* Cinzel-SemiBold.ttf */; };
+		9508C7F34BAE8BD034467A77 /* DocumentTocView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CEC5FBB76D7BE63305F7369 /* DocumentTocView.swift */; };
 		9B0DF1151700DED8D5E7B074 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0622E7353216946347CF3DD1 /* DesignSystem.swift */; };
 		A37246ABCD770C1EB341917E /* RootTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98A25657E65FD99C28C300E6 /* RootTab.swift */; };
 		AA3071EDEBE7EB226F5C6F35 /* LocalSeriesProgressStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BD9CBA322989F8D3D341509 /* LocalSeriesProgressStore.swift */; };
@@ -28,6 +31,7 @@
 		B3F5CF1C182FCFD4301934FC /* TabIcons.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81D5508EB376718085AA71A6 /* TabIcons.swift */; };
 		B660D8E3C77CCE66F8AA8BE1 /* PracticeReminderScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2803DDC4DF75B0849AF89D85 /* PracticeReminderScheduler.swift */; };
 		B97CE4E17FAB9A8257350F08 /* Cinzel-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0DEE3A1FB42239248ABA0E9F /* Cinzel-Regular.ttf */; };
+		C1E4EAF8F6E8528DE63DA7EB /* LibraryEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09DC9BA05478BE3F8C6ABE62 /* LibraryEntryView.swift */; };
 		D06F0AAC20B0B41A2FA46C6B /* DevotionLandingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D017E9C304663F35669084F /* DevotionLandingView.swift */; };
 		DD6B7EDEA2E24A1C8AA22FA6 /* ComingSoonTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6380C3C2DC1FFBA52FA0BE5C /* ComingSoonTabView.swift */; };
 		DE6921043A9DF51BC51CDB04 /* FlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = C23F51243C50FFC327642E50 /* FlowLayout.swift */; };
@@ -39,14 +43,18 @@
 
 /* Begin PBXFileReference section */
 		0622E7353216946347CF3DD1 /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
+		09DC9BA05478BE3F8C6ABE62 /* LibraryEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryEntryView.swift; sourceTree = "<group>"; };
 		0DEE3A1FB42239248ABA0E9F /* Cinzel-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Cinzel-Regular.ttf"; sourceTree = "<group>"; };
 		100A6540E810CB4FDB4F1B15 /* DevotionRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevotionRoute.swift; sourceTree = "<group>"; };
 		27A1DF330C4DA1EC70E025A1 /* SessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionView.swift; sourceTree = "<group>"; };
 		2803DDC4DF75B0849AF89D85 /* PracticeReminderScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PracticeReminderScheduler.swift; sourceTree = "<group>"; };
 		3ED5831742D2E28312CC6091 /* DevotionsTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevotionsTabView.swift; sourceTree = "<group>"; };
 		6380C3C2DC1FFBA52FA0BE5C /* ComingSoonTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComingSoonTabView.swift; sourceTree = "<group>"; };
+		6F0B1A13CFCB4351B4180520 /* LibraryRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryRoute.swift; sourceTree = "<group>"; };
+		74DCA6EEDDCA17FB559A94C1 /* LibraryTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryTabView.swift; sourceTree = "<group>"; };
 		81D5508EB376718085AA71A6 /* TabIcons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabIcons.swift; sourceTree = "<group>"; };
 		8BD9CBA322989F8D3D341509 /* LocalSeriesProgressStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalSeriesProgressStore.swift; sourceTree = "<group>"; };
+		8CEC5FBB76D7BE63305F7369 /* DocumentTocView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentTocView.swift; sourceTree = "<group>"; };
 		8D017E9C304663F35669084F /* DevotionLandingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevotionLandingView.swift; sourceTree = "<group>"; };
 		8E695AE85593396B01EA0946 /* Marcellus-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Marcellus-Regular.ttf"; sourceTree = "<group>"; };
 		943068F9BE1D5E9C1869664E /* JumpToQuestionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JumpToQuestionView.swift; sourceTree = "<group>"; };
@@ -122,12 +130,24 @@
 				EE528B6742ED23B6A61D5A87 /* Devotions */,
 				F3129055BD870EC499700ADE /* Fonts */,
 				3B3495F63C7DCA40F6F59652 /* Home */,
+				6720DAEF67BAA788B4F79D57 /* Library */,
 				9FC172FE53A914815E802A47 /* Models */,
 				A4460A8452F08D2BE29684B6 /* Notifications */,
 				C4AA8AC13957E0749CD239B6 /* Session */,
 				1ACCE43A4C51C80DBD74A1E9 /* Support */,
 			);
 			path = Sources;
+			sourceTree = "<group>";
+		};
+		6720DAEF67BAA788B4F79D57 /* Library */ = {
+			isa = PBXGroup;
+			children = (
+				8CEC5FBB76D7BE63305F7369 /* DocumentTocView.swift */,
+				09DC9BA05478BE3F8C6ABE62 /* LibraryEntryView.swift */,
+				6F0B1A13CFCB4351B4180520 /* LibraryRoute.swift */,
+				74DCA6EEDDCA17FB559A94C1 /* LibraryTabView.swift */,
+			);
+			path = Library;
 			sourceTree = "<group>";
 		};
 		67DFFB2641D6FB64A8B93F0C /* Products */ = {
@@ -280,10 +300,14 @@
 				0FF4D29361392BA8D485D06C /* DevotionSeriesView.swift in Sources */,
 				4BB3A7BB2DBF57AA67C54B1B /* DevotionWorshipView.swift in Sources */,
 				2DDD25466D165E5802738630 /* DevotionsTabView.swift in Sources */,
+				9508C7F34BAE8BD034467A77 /* DocumentTocView.swift in Sources */,
 				30DF48B35840FA30269AA83C /* FloatingTabBarView.swift in Sources */,
 				DE6921043A9DF51BC51CDB04 /* FlowLayout.swift in Sources */,
 				F853CD067589F714D2703331 /* HomeView.swift in Sources */,
 				1759D64CAD6C6F870DE4716A /* JumpToQuestionView.swift in Sources */,
+				C1E4EAF8F6E8528DE63DA7EB /* LibraryEntryView.swift in Sources */,
+				322478282EA26DE9CAF459C3 /* LibraryRoute.swift in Sources */,
+				257B4713F297B37D53200A1E /* LibraryTabView.swift in Sources */,
 				3896FF06B372767504CFC88B /* LocalProgressStore.swift in Sources */,
 				AA3071EDEBE7EB226F5C6F35 /* LocalSeriesProgressStore.swift in Sources */,
 				744A53A6115745E063B78CE1 /* MilestonesView.swift in Sources */,

@@ -41,12 +41,3 @@ struct ReflectionsTabView: View {
         )
     }
 }
-
-struct LibraryTabView: View {
-    var body: some View {
-        ComingSoonTabView(
-            title: "Library",
-            message: "The full library of confessions and catechisms is still being prepared."
-        )
-    }
-}

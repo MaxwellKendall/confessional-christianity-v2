@@ -11,7 +11,12 @@ struct RootView: View {
     @State private var selected: RootTab = .catechisms
     @State private var catechismsPath = NavigationPath()
     @State private var devotionsPath = NavigationPath()
+    @State private var libraryPath = NavigationPath()
 
+    // Library's own screens (document TOC, entry reading page) are plain
+    // browsing, not the immersive/chrome-free Session and Worship flows —
+    // the tab bar stays up throughout, same as it already did as a
+    // placeholder before Library had real content.
     private var isTabBarVisible: Bool {
         switch selected {
         case .catechisms: return catechismsPath.isEmpty
@@ -25,7 +30,7 @@ struct RootView: View {
             HomeView(path: $catechismsPath).tag(RootTab.catechisms)
             DevotionsTabView(path: $devotionsPath).tag(RootTab.devotions)
             ReflectionsTabView().tag(RootTab.reflections)
-            LibraryTabView().tag(RootTab.library)
+            LibraryTabView(path: $libraryPath).tag(RootTab.library)
         }
         .toolbar(.hidden, for: .tabBar)
         .overlay(alignment: .bottom) {

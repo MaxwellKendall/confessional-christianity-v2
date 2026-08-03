@@ -15,3 +15,24 @@ public func stripFootnoteMarkers(_ text: String = "") -> String {
         .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
         .trimmingCharacters(in: .whitespacesAndNewlines)
 }
+
+/// Orders two entry ids in canonical document order, comparing the
+/// dash-delimited fragments after the document prefix numerically where
+/// both sides are numbers (chapter/question numbers), lexically otherwise
+/// (e.g. Canons of Dort's "articles" sorts before "rejections").
+public func compareEntryIds(_ aId: String, _ bId: String) -> Bool {
+    let a = aId.split(separator: "-").dropFirst().map(String.init)
+    let b = bId.split(separator: "-").dropFirst().map(String.init)
+    let len = max(a.count, b.count)
+    for i in 0..<len {
+        guard i < a.count else { return true }
+        guard i < b.count else { return false }
+        let (av, bv) = (a[i], b[i])
+        if let aNum = Int(av), let bNum = Int(bv) {
+            if aNum != bNum { return aNum < bNum }
+        } else if av != bv {
+            return av < bv
+        }
+    }
+    return false
+}
