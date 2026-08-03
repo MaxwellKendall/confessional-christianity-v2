@@ -14,6 +14,8 @@ targets:
       - path: Sources
     dependencies:
       - package: DomainKit
+      - target: ConfessionalChristianityWidgetExtension
+        embed: true
     info:
       path: Sources/Info.plist
       properties:
@@ -25,6 +27,11 @@ targets:
           - Cinzel-Regular.ttf
           - Cinzel-SemiBold.ttf
           - Marcellus-Regular.ttf
+    entitlements:
+      path: Sources/ConfessionalChristianity.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.confessionalchristianity.app
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.confessionalchristianity.app
@@ -32,12 +39,56 @@ targets:
         CURRENT_PROJECT_VERSION: "1"
         TARGETED_DEVICE_FAMILY: "1,2"
         SWIFT_VERSION: "6.0"
+        CODE_SIGN_ENTITLEMENTS: Sources/ConfessionalChristianity.entitlements
     schemes:
       ConfessionalChristianity:
         build:
           targets:
             ConfessionalChristianity: all
+            ConfessionalChristianityWidgetExtension: all
         run:
           config: Debug
         test:
           config: Debug
+
+  # A Home Screen widget previewing the visitor's active catechism session
+  # (current question, progress) — reads the same App Group-backed SwiftData
+  # store as the app (see DomainKit's makeSharedModelContainer), entirely
+  # offline. Nice-to-have per the plan: a cheap, reviewer-visible native
+  # surface beyond the tab UI, helping the Guideline 4.2 (minimum
+  # functionality) case.
+  ConfessionalChristianityWidgetExtension:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: Widget/Sources
+      - path: Sources/DesignSystem.swift
+      - path: Sources/Fonts
+    dependencies:
+      - package: DomainKit
+      - sdk: WidgetKit.framework
+      - sdk: SwiftUI.framework
+    info:
+      path: Widget/Info.plist
+      properties:
+        CFBundleDisplayName: Confessional Christianity
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+        UIAppFonts:
+          - Cinzel-Regular.ttf
+          - Cinzel-SemiBold.ttf
+          - Marcellus-Regular.ttf
+    entitlements:
+      path: Widget/ConfessionalChristianityWidgetExtension.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.confessionalchristianity.app
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.confessionalchristianity.app.widget
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SWIFT_VERSION: "6.0"
+        SKIP_INSTALL: "YES"
+        CODE_SIGN_ENTITLEMENTS: Widget/ConfessionalChristianityWidgetExtension.entitlements
