@@ -32,4 +32,12 @@ import Testing
             #expect(citationToOsis(parseOsisBibleReference(osis)) == osis)
         }
     }
+
+    @Test func bundledEsvTextFindsAKnownRef() {
+        #expect(bundledEsvText(for: "1Chr.21.1") != nil)
+    }
+
+    @Test func bundledEsvTextFailsSoftOnUnknownRef() {
+        #expect(bundledEsvText(for: "Not.a.ref") == nil)
+    }
 }

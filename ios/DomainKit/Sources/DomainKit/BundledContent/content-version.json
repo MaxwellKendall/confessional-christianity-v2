@@ -71,6 +71,8 @@
     "content/devotions/wsc-7.json",
     "content/devotions/wsc-8.json",
     "content/devotions/wsc-9.json",
-    "content/commentary/WSC-1.md"
-  ]
+    "content/commentary/WSC-1.md",
+    "bible-text.json"
+  ],
+  "esvTextSyncedAt": "2026-08-03T15:24:30.276Z"
 }

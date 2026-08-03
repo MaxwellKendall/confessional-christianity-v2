@@ -1,9 +1,14 @@
-// Fetches proof-text scripture through the deployed web app's /api/esv proxy
-// — mirrors src/lib/esvClient.ts. The ESV_API_KEY stays server-side there
-// (see src/app/api/esv/route.ts's own comment on v1's mistake of shipping
-// the key to a client); the app calls the same proxy rather than api.esv.org
-// directly. In-memory cache, deduped per osis ref for the app's lifetime.
+// Fetches proof-text scripture, checking DomainKit's bundled bible-text.json
+// (baked in at content-sync time for every osis ref the app can reach — see
+// scripts/ios/sync-esv-text.mjs) before falling back to the deployed web
+// app's /api/esv proxy — mirrors src/lib/esvClient.ts. The ESV_API_KEY stays
+// server-side there (see src/app/api/esv/route.ts's own comment on v1's
+// mistake of shipping the key to a client); the app calls the same proxy
+// rather than api.esv.org directly. Live fetches are in-memory cached,
+// deduped per osis ref for the app's lifetime — the bundled lookup is
+// already a synchronous dictionary read, so it isn't cached separately.
 import Foundation
+import DomainKit
 
 actor EsvClient {
     static let shared = EsvClient()
@@ -13,6 +18,9 @@ actor EsvClient {
     private var cache: [String: Task<String?, Never>] = [:]
 
     func text(for osis: String) async -> String? {
+        if let bundled = bundledEsvText(for: osis) {
+            return bundled
+        }
         if let existing = cache[osis] {
             return await existing.value
         }

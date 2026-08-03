@@ -116,3 +116,24 @@ public func citationToOsis(_ citation: String) -> String? {
     }
     return "\(start)-\(book).\(endChapter ?? chapter).\(end)"
 }
+
+// Pre-fetched at content-sync time (scripts/ios/sync-esv-text.mjs) for every
+// osis ref in scripts/deduped-bible-verses.json — the full set of proof-texts
+// cited across every bundled document, and therefore every osis ref Session,
+// Library, and Search can ever push to ScriptureView. Bundling this lets
+// passage text render fully offline; EsvClient falls back to a live fetch
+// only for a ref this dictionary doesn't have. Coverage may be partial
+// (ESV's API rate limits make a full sync from empty a slow, resumable
+// process) — that's expected and harmless, not a bug to fix here.
+private let bundledEsvTextMap: [String: String] = {
+    guard let url = Bundle.module.url(forResource: "bible-text", withExtension: "json", subdirectory: "BundledContent"),
+          let data = try? Data(contentsOf: url),
+          let map = try? JSONDecoder().decode([String: String].self, from: data) else {
+        return [:]
+    }
+    return map
+}()
+
+public func bundledEsvText(for osis: String) -> String? {
+    bundledEsvTextMap[osis]
+}
