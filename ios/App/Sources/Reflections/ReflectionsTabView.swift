@@ -17,7 +17,7 @@ struct ReflectionsTabView: View {
     var body: some View {
         NavigationStack(path: $path) {
             VStack(spacing: 0) {
-                SiteHeaderView()
+                SiteHeaderView(path: $path)
                 ScrollView {
                     VStack(spacing: 0) {
                         Text("Reflections").headingPage().padding(.top, 24).padding(.bottom, 4)
@@ -61,6 +61,27 @@ struct ReflectionsTabView: View {
                 case .detail(let slug):
                     ReflectionDetailView(slug: slug, path: $path)
                 }
+            }
+            .navigationDestination(for: LibraryRoute.self) { route in
+                switch route {
+                case .document(let slug):
+                    DocumentTocView(slug: slug, path: $path)
+                case .entry(let slug, let entryId):
+                    LibraryEntryView(slug: slug, entryId: entryId, path: $path)
+                case .session(let programSlug, let questionNumber):
+                    if let program = getProgram(programSlug) {
+                        SessionView(program: program, path: $path, startQuestion: questionNumber)
+                    }
+                }
+            }
+            .navigationDestination(for: ScriptureRoute.self) { route in
+                switch route {
+                case .detail(let osis):
+                    ScriptureView(osis: osis, path: $path)
+                }
+            }
+            .navigationDestination(for: SearchRoute.self) { _ in
+                SearchView(path: $path)
             }
         }
         .tint(.ccInk)

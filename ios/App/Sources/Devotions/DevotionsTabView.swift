@@ -12,7 +12,7 @@ struct DevotionsTabView: View {
     var body: some View {
         NavigationStack(path: $path) {
             VStack(spacing: 0) {
-                SiteHeaderView()
+                SiteHeaderView(path: $path)
                 ScrollView {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Devotion Series")
@@ -85,6 +85,9 @@ struct DevotionsTabView: View {
                         SessionView(program: program, path: $path, startQuestion: questionNumber)
                     }
                 }
+            }
+            .navigationDestination(for: SearchRoute.self) { _ in
+                SearchView(path: $path)
             }
         }
         .tint(.ccInk)

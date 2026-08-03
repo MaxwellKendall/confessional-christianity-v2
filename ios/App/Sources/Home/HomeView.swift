@@ -54,7 +54,7 @@ struct HomeView: View {
     var body: some View {
         NavigationStack(path: $path) {
             VStack(spacing: 0) {
-                SiteHeaderView()
+                SiteHeaderView(path: $path)
                 homeScrollView
             }
             .background(Color.ccCanvas)
@@ -104,6 +104,9 @@ struct HomeView: View {
                         SessionView(program: program, path: $path, startQuestion: questionNumber)
                     }
                 }
+            }
+            .navigationDestination(for: SearchRoute.self) { _ in
+                SearchView(path: $path)
             }
             .task {
                 track = store.activeTrack()

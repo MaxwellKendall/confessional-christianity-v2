@@ -10,7 +10,7 @@ struct LibraryTabView: View {
     var body: some View {
         NavigationStack(path: $path) {
             VStack(spacing: 0) {
-                SiteHeaderView()
+                SiteHeaderView(path: $path)
                 ScrollView {
                     VStack(spacing: 0) {
                         Text("Library").headingPage().padding(.top, 24).padding(.bottom, 4)
@@ -90,6 +90,9 @@ struct LibraryTabView: View {
                 case .detail(let osis):
                     ScriptureView(osis: osis, path: $path)
                 }
+            }
+            .navigationDestination(for: SearchRoute.self) { _ in
+                SearchView(path: $path)
             }
         }
         .tint(.ccInk)
