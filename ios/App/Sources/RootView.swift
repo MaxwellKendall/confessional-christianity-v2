@@ -11,6 +11,7 @@ struct RootView: View {
     @State private var selected: RootTab = .catechisms
     @State private var catechismsPath = NavigationPath()
     @State private var devotionsPath = NavigationPath()
+    @State private var reflectionsPath = NavigationPath()
     @State private var libraryPath = NavigationPath()
 
     // Library's own screens (document TOC, entry reading page) are plain
@@ -29,7 +30,7 @@ struct RootView: View {
         TabView(selection: $selected) {
             HomeView(path: $catechismsPath).tag(RootTab.catechisms)
             DevotionsTabView(path: $devotionsPath).tag(RootTab.devotions)
-            ReflectionsTabView().tag(RootTab.reflections)
+            ReflectionsTabView(path: $reflectionsPath).tag(RootTab.reflections)
             LibraryTabView(path: $libraryPath).tag(RootTab.library)
         }
         .toolbar(.hidden, for: .tabBar)

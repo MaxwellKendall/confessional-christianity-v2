@@ -1,7 +1,8 @@
-// Honest empty-state root for tabs whose surface isn't built yet
-// (Reflections mirrors web's /reflections, Library mirrors /library) —
-// reachable from the floating tab bar so all four sections resolve
-// somewhere, rather than omitting the tab and reintroducing dead taps.
+// Honest empty-state root for a tab whose surface isn't built yet —
+// reachable from the floating tab bar so every section resolves somewhere,
+// rather than omitting the tab and reintroducing dead taps. Reflections
+// graduated from this stub to a real ReflectionsTabView; kept around for any
+// future section still in preparation.
 import SwiftUI
 
 struct ComingSoonTabView: View {
@@ -30,14 +31,5 @@ struct ComingSoonTabView: View {
             .toolbar(.hidden, for: .navigationBar)
         }
         .tint(.ccInk)
-    }
-}
-
-struct ReflectionsTabView: View {
-    var body: some View {
-        ComingSoonTabView(
-            title: "Reflections",
-            message: "Commentary and reflections on the confessions are still being prepared."
-        )
     }
 }
