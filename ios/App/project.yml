@@ -40,7 +40,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.confessionalchristianity.app
         MARKETING_VERSION: "0.1.0"
         CURRENT_PROJECT_VERSION: "1"
-        TARGETED_DEVICE_FAMILY: "1,2"
+        TARGETED_DEVICE_FAMILY: "1"
         SWIFT_VERSION: "6.0"
         CODE_SIGN_ENTITLEMENTS: Sources/ConfessionalChristianity.entitlements
     schemes:
@@ -94,7 +94,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.confessionalchristianity.app.widget
         MARKETING_VERSION: "0.1.0"
         CURRENT_PROJECT_VERSION: "1"
-        TARGETED_DEVICE_FAMILY: "1,2"
+        TARGETED_DEVICE_FAMILY: "1"
         SWIFT_VERSION: "6.0"
         SKIP_INSTALL: "YES"
         CODE_SIGN_ENTITLEMENTS: Widget/ConfessionalChristianityWidgetExtension.entitlements
