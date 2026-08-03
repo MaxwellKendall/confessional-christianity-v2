@@ -49,3 +49,10 @@ ios/**/DerivedData/
 ios/**/*.xcodeproj/xcuserdata/
 ios/**/*.xcodeproj/project.xcworkspace/xcuserdata/
 ios/**/.swiftpm/
+
+# claude code local settings (personal tool-permission grants)
+/.claude/settings.local.json
+
+# downloaded Claude Design export (design reference, not project source)
+/latest-designs.zip
+/latest-designs/
