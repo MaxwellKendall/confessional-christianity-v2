@@ -217,32 +217,38 @@ private struct LargeCatechismView: View {
             ProgressBar(progress: entry.progress)
                 .padding(.bottom, 4)
 
-            Text(entry.question)
-                .font(.ccDisplay(15, semibold: true))
-                .foregroundStyle(.ccInk)
-                .lineLimit(2)
+            // The design centers this whole block — question, answer, and
+            // scripture — both ways in the space between the progress bar
+            // and the footer, unlike the left-aligned header above it.
+            VStack(spacing: 10) {
+                Text(entry.question)
+                    .font(.ccDisplay(15, semibold: true))
+                    .foregroundStyle(.ccInk)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
 
-            Text(entry.answer)
-                .font(.ccBody(13.5))
-                .foregroundStyle(.ccInk2)
-                .lineLimit(4)
+                Text(entry.answer)
+                    .font(.ccBody(13.5))
+                    .foregroundStyle(.ccInk2)
+                    .lineLimit(4)
+                    .multilineTextAlignment(.center)
 
-            if let quote = entry.scriptureQuote, let ref = entry.scriptureRef {
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("The Scripture Behind It")
-                        .labelCaps(size: 7.5, tracking: 0.1)
-                    Text(quote)
-                        .font(.ccBody(11.5))
-                        .italic()
-                        .foregroundStyle(.ccInk2)
-                        .lineLimit(3)
-                    Text(ref)
-                        .labelCaps(size: 8, tracking: 0.06, color: .ccOchre)
+                if let quote = entry.scriptureQuote, let ref = entry.scriptureRef {
+                    VStack(spacing: 3) {
+                        Text("The Scripture Behind It")
+                            .labelCaps(size: 7.5, tracking: 0.1)
+                        Text(quote)
+                            .font(.ccBody(11.5))
+                            .italic()
+                            .foregroundStyle(.ccInk2)
+                            .lineLimit(3)
+                            .multilineTextAlignment(.center)
+                        Text(ref)
+                            .labelCaps(size: 8, tracking: 0.06, color: .ccOchre)
+                    }
                 }
-                .padding(.top, 2)
             }
-
-            Spacer(minLength: 0)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             ContinueRow()
         }
