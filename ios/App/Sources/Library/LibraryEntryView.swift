@@ -3,9 +3,9 @@
 // proof-texts panel follows QuestionCardView's catechism-session pattern
 // rather than web's per-citation click-to-expand list: one clause is
 // "active" at a time (tap any footnote-marked clause to switch), its group's
-// verses are fetched live through EsvClient and shown automatically. The
-// scripture-cross-reference page (web's /scripture/[osis]) is a separate,
-// not-yet-built phase, so citations don't link out yet.
+// verses are fetched live through EsvClient and shown automatically. Each
+// citation links out to that reference's canonical cross-reference page
+// (ScriptureView, mirroring web's /scripture/[osis]).
 //
 // Paging also responds to a horizontal swipe (left = next, right = prev,
 // the standard iOS carousel convention), not just the Prev/Next links —
@@ -146,8 +146,14 @@ struct LibraryEntryView: View {
                             .italic()
                             .foregroundStyle(.ccInk)
                             .multilineTextAlignment(.center)
-                        Text(ref.citation)
-                            .labelCaps(size: 9, tracking: 0.1, color: .ccInk3)
+                        Button {
+                            path.append(ScriptureRoute.detail(osis: ref.osis))
+                        } label: {
+                            Text(ref.citation)
+                                .labelCaps(size: 9, tracking: 0.1, color: .ccInk3)
+                                .dottedUnderline(.ccInk3)
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
             }

@@ -14,9 +14,11 @@
 		1B75F3CE1BEB367636F4159E /* PrayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A18960952FB0E4DF82B9E736 /* PrayerView.swift */; };
 		257B4713F297B37D53200A1E /* LibraryTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74DCA6EEDDCA17FB559A94C1 /* LibraryTabView.swift */; };
 		28CBE251D286E2BEE5825C57 /* EsvClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72FB0289223150F84B4EF930 /* EsvClient.swift */; };
+		2940242738B000E1BE7AE7E0 /* ScriptureRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05EB0F0C3B3D18BF87EFE32C /* ScriptureRoute.swift */; };
 		2DDD25466D165E5802738630 /* DevotionsTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ED5831742D2E28312CC6091 /* DevotionsTabView.swift */; };
 		30DF48B35840FA30269AA83C /* FloatingTabBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFC0F6EBEA55CD22AC8831B1 /* FloatingTabBarView.swift */; };
 		322478282EA26DE9CAF459C3 /* LibraryRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F0B1A13CFCB4351B4180520 /* LibraryRoute.swift */; };
+		3739A33AC30DEAF56A3F62A9 /* ScriptureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DE21E2EC93C342F162E7EB8 /* ScriptureView.swift */; };
 		3896FF06B372767504CFC88B /* LocalProgressStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A91F75F78A7C8406A81FF628 /* LocalProgressStore.swift */; };
 		4BB3A7BB2DBF57AA67C54B1B /* DevotionWorshipView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C108F4CBFD531B62601AE1E0 /* DevotionWorshipView.swift */; };
 		4BF1AA038DAF23E878D34262 /* SiteHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA107B8B544A9F504E2D6E4F /* SiteHeaderView.swift */; };
@@ -48,6 +50,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		05EB0F0C3B3D18BF87EFE32C /* ScriptureRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptureRoute.swift; sourceTree = "<group>"; };
 		0622E7353216946347CF3DD1 /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
 		0696F7777BB06E349FC8B348 /* ReflectionsRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReflectionsRoute.swift; sourceTree = "<group>"; };
 		09DC9BA05478BE3F8C6ABE62 /* LibraryEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryEntryView.swift; sourceTree = "<group>"; };
@@ -56,6 +59,7 @@
 		27A1DF330C4DA1EC70E025A1 /* SessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionView.swift; sourceTree = "<group>"; };
 		2803DDC4DF75B0849AF89D85 /* PracticeReminderScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PracticeReminderScheduler.swift; sourceTree = "<group>"; };
 		2CA73F64DC39A88E251E81D2 /* MarkdownText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownText.swift; sourceTree = "<group>"; };
+		3DE21E2EC93C342F162E7EB8 /* ScriptureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptureView.swift; sourceTree = "<group>"; };
 		3ED5831742D2E28312CC6091 /* DevotionsTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevotionsTabView.swift; sourceTree = "<group>"; };
 		58912A495665984DB2EDA36E /* ClauseLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClauseLabel.swift; sourceTree = "<group>"; };
 		6380C3C2DC1FFBA52FA0BE5C /* ComingSoonTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComingSoonTabView.swift; sourceTree = "<group>"; };
@@ -188,6 +192,8 @@
 			isa = PBXGroup;
 			children = (
 				72FB0289223150F84B4EF930 /* EsvClient.swift */,
+				05EB0F0C3B3D18BF87EFE32C /* ScriptureRoute.swift */,
+				3DE21E2EC93C342F162E7EB8 /* ScriptureView.swift */,
 			);
 			path = Scripture;
 			sourceTree = "<group>";
@@ -357,6 +363,8 @@
 				95A6F78766AEB3F0FE5AFA7B /* ReflectionsTabView.swift in Sources */,
 				A37246ABCD770C1EB341917E /* RootTab.swift in Sources */,
 				EF6180A42307C70469D1AAF6 /* RootView.swift in Sources */,
+				2940242738B000E1BE7AE7E0 /* ScriptureRoute.swift in Sources */,
+				3739A33AC30DEAF56A3F62A9 /* ScriptureView.swift in Sources */,
 				7C611E39E3B058BE6D93D933 /* SessionView.swift in Sources */,
 				4BF1AA038DAF23E878D34262 /* SiteHeaderView.swift in Sources */,
 				B3F5CF1C182FCFD4301934FC /* TabIcons.swift in Sources */,

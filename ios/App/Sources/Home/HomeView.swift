@@ -87,6 +87,24 @@ struct HomeView: View {
                     }
                 }
             }
+            .navigationDestination(for: ScriptureRoute.self) { route in
+                switch route {
+                case .detail(let osis):
+                    ScriptureView(osis: osis, path: $path)
+                }
+            }
+            .navigationDestination(for: LibraryRoute.self) { route in
+                switch route {
+                case .document(let slug):
+                    DocumentTocView(slug: slug, path: $path)
+                case .entry(let slug, let entryId):
+                    LibraryEntryView(slug: slug, entryId: entryId, path: $path)
+                case .session(let programSlug, let questionNumber):
+                    if let program = getProgram(programSlug) {
+                        SessionView(program: program, path: $path, startQuestion: questionNumber)
+                    }
+                }
+            }
             .task {
                 track = store.activeTrack()
                 if let wscRun {

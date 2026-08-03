@@ -1,7 +1,11 @@
-// Push targets for the Library tab's NavigationStack (mirrors the
-// /library/[confession] and /library/[confession]/[entry] web routes).
-// Routes carry the raw ConfessionEntry id (e.g. "WCoF-1-2") rather than a
-// URL path segment — there's no URL layer here to keep the two in sync.
+// Push targets for the Library surface (mirrors the /library/[confession]
+// and /library/[confession]/[entry] web routes). Routes carry the raw
+// ConfessionEntry id (e.g. "WCoF-1-2") rather than a URL path segment —
+// there's no URL layer here to keep the two in sync. Reachable from
+// anywhere a citation can link to a confession entry (Library's own
+// NavigationStack, plus the Catechisms/Devotions stacks a ScriptureView's
+// "Cited in the Confessions" list can be pushed onto), so it's registered
+// in all three, same as ScriptureRoute.
 import Foundation
 
 enum LibraryRoute: Hashable {

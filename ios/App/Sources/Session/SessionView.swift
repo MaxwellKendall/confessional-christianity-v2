@@ -64,7 +64,7 @@ struct SessionView: View {
                                 } else if isComplete {
                                     CompletionView(program: program)
                                 } else if let questionNumber, let question = getQuestion(program, questionNumber) {
-                                    QuestionCardView(program: program, question: question)
+                                    QuestionCardView(program: program, question: question, path: $path)
                                 } else {
                                     CompletionView(program: program)
                                 }

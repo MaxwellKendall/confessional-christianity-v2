@@ -85,6 +85,12 @@ struct LibraryTabView: View {
                     ReflectionDetailView(slug: slug, path: $path)
                 }
             }
+            .navigationDestination(for: ScriptureRoute.self) { route in
+                switch route {
+                case .detail(let osis):
+                    ScriptureView(osis: osis, path: $path)
+                }
+            }
         }
         .tint(.ccInk)
     }

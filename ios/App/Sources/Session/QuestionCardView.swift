@@ -2,13 +2,15 @@
 // catechism answer with every clause cited in-line, one clause's proof
 // text shown at a time (live ESV text fetched through EsvClient, same
 // /api/esv proxy the web app uses), and a "Pray About This" entry point one
-// tap away.
+// tap away. Each citation links out to its scripture cross-reference page
+// (ScriptureView), same as Library's proof-texts panel.
 import SwiftUI
 import DomainKit
 
 struct QuestionCardView: View {
     let program: ProgramDefinition
     let question: ProgramQuestion
+    @Binding var path: NavigationPath
 
     @State private var activeMarker: String?
     @State private var verseTexts: [String: String?] = [:]
@@ -82,8 +84,14 @@ struct QuestionCardView: View {
                                 .italic()
                                 .foregroundStyle(.ccInk)
                                 .multilineTextAlignment(.center)
-                            Text(ref.citation)
-                                .labelCaps(size: 9, tracking: 0.1, color: .ccInk3)
+                            Button {
+                                path.append(ScriptureRoute.detail(osis: ref.osis))
+                            } label: {
+                                Text(ref.citation)
+                                    .labelCaps(size: 9, tracking: 0.1, color: .ccInk3)
+                                    .dottedUnderline(.ccInk3)
+                            }
+                            .buttonStyle(.plain)
                         }
                     }
                 }
