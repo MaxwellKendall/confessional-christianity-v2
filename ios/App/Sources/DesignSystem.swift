@@ -29,6 +29,8 @@ extension Color {
     // the devotions library's one deep accent
     static let ccFeatured = Color(hex: 0x3d4f47)
     static let ccFeaturedInk = Color(hex: 0xd8ddd8)
+    // the floating tab bar's selected-pill fill
+    static let ccTabSelected = Color(hex: 0xede7d8)
 
     init(hex: UInt32) {
         self.init(
@@ -58,6 +60,7 @@ extension ShapeStyle where Self == Color {
     static var ccHeartReviewing: Color { .ccHeartReviewing }
     static var ccFeatured: Color { .ccFeatured }
     static var ccFeaturedInk: Color { .ccFeaturedInk }
+    static var ccTabSelected: Color { .ccTabSelected }
 }
 
 // Cinzel: display/labels (tracked uppercase). Marcellus: body/reading.

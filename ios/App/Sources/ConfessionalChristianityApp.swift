@@ -5,7 +5,7 @@ import SwiftData
 struct ConfessionalChristianityApp: App {
     var body: some Scene {
         WindowGroup {
-            HomeView()
+            RootView()
         }
         .modelContainer(for: [LocalCatechismTrack.self, ProgressSettings.self, SeriesProgressRecord.self])
     }

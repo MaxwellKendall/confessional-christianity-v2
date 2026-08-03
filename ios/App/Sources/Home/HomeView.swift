@@ -12,8 +12,9 @@ struct HomeView: View {
     private let defaultProgram = PROGRAMS[0]
     private let wscRun = seriesForCatechism("WSC")
 
+    @Binding var path: NavigationPath
+
     @Environment(\.modelContext) private var modelContext
-    @State private var path = NavigationPath()
     @State private var track: LocalCatechismTrack?
     @State private var runCompletedDays: [Int] = []
 
@@ -205,7 +206,7 @@ struct HomeView: View {
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 24)
-                .padding(.bottom, 32)
+                .padding(.bottom, 100)
                 .frame(maxWidth: 704)
                 .frame(maxWidth: .infinity)
             }

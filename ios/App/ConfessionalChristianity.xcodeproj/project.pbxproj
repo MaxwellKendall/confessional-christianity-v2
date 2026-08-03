@@ -12,6 +12,8 @@
 		0FF4D29361392BA8D485D06C /* DevotionSeriesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E37A6F435C2C097A6586109B /* DevotionSeriesView.swift */; };
 		1759D64CAD6C6F870DE4716A /* JumpToQuestionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 943068F9BE1D5E9C1869664E /* JumpToQuestionView.swift */; };
 		1B75F3CE1BEB367636F4159E /* PrayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A18960952FB0E4DF82B9E736 /* PrayerView.swift */; };
+		2DDD25466D165E5802738630 /* DevotionsTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ED5831742D2E28312CC6091 /* DevotionsTabView.swift */; };
+		30DF48B35840FA30269AA83C /* FloatingTabBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFC0F6EBEA55CD22AC8831B1 /* FloatingTabBarView.swift */; };
 		3896FF06B372767504CFC88B /* LocalProgressStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A91F75F78A7C8406A81FF628 /* LocalProgressStore.swift */; };
 		4BB3A7BB2DBF57AA67C54B1B /* DevotionWorshipView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C108F4CBFD531B62601AE1E0 /* DevotionWorshipView.swift */; };
 		4BF1AA038DAF23E878D34262 /* SiteHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA107B8B544A9F504E2D6E4F /* SiteHeaderView.swift */; };
@@ -20,13 +22,17 @@
 		7C611E39E3B058BE6D93D933 /* SessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27A1DF330C4DA1EC70E025A1 /* SessionView.swift */; };
 		94F2A0DB1351CCA796EA6567 /* Cinzel-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E38A936D51B1960620B4EA13 /* Cinzel-SemiBold.ttf */; };
 		9B0DF1151700DED8D5E7B074 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0622E7353216946347CF3DD1 /* DesignSystem.swift */; };
+		A37246ABCD770C1EB341917E /* RootTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98A25657E65FD99C28C300E6 /* RootTab.swift */; };
 		AA3071EDEBE7EB226F5C6F35 /* LocalSeriesProgressStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BD9CBA322989F8D3D341509 /* LocalSeriesProgressStore.swift */; };
 		ABC676EECAD6EB2A5DDE8916 /* Marcellus-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 8E695AE85593396B01EA0946 /* Marcellus-Regular.ttf */; };
+		B3F5CF1C182FCFD4301934FC /* TabIcons.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81D5508EB376718085AA71A6 /* TabIcons.swift */; };
 		B660D8E3C77CCE66F8AA8BE1 /* PracticeReminderScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2803DDC4DF75B0849AF89D85 /* PracticeReminderScheduler.swift */; };
 		B97CE4E17FAB9A8257350F08 /* Cinzel-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0DEE3A1FB42239248ABA0E9F /* Cinzel-Regular.ttf */; };
 		D06F0AAC20B0B41A2FA46C6B /* DevotionLandingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D017E9C304663F35669084F /* DevotionLandingView.swift */; };
+		DD6B7EDEA2E24A1C8AA22FA6 /* ComingSoonTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6380C3C2DC1FFBA52FA0BE5C /* ComingSoonTabView.swift */; };
 		DE6921043A9DF51BC51CDB04 /* FlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = C23F51243C50FFC327642E50 /* FlowLayout.swift */; };
 		E7543DC35B02A71F5F4D81BE /* QuestionCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D892E4739FA3AAD34062EB53 /* QuestionCardView.swift */; };
+		EF6180A42307C70469D1AAF6 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE787EFA6523867E8B169F3C /* RootView.swift */; };
 		F853CD067589F714D2703331 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBA120F8482D994D28BEF11F /* HomeView.swift */; };
 		FD3EE34BAD75E9012CC7B741 /* DevotionRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100A6540E810CB4FDB4F1B15 /* DevotionRoute.swift */; };
 /* End PBXBuildFile section */
@@ -37,16 +43,22 @@
 		100A6540E810CB4FDB4F1B15 /* DevotionRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevotionRoute.swift; sourceTree = "<group>"; };
 		27A1DF330C4DA1EC70E025A1 /* SessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionView.swift; sourceTree = "<group>"; };
 		2803DDC4DF75B0849AF89D85 /* PracticeReminderScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PracticeReminderScheduler.swift; sourceTree = "<group>"; };
+		3ED5831742D2E28312CC6091 /* DevotionsTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevotionsTabView.swift; sourceTree = "<group>"; };
+		6380C3C2DC1FFBA52FA0BE5C /* ComingSoonTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComingSoonTabView.swift; sourceTree = "<group>"; };
+		81D5508EB376718085AA71A6 /* TabIcons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabIcons.swift; sourceTree = "<group>"; };
 		8BD9CBA322989F8D3D341509 /* LocalSeriesProgressStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalSeriesProgressStore.swift; sourceTree = "<group>"; };
 		8D017E9C304663F35669084F /* DevotionLandingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevotionLandingView.swift; sourceTree = "<group>"; };
 		8E695AE85593396B01EA0946 /* Marcellus-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Marcellus-Regular.ttf"; sourceTree = "<group>"; };
 		943068F9BE1D5E9C1869664E /* JumpToQuestionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JumpToQuestionView.swift; sourceTree = "<group>"; };
+		98A25657E65FD99C28C300E6 /* RootTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootTab.swift; sourceTree = "<group>"; };
 		A18960952FB0E4DF82B9E736 /* PrayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrayerView.swift; sourceTree = "<group>"; };
 		A3BCFC7770E05C3C772E8A0D /* ConfessionalChristianity.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = ConfessionalChristianity.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A91F75F78A7C8406A81FF628 /* LocalProgressStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalProgressStore.swift; sourceTree = "<group>"; };
 		A968AF70AD49E41C42492E83 /* DomainKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = DomainKit; path = ../DomainKit; sourceTree = SOURCE_ROOT; };
 		AA107B8B544A9F504E2D6E4F /* SiteHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiteHeaderView.swift; sourceTree = "<group>"; };
+		AFC0F6EBEA55CD22AC8831B1 /* FloatingTabBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingTabBarView.swift; sourceTree = "<group>"; };
 		B546077DA28FC7305B721170 /* ProgressModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressModels.swift; sourceTree = "<group>"; };
+		BE787EFA6523867E8B169F3C /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		C108F4CBFD531B62601AE1E0 /* DevotionWorshipView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevotionWorshipView.swift; sourceTree = "<group>"; };
 		C23F51243C50FFC327642E50 /* FlowLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowLayout.swift; sourceTree = "<group>"; };
 		CA5673ACB1419E8AFFF76F5A /* MilestonesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MilestonesView.swift; sourceTree = "<group>"; };
@@ -82,8 +94,12 @@
 		1ACCE43A4C51C80DBD74A1E9 /* Support */ = {
 			isa = PBXGroup;
 			children = (
+				6380C3C2DC1FFBA52FA0BE5C /* ComingSoonTabView.swift */,
+				AFC0F6EBEA55CD22AC8831B1 /* FloatingTabBarView.swift */,
 				C23F51243C50FFC327642E50 /* FlowLayout.swift */,
+				98A25657E65FD99C28C300E6 /* RootTab.swift */,
 				AA107B8B544A9F504E2D6E4F /* SiteHeaderView.swift */,
+				81D5508EB376718085AA71A6 /* TabIcons.swift */,
 			);
 			path = Support;
 			sourceTree = "<group>";
@@ -102,6 +118,7 @@
 				D721D4D4D91E53FCEF7C32EB /* ConfessionalChristianityApp.swift */,
 				0622E7353216946347CF3DD1 /* DesignSystem.swift */,
 				D210C306DA02A872ECFE942F /* Info.plist */,
+				BE787EFA6523867E8B169F3C /* RootView.swift */,
 				EE528B6742ED23B6A61D5A87 /* Devotions */,
 				F3129055BD870EC499700ADE /* Fonts */,
 				3B3495F63C7DCA40F6F59652 /* Home */,
@@ -165,6 +182,7 @@
 				8D017E9C304663F35669084F /* DevotionLandingView.swift */,
 				100A6540E810CB4FDB4F1B15 /* DevotionRoute.swift */,
 				E37A6F435C2C097A6586109B /* DevotionSeriesView.swift */,
+				3ED5831742D2E28312CC6091 /* DevotionsTabView.swift */,
 				C108F4CBFD531B62601AE1E0 /* DevotionWorshipView.swift */,
 			);
 			path = Devotions;
@@ -254,12 +272,15 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DD6B7EDEA2E24A1C8AA22FA6 /* ComingSoonTabView.swift in Sources */,
 				58641ED3BB13D794A63BE99F /* ConfessionalChristianityApp.swift in Sources */,
 				9B0DF1151700DED8D5E7B074 /* DesignSystem.swift in Sources */,
 				D06F0AAC20B0B41A2FA46C6B /* DevotionLandingView.swift in Sources */,
 				FD3EE34BAD75E9012CC7B741 /* DevotionRoute.swift in Sources */,
 				0FF4D29361392BA8D485D06C /* DevotionSeriesView.swift in Sources */,
 				4BB3A7BB2DBF57AA67C54B1B /* DevotionWorshipView.swift in Sources */,
+				2DDD25466D165E5802738630 /* DevotionsTabView.swift in Sources */,
+				30DF48B35840FA30269AA83C /* FloatingTabBarView.swift in Sources */,
 				DE6921043A9DF51BC51CDB04 /* FlowLayout.swift in Sources */,
 				F853CD067589F714D2703331 /* HomeView.swift in Sources */,
 				1759D64CAD6C6F870DE4716A /* JumpToQuestionView.swift in Sources */,
@@ -270,8 +291,11 @@
 				1B75F3CE1BEB367636F4159E /* PrayerView.swift in Sources */,
 				0C6D9DE8C46447E484FDF366 /* ProgressModels.swift in Sources */,
 				E7543DC35B02A71F5F4D81BE /* QuestionCardView.swift in Sources */,
+				A37246ABCD770C1EB341917E /* RootTab.swift in Sources */,
+				EF6180A42307C70469D1AAF6 /* RootView.swift in Sources */,
 				7C611E39E3B058BE6D93D933 /* SessionView.swift in Sources */,
 				4BF1AA038DAF23E878D34262 /* SiteHeaderView.swift in Sources */,
+				B3F5CF1C182FCFD4301934FC /* TabIcons.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
