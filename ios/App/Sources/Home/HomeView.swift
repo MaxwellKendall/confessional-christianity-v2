@@ -246,7 +246,7 @@ private struct OtherCatechismCard: View {
                     .labelCaps(size: 9, tracking: 0.1)
             }
             .padding(20)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .background(Color.ccFill)
             .clipShape(RoundedRectangle(cornerRadius: 3))
         }
