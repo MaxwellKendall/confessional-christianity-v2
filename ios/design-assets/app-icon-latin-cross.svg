@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <rect width="1024" height="1024" fill="#faf9f6"/>
+  <path fill="#211e19" d="
+    M 447 160
+    L 577 160
+    L 577 375
+    L 785 375
+    L 785 490
+    L 577 490
+    L 577 895
+    L 447 895
+    L 447 490
+    L 240 490
+    L 240 375
+    L 447 375
+    Z" />
+</svg>
