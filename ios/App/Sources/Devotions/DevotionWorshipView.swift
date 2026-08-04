@@ -36,7 +36,7 @@ struct DevotionWorshipView: View {
         VStack(spacing: 0) {
             HStack {
                 Button {
-                    if stepNumber > 1 { stepNumber -= 1 } else { dismiss() }
+                    goBack()
                 } label: {
                     Text(stepNumber > 1 ? "\u{2190}" : "\u{2715}")
                         .font(.ccDisplay(15))
@@ -109,7 +109,7 @@ struct DevotionWorshipView: View {
                         .multilineTextAlignment(.center)
                 } else if stepNumber < totalSteps {
                     Button {
-                        stepNumber += 1
+                        advance()
                     } label: {
                         Text("Continue \u{2192}")
                             .labelCaps(size: 11, tracking: 0.08, color: .ccInk)
@@ -136,9 +136,34 @@ struct DevotionWorshipView: View {
         }
         .background(Color.ccCard.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
+        .contentShape(Rectangle())
+        .simultaneousGesture(
+            // Only a clearly-horizontal drag counts, so it doesn't fight the
+            // step content's own vertical ScrollView.
+            DragGesture(minimumDistance: 24)
+                .onEnded { value in
+                    let horizontal = value.translation.width
+                    let vertical = value.translation.height
+                    guard abs(horizontal) > abs(vertical), abs(horizontal) > 60 else { return }
+                    if horizontal < 0 {
+                        advance()
+                    } else {
+                        goBack()
+                    }
+                }
+        )
         .task {
             loadHandoff()
         }
+    }
+
+    private func goBack() {
+        if stepNumber > 1 { stepNumber -= 1 } else { dismiss() }
+    }
+
+    private func advance() {
+        guard !isCatechismStep else { return }
+        if stepNumber < totalSteps { stepNumber += 1 } else { finish() }
     }
 
     private func loadHandoff() {
