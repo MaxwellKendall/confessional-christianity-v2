@@ -188,26 +188,21 @@ struct HomeView: View {
                         .labelCaps(size: 9.5, tracking: 0.14)
                         .padding(.bottom, 10)
 
+                    // An odd item out left alone in a 2-column grid leaves a
+                    // dangling half-empty row; give it the full row's width
+                    // instead so every row reads as a complete grid.
+                    let oddCount = otherPrograms.count % 2
+                    let paired = otherPrograms.dropLast(oddCount)
+                    let remainder = otherPrograms.suffix(oddCount)
+
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                        ForEach(otherPrograms, id: \.slug) { p in
-                            Button {
-                                path.append(p.slug)
-                            } label: {
-                                VStack(alignment: .leading, spacing: 6) {
-                                    Text(p.shortTitle)
-                                        .font(.ccDisplay(14, semibold: true))
-                                        .foregroundStyle(.ccInk)
-                                        .multilineTextAlignment(.leading)
-                                    Text("\(p.totalQuestions) Q&A")
-                                        .labelCaps(size: 9, tracking: 0.1)
-                                }
-                                .padding(20)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .background(Color.ccFill)
-                                .clipShape(RoundedRectangle(cornerRadius: 3))
-                            }
-                            .buttonStyle(.plain)
+                        ForEach(paired, id: \.slug) { p in
+                            OtherCatechismCard(program: p, path: $path)
                         }
+                    }
+                    ForEach(remainder, id: \.slug) { p in
+                        OtherCatechismCard(program: p, path: $path)
+                            .padding(.top, 12)
                     }
 
                     HStack {
@@ -231,5 +226,30 @@ struct HomeView: View {
                 .frame(maxWidth: 704)
                 .frame(maxWidth: .infinity)
             }
+    }
+}
+
+private struct OtherCatechismCard: View {
+    let program: ProgramDefinition
+    @Binding var path: NavigationPath
+
+    var body: some View {
+        Button {
+            path.append(program.slug)
+        } label: {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(program.shortTitle)
+                    .font(.ccDisplay(14, semibold: true))
+                    .foregroundStyle(.ccInk)
+                    .multilineTextAlignment(.leading)
+                Text("\(program.totalQuestions) Q&A")
+                    .labelCaps(size: 9, tracking: 0.1)
+            }
+            .padding(20)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.ccFill)
+            .clipShape(RoundedRectangle(cornerRadius: 3))
+        }
+        .buttonStyle(.plain)
     }
 }
