@@ -79,7 +79,7 @@ struct LibraryEntryView: View {
                 .padding(.bottom, 100)
             }
         }
-        .background(Color.ccCanvas)
+        .background(Color.ccCard)
         .toolbar(.hidden, for: .navigationBar)
         .onAppear { activeMarker = groups.first?.marker }
         .task(id: "\(entryId)|\(activeMarker ?? "")") {

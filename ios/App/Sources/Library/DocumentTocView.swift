@@ -91,7 +91,7 @@ struct DocumentTocView: View {
             .padding(.horizontal, 20)
             .padding(.bottom, 100)
         }
-        .background(Color.ccCanvas)
+        .background(Color.ccCard)
         .toolbar(.hidden, for: .navigationBar)
     }
 }

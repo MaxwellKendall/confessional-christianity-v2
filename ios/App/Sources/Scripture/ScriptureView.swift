@@ -75,7 +75,7 @@ struct ScriptureView: View {
                 }
             }
         }
-        .background(Color.ccCanvas)
+        .background(Color.ccCard)
         .toolbar(.hidden, for: .navigationBar)
         .task(id: osis) {
             passageLoaded = false

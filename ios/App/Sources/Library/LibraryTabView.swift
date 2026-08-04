@@ -65,7 +65,7 @@ struct LibraryTabView: View {
                     .padding(.bottom, 100)
                 }
             }
-            .background(Color.ccCanvas)
+            .background(Color.ccCard)
             .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(for: LibraryRoute.self) { route in
                 switch route {

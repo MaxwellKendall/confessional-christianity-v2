@@ -96,7 +96,7 @@ struct ReflectionDetailView: View {
                 }
             }
         }
-        .background(Color.ccCanvas)
+        .background(Color.ccCard)
         .toolbar(.hidden, for: .navigationBar)
     }
 

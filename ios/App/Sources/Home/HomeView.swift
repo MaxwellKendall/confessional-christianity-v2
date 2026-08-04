@@ -57,7 +57,7 @@ struct HomeView: View {
                 SiteHeaderView(path: $path)
                 homeScrollView
             }
-            .background(Color.ccCanvas)
+            .background(Color.ccCard)
             .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(for: String.self) { slug in
                 if let program = getProgram(slug) {

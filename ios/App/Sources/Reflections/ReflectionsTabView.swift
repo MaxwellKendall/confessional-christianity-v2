@@ -54,7 +54,7 @@ struct ReflectionsTabView: View {
                     .padding(.bottom, 100)
                 }
             }
-            .background(Color.ccCanvas)
+            .background(Color.ccCard)
             .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(for: ReflectionsRoute.self) { route in
                 switch route {

@@ -43,7 +43,7 @@ struct DevotionsTabView: View {
                     .padding(.bottom, 100)
                 }
             }
-            .background(Color.ccCanvas)
+            .background(Color.ccCard)
             .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(for: DevotionRoute.self) { route in
                 switch route {
