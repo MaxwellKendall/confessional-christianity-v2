@@ -38,7 +38,7 @@ struct SiteHeaderView: View {
         .padding(.bottom, 14)
         .background(Color.ccCard)
         .overlay(alignment: .bottom) {
-            Rectangle().fill(Color.ccHairline).frame(height: 1)
+            Rectangle().fill(Color.ccMuted).frame(height: 1)
         }
     }
 }

@@ -6,8 +6,10 @@
 import SwiftUI
 
 extension Color {
-    // canvas is the page background only, never app chrome
-    static let ccCanvas = Color(hex: 0xe9e6dd)
+    // canvas is the page background only, never app chrome. Native app
+    // chrome uses plain white here rather than the web's tan canvas — an
+    // explicit on-device call, not a porting slip.
+    static let ccCanvas = Color(hex: 0xffffff)
     // app/card background
     static let ccCard = Color(hex: 0xfaf9f6)
     // ink: primary / secondary-meta / tertiary-label text
