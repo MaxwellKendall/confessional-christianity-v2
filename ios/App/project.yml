@@ -43,6 +43,8 @@ targets:
         TARGETED_DEVICE_FAMILY: "1"
         SWIFT_VERSION: "6.0"
         CODE_SIGN_ENTITLEMENTS: Sources/ConfessionalChristianity.entitlements
+        DEVELOPMENT_TEAM: 7GZKY29XJH
+        CODE_SIGN_STYLE: Automatic
     schemes:
       ConfessionalChristianity:
         build:
@@ -98,3 +100,5 @@ targets:
         SWIFT_VERSION: "6.0"
         SKIP_INSTALL: "YES"
         CODE_SIGN_ENTITLEMENTS: Widget/ConfessionalChristianityWidgetExtension.entitlements
+        DEVELOPMENT_TEAM: 7GZKY29XJH
+        CODE_SIGN_STYLE: Automatic

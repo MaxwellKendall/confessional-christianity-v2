@@ -29,6 +29,7 @@
 		7C611E39E3B058BE6D93D933 /* SessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27A1DF330C4DA1EC70E025A1 /* SessionView.swift */; };
 		8B7CCA1620D28C8EE82E0212 /* CatechismWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C4BE3D3CA7C31C59ACB5286 /* CatechismWidget.swift */; };
 		8E1F53502D81DEB3DC3AACD0 /* ReflectionsRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0696F7777BB06E349FC8B348 /* ReflectionsRoute.swift */; };
+		93373EFF4BEEBB9305D97C2A /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82F6656D056CA75FE62409F4 /* AboutView.swift */; };
 		94F2A0DB1351CCA796EA6567 /* Cinzel-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E38A936D51B1960620B4EA13 /* Cinzel-SemiBold.ttf */; };
 		9508C7F34BAE8BD034467A77 /* DocumentTocView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CEC5FBB76D7BE63305F7369 /* DocumentTocView.swift */; };
 		958E1E27094E04B8F5121E51 /* ConfessionalChristianityWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = CFC6793E7895E7D3636BA94F /* ConfessionalChristianityWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -108,6 +109,7 @@
 		7E69BB26BAE59E9A1DD9E9FB /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		81D5508EB376718085AA71A6 /* TabIcons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabIcons.swift; sourceTree = "<group>"; };
 		826FFB63796815E34180F9FC /* ReflectionDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReflectionDetailView.swift; sourceTree = "<group>"; };
+		82F6656D056CA75FE62409F4 /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
 		8CEC5FBB76D7BE63305F7369 /* DocumentTocView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentTocView.swift; sourceTree = "<group>"; };
 		8D017E9C304663F35669084F /* DevotionLandingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevotionLandingView.swift; sourceTree = "<group>"; };
 		8E695AE85593396B01EA0946 /* Marcellus-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Marcellus-Regular.ttf"; sourceTree = "<group>"; };
@@ -241,6 +243,7 @@
 		6720DAEF67BAA788B4F79D57 /* Library */ = {
 			isa = PBXGroup;
 			children = (
+				82F6656D056CA75FE62409F4 /* AboutView.swift */,
 				8CEC5FBB76D7BE63305F7369 /* DocumentTocView.swift */,
 				09DC9BA05478BE3F8C6ABE62 /* LibraryEntryView.swift */,
 				6F0B1A13CFCB4351B4180520 /* LibraryRoute.swift */,
@@ -391,6 +394,14 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
+					509AC7FB8455E7E32B916226 = {
+						DevelopmentTeam = 7GZKY29XJH;
+						ProvisioningStyle = Automatic;
+					};
+					6E2872A9D525C0FEF00C927E = {
+						DevelopmentTeam = 7GZKY29XJH;
+						ProvisioningStyle = Automatic;
+					};
 				};
 			};
 			buildConfigurationList = CB93513B5D7FBA66EE9CFE52 /* Build configuration list for PBXProject "ConfessionalChristianity" */;
@@ -457,6 +468,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				93373EFF4BEEBB9305D97C2A /* AboutView.swift in Sources */,
 				071133A6E8575DC8F1628D43 /* AlgoliaClient.swift in Sources */,
 				D7FD205440856F87ABC90190 /* ClauseLabel.swift in Sources */,
 				58641ED3BB13D794A63BE99F /* ConfessionalChristianityApp.swift in Sources */,
@@ -568,7 +580,9 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Sources/ConfessionalChristianity.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 7GZKY29XJH;
 				INFOPLIST_FILE = Sources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -649,7 +663,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Widget/ConfessionalChristianityWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 7GZKY29XJH;
 				INFOPLIST_FILE = Widget/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -671,7 +687,9 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Sources/ConfessionalChristianity.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 7GZKY29XJH;
 				INFOPLIST_FILE = Sources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -689,7 +707,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Widget/ConfessionalChristianityWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 7GZKY29XJH;
 				INFOPLIST_FILE = Widget/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
