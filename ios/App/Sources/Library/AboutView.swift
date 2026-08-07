@@ -37,6 +37,7 @@ struct AboutView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
+        .ignoresSafeArea(edges: .bottom)
         .background(Color.ccCard)
         .toolbar(.hidden, for: .navigationBar)
     }

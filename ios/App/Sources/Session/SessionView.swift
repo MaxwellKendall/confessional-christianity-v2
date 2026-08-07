@@ -133,6 +133,7 @@ struct SessionView: View {
             .padding(.trailing, 6)
             .padding(.top, 6)
         }
+        .ignoresSafeArea(edges: .bottom)
         .toolbar(.hidden, for: .navigationBar)
         .hidesFloatingTabBar()
         .sheet(isPresented: $showJump) {

@@ -75,6 +75,7 @@ struct ScriptureView: View {
                 }
             }
         }
+        .ignoresSafeArea(edges: .bottom)
         .background(Color.ccCard)
         .toolbar(.hidden, for: .navigationBar)
         .task(id: osis) {

@@ -64,6 +64,7 @@ struct SearchView: View {
             }
             .padding(.bottom, 100)
         }
+        .ignoresSafeArea(edges: .bottom)
         .background(Color.ccCard)
         .toolbar(.hidden, for: .navigationBar)
         .onDisappear { searchTask?.cancel() }

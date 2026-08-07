@@ -90,6 +90,7 @@ struct PrayerView: View {
                 Rectangle().fill(Color.ccHairline).frame(height: 1)
             }
         }
+        .ignoresSafeArea(edges: .bottom)
         .background(Color.ccCard.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
         .hidesFloatingTabBar()

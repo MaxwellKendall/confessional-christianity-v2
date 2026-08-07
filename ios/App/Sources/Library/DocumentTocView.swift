@@ -91,6 +91,7 @@ struct DocumentTocView: View {
             .padding(.horizontal, 20)
             .padding(.bottom, 100)
         }
+        .ignoresSafeArea(edges: .bottom)
         .background(Color.ccCard)
         .toolbar(.hidden, for: .navigationBar)
     }
