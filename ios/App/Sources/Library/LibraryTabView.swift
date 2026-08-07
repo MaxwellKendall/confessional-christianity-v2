@@ -60,6 +60,16 @@ struct LibraryTabView: View {
                         .overlay(alignment: .top) {
                             Rectangle().fill(Color.ccHairline).frame(height: 1)
                         }
+
+                        Button {
+                            path.append(LibraryRoute.about)
+                        } label: {
+                            Text("About & Credits")
+                                .labelCaps(size: 9.5, tracking: 0.1, color: .ccInk3)
+                                .dottedUnderline(.ccInk3)
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.top, 20)
                     }
                     .padding(.horizontal, 20)
                     .padding(.bottom, 100)
@@ -77,6 +87,8 @@ struct LibraryTabView: View {
                     if let program = getProgram(programSlug) {
                         SessionView(program: program, path: $path, startQuestion: questionNumber)
                     }
+                case .about:
+                    AboutView(path: $path)
                 }
             }
             .navigationDestination(for: ReflectionsRoute.self) { route in

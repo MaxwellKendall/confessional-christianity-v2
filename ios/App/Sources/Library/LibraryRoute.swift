@@ -15,4 +15,8 @@ enum LibraryRoute: Hashable {
     /// routes into the real, progress-tracked SessionView at that question
     /// instead of a parallel read-only entry page.
     case session(programSlug: String, questionNumber: Int)
+    /// Credits/attribution screen — required so the app's use of Crossway's
+    /// ESV® text carries the copyright notice their API terms require it
+    /// to display somewhere in the app, not just an "ESV" version label.
+    case about
 }

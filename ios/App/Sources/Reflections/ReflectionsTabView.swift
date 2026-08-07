@@ -72,6 +72,8 @@ struct ReflectionsTabView: View {
                     if let program = getProgram(programSlug) {
                         SessionView(program: program, path: $path, startQuestion: questionNumber)
                     }
+                case .about:
+                    AboutView(path: $path)
                 }
             }
             .navigationDestination(for: ScriptureRoute.self) { route in

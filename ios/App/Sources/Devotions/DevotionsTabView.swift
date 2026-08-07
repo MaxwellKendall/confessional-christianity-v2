@@ -84,6 +84,8 @@ struct DevotionsTabView: View {
                     if let program = getProgram(programSlug) {
                         SessionView(program: program, path: $path, startQuestion: questionNumber)
                     }
+                case .about:
+                    AboutView(path: $path)
                 }
             }
             .navigationDestination(for: SearchRoute.self) { _ in
