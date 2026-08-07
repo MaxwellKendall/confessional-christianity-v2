@@ -36,49 +36,59 @@ struct LibraryEntryView: View {
     }
 
     var body: some View {
-        ScrollView {
-            if let page {
-                VStack(spacing: 0) {
-                    breadcrumb(page)
+        // The prev/next paging row is a pinned footer, not the tail of the
+        // ScrollView's content — a short entry (e.g. a single-sentence
+        // thesis) would otherwise leave it stranded right under the quote
+        // instead of anchored at a consistent position above the tab bar.
+        VStack(spacing: 0) {
+            ScrollView {
+                if let page {
+                    VStack(spacing: 0) {
+                        breadcrumb(page)
 
-                    VStack(spacing: 10) {
-                        Text(entryPageLabel(page.item))
-                            .labelCaps(size: 9.5, tracking: 0.1)
-                        VStack(alignment: .leading, spacing: 4) {
-                            ForEach(Array(entryQuoteSegments(page.item).enumerated()), id: \.offset) { _, line in
-                                FlowText(prefix: "", segments: line, activeMarker: activeMarker) { marker in
-                                    withAnimation(.easeOut(duration: 0.15)) { activeMarker = marker }
+                        VStack(spacing: 10) {
+                            Text(entryPageLabel(page.item))
+                                .labelCaps(size: 9.5, tracking: 0.1)
+                            VStack(alignment: .leading, spacing: 4) {
+                                ForEach(Array(entryQuoteSegments(page.item).enumerated()), id: \.offset) { _, line in
+                                    FlowText(prefix: "", segments: line, activeMarker: activeMarker) { marker in
+                                        withAnimation(.easeOut(duration: 0.15)) { activeMarker = marker }
+                                    }
                                 }
                             }
+                            .frame(maxWidth: .infinity, alignment: .leading)
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 20)
+                        .padding(.top, 22)
+
+                        if let reflection {
+                            commentaryLink(reflection)
+                        }
+
+                        if !groups.isEmpty {
+                            scriptureSection
+                        }
                     }
                     .padding(.horizontal, 20)
-                    .padding(.top, 22)
+                    .padding(.top, 20)
+                }
+            }
 
-                    if let reflection {
-                        commentaryLink(reflection)
-                    }
-
-                    if !groups.isEmpty {
-                        scriptureSection
-                    }
-
-                    HStack {
-                        pagingLink(page.prevEntry, symbol: "\u{2190}", isNext: false)
-                        Spacer()
-                        pagingLink(page.nextEntry, symbol: "\u{2192}", isNext: true)
-                    }
-                    .padding(.top, 28)
-                    .overlay(alignment: .top) {
-                        Rectangle().fill(Color.ccHairline).frame(height: 1)
-                    }
+            if let page {
+                HStack {
+                    pagingLink(page.prevEntry, symbol: "\u{2190}", isNext: false)
+                    Spacer()
+                    pagingLink(page.nextEntry, symbol: "\u{2192}", isNext: true)
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 20)
                 .padding(.bottom, 100)
+                .overlay(alignment: .top) {
+                    Rectangle().fill(Color.ccHairline).frame(height: 1)
+                }
             }
         }
+        .ignoresSafeArea(edges: .bottom)
         .background(Color.ccCard)
         .toolbar(.hidden, for: .navigationBar)
         .onAppear { activeMarker = groups.first?.marker }

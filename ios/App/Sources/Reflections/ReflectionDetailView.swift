@@ -44,58 +44,67 @@ struct ReflectionDetailView: View {
     }
 
     var body: some View {
-        ScrollView {
-            if let post {
-                VStack(spacing: 0) {
-                    backBar
+        // The prev/next paging row is a pinned footer, not the tail of the
+        // ScrollView's content — a short essay would otherwise leave it
+        // stranded right under the body text instead of anchored at a
+        // consistent position above the tab bar.
+        VStack(spacing: 0) {
+            ScrollView {
+                if let post {
+                    VStack(spacing: 0) {
+                        backBar
 
-                    VStack(spacing: 6) {
-                        if let series = post.series {
-                            Text(post.part.map { "Series: \(series) \u{00B7} Part \($0) of \(siblings.count)" } ?? "Series: \(series)")
-                                .labelCaps(size: 9.5, color: .ccInk3)
+                        VStack(spacing: 6) {
+                            if let series = post.series {
+                                Text(post.part.map { "Series: \(series) \u{00B7} Part \($0) of \(siblings.count)" } ?? "Series: \(series)")
+                                    .labelCaps(size: 9.5, color: .ccInk3)
+                            }
+                            Text(post.title).headingPage().multilineTextAlignment(.center)
+                            if let subtitle = post.subtitle {
+                                Text(subtitle)
+                                    .font(.ccBody(13.5))
+                                    .italic()
+                                    .foregroundStyle(.ccInk2)
+                                    .multilineTextAlignment(.center)
+                            }
+                            Text(
+                                [post.author, formatDate(post.date)]
+                                    .compactMap { $0 }
+                                    .filter { !$0.isEmpty }
+                                    .joined(separator: " \u{00B7} ")
+                            )
+                            .labelCaps(size: 10, tracking: 0.14, color: .ccInk3)
+                            .padding(.top, 2)
                         }
-                        Text(post.title).headingPage().multilineTextAlignment(.center)
-                        if let subtitle = post.subtitle {
-                            Text(subtitle)
-                                .font(.ccBody(13.5))
-                                .italic()
-                                .foregroundStyle(.ccInk2)
-                                .multilineTextAlignment(.center)
+                        .padding(.horizontal, 24)
+                        .padding(.top, 10)
+
+                        if let entryPage {
+                            quoteCard(entryPage)
                         }
-                        Text(
-                            [post.author, formatDate(post.date)]
-                                .compactMap { $0 }
-                                .filter { !$0.isEmpty }
-                                .joined(separator: " \u{00B7} ")
-                        )
-                        .labelCaps(size: 10, tracking: 0.14, color: .ccInk3)
-                        .padding(.top, 2)
-                    }
-                    .padding(.horizontal, 24)
-                    .padding(.top, 10)
 
-                    if let entryPage {
-                        quoteCard(entryPage)
-                    }
-
-                    MarkdownText(source: post.body)
-                        .padding(.horizontal, 20)
-                        .padding(.top, 24)
-
-                    HStack {
-                        pagingLink(prev, isNext: false)
-                        Spacer()
-                        pagingLink(next, isNext: true)
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 28)
-                    .padding(.bottom, 100)
-                    .overlay(alignment: .top) {
-                        Rectangle().fill(Color.ccHairline).frame(height: 1)
+                        MarkdownText(source: post.body)
+                            .padding(.horizontal, 20)
+                            .padding(.top, 24)
                     }
                 }
             }
+
+            if post != nil {
+                HStack {
+                    pagingLink(prev, isNext: false)
+                    Spacer()
+                    pagingLink(next, isNext: true)
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 20)
+                .padding(.bottom, 100)
+                .overlay(alignment: .top) {
+                    Rectangle().fill(Color.ccHairline).frame(height: 1)
+                }
+            }
         }
+        .ignoresSafeArea(edges: .bottom)
         .background(Color.ccCard)
         .toolbar(.hidden, for: .navigationBar)
     }
