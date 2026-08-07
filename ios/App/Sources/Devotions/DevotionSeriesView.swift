@@ -121,6 +121,7 @@ struct DevotionSeriesView: View {
         }
         .background(Color.ccCard.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
+        .hidesFloatingTabBar()
         .task {
             completed = store.getCompletedDays(series.slug)
         }

@@ -134,6 +134,7 @@ struct SessionView: View {
             .padding(.top, 6)
         }
         .toolbar(.hidden, for: .navigationBar)
+        .hidesFloatingTabBar()
         .sheet(isPresented: $showJump) {
             JumpToQuestionView(program: program, currentQuestion: track?.currentQuestion ?? 1) { number in
                 jump(to: number)

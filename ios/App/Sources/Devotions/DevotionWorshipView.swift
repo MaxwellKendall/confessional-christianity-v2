@@ -142,9 +142,13 @@ struct DevotionWorshipView: View {
             .padding(.horizontal, 24)
             .padding(.top, 14)
             .padding(.bottom, 32)
+            .overlay(alignment: .top) {
+                Rectangle().fill(Color.ccHairline).frame(height: 1)
+            }
         }
         .background(Color.ccCard.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
+        .hidesFloatingTabBar()
         .contentShape(Rectangle())
         .simultaneousGesture(
             // Only a clearly-horizontal drag counts, so it doesn't fight the

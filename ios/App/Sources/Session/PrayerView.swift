@@ -92,6 +92,7 @@ struct PrayerView: View {
         }
         .background(Color.ccCard.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
+        .hidesFloatingTabBar()
     }
 }
 

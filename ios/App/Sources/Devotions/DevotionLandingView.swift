@@ -107,6 +107,7 @@ struct DevotionLandingView: View {
         }
         .background(Color.ccCard.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
+        .hidesFloatingTabBar()
     }
 
     private func stepPreviewLabel(_ step: WorshipStep) -> String {

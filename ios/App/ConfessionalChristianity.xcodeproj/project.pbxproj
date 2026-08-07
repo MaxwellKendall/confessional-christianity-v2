@@ -46,6 +46,7 @@
 		B97CE4E17FAB9A8257350F08 /* Cinzel-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0DEE3A1FB42239248ABA0E9F /* Cinzel-Regular.ttf */; };
 		C1E4EAF8F6E8528DE63DA7EB /* LibraryEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09DC9BA05478BE3F8C6ABE62 /* LibraryEntryView.swift */; };
 		C28489EE9B71F81F51910317 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 245AE89B18EF74ECA2A2C5B1 /* Assets.xcassets */; };
+		CCA59BAED520814729154AF4 /* HidesFloatingTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7CC21628E6787C6FD581730 /* HidesFloatingTabBar.swift */; };
 		D06F0AAC20B0B41A2FA46C6B /* DevotionLandingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D017E9C304663F35669084F /* DevotionLandingView.swift */; };
 		D5A5B50AC7558D9BF4B4A6E7 /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D65ACD5AC11EFE015FD5B666 /* SearchView.swift */; };
 		D7FD205440856F87ABC90190 /* ClauseLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58912A495665984DB2EDA36E /* ClauseLabel.swift */; };
@@ -126,6 +127,7 @@
 		C108F4CBFD531B62601AE1E0 /* DevotionWorshipView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevotionWorshipView.swift; sourceTree = "<group>"; };
 		C23F51243C50FFC327642E50 /* FlowLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowLayout.swift; sourceTree = "<group>"; };
 		C45EC54D0EE5907B79FC4071 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		C7CC21628E6787C6FD581730 /* HidesFloatingTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HidesFloatingTabBar.swift; sourceTree = "<group>"; };
 		CA5673ACB1419E8AFFF76F5A /* MilestonesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MilestonesView.swift; sourceTree = "<group>"; };
 		CEC4206BF48A49227EF39284 /* ReflectionsTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReflectionsTabView.swift; sourceTree = "<group>"; };
 		CFC6793E7895E7D3636BA94F /* ConfessionalChristianityWidgetExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = ConfessionalChristianityWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -189,6 +191,7 @@
 				58912A495665984DB2EDA36E /* ClauseLabel.swift */,
 				AFC0F6EBEA55CD22AC8831B1 /* FloatingTabBarView.swift */,
 				C23F51243C50FFC327642E50 /* FlowLayout.swift */,
+				C7CC21628E6787C6FD581730 /* HidesFloatingTabBar.swift */,
 				2CA73F64DC39A88E251E81D2 /* MarkdownText.swift */,
 				98A25657E65FD99C28C300E6 /* RootTab.swift */,
 				AA107B8B544A9F504E2D6E4F /* SiteHeaderView.swift */,
@@ -482,6 +485,7 @@
 				28CBE251D286E2BEE5825C57 /* EsvClient.swift in Sources */,
 				30DF48B35840FA30269AA83C /* FloatingTabBarView.swift in Sources */,
 				DE6921043A9DF51BC51CDB04 /* FlowLayout.swift in Sources */,
+				CCA59BAED520814729154AF4 /* HidesFloatingTabBar.swift in Sources */,
 				F853CD067589F714D2703331 /* HomeView.swift in Sources */,
 				1759D64CAD6C6F870DE4716A /* JumpToQuestionView.swift in Sources */,
 				C1E4EAF8F6E8528DE63DA7EB /* LibraryEntryView.swift in Sources */,
