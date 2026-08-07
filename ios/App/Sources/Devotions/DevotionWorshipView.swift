@@ -19,6 +19,10 @@ struct DevotionWorshipView: View {
     @State private var stepNumber: Int
     @State private var handoffProgram: ProgramDefinition?
     @State private var handoffQuestionNumber: Int = 1
+    /// Which edge the next step enters from — mirrors SessionView's paging
+    /// direction so a step advance and a step back read as opposite swipes,
+    /// not the same generic transition.
+    @State private var navDirection: Edge = .trailing
 
     init(devotion: Devotion, startStep: Int, path: Binding<NavigationPath>) {
         self.devotion = devotion
@@ -97,6 +101,11 @@ struct DevotionWorshipView: View {
                     .padding(.horizontal, 32)
                     .padding(.vertical, 28)
                     .frame(maxWidth: .infinity, minHeight: geo.size.height)
+                    .id(stepNumber)
+                    .transition(.asymmetric(
+                        insertion: .move(edge: navDirection).combined(with: .opacity),
+                        removal: .move(edge: navDirection == .trailing ? .leading : .trailing).combined(with: .opacity)
+                    ))
                 }
             }
 
@@ -158,12 +167,22 @@ struct DevotionWorshipView: View {
     }
 
     private func goBack() {
-        if stepNumber > 1 { stepNumber -= 1 } else { dismiss() }
+        guard stepNumber > 1 else {
+            dismiss()
+            return
+        }
+        navDirection = .leading
+        withAnimation(.easeInOut(duration: 0.28)) { stepNumber -= 1 }
     }
 
     private func advance() {
         guard !isCatechismStep else { return }
-        if stepNumber < totalSteps { stepNumber += 1 } else { finish() }
+        guard stepNumber < totalSteps else {
+            finish()
+            return
+        }
+        navDirection = .trailing
+        withAnimation(.easeInOut(duration: 0.28)) { stepNumber += 1 }
     }
 
     private func loadHandoff() {
@@ -189,13 +208,21 @@ struct DevotionWorshipView: View {
 private struct SourceLine: View {
     let source: ElementSource
 
-    var body: some View {
+    private var label: some View {
         Text(source.label + ((source.external ?? false) ? " \u{2197}" : " \u{203A}"))
             .font(.ccBody(11.5))
             .italic()
             .foregroundStyle(.ccMuted)
             .dottedUnderline(.ccMuted)
             .padding(.top, 4)
+    }
+
+    var body: some View {
+        if let url = URL(string: source.href) {
+            Link(destination: url) { label }
+        } else {
+            label
+        }
     }
 }
 

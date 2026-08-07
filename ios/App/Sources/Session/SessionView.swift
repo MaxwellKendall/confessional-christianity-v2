@@ -30,6 +30,11 @@ struct SessionView: View {
     @State private var showJump = false
     @State private var showMilestones = false
     @State private var notificationsOffered = false
+    /// Which edge the next question card enters from — set just before each
+    /// state change so the transition below reads as a directional page turn
+    /// (forward = enters from trailing, back = enters from leading) rather
+    /// than a generic cross-fade.
+    @State private var navDirection: Edge = .trailing
 
     private var store: LocalProgressStore { LocalProgressStore(context: modelContext) }
 
@@ -72,6 +77,11 @@ struct SessionView: View {
                             }
                             .frame(maxWidth: 560)
                             .frame(maxWidth: .infinity)
+                            .id(questionNumber)
+                            .transition(.asymmetric(
+                                insertion: .move(edge: navDirection).combined(with: .opacity),
+                                removal: .move(edge: navDirection == .trailing ? .leading : .trailing).combined(with: .opacity)
+                            ))
 
                             Spacer(minLength: 0)
                         }
@@ -160,7 +170,7 @@ struct SessionView: View {
     }
 
     private var footer: some View {
-        VStack(spacing: 14) {
+        VStack(spacing: 22) {
             HStack {
                 if (track?.currentQuestion ?? 1) > 1 {
                     Button {
@@ -207,14 +217,20 @@ struct SessionView: View {
     }
 
     private func advance() {
-        track = store.advanceQuestion(catechismId: program.contentId.rawValue, totalQuestions: program.totalQuestions)
+        navDirection = .trailing
+        withAnimation(.easeInOut(duration: 0.28)) {
+            track = store.advanceQuestion(catechismId: program.contentId.rawValue, totalQuestions: program.totalQuestions)
+        }
         WidgetCenter.shared.reloadTimelines(ofKind: "CatechismWidget")
     }
 
     private func jump(to number: Int) {
-        track = store.jumpToQuestion(
-            catechismId: program.contentId.rawValue, questionNumber: number, totalQuestions: program.totalQuestions
-        )
+        navDirection = number >= (track?.currentQuestion ?? 1) ? .trailing : .leading
+        withAnimation(.easeInOut(duration: 0.28)) {
+            track = store.jumpToQuestion(
+                catechismId: program.contentId.rawValue, questionNumber: number, totalQuestions: program.totalQuestions
+            )
+        }
         WidgetCenter.shared.reloadTimelines(ofKind: "CatechismWidget")
     }
 
