@@ -102,6 +102,7 @@ struct DevotionSeriesView: View {
                     .buttonStyle(.plain)
                     .padding(.vertical, 14)
                     .frame(maxWidth: .infinity)
+                    .contentShape(Rectangle())
                     .background(Color.ccInk)
                     .clipShape(RoundedRectangle(cornerRadius: 3))
                 } else {
