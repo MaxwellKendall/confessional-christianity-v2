@@ -7,7 +7,10 @@
 // axis in the library, so it gets the first row after Featured rather than
 // its old spot at the back. Groupings that have no authored devotions yet
 // render as quiet, unlinked states; rows light up as the library grows. A
-// season with a series opens onto it.
+// season with a series opens onto it. Reading plans (turn 19, adapted) lead
+// even Catechism: a first-class axis in its own right, and the default one
+// — a whole-Bible walk is the most universal starting point — so its row
+// sits first, right after Featured.
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
@@ -17,6 +20,7 @@ import {
   SEASONS, TOPICS, devotionsGroundedIn, scriptureDevotionsByBook,
 } from '@/lib/devotions';
 import { FeaturedSlot } from './FeaturedSlot';
+import { ReadingPlansRow } from './ReadingPlansRow';
 
 export const metadata: Metadata = {
   title: 'Devotions',
@@ -66,6 +70,9 @@ export default function DevotionsPage() {
         Featured This Week
       </div>
       <FeaturedSlot />
+
+      <RowLabel>By Reading Plan</RowLabel>
+      <ReadingPlansRow />
 
       <RowLabel>By Confession &amp; Catechism</RowLabel>
       {(() => {

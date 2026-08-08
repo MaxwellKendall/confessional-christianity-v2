@@ -12,6 +12,11 @@ enum DevotionRoute: Hashable {
     /// remembering where to return — mirrors SessionClient's `?devotion=`
     /// query param, since this app has no URL layer to carry it.
     case catechismHandoff(programSlug: String, devotionSlug: String, returnStep: Int)
+    /// A reading plan's home — mirrors /devotions/reading-plans/[slug].
+    /// The plan's calendar is the whole destination: every action (mark
+    /// today done, skip ahead to any day) happens inline there, no
+    /// separate day-detail push.
+    case readingPlan(String)
 }
 
 /// What SessionView needs to know when it was reached via a devotion's

@@ -16,16 +16,24 @@ import {
   getActiveLocalCatechismTrack,
   type LocalCatechismTrack,
 } from '@/lib/localCatechismProgress';
+import { getReadingPlanCompletedDays } from '@/lib/localReadingPlanProgress';
 import { currentPartDay, getSeriesCompletedDays } from '@/lib/localSeriesProgress';
 import { PROGRAMS } from '@/lib/programs';
+import { getReadingPlanDay } from '@/lib/readingPlanContent';
+import { READING_PLANS } from '@/lib/readingPlans';
 
-// With no saved progress the homepage pitches the flagship program (WSC).
+// With no saved progress the homepage pitches the flagship program (WSC)
+// and the flagship reading plan (the full year) — reading plans are a
+// first-class, default devotion type (turn 19, adapted), so they get a
+// direct entry point here, not just a link buried in the devotions hub.
 const DEFAULT_PROGRAM = PROGRAMS[0];
 const WSC_RUN = seriesForCatechism('WSC');
+const FLAGSHIP_PLAN = READING_PLANS[0];
 
 export function HomeClient() {
   const [localTrack, setLocalTrack] = useState<LocalCatechismTrack | null>(null);
   const [runCompleted, setRunCompleted] = useState<number[] | null>(null);
+  const [planCompleted, setPlanCompleted] = useState<number[] | null>(null);
 
   // The saved track and the run's local progress are both device state, so
   // neither can render on the server; the mount effect doubles as the ready
@@ -33,11 +41,15 @@ export function HomeClient() {
   useEffect(() => {
     setLocalTrack(getActiveLocalCatechismTrack());
     setRunCompleted(WSC_RUN ? getSeriesCompletedDays(WSC_RUN.slug) : []);
+    setPlanCompleted(getReadingPlanCompletedDays(FLAGSHIP_PLAN.slug));
   }, []);
 
-  if (!runCompleted) {
+  if (!runCompleted || !planCompleted) {
     return <div className="min-h-40" aria-hidden="true" />;
   }
+
+  const planCurrentDay = currentPartDay(planCompleted, FLAGSHIP_PLAN.totalDays);
+  const planToday = planCurrentDay ? getReadingPlanDay(FLAGSHIP_PLAN, planCurrentDay) : null;
 
   // A track whose catechism no longer maps to a program can't be continued;
   // treat it as a fresh visit.
@@ -83,8 +95,31 @@ export function HomeClient() {
         </Link>
       )}
 
+      <Link
+        href={`/devotions/reading-plans/${FLAGSHIP_PLAN.slug}`}
+        className="mt-3.5 block rounded-sm bg-fill px-6 py-6 text-ink no-underline sm:mt-5 sm:px-10 sm:py-9"
+      >
+        <div className="label-caps mb-2.5 text-[9.5px] tracking-[0.14em] text-ochre sm:mb-3.5 sm:text-[11.5px]">
+          {planCurrentDay === null
+            ? `All ${FLAGSHIP_PLAN.totalDays} Days Read`
+            : `Day ${planCurrentDay} of ${FLAGSHIP_PLAN.totalDays} · ${FLAGSHIP_PLAN.title}`}
+        </div>
+        <div className="flex items-baseline justify-between gap-4">
+          <h2 className="m-0 heading-page">
+            {planCurrentDay === null ? 'The Whole Bible, Read'
+              : planCompleted.length > 0 ? `Continue — Day ${planCurrentDay}`
+                : 'Begin — Day 1'}
+          </h2>
+          <span className="font-display text-[18px] text-ochre sm:text-[20px]" aria-hidden="true">→</span>
+        </div>
+        <p className="m-0 mt-1.5 font-body text-[13px] italic text-ink-2 sm:mt-2.5 sm:text-[15.5px]">
+          {planToday ? planToday.citation : 'Genesis through Revelation, canonical order'}
+        </p>
+      </Link>
+
       {/* the devotions library's entry point (12a): a quiet alternative to
-          the WSC run card, never competing with it */}
+          the WSC run card and the reading-plan card, never competing with
+          either */}
       <div className="mt-3.5 text-center sm:mt-5">
         <Link
           href="/devotions"

@@ -1,6 +1,4 @@
-// OSIS bible-reference helpers, ported from src/lib/bible.ts. The full
-// BIBLE_BOOKS browse structure isn't ported — nothing in the app browses by
-// book yet.
+// OSIS bible-reference helpers, ported from src/lib/bible.ts.
 import Foundation
 
 public let bibleBookByAbbreviation: [String: String] = [
@@ -136,4 +134,41 @@ private let bundledEsvTextMap: [String: String] = {
 
 public func bundledEsvText(for osis: String) -> String? {
     bundledEsvTextMap[osis]
+}
+
+// The canon as a browsable structure (ported for reading plans —
+// src/lib/bible.ts's BIBLE_BOOKS): all 66 books in canonical order with
+// English chapter counts, so a plan's day-by-day schedule can be derived
+// from the canon itself rather than authored.
+public struct BibleBook: Sendable {
+    public let osis: String
+    public let name: String
+    public let chapters: Int
+    public let testament: String // "old" | "new"
+}
+
+private let oldTestamentBooks: [(String, Int)] = [
+    ("Gen", 50), ("Exod", 40), ("Lev", 27), ("Num", 36), ("Deut", 34),
+    ("Josh", 24), ("Judg", 21), ("Ruth", 4), ("1Sam", 31), ("2Sam", 24),
+    ("1Kgs", 22), ("2Kgs", 25), ("1Chr", 29), ("2Chr", 36), ("Ezra", 10),
+    ("Neh", 13), ("Esth", 10), ("Job", 42), ("Ps", 150), ("Prov", 31),
+    ("Eccl", 12), ("Song", 8), ("Isa", 66), ("Jer", 52), ("Lam", 5),
+    ("Ezek", 48), ("Dan", 12), ("Hos", 14), ("Joel", 3), ("Amos", 9),
+    ("Obad", 1), ("Jonah", 4), ("Mic", 7), ("Nah", 3), ("Hab", 3),
+    ("Zeph", 3), ("Hag", 2), ("Zech", 14), ("Mal", 4),
+]
+
+private let newTestamentBooks: [(String, Int)] = [
+    ("Matt", 28), ("Mark", 16), ("Luke", 24), ("John", 21), ("Acts", 28),
+    ("Rom", 16), ("1Cor", 16), ("2Cor", 13), ("Gal", 6), ("Eph", 6),
+    ("Phil", 4), ("Col", 4), ("1Thess", 5), ("2Thess", 3), ("1Tim", 6),
+    ("2Tim", 4), ("Titus", 3), ("Phlm", 1), ("Heb", 13), ("Jas", 5),
+    ("1Pet", 5), ("2Pet", 3), ("1John", 5), ("2John", 1), ("3John", 1),
+    ("Jude", 1), ("Rev", 22),
+]
+
+public let BIBLE_BOOKS: [BibleBook] = oldTestamentBooks.map {
+    BibleBook(osis: $0.0, name: bibleBookByAbbreviation[$0.0] ?? $0.0, chapters: $0.1, testament: "old")
+} + newTestamentBooks.map {
+    BibleBook(osis: $0.0, name: bibleBookByAbbreviation[$0.0] ?? $0.0, chapters: $0.1, testament: "new")
 }

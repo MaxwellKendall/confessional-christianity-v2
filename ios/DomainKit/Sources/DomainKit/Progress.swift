@@ -87,10 +87,32 @@ public final class SeriesProgressRecord {
 // capability (Signing & Capabilities > App Groups) for both targets — see
 // ios/App/Sources/ConfessionalChristianity.entitlements and
 // ios/App/Widget/ConfessionalChristianityWidgetExtension.entitlements.
+// SwiftData port of src/lib/localReadingPlanProgress.ts's per-plan
+// completions record — a sibling to SeriesProgressRecord, not a reuse of it:
+// a plan's days are computed chapters (ReadingPlanContent.swift), not
+// authored devotions, so it gets its own row type rather than borrowing the
+// series store's namespace.
+@Model
+public final class ReadingPlanProgressRecord {
+    @Attribute(.unique) public var planSlug: String
+    private var completedDaysData: Data
+
+    public var completedDays: [Int] {
+        get { (try? JSONDecoder().decode([Int].self, from: completedDaysData)) ?? [] }
+        set { completedDaysData = (try? JSONEncoder().encode(newValue)) ?? Data() }
+    }
+
+    public init(planSlug: String, completedDays: [Int] = []) {
+        self.planSlug = planSlug
+        self.completedDaysData = (try? JSONEncoder().encode(completedDays)) ?? Data()
+    }
+}
+
 public let sharedAppGroupID = "group.com.confessionalchristianity.app"
 
 public let progressSchema = Schema([
     LocalCatechismTrack.self, ProgressSettings.self, SeriesProgressRecord.self,
+    ReadingPlanProgressRecord.self,
 ])
 
 /// The single ModelContainer both the app and the widget extension build
@@ -262,6 +284,51 @@ public final class LocalSeriesProgressStore {
             return
         }
         context.insert(SeriesProgressRecord(seriesSlug: seriesSlug, completedDays: [day]))
+        try? context.save()
+    }
+}
+
+// Ported from src/lib/localReadingPlanProgress.ts: which days of each
+// reading plan this device has read. Its own store beside
+// LocalSeriesProgressStore, same shape, sibling domain — see
+// ReadingPlanProgressRecord's own comment for why it isn't a reuse of
+// SeriesProgressRecord.
+@MainActor
+public final class LocalReadingPlanProgressStore {
+    private let context: ModelContext
+
+    public init(context: ModelContext) {
+        self.context = context
+    }
+
+    private func record(for planSlug: String) -> ReadingPlanProgressRecord? {
+        let predicate = #Predicate<ReadingPlanProgressRecord> { $0.planSlug == planSlug }
+        return try? context.fetch(FetchDescriptor(predicate: predicate)).first
+    }
+
+    public func getCompletedDays(_ planSlug: String) -> [Int] {
+        record(for: planSlug)?.completedDays ?? []
+    }
+
+    /// Idempotent, like LocalSeriesProgressStore.recordCompletion — replaying
+    /// a read day changes nothing, and progress never regresses.
+    public func recordRead(planSlug: String, day: Int) {
+        if let existing = record(for: planSlug) {
+            guard !existing.completedDays.contains(day) else { return }
+            existing.completedDays.append(day)
+            try? context.save()
+            return
+        }
+        context.insert(ReadingPlanProgressRecord(planSlug: planSlug, completedDays: [day]))
+        try? context.save()
+    }
+
+    /// Reverses recordRead — a plan-only "undo," since a devotion series'
+    /// authored parts don't need unmarking but a reading plan's days (jumped
+    /// to freely, possibly by mistake) do.
+    public func markUnread(planSlug: String, day: Int) {
+        guard let existing = record(for: planSlug) else { return }
+        existing.completedDays.removeAll { $0 == day }
         try? context.save()
     }
 }

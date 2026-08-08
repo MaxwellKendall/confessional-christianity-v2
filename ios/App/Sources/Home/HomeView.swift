@@ -11,15 +11,18 @@ import DomainKit
 struct HomeView: View {
     private let defaultProgram = PROGRAMS[0]
     private let wscRun = seriesForCatechism("WSC")
+    private let flagshipPlan = READING_PLANS[0]
 
     @Binding var path: NavigationPath
 
     @Environment(\.modelContext) private var modelContext
     @State private var track: LocalCatechismTrack?
     @State private var runCompletedDays: [Int] = []
+    @State private var planCompletedDays: [Int] = []
 
     private var store: LocalProgressStore { LocalProgressStore(context: modelContext) }
     private var seriesStore: LocalSeriesProgressStore { LocalSeriesProgressStore(context: modelContext) }
+    private var readingPlanStore: LocalReadingPlanProgressStore { LocalReadingPlanProgressStore(context: modelContext) }
 
     private var trackProgram: ProgramDefinition? {
         guard let track else { return nil }
@@ -50,6 +53,9 @@ struct HomeView: View {
         guard let wscRun, let runCurrentDay else { return nil }
         return wscRun.parts.first { $0.day == runCurrentDay }
     }
+
+    private var planCurrentDay: Int? { currentPartDay(planCompletedDays, totalParts: flagshipPlan.totalDays) }
+    private var planToday: ReadingPlanDay? { planCurrentDay.flatMap { getReadingPlanDay(flagshipPlan, $0) } }
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -85,6 +91,10 @@ struct HomeView: View {
                             handoff: DevotionHandoff(devotionSlug: devotionSlug, returnStep: returnStep)
                         )
                     }
+                case .readingPlan(let slug):
+                    if let plan = getReadingPlan(slug) {
+                        ReadingPlanView(plan: plan, path: $path)
+                    }
                 }
             }
             .navigationDestination(for: ScriptureRoute.self) { route in
@@ -115,6 +125,7 @@ struct HomeView: View {
                 if let wscRun {
                     runCompletedDays = seriesStore.getCompletedDays(wscRun.slug)
                 }
+                planCompletedDays = readingPlanStore.getCompletedDays(flagshipPlan.slug)
             }
         }
         .tint(.ccInk)
@@ -152,8 +163,38 @@ struct HomeView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 3))
                         }
                         .buttonStyle(.plain)
-                        .padding(.bottom, 32)
+                        .padding(.bottom, 12)
                     }
+
+                    Button {
+                        path.append(DevotionRoute.readingPlan(flagshipPlan.slug))
+                    } label: {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(planCurrentDay == nil
+                                 ? "All \(flagshipPlan.totalDays) Days Read"
+                                 : "Day \(planCurrentDay!) of \(flagshipPlan.totalDays) \u{00B7} \(flagshipPlan.title)")
+                                .labelCaps(size: 9.5, tracking: 0.14, color: .ccOchre)
+                            HStack(alignment: .firstTextBaseline) {
+                                Text(planCurrentDay == nil
+                                     ? "The Whole Bible, Read"
+                                     : (planCompletedDays.isEmpty ? "Begin \u{2014} Day 1" : "Continue \u{2014} Day \(planCurrentDay!)"))
+                                    .headingPage()
+                                Spacer()
+                                Text("\u{2192}").font(.ccDisplay(18)).foregroundStyle(.ccOchre)
+                            }
+                            Text(planToday?.citation ?? "Genesis through Revelation, canonical order")
+                                .font(.ccBody(13.5))
+                                .italic()
+                                .foregroundStyle(.ccInk2)
+                        }
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 22)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color.ccFill)
+                        .clipShape(RoundedRectangle(cornerRadius: 3))
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.bottom, 32)
 
                     Text("Your Catechism")
                         .labelCaps(size: 9.5, tracking: 0.14)

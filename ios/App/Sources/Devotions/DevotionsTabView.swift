@@ -3,6 +3,9 @@
 // authored series directly (advent, wsc) rather than block the tab bar's
 // Devotions destination on unbuilt content — an honest, minimal root
 // consistent with milestones.ts's "not yet mapped" pattern elsewhere.
+// Reading plans (mirroring the web hub's "By Reading Plan" row) lead even
+// that list: first-class and default among this root's sections, so they're
+// the first thing shown.
 import SwiftUI
 import DomainKit
 
@@ -15,9 +18,33 @@ struct DevotionsTabView: View {
                 SiteHeaderView(path: $path)
                 ScrollView {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Devotion Series")
+                        Text("Reading Plans")
                             .labelCaps(size: 9.5, tracking: 0.14)
                             .padding(.top, 24)
+                            .padding(.bottom, 2)
+
+                        ForEach(READING_PLANS, id: \.slug) { plan in
+                            Button {
+                                path.append(DevotionRoute.readingPlan(plan.slug))
+                            } label: {
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Text(plan.title).headingSection()
+                                    Text("\(plan.pace) \u{00B7} \(plan.totalDays) days")
+                                        .font(.ccBody(13))
+                                        .italic()
+                                        .foregroundStyle(.ccInk2)
+                                }
+                                .padding(20)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(Color.ccFill)
+                                .clipShape(RoundedRectangle(cornerRadius: 3))
+                            }
+                            .buttonStyle(.plain)
+                        }
+
+                        Text("Devotion Series")
+                            .labelCaps(size: 9.5, tracking: 0.14)
+                            .padding(.top, 20)
                             .padding(.bottom, 2)
 
                         ForEach(getAllSeries(), id: \.slug) { series in
@@ -65,6 +92,10 @@ struct DevotionsTabView: View {
                             program: program, path: $path,
                             handoff: DevotionHandoff(devotionSlug: devotionSlug, returnStep: returnStep)
                         )
+                    }
+                case .readingPlan(let slug):
+                    if let plan = getReadingPlan(slug) {
+                        ReadingPlanView(plan: plan, path: $path)
                     }
                 }
             }
