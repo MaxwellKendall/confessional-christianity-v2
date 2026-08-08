@@ -1,8 +1,14 @@
 // App shell: four tabs (Catechisms/Devotions/Reflections/Library) behind a
-// native TabView — kept mounted so each tab's own navigation state survives
-// switching — with the system tab bar hidden and the design handoff's
-// floating pill (FloatingTabBarView) overlaid instead. Visibility is a
-// property of whatever screen is on top, not of which tab it's pushed on:
+// plain ZStack — kept mounted so each tab's own navigation state survives
+// switching — with the design handoff's floating pill (FloatingTabBarView)
+// overlaid on top. A real TabView was tried first, but even with its system
+// tab bar hidden via .toolbar(.hidden, for: .tabBar), the hidden bar kept
+// consuming taps in its own screen-edge strip — e.g. a "Begin This Devotion"
+// CTA sitting flush against the bottom (ignoresSafeArea) would register on
+// whichever hidden native tab item shared its coordinates instead of its own
+// action. The ZStack avoids a system tab bar existing at all, so there's
+// nothing hidden-but-still-tappable underneath. Visibility is a property of
+// whatever screen is on top, not of which tab it's pushed on:
 // immersive/chrome-free screens (Session, Worship, Prayer, etc.) opt out via
 // .hidesFloatingTabBar() so they read the same whether reached from their
 // home tab or deep-linked from another tab's navigationDestination(for:).
@@ -34,21 +40,24 @@ struct RootView: View {
     }
 
     var body: some View {
-        TabView(selection: $selected) {
+        ZStack {
             HomeView(path: $catechismsPath)
                 .onHidesFloatingTabBarChange { catechismsHidesBar = $0 }
-                .tag(RootTab.catechisms)
+                .opacity(selected == .catechisms ? 1 : 0)
+                .allowsHitTesting(selected == .catechisms)
             DevotionsTabView(path: $devotionsPath)
                 .onHidesFloatingTabBarChange { devotionsHidesBar = $0 }
-                .tag(RootTab.devotions)
+                .opacity(selected == .devotions ? 1 : 0)
+                .allowsHitTesting(selected == .devotions)
             ReflectionsTabView(path: $reflectionsPath)
                 .onHidesFloatingTabBarChange { reflectionsHidesBar = $0 }
-                .tag(RootTab.reflections)
+                .opacity(selected == .reflections ? 1 : 0)
+                .allowsHitTesting(selected == .reflections)
             LibraryTabView(path: $libraryPath)
                 .onHidesFloatingTabBarChange { libraryHidesBar = $0 }
-                .tag(RootTab.library)
+                .opacity(selected == .library ? 1 : 0)
+                .allowsHitTesting(selected == .library)
         }
-        .toolbar(.hidden, for: .tabBar)
         .overlay(alignment: .bottom) {
             if isTabBarVisible {
                 FloatingTabBarView(selected: $selected)
