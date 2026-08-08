@@ -40,20 +40,43 @@ private func osis(for chapters: [PlanChapter]) -> String {
     return start == end ? start : "\(start)-\(end)"
 }
 
-/// One day's reading: the canon's chapters split evenly across the plan's
-/// length, in canonical order. Nil outside the plan's day range.
+/// One day's reading. Nil outside the plan's day range. Sequential plans
+/// split the whole canon evenly across totalDays; calendarMonthly plans
+/// instead slice a fixed number of chapters straight off one book, day by
+/// day (see ReadingPlans.swift's cadence doc).
 public func getReadingPlanDay(_ plan: ReadingPlanDefinition, _ day: Int) -> ReadingPlanDay? {
     guard day >= 1, day <= plan.totalDays else { return nil }
-    let total = allChapters.count
-    let start = (total * (day - 1)) / plan.totalDays
-    let end = (total * day) / plan.totalDays
-    guard start < end else { return nil }
-    let chapters = Array(allChapters[start..<end])
-    return ReadingPlanDay(day: day, osis: osis(for: chapters), citation: citation(for: chapters))
+    switch plan.cadence {
+    case .sequential:
+        let total = allChapters.count
+        let start = (total * (day - 1)) / plan.totalDays
+        let end = (total * day) / plan.totalDays
+        guard start < end else { return nil }
+        let chapters = Array(allChapters[start..<end])
+        return ReadingPlanDay(day: day, osis: osis(for: chapters), citation: citation(for: chapters))
+    case .calendarMonthly(let book, let chaptersPerDay):
+        guard let bibleBook = BIBLE_BOOKS.first(where: { $0.osis == book }) else { return nil }
+        let startChapter = (day - 1) * chaptersPerDay + 1
+        let endChapter = min(day * chaptersPerDay, bibleBook.chapters)
+        guard startChapter <= bibleBook.chapters else { return nil }
+        let chapters = (startChapter...endChapter).map {
+            PlanChapter(bookOsis: bibleBook.osis, bookName: bibleBook.name, chapter: $0)
+        }
+        return ReadingPlanDay(day: day, osis: osis(for: chapters), citation: citation(for: chapters))
+    }
 }
 
 /// The whole plan's schedule, in order — the calendar grid's day list reads
 /// off this.
 public func getReadingPlanSchedule(_ plan: ReadingPlanDefinition) -> [ReadingPlanDay] {
     (1...plan.totalDays).compactMap { getReadingPlanDay(plan, $0) }
+}
+
+/// For calendarMonthly plans: today's day-of-month, clamped into the
+/// plan's cycle — the reading for "today" is fixed by the calendar, not by
+/// when the reader started or what they've already marked done (contrast
+/// currentPartDay, which sequential plans use instead).
+public func currentCalendarPlanDay(_ plan: ReadingPlanDefinition, now: Date = Date()) -> Int {
+    let dayOfMonth = Calendar.current.component(.day, from: now)
+    return min(max(dayOfMonth, 1), plan.totalDays)
 }

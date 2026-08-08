@@ -88,7 +88,14 @@ struct ReadingPlanView: View {
         }
         .task {
             completed = store.getCompletedDays(plan.slug)
-            viewedDay = currentPartDay(completed, totalParts: plan.totalDays) ?? plan.totalDays
+            switch plan.cadence {
+            case .sequential:
+                viewedDay = currentPartDay(completed, totalParts: plan.totalDays) ?? plan.totalDays
+            case .calendarMonthly:
+                // Keyed to the calendar, not to progress — "today" is always
+                // today's day-of-month, whether or not it's marked done yet.
+                viewedDay = currentCalendarPlanDay(plan)
+            }
             loaded = true
         }
     }
