@@ -7,64 +7,10 @@
 // "Begin This Devotion" (mockup 15c) hands off to the existing renderer;
 // only the wrapper metadata (grounding, summary, description) is new.
 // "Liturgy" stays out of user-facing copy — everywhere it's "Devotions".
-// Statically imported so the bundler traces the data (see programContent.ts).
-import advent1 from '../../content/devotions/advent-1.json';
-import advent2 from '../../content/devotions/advent-2.json';
-import advent3 from '../../content/devotions/advent-3.json';
-import psalm130 from '../../content/devotions/psalm-130.json';
-import wsc1 from '../../content/devotions/wsc-1.json';
-import wsc2 from '../../content/devotions/wsc-2.json';
-import wsc3 from '../../content/devotions/wsc-3.json';
-import wsc4 from '../../content/devotions/wsc-4.json';
-import wsc5 from '../../content/devotions/wsc-5.json';
-import wsc6 from '../../content/devotions/wsc-6.json';
-import wsc7 from '../../content/devotions/wsc-7.json';
-import wsc8 from '../../content/devotions/wsc-8.json';
-import wsc9 from '../../content/devotions/wsc-9.json';
-import wsc10 from '../../content/devotions/wsc-10.json';
-import wsc11 from '../../content/devotions/wsc-11.json';
-import wsc12 from '../../content/devotions/wsc-12.json';
-import wsc13 from '../../content/devotions/wsc-13.json';
-import wsc14 from '../../content/devotions/wsc-14.json';
-import wsc15 from '../../content/devotions/wsc-15.json';
-import wsc16 from '../../content/devotions/wsc-16.json';
-import wsc17 from '../../content/devotions/wsc-17.json';
-import wsc18 from '../../content/devotions/wsc-18.json';
-import wsc19 from '../../content/devotions/wsc-19.json';
-import wsc20 from '../../content/devotions/wsc-20.json';
-import wsc21 from '../../content/devotions/wsc-21.json';
-import wsc22 from '../../content/devotions/wsc-22.json';
-import wsc23 from '../../content/devotions/wsc-23.json';
-import wsc24 from '../../content/devotions/wsc-24.json';
-import wsc25 from '../../content/devotions/wsc-25.json';
-import wsc26 from '../../content/devotions/wsc-26.json';
-import wsc27 from '../../content/devotions/wsc-27.json';
-import wsc28 from '../../content/devotions/wsc-28.json';
-import wsc29 from '../../content/devotions/wsc-29.json';
-import wsc30 from '../../content/devotions/wsc-30.json';
-import wsc31 from '../../content/devotions/wsc-31.json';
-import wsc32 from '../../content/devotions/wsc-32.json';
-import wsc33 from '../../content/devotions/wsc-33.json';
-import wsc34 from '../../content/devotions/wsc-34.json';
-import wsc35 from '../../content/devotions/wsc-35.json';
-import wsc36 from '../../content/devotions/wsc-36.json';
-import wsc37 from '../../content/devotions/wsc-37.json';
-import wsc38 from '../../content/devotions/wsc-38.json';
-import wsc39 from '../../content/devotions/wsc-39.json';
-import wsc40 from '../../content/devotions/wsc-40.json';
-import wsc42 from '../../content/devotions/wsc-42.json';
-import wsc43 from '../../content/devotions/wsc-43.json';
-import wsc45 from '../../content/devotions/wsc-45.json';
-import wsc47 from '../../content/devotions/wsc-47.json';
-import wsc49 from '../../content/devotions/wsc-49.json';
-import wsc51 from '../../content/devotions/wsc-51.json';
-import wsc53 from '../../content/devotions/wsc-53.json';
-import wsc55 from '../../content/devotions/wsc-55.json';
-import wsc57 from '../../content/devotions/wsc-57.json';
-import wsc59 from '../../content/devotions/wsc-59.json';
-import wsc61 from '../../content/devotions/wsc-61.json';
-import wsc63 from '../../content/devotions/wsc-63.json';
-import wsc65 from '../../content/devotions/wsc-65.json';
+// Statically imported so the bundler traces the data (see programContent.ts)
+// — through a generated manifest, so adding a devotion is just adding its
+// content/devotions/<slug>.json (scripts/devotions/generate-manifest.mjs).
+import { DEVOTION_JSON } from './devotionManifest.generated';
 import { getDocumentById } from './catechisms';
 import type { WorshipStep } from './worship';
 
@@ -129,67 +75,8 @@ export const SEASONS: DevotionSeason[] = [
   { slug: 'lent', name: 'Lent', days: 40 },
 ];
 
-// Add a static import + entry here for each authored devotion, same
-// one-line shape as psalm-130.
-const DEVOTIONS: Devotion[] = [
-  psalm130 as unknown as Devotion,
-  advent1 as unknown as Devotion,
-  advent2 as unknown as Devotion,
-  advent3 as unknown as Devotion,
-  wsc1 as unknown as Devotion,
-  wsc2 as unknown as Devotion,
-  wsc3 as unknown as Devotion,
-  wsc4 as unknown as Devotion,
-  wsc5 as unknown as Devotion,
-  wsc6 as unknown as Devotion,
-  wsc7 as unknown as Devotion,
-  wsc8 as unknown as Devotion,
-  wsc9 as unknown as Devotion,
-  wsc10 as unknown as Devotion,
-  wsc11 as unknown as Devotion,
-  wsc12 as unknown as Devotion,
-  wsc13 as unknown as Devotion,
-  wsc14 as unknown as Devotion,
-  wsc15 as unknown as Devotion,
-  wsc16 as unknown as Devotion,
-  wsc17 as unknown as Devotion,
-  wsc18 as unknown as Devotion,
-  wsc19 as unknown as Devotion,
-  wsc20 as unknown as Devotion,
-  wsc21 as unknown as Devotion,
-  wsc22 as unknown as Devotion,
-  wsc23 as unknown as Devotion,
-  wsc24 as unknown as Devotion,
-  wsc25 as unknown as Devotion,
-  wsc26 as unknown as Devotion,
-  wsc27 as unknown as Devotion,
-  wsc28 as unknown as Devotion,
-  wsc29 as unknown as Devotion,
-  wsc30 as unknown as Devotion,
-  wsc31 as unknown as Devotion,
-  wsc32 as unknown as Devotion,
-  wsc33 as unknown as Devotion,
-  wsc34 as unknown as Devotion,
-  wsc35 as unknown as Devotion,
-  wsc36 as unknown as Devotion,
-  wsc37 as unknown as Devotion,
-  wsc38 as unknown as Devotion,
-  wsc39 as unknown as Devotion,
-  wsc40 as unknown as Devotion,
-  wsc42 as unknown as Devotion,
-  wsc43 as unknown as Devotion,
-  wsc45 as unknown as Devotion,
-  wsc47 as unknown as Devotion,
-  wsc49 as unknown as Devotion,
-  wsc51 as unknown as Devotion,
-  wsc53 as unknown as Devotion,
-  wsc55 as unknown as Devotion,
-  wsc57 as unknown as Devotion,
-  wsc59 as unknown as Devotion,
-  wsc61 as unknown as Devotion,
-  wsc63 as unknown as Devotion,
-  wsc65 as unknown as Devotion,
-];
+// Every content/devotions/*.json, in natural slug order.
+const DEVOTIONS = DEVOTION_JSON as Devotion[];
 
 /** The hub's "Featured This Week" pick (15a) — editorial, rotated by hand. */
 const FEATURED_SLUG = 'psalm-130';

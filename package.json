@@ -3,17 +3,21 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "npm run devotions:manifest",
     "dev": "next dev",
-    "prebuild": "npm run prayers:compile",
+    "prebuild": "npm run devotions:manifest && npm run prayers:compile",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "pretest": "npm run devotions:manifest",
     "test": "vitest run",
     "prayers:compile": "node scripts/programs/compile-prayers.mjs",
     "prayers:draft": "node scripts/programs/draft-prayers.mjs",
     "prayers:approve": "node scripts/programs/approve-prayers.mjs",
     "ios:sync-content": "node scripts/ios/sync-content.mjs",
-    "ios:sync-esv-text": "node scripts/ios/sync-esv-text.mjs"
+    "ios:sync-esv-text": "node scripts/ios/sync-esv-text.mjs",
+    "postinstall": "npm run devotions:manifest",
+    "devotions:manifest": "node scripts/devotions/generate-manifest.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",

@@ -56,3 +56,6 @@ ios/**/.swiftpm/
 # downloaded Claude Design export (design reference, not project source)
 /latest-designs.zip
 /latest-designs/
+
+# generated devotion manifest (scripts/devotions/generate-manifest.mjs)
+/src/lib/devotionManifest.generated.ts
