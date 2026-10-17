@@ -1,13 +1,14 @@
-// Where /admin reads devotions from and writes them to. Devotions stay what
-// they've always been — JSON files in content/devotions, reviewed as git
-// commits — so there are two stores over the same files:
+// Where /admin reads devotions and series from and writes them to. Both stay
+// what they've always been — JSON files under content/devotions, reviewed as
+// git commits — so there are two stores over the same files:
 //
 // - local: `next dev` on a checkout. Saves write straight to disk and
 //   regenerate the manifest; the author commits like any other change.
-// - github: the deployed admin (ADMIN_GITHUB_* set). Each devotion gets a
-//   review branch, admin/devotions/<slug>; the first save opens a pull
-//   request, later saves add commits to it. Merging is publishing — the
-//   web goes live on the next deploy, iOS on its next content sync.
+// - github: the deployed admin (ADMIN_GITHUB_* set). Each devotion or series
+//   gets a review branch (admin/devotions/<slug>, admin/series/<slug>); the
+//   first save opens a pull request, later saves add commits to it. Merging
+//   is publishing — the web goes live on the next deploy, iOS on its next
+//   content sync.
 import { execFile } from 'node:child_process';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
@@ -18,29 +19,45 @@ import { getAllDevotions } from '../devotions';
 import type { DevotionSeries } from '../devotionSeries';
 import { getAllSeries } from '../devotionSeries';
 import {
-  SLUG_PATTERN, relinkSeries, toContentJson, type SeriesLink,
+  SLUG_PATTERN, mergeSeriesEdit, relinkSeries, toContentJson, type SeriesLink,
 } from '../devotionValidation';
 import { createGitHubClient, githubConfig, type GitHubClient, type PullRequest } from './github';
 
 export const DEVOTIONS_DIR = 'content/devotions';
 export const SERIES_DIR = 'content/devotions/series';
 export const REVIEW_BRANCH_PREFIX = 'admin/devotions/';
+export const SERIES_BRANCH_PREFIX = 'admin/series/';
 
 export const devotionPath = (slug: string) => `${DEVOTIONS_DIR}/${slug}.json`;
 export const seriesPath = (slug: string) => `${SERIES_DIR}/${slug}.json`;
 
-export interface AdminDevotionRow {
-  devotion: Devotion;
-  /** On the base branch (github) — false for a devotion that so far exists
+interface ReviewState {
+  /** On the base branch (github) — false for something that so far exists
    * only in its open pull request. Always true locally. */
   published: boolean;
   /** The open review PR carrying unmerged edits, if any. */
   pending: PullRequest | null;
 }
 
+export interface AdminDevotionRow extends ReviewState {
+  devotion: Devotion;
+}
+
 export interface LoadedDevotion extends AdminDevotionRow {
   /** Every series as this devotion's branch sees them, for the part picker. */
   series: DevotionSeries[];
+}
+
+export interface AdminSeriesRow extends ReviewState {
+  series: DevotionSeries;
+}
+
+export interface LoadedSeries extends AdminSeriesRow {
+  /** How many leading parts households already have — fixed in place, since
+   * progress is stored by day number. 0 for a series not yet published. */
+  lockedParts: number;
+  /** Every other series, for the one-series-per-source check. */
+  otherSeries: DevotionSeries[];
 }
 
 export type SaveResult =
@@ -53,6 +70,11 @@ export interface SaveInput {
   isNew: boolean;
 }
 
+export interface SeriesSaveInput {
+  series: DevotionSeries;
+  isNew: boolean;
+}
+
 export interface DevotionStore {
   mode: 'local' | 'github';
   list(): Promise<AdminDevotionRow[]>;
@@ -62,35 +84,57 @@ export interface DevotionStore {
   /** Every slug in the shared /devotions/[slug] namespace, drafts included. */
   takenSlugs(): Promise<string[]>;
   save(input: SaveInput): Promise<SaveResult>;
+  listSeries(): Promise<AdminSeriesRow[]>;
+  loadSeries(slug: string): Promise<LoadedSeries | null>;
+  saveSeries(input: SeriesSaveInput): Promise<SaveResult>;
 }
+
+type FileWrite = { path: string; content: string };
 
 const bySlug = (a: { slug: string }, b: { slug: string }) => a.slug
   .localeCompare(b.slug, 'en', { numeric: true });
 
-/** The files a save writes: the devotion plus any series whose parts it
- * moved, each laid out like its current text (toContentJson), and none
- * that would come out byte-identical. */
-const filesToWrite = async (
-  { devotion, link }: SaveInput,
-  allSeries: DevotionSeries[],
+/** Lays each value out like its file's current text (toContentJson) and
+ * drops the ones that would come out byte-identical. */
+const changedFiles = async (
+  targets: [string, unknown][],
   readText: (path: string) => Promise<string | null>,
-): Promise<{ path: string; content: string }[]> => {
-  const targets: [string, unknown][] = [
-    [devotionPath(devotion.slug), devotion],
-    ...relinkSeries(allSeries, devotion.slug, link).map((s): [string, unknown] => [seriesPath(s.slug), s]),
-  ];
+): Promise<FileWrite[]> => {
   const files = await Promise.all(targets.map(async ([filePath, value]) => {
     const original = await readText(filePath);
     const content = toContentJson(value, original);
     return content === original ? null : { path: filePath, content };
   }));
-  const changed = files.filter((f): f is { path: string; content: string } => f !== null);
+  const changed = files.filter((f): f is FileWrite => f !== null);
   if (!changed.length) throw new Error('Nothing to save: this already matches what is there.');
   return changed;
 };
 
+/** A devotion save writes the devotion plus any series whose parts it moved. */
+const devotionFiles = (
+  { devotion, link }: SaveInput,
+  allSeries: DevotionSeries[],
+  readText: (path: string) => Promise<string | null>,
+) => changedFiles([
+  [devotionPath(devotion.slug), devotion],
+  ...relinkSeries(allSeries, devotion.slug, link).map((s): [string, unknown] => [seriesPath(s.slug), s]),
+], readText);
+
+/** A series save writes only its own manifest, with devotion links and
+ * published parts kept as mergeSeriesEdit rules. */
+const seriesFiles = (
+  { series }: SeriesSaveInput,
+  current: DevotionSeries | null,
+  published: DevotionSeries | null,
+  readText: (path: string) => Promise<string | null>,
+) => changedFiles([[seriesPath(series.slug), mergeSeriesEdit(series, current, published)]], readText);
+
 const commitMessage = ({ devotion, isNew }: SaveInput) => (
   `${isNew ? 'Add' : 'Update'} the "${devotion.title}" devotion (${devotion.slug})`
+);
+
+const seriesCommitMessage = ({ series, isNew }: SeriesSaveInput) => (
+  `${isNew ? 'Add' : 'Update'} the "${series.title}" devotion series (${series.slug})`
 );
 
 // ---------------------------------------------------------------------------
@@ -107,6 +151,20 @@ const createLocalStore = (root = process.cwd()): DevotionStore => {
   };
   const readDevotions = async () => (await readJsonDir<Devotion>(DEVOTIONS_DIR)).sort(bySlug);
   const readSeries = async () => (await readJsonDir<DevotionSeries>(SERIES_DIR)).sort(bySlug);
+  const readText = (filePath: string) => fs.readFile(path.join(root, filePath), 'utf8').catch(() => null);
+  /** The committed version — the closest a checkout has to "published". */
+  const readCommittedSeries = (slug: string): Promise<DevotionSeries | null> => execFileAsync(
+    'git', ['show', `HEAD:${seriesPath(slug)}`], { cwd: root },
+  ).then(({ stdout }) => JSON.parse(stdout) as DevotionSeries).catch(() => null);
+
+  const write = async (files: FileWrite[], isNew: boolean): Promise<SaveResult> => {
+    await Promise.all(files.map((f) => fs.writeFile(path.join(root, f.path), f.content, 'utf8')));
+    // a new file needs a manifest entry before the site can import it
+    if (isNew) {
+      await execFileAsync(process.execPath, [path.join(root, 'scripts/devotions/generate-manifest.mjs')], { cwd: root });
+    }
+    return { mode: 'local', paths: files.map((f) => f.path) };
+  };
 
   return {
     mode: 'local',
@@ -123,15 +181,25 @@ const createLocalStore = (root = process.cwd()): DevotionStore => {
       return [...(await readDevotions()), ...(await readSeries())].map((x) => x.slug);
     },
     async save(input) {
-      const files = await filesToWrite(input, await readSeries(), (filePath) => fs
-        .readFile(path.join(root, filePath), 'utf8')
-        .catch(() => null));
-      await Promise.all(files.map((f) => fs.writeFile(path.join(root, f.path), f.content, 'utf8')));
-      // a new file needs a manifest entry before the site can import it
-      if (input.isNew) {
-        await execFileAsync(process.execPath, [path.join(root, 'scripts/devotions/generate-manifest.mjs')], { cwd: root });
-      }
-      return { mode: 'local', paths: files.map((f) => f.path) };
+      return write(await devotionFiles(input, await readSeries(), readText), input.isNew);
+    },
+    async listSeries() {
+      return (await readSeries()).map((series) => ({ series, published: true, pending: null }));
+    },
+    async loadSeries(slug) {
+      const all = await readSeries();
+      const series = all.find((s) => s.slug === slug);
+      if (!series) return null;
+      const committed = await readCommittedSeries(slug);
+      return {
+        series, published: committed !== null, pending: null, lockedParts: committed?.parts.length ?? 0,
+        otherSeries: all.filter((s) => s.slug !== slug),
+      };
+    },
+    async saveSeries(input) {
+      const current = (await readSeries()).find((s) => s.slug === input.series.slug) ?? null;
+      const committed = await readCommittedSeries(input.series.slug);
+      return write(await seriesFiles(input, current, committed, readText), input.isNew);
     },
   };
 };
@@ -139,10 +207,8 @@ const createLocalStore = (root = process.cwd()): DevotionStore => {
 // ---------------------------------------------------------------------------
 // github
 
-const reviewBranch = (slug: string) => `${REVIEW_BRANCH_PREFIX}${slug}`;
-
-const prBody = (devotion: Devotion, paths: string[]) => [
-  `Authored in /admin: **${devotion.title}** (\`${devotion.slug}\`).`,
+const prBody = (what: string, paths: string[]) => [
+  `Authored in /admin: ${what}.`,
   '',
   'Merging publishes it on the web with the next deploy. iOS picks it up on the next `npm run ios:sync-content` and app build.',
   '',
@@ -151,15 +217,15 @@ const prBody = (devotion: Devotion, paths: string[]) => [
 ].join('\n');
 
 const createGitHubStore = (github: GitHubClient): DevotionStore => {
+  const base = github.config.baseBranch;
   const parse = <T>(text: string | null): T | null => (text ? JSON.parse(text) as T : null);
 
-  const pendingBySlug = async (): Promise<Map<string, PullRequest>> => new Map(
-    (await github.openPullRequests(REVIEW_BRANCH_PREFIX))
-      .map((pr) => [pr.branch.slice(REVIEW_BRANCH_PREFIX.length), pr]),
+  const pendingBySlug = async (prefix: string): Promise<Map<string, PullRequest>> => new Map(
+    (await github.openPullRequests(prefix)).map((pr) => [pr.branch.slice(prefix.length), pr]),
   );
 
-  /** Series as `ref` has them. Reads each manifest the deploy knows about
-   * plus any the branch added, so a series authored by hand still shows. */
+  /** Series as `ref` has them — every manifest in the directory, so one
+   * added by hand or on the branch shows too. */
   const seriesAt = async (ref: string): Promise<DevotionSeries[]> => {
     const names = await github.listDirectory(SERIES_DIR, ref);
     const series = await Promise.all(names.filter((n) => n.endsWith('.json'))
@@ -167,14 +233,29 @@ const createGitHubStore = (github: GitHubClient): DevotionStore => {
     return series.filter((s): s is DevotionSeries => s !== null).sort(bySlug);
   };
 
+  /** Commits to `<prefix><slug>`, opening its PR on the first save. */
+  const commitForReview = async (
+    branch: string,
+    existing: PullRequest | null,
+    files: FileWrite[],
+    message: string,
+    prTitle: string,
+    what: string,
+  ): Promise<SaveResult> => {
+    await github.commitFiles(branch, files, message, { restart: !existing });
+    const paths = files.map((f) => f.path);
+    if (existing) return { mode: 'github', paths, pullRequest: existing, opened: false };
+    const pullRequest = await github.openPullRequest(branch, prTitle, prBody(what, paths));
+    return { mode: 'github', paths, pullRequest, opened: true };
+  };
+
   return {
     mode: 'github',
     async list() {
       // published = what this deployment was built from; one API call for
       // the open PRs, plus one read per devotion that has unmerged edits
-      const pending = await pendingBySlug();
-      const published = getAllDevotions();
-      const rows: AdminDevotionRow[] = published.map((devotion) => ({
+      const pending = await pendingBySlug(REVIEW_BRANCH_PREFIX);
+      const rows: AdminDevotionRow[] = getAllDevotions().map((devotion) => ({
         devotion, published: true, pending: pending.get(devotion.slug) ?? null,
       }));
       await Promise.all([...pending].map(async ([slug, pr]) => {
@@ -189,46 +270,95 @@ const createGitHubStore = (github: GitHubClient): DevotionStore => {
     async load(slug) {
       // slugs become repository paths below; refuse anything else up front
       if (!SLUG_PATTERN.test(slug)) return null;
-      const pr = (await pendingBySlug()).get(slug) ?? null;
-      const ref = pr?.branch ?? github.config.baseBranch;
+      const pr = (await pendingBySlug(REVIEW_BRANCH_PREFIX)).get(slug) ?? null;
+      const ref = pr?.branch ?? base;
       const devotion = parse<Devotion>(await github.readFile(devotionPath(slug), ref));
       if (!devotion) return null;
-      const published = pr
-        ? (await github.readFile(devotionPath(slug))) !== null
-        : true;
+      const published = pr ? (await github.readFile(devotionPath(slug))) !== null : true;
       return { devotion, published, pending: pr, series: await seriesAt(ref) };
     },
-    series: () => seriesAt(github.config.baseBranch),
+    series: () => seriesAt(base),
     async takenSlugs() {
-      const [devotions, series, pending] = await Promise.all([
+      const [devotions, series, pendingDevotions, pendingSeries] = await Promise.all([
         github.listDirectory(DEVOTIONS_DIR),
         github.listDirectory(SERIES_DIR),
-        pendingBySlug(),
+        pendingBySlug(REVIEW_BRANCH_PREFIX),
+        pendingBySlug(SERIES_BRANCH_PREFIX),
       ]);
       return [
         ...[...devotions, ...series].filter((n) => n.endsWith('.json')).map((n) => n.slice(0, -5)),
         ...getAllDevotions().map((d) => d.slug),
         ...getAllSeries().map((s) => s.slug),
-        ...pending.keys(),
+        ...pendingDevotions.keys(),
+        ...pendingSeries.keys(),
       ];
     },
     async save(input) {
       const { devotion } = input;
-      const branch = reviewBranch(devotion.slug);
-      const existing = (await pendingBySlug()).get(devotion.slug) ?? null;
+      const branch = `${REVIEW_BRANCH_PREFIX}${devotion.slug}`;
+      const existing = (await pendingBySlug(REVIEW_BRANCH_PREFIX)).get(devotion.slug) ?? null;
       // build on the commit's parent — the open PR's branch, else the base —
       // so a second save on an open PR relinks against its own first save
-      const ref = existing ? branch : github.config.baseBranch;
-      const files = await filesToWrite(input, await seriesAt(ref), (filePath) => github.readFile(filePath, ref));
-      await github.commitFiles(branch, files, commitMessage(input), { restart: !existing });
-      const paths = files.map((f) => f.path);
-      if (existing) return { mode: 'github', paths, pullRequest: existing, opened: false };
-      const pullRequest = await github.openPullRequest(
-        branch,
+      const ref = existing ? branch : base;
+      const files = await devotionFiles(input, await seriesAt(ref), (p) => github.readFile(p, ref));
+      return commitForReview(
+        branch, existing, files, commitMessage(input),
         `${input.isNew ? 'New devotion' : 'Edit devotion'}: ${devotion.title}`,
-        prBody(devotion, paths),
+        `**${devotion.title}** (\`${devotion.slug}\`)`,
       );
-      return { mode: 'github', paths, pullRequest, opened: true };
+    },
+    async listSeries() {
+      const pending = await pendingBySlug(SERIES_BRANCH_PREFIX);
+      const rows: AdminSeriesRow[] = (await seriesAt(base)).map((series) => ({
+        series, published: true, pending: pending.get(series.slug) ?? null,
+      }));
+      await Promise.all([...pending].map(async ([slug, pr]) => {
+        const draft = parse<DevotionSeries>(await github.readFile(seriesPath(slug), pr.branch));
+        if (!draft) return;
+        const row = rows.find((r) => r.series.slug === slug);
+        if (row) row.series = draft;
+        else rows.push({ series: draft, published: false, pending: pr });
+      }));
+      return rows.sort((a, b) => bySlug(a.series, b.series));
+    },
+    async loadSeries(slug) {
+      if (!SLUG_PATTERN.test(slug)) return null;
+      const pr = (await pendingBySlug(SERIES_BRANCH_PREFIX)).get(slug) ?? null;
+      const [draft, published, others] = await Promise.all([
+        pr ? github.readFile(seriesPath(slug), pr.branch).then((t) => parse<DevotionSeries>(t)) : null,
+        github.readFile(seriesPath(slug)).then((t) => parse<DevotionSeries>(t)),
+        seriesAt(base),
+      ]);
+      const series = draft ?? published;
+      if (!series) return null;
+      return {
+        series,
+        published: published !== null,
+        pending: pr,
+        lockedParts: published?.parts.length ?? 0,
+        otherSeries: others.filter((s) => s.slug !== slug),
+      };
+    },
+    async saveSeries(input) {
+      const { series } = input;
+      const branch = `${SERIES_BRANCH_PREFIX}${series.slug}`;
+      const existing = (await pendingBySlug(SERIES_BRANCH_PREFIX)).get(series.slug) ?? null;
+      const ref = existing ? branch : base;
+      const [current, published] = await Promise.all([
+        github.readFile(seriesPath(series.slug), ref).then((t) => parse<DevotionSeries>(t)),
+        github.readFile(seriesPath(series.slug)).then((t) => parse<DevotionSeries>(t)),
+      ]);
+      // a devotion PR may have linked a part on the base since this branch
+      // was cut; take links from the base too so this save can't drop them
+      const linksFrom = current && published
+        ? { ...current, parts: current.parts.map((p) => ({ ...p, devotionSlug: p.devotionSlug ?? published.parts.find((q) => q.day === p.day)?.devotionSlug })) }
+        : current ?? published;
+      const files = await seriesFiles(input, linksFrom, published, (p) => github.readFile(p, ref));
+      return commitForReview(
+        branch, existing, files, seriesCommitMessage(input),
+        `${input.isNew ? 'New devotion series' : 'Edit devotion series'}: ${series.title}`,
+        `the **${series.title}** series (\`${series.slug}\`)`,
+      );
     },
   };
 };

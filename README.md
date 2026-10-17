@@ -57,17 +57,23 @@ layer, indexing pipeline, and Supabase project were **ported**, the UI was
 
 ## Devotion admin (`/admin`)
 
-An editor for devotions: metadata, grounding, the series part a devotion
-fills, and the eight fixed worship steps with their typed elements. It runs
-the same validation (`src/lib/devotionValidation.ts`) the test suite runs over
-every file in `content/devotions`. Devotions stay JSON files in git; how a
+An editor for devotions (metadata, grounding, the series part a devotion
+fills, and the eight fixed worship steps with their typed elements) and for
+series (name, the season or catechism the run is ordered over, and its named
+parts, which can be prefilled from a catechism). It runs the same validation
+(`src/lib/devotionValidation.ts`) the test suite runs over every file in
+`content/devotions`. Series progress is stored on devices by part number, so
+published parts can be renamed but not reordered or removed; new parts go
+after them. Each season and each document has at most one series, which the
+hub's rows link to. Devotions stay JSON files in git; how a
 save lands depends on where the admin runs:
 
 - **`npm run dev`**: saves write to `content/devotions` on your checkout, and
   you commit them. With no `ADMIN_PASSWORD` set, the admin is open locally.
 - **Deployed** (`ADMIN_PASSWORD`, `ADMIN_GITHUB_TOKEN`, `ADMIN_GITHUB_REPO`
   set): the first save of a devotion opens a pull request from
-  `admin/devotions/<slug>`, and later saves add commits to it. Review and
+  `admin/devotions/<slug>` (or `admin/series/<slug>`), and later saves add
+  commits to it. Review and
   merge are the editorial gate. The web goes live on the next deploy. iOS
   picks the devotion up on the next `npm run ios:sync-content`, which also
   regenerates `DevotionManifest.generated.swift`, followed by an app build
@@ -75,8 +81,8 @@ save lands depends on where the admin runs:
 - **Deployed without `ADMIN_PASSWORD`**: `/admin` returns 404.
 
 Saves keep each file's existing JSON layout, so a diff shows only what
-changed. Slugs are fixed after the first save. Deleting a devotion and
-editing series metadata are still done by hand.
+changed. Slugs are fixed after the first save. Deleting a devotion or series
+is still done by hand.
 
 ## URL continuity
 

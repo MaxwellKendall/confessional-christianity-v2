@@ -1,5 +1,7 @@
 // Starting points for the /admin editor — client-safe (no fs, no secrets).
 import type { Devotion } from '../devotions';
+import { SEASONS } from '../devotions';
+import type { DevotionSeries } from '../devotionSeries';
 import { DEVOTION_ROLES } from '../devotionValidation';
 import type { WorshipElement } from '../worship';
 
@@ -51,4 +53,14 @@ export const devotionFrom = (template: Devotion): Devotion => ({
   title: '',
   summary: '',
   description: '',
+});
+
+/** A new series: Advent-shaped until the author picks its source. */
+export const blankSeries = (): DevotionSeries => ({
+  slug: '',
+  source: { kind: 'season', season: SEASONS[0].slug },
+  title: '',
+  tagline: '',
+  description: '',
+  parts: [],
 });

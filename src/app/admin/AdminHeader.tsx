@@ -9,12 +9,33 @@ const MODE_NOTE = {
   github: 'Saves open a pull request for review',
 } as const;
 
-export function AdminHeader({ crumbs = [] }: { crumbs?: { href?: string; label: string }[] }) {
+const SECTIONS = [
+  { key: 'devotions', href: '/admin/devotions', label: 'Devotions' },
+  { key: 'series', href: '/admin/series', label: 'Series' },
+] as const;
+
+export function AdminHeader(
+  { section = 'devotions', crumbs = [] }: {
+    section?: (typeof SECTIONS)[number]['key'];
+    crumbs?: { href?: string; label: string }[];
+  },
+) {
   const setup = getDevotionStore();
   return (
     <div className="mb-6 flex flex-wrap items-baseline justify-between gap-3 border-b border-hairline pb-3">
       <nav className="label-caps flex flex-wrap items-baseline gap-2 text-[10.5px] text-ink-3">
-        <Link href="/admin/devotions" className="text-ink no-underline">Devotion Admin</Link>
+        <span className="text-ink">Admin</span>
+        <span aria-hidden="true">·</span>
+        {SECTIONS.map(({ key, href, label }) => (
+          <Link
+            key={key}
+            href={href}
+            aria-current={key === section ? 'page' : undefined}
+            className={`no-underline ${key === section ? 'text-ink' : 'text-ink-3'}`}
+          >
+            {label}
+          </Link>
+        ))}
         {crumbs.map((crumb) => (
           <span key={crumb.label} className="flex gap-2">
             <span aria-hidden="true">›</span>

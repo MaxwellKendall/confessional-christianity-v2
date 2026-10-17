@@ -163,6 +163,46 @@ describe('the GitHub-backed store', () => {
     expect(gh.calls.filter((c) => c.startsWith('POST'))).toEqual([]);
   });
 
+  test('a new series opens its own PR and shows as in review', async () => {
+    const s = store();
+    const lent = {
+      slug: 'lent',
+      source: { kind: 'season' as const, season: 'lent' },
+      title: 'The Way of the Cross',
+      tagline: 'Forty Days',
+      description: 'A walk to Good Friday.',
+      parts: [{ day: 1, title: 'Dust', citation: 'Genesis 3:19', devotionSlug: 'smuggled' }],
+    };
+    const result = await s.saveSeries({ series: lent, isNew: true });
+    expect(result).toMatchObject({ opened: true, pullRequest: { branch: 'admin/series/lent' }, paths: ['content/devotions/series/lent.json'] });
+    const written = JSON.parse(gh.fileAt(gh.refs['admin/series/lent'], 'content/devotions/series/lent.json')!);
+    // links belong to devotions; a series save never sets one
+    expect(written.parts).toEqual([{ day: 1, title: 'Dust', citation: 'Genesis 3:19' }]);
+
+    expect((await s.listSeries()).find((r) => r.series.slug === 'lent')).toMatchObject({ published: false, pending: { number: 40 } });
+    expect(await s.loadSeries('lent')).toMatchObject({ published: false, lockedParts: 0 });
+    expect(await s.takenSlugs()).toContain('lent');
+  });
+
+  test('a published series keeps its parts and links', async () => {
+    const s = store();
+    const loaded = await s.loadSeries('advent');
+    expect(loaded).toMatchObject({ published: true, pending: null, lockedParts: 24 });
+    expect(loaded!.otherSeries.map((x) => x.slug)).toEqual(['wsc']);
+
+    const advent = structuredClone(loaded!.series);
+    await expect(s.saveSeries({ series: { ...advent, parts: advent.parts.slice(0, 23) }, isNew: false }))
+      .rejects.toThrow(/added but not removed/);
+
+    advent.tagline = 'Waiting and Longing';
+    const result = await s.saveSeries({ series: advent, isNew: false });
+    const text = gh.fileAt(gh.refs['admin/series/advent'], 'content/devotions/series/advent.json')!;
+    expect(result.paths).toEqual(['content/devotions/series/advent.json']);
+    expect(text).toContain('"tagline": "Waiting and Longing"');
+    // one-line parts layout kept, links intact
+    expect(text).toContain('{ "day": 3, "title": "A Star out of Jacob", "citation": "Numbers 24:15–17", "devotionSlug": "advent-3" },');
+  });
+
   test('editing a published devotion reads it from the base branch', async () => {
     const loaded = await store().load('psalm-130');
     expect(loaded).toMatchObject({ published: true, pending: null, devotion: { slug: 'psalm-130' } });

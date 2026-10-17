@@ -172,19 +172,96 @@ export const validateDevotion = (
   return errors;
 };
 
-/** Series manifests the shape devotionSeries.ts reads; part days run 1..n. */
-export const validateSeries = (series: DevotionSeries): string[] => {
+/** Every problem with a series manifest, in the same "field: problem"
+ * form as validateDevotion. `otherSeries` are the rest of the library: two
+ * series on one season or catechism would make seriesForSeason /
+ * seriesForCatechism (and the hub rows built on them) ambiguous. */
+export const validateSeries = (
+  candidate: unknown,
+  { takenSlugs = [], otherSeries = [] }: { takenSlugs?: string[]; otherSeries?: DevotionSeries[] } = {},
+): string[] => {
+  if (!isRecord(candidate)) return ['a series must be an object'];
+  const series = candidate as Partial<DevotionSeries> & Record<string, unknown>;
   const errors: string[] = [];
-  if (!SLUG_PATTERN.test(series.slug)) errors.push(`series slug "${series.slug}" is malformed`);
-  series.parts.forEach((part, i) => {
-    if (part.day !== i + 1) errors.push(`${series.slug} part ${i + 1} has day ${part.day}`);
-    if (!nonEmpty(part.title) || !nonEmpty(part.citation)) {
-      errors.push(`${series.slug} day ${part.day} needs a title and citation`);
+
+  if (!nonEmpty(series.slug) || !SLUG_PATTERN.test(series.slug)) {
+    errors.push('slug must be lowercase letters, numbers, and single hyphens (e.g. lent)');
+  } else if (takenSlugs.includes(series.slug)) {
+    errors.push(`slug "${series.slug}" is already taken`);
+  }
+  if (!nonEmpty(series.title)) errors.push('title is required');
+  if (!nonEmpty(series.tagline)) errors.push('tagline is required');
+  if (!nonEmpty(series.description)) errors.push('description is required');
+
+  const source: Record<string, unknown> = isRecord(series.source) ? series.source : {};
+  if (source.kind === 'season') {
+    const season = SEASONS.find((s) => s.slug === source.season);
+    if (!season) errors.push(`source.season must be one of: ${SEASONS.map((s) => s.slug).join(', ')}`);
+    else if (Array.isArray(series.parts) && series.parts.length > season.days) {
+      errors.push(`${season.name} has ${season.days} days, so its series can't have ${series.parts.length} parts`);
     }
+  } else if (source.kind === 'catechism') {
+    if (typeof source.documentId !== 'string' || !getDocumentById(source.documentId)) {
+      errors.push('source.documentId must be a known document (e.g. WSC)');
+    }
+  } else {
+    errors.push('source.kind must be season or catechism');
+  }
+  const clash = otherSeries.find((other) => other.slug !== series.slug
+    && other.source.kind === source.kind
+    && (other.source.kind === 'season'
+      ? other.source.season === source.season
+      : other.source.documentId === source.documentId));
+  if (clash) errors.push(`"${clash.title}" (${clash.slug}) already covers this ${source.kind}`);
+
+  if (!Array.isArray(series.parts) || series.parts.length === 0) {
+    errors.push('a series needs at least one part');
+    return errors;
+  }
+  series.parts.forEach((part, i) => {
+    if (!isRecord(part)) {
+      errors.push(`part ${i + 1} is not a part`);
+      return;
+    }
+    if (part.day !== i + 1) errors.push(`part ${i + 1} has day ${String(part.day)}`);
+    if (!nonEmpty(part.title)) errors.push(`part ${i + 1} needs a title`);
+    if (!nonEmpty(part.citation)) errors.push(`part ${i + 1} needs a citation`);
   });
-  const linked = series.parts.flatMap((p) => (p.devotionSlug ? [p.devotionSlug] : []));
-  if (new Set(linked).size !== linked.length) errors.push(`${series.slug} links one devotion to two parts`);
+  const linked = series.parts.flatMap((p) => (isRecord(p) && typeof p.devotionSlug === 'string' ? [p.devotionSlug] : []));
+  if (new Set(linked).size !== linked.length) errors.push('one devotion is linked to two parts');
   return errors;
+};
+
+/** Folds an edited series onto the stored ones before it is written:
+ *
+ * - devotion links come from `current` (the file the save builds on), by
+ *   day — they're owned by each devotion's editor, never by this form;
+ * - parts in `published` (what households have) can be retitled but never
+ *   removed, because series progress is stored by day number on devices.
+ *
+ * Throws when the edit drops a published part. */
+export const mergeSeriesEdit = (
+  draft: DevotionSeries,
+  current: DevotionSeries | null,
+  published: DevotionSeries | null,
+): DevotionSeries => {
+  if (published && draft.parts.length < published.parts.length) {
+    throw new Error(`${published.title} is published with ${published.parts.length} parts; parts can be added but not removed`);
+  }
+  const lastLinked = Math.max(0, ...(current?.parts ?? []).filter((p) => p.devotionSlug).map((p) => p.day));
+  if (draft.parts.length < lastLinked) {
+    throw new Error(`part ${lastLinked} has a devotion linked; unlink it from that devotion before removing the part`);
+  }
+  return {
+    ...draft,
+    parts: draft.parts.map((part, i) => {
+      const day = i + 1;
+      const rest = { ...part };
+      delete rest.devotionSlug;
+      const link = current?.parts.find((p) => p.day === day)?.devotionSlug;
+      return link ? { ...rest, day, devotionSlug: link } : { ...rest, day };
+    }),
+  };
 };
 
 export interface SeriesLink {

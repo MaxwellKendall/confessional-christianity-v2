@@ -6,10 +6,12 @@ import { redirect } from 'next/navigation';
 import {
   ADMIN_COOKIE, SESSION_TTL_SECONDS, adminAccess, createSessionToken, isAdminToken, passwordMatches,
 } from '@/lib/admin/session';
+import { catechismSeriesParts } from '@/lib/admin/catechismParts';
 import { getDevotionStore, type SaveResult } from '@/lib/admin/store';
 import { citationToOsis, parseOsisBibleReference } from '@/lib/bible';
 import type { Devotion } from '@/lib/devotions';
-import { validateDevotion, type SeriesLink } from '@/lib/devotionValidation';
+import type { DevotionSeries, SeriesPart } from '@/lib/devotionSeries';
+import { validateDevotion, validateSeries, type SeriesLink } from '@/lib/devotionValidation';
 
 /** Server actions are public POST endpoints whatever proxy.ts matches, so
  * each one checks the session itself. */
@@ -73,6 +75,40 @@ export async function saveDevotion(input: {
   } catch (error) {
     return { ok: false, errors: [error instanceof Error ? error.message : String(error)] };
   }
+}
+
+export async function saveSeries(input: {
+  series: DevotionSeries;
+  isNew: boolean;
+}): Promise<SaveResponse> {
+  await requireAdmin();
+  const setup = getDevotionStore();
+  if (!setup.ok) return { ok: false, errors: [setup.reason] };
+  const { store } = setup;
+  const { series, isNew } = input;
+
+  try {
+    let otherSeries: DevotionSeries[];
+    let takenSlugs: string[] = [];
+    if (isNew) {
+      [takenSlugs, otherSeries] = await Promise.all([store.takenSlugs(), store.series()]);
+    } else {
+      const loaded = await store.loadSeries(series.slug);
+      if (!loaded) return { ok: false, errors: [`there is no series "${series.slug}" to update`] };
+      otherSeries = loaded.otherSeries;
+    }
+    const errors = validateSeries(series, { takenSlugs, otherSeries });
+    if (errors.length) return { ok: false, errors };
+    return { ok: true, result: await store.saveSeries({ series, isNew }) };
+  } catch (error) {
+    return { ok: false, errors: [error instanceof Error ? error.message : String(error)] };
+  }
+}
+
+/** One part per top-level entry of a document, for prefilling a new run. */
+export async function prefillCatechismParts(documentId: string): Promise<SeriesPart[]> {
+  await requireAdmin();
+  return catechismSeriesParts(documentId);
 }
 
 export interface ScriptureLookup {

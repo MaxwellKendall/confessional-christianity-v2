@@ -2,10 +2,11 @@ import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, test } from 'vitest';
 
+import { catechismSeriesParts } from '@/lib/admin/catechismParts';
 import { blankDevotion, devotionFrom } from '@/lib/admin/devotionDraft';
-import { getAllSeries } from '@/lib/devotionSeries';
+import { getAllSeries, getSeries, type DevotionSeries } from '@/lib/devotionSeries';
 import {
-  DEVOTION_ROLES, findSeriesLink, relinkSeries, toContentJson, validateDevotion, validateSeries,
+  DEVOTION_ROLES, findSeriesLink, mergeSeriesEdit, relinkSeries, toContentJson, validateDevotion, validateSeries,
 } from '@/lib/devotionValidation';
 import { getAllDevotions, getDevotion } from '@/lib/devotions';
 
@@ -26,7 +27,7 @@ describe('every authored file meets the contract /admin enforces', () => {
   });
 
   test.each(getAllSeries().map((s) => [s.slug, s] as const))('series %s', (_slug, series) => {
-    expect(validateSeries(series)).toEqual([]);
+    expect(validateSeries(series, { otherSeries: getAllSeries() })).toEqual([]);
   });
 
 });
@@ -144,5 +145,91 @@ describe('series linking', () => {
     expect(() => relinkSeries(series(), 'psalm-130', { seriesSlug: 'advent', day: 1 }))
       .toThrow(/already belongs to "advent-1"/);
     expect(() => relinkSeries(series(), 'x', { seriesSlug: 'lent', day: 1 })).toThrow(/does not exist/);
+  });
+});
+
+describe('validateSeries', () => {
+  const lent = (): DevotionSeries => ({
+    slug: 'lent',
+    source: { kind: 'season', season: 'lent' },
+    title: 'The Way of the Cross',
+    tagline: 'Forty Days',
+    description: 'A walk to Good Friday.',
+    parts: [{ day: 1, title: 'Dust', citation: 'Genesis 3:19' }],
+  });
+
+  test('a complete new series passes', () => {
+    expect(validateSeries(lent(), { takenSlugs: ['advent', 'wsc'], otherSeries: getAllSeries() })).toEqual([]);
+  });
+
+  test('missing names, empty parts, and malformed days', () => {
+    expect(validateSeries({ ...lent(), title: '', tagline: ' ', parts: [] })).toEqual([
+      'title is required', 'tagline is required', 'a series needs at least one part',
+    ]);
+    expect(validateSeries({ ...lent(), parts: [{ day: 2, title: '', citation: 'x' }] })).toEqual([
+      'part 1 has day 2', 'part 1 needs a title',
+    ]);
+  });
+
+  test('sources must exist, and one series per season or document', () => {
+    expect(validateSeries({ ...lent(), source: { kind: 'season', season: 'easter' } })[0]).toMatch(/source.season/);
+    expect(validateSeries({ ...lent(), source: { kind: 'catechism', documentId: 'NOPE' } })[0]).toMatch(/known document/);
+    expect(validateSeries({ ...lent(), slug: 'advent-2026', source: { kind: 'season', season: 'advent' } }, { otherSeries: getAllSeries() }))
+      .toEqual(['"Prepare the Way" (advent) already covers this season']);
+    expect(validateSeries({ ...lent(), slug: 'wsc', source: { kind: 'catechism', documentId: 'WSC' } }, { otherSeries: getAllSeries() }))
+      .toEqual([]);
+  });
+
+  test('a season series fits in the season', () => {
+    const parts = Array.from({ length: 41 }, (_, i) => ({ day: i + 1, title: 't', citation: 'c' }));
+    expect(validateSeries({ ...lent(), parts })).toEqual(["Lent has 40 days, so its series can't have 41 parts"]);
+  });
+});
+
+describe('mergeSeriesEdit', () => {
+  const advent = () => structuredClone(getSeries('advent')!);
+
+  test('keeps devotion links by day and ignores links sent with the edit', () => {
+    const draft = advent();
+    draft.parts[0].title = 'Retitled';
+    draft.parts[4].devotionSlug = 'smuggled';
+    delete draft.parts[1].devotionSlug;
+    const merged = mergeSeriesEdit(draft, advent(), advent());
+    expect(merged.parts[0]).toEqual({ day: 1, title: 'Retitled', citation: 'Genesis 3:8–15', devotionSlug: 'advent-1' });
+    expect(merged.parts[1].devotionSlug).toBe('advent-2');
+    expect(merged.parts[4].devotionSlug).toBeUndefined();
+  });
+
+  test('parts can be added after the published ones but not removed', () => {
+    const longer = { ...advent(), parts: [...advent().parts.slice(0, 3)] };
+    expect(() => mergeSeriesEdit(longer, advent(), advent())).toThrow(/added but not removed/);
+    // unpublished: trailing parts may go, until a linked one would
+    expect(mergeSeriesEdit(longer, advent(), null).parts).toHaveLength(3);
+    const tooShort = { ...advent(), parts: advent().parts.slice(0, 2) };
+    expect(() => mergeSeriesEdit(tooShort, advent(), null)).toThrow(/part 3 has a devotion linked/);
+  });
+
+  test('renumbers days from position', () => {
+    const draft = { ...advent(), parts: advent().parts.map((p) => ({ ...p, day: 99 })) };
+    expect(mergeSeriesEdit(draft, advent(), advent()).parts.map((p) => p.day).slice(0, 3)).toEqual([1, 2, 3]);
+  });
+});
+
+describe('catechism prefill', () => {
+  test('one part per question, titled from the catechism', () => {
+    const wsc = catechismSeriesParts('WSC');
+    expect(wsc).toHaveLength(107);
+    expect(wsc[0]).toEqual({ day: 1, title: 'What is the chief end of man?', citation: 'WSC Q. 1' });
+    expect(catechismSeriesParts('WLC')).toHaveLength(196);
+  });
+
+  test("grouped documents get one part per group (the Heidelberg's Lord's Days)", () => {
+    const hc = catechismSeriesParts('HC');
+    expect(hc).toHaveLength(52);
+    expect(hc[0]).toEqual({ day: 1, title: "LORD's Day 1", citation: "HC LORD's Day 1" });
+  });
+
+  test('unknown documents give nothing', () => {
+    expect(catechismSeriesParts('NOPE')).toEqual([]);
   });
 });

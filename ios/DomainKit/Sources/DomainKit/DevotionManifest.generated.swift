@@ -59,3 +59,9 @@ let generatedDevotionSlugs: [String] = [
     "wsc-63",
     "wsc-65",
 ]
+
+// Every content/devotions/series/<slug>.json, in slug order.
+let generatedSeriesSlugs: [String] = [
+    "advent",
+    "wsc",
+]
