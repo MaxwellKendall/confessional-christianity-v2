@@ -89,6 +89,20 @@ Saves keep each file's existing JSON layout, so a diff shows only what
 changed. Slugs are fixed after the first save. Deleting a devotion or series
 is still done by hand.
 
+## Sharing
+
+Any library entry can be shared: the whole entry, one clause (tap it; the
+clause carries exactly its own proof texts), or any selected words. A share
+is just a URL, `/share/<document>/<entry>` plus `?c=<marker>` or
+`?r=<start>-<end>`, so nothing is stored. The share page shows the quote, the
+ESV text of its proof texts, and a link back to the passage in context (which
+highlights it), plus a catechism's program for catechisms. Its link preview
+and the "Save image" / "Share…" image come from
+`/share/<document>/<entry>/image?f=og|portrait`, drawn by `next/og` in the
+site's fonts (`src/assets/fonts`). The model lives in `src/lib/share.ts`. On
+iOS, the library entry's Share links point at the same URLs (`WebLinks` in
+`LibraryEntryView.swift`).
+
 ## URL continuity
 
 `next.config.ts` 301s every v1 reading route (`/[confession]`,

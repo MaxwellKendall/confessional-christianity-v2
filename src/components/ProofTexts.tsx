@@ -10,7 +10,8 @@ import { useState } from 'react';
 import { fetchEsvText } from '@/lib/esvClient';
 import type { ProofTextGroup } from '@/lib/entryDisplay';
 
-export function ProofTexts({ groups }: { groups: ProofTextGroup[] }) {
+/** `highlight` marks the groups behind a picked clause or selection. */
+export function ProofTexts({ groups, highlight = [] }: { groups: ProofTextGroup[]; highlight?: string[] }) {
   const [open, setOpen] = useState<Set<string>>(new Set());
   const [texts, setTexts] = useState<Record<string, string | null>>({});
 
@@ -29,8 +30,14 @@ export function ProofTexts({ groups }: { groups: ProofTextGroup[] }) {
   return (
     <div className="flex flex-col gap-2.5">
       {groups.map((group) => (
-        <div key={group.marker} className="flex gap-2.5">
-          <span className="w-4 shrink-0 pt-px text-right font-body text-[11px] text-ink-3" aria-hidden="true">
+        <div
+          key={group.marker}
+          className={`-mx-2 flex gap-2.5 rounded-sm px-2 transition-colors ${highlight.includes(group.marker) ? 'bg-[#f1e5cc]/60' : ''}`}
+        >
+          <span
+            className={`w-4 shrink-0 pt-px text-right font-body text-[11px] ${highlight.includes(group.marker) ? 'text-ochre' : 'text-ink-3'}`}
+            aria-hidden="true"
+          >
             {group.marker}
           </span>
           <div className="min-w-0 grow">

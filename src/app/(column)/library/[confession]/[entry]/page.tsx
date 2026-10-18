@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-import { ProofTexts } from '@/components/ProofTexts';
-import { entryPageLabel, entryQuoteSegments, proofTextGroups } from '@/lib/entryDisplay';
+import { EntryReader } from '@/components/EntryReader';
+import { entryPageLabel, proofTextGroups } from '@/lib/entryDisplay';
 import { truncateForMeta } from '@/lib/helpers';
 import { getAllEntryParams, getEntryPage } from '@/lib/library';
 import { loadConfessionContent } from '@/lib/confessionContent';
@@ -42,7 +42,6 @@ export default async function EntryPage({ params }: { params: Promise<Params> })
 
   const content = await loadConfessionContent(confession);
   const label = entryPageLabel(page.item, content?.contentById);
-  const quoteLines = entryQuoteSegments(page.item);
   const proofTexts = proofTextGroups(page.item);
   const reflection = await getReflectionByEntryId(page.item.id);
 
@@ -57,25 +56,15 @@ export default async function EntryPage({ params }: { params: Promise<Params> })
       </div>
 
       <div className="px-11 pt-5 text-center">
-        <div className="label-caps mb-4 text-[9.5px] text-ink-3">{label}</div>
-        <blockquote className="m-0 font-body text-[17px] italic leading-[1.55] text-ink">
-          {quoteLines.map((segments, i) => (
-            <span key={i}>
-              {i > 0 && <br />}
-              {segments.map((segment, j) => (
-                <span key={j}>
-                  {segment.text}
-                  {segment.marker && (
-                    <sup className="font-body text-[10.5px] not-italic text-ink-3">
-                      {segment.marker}
-                    </sup>
-                  )}
-                </span>
-              ))}
-            </span>
-          ))}
-        </blockquote>
+        <div className="label-caps text-[9.5px] text-ink-3">{label}</div>
       </div>
+      <EntryReader
+        entry={page.item}
+        slug={confession}
+        segment={entry}
+        proofTexts={proofTexts}
+        source={`${page.documentTitle}, ${label}`}
+      />
 
       {reflection && (
         <div className="mx-5 mt-6 border-t border-hairline pt-4 text-center">
@@ -86,13 +75,6 @@ export default async function EntryPage({ params }: { params: Promise<Params> })
             <span aria-hidden="true">† </span>
             Commentary — {reflection.title}
           </Link>
-        </div>
-      )}
-
-      {proofTexts.length > 0 && (
-        <div className="mx-5 mt-6 border-t border-hairline pt-4">
-          <div className="label-caps mb-2 text-[9.5px] text-ink-3">Proof Texts</div>
-          <ProofTexts groups={proofTexts} />
         </div>
       )}
 

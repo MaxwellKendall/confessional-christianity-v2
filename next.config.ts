@@ -16,6 +16,10 @@ const CONFESSION_SLUGS = [
 ].join('|');
 
 const nextConfig: NextConfig = {
+  // share images read their fonts from disk (ImageResponse needs TTF data)
+  outputFileTracingIncludes: {
+    '/share/**': ['./src/assets/fonts/**/*'],
+  },
   async redirects() {
     return [
       // v1 document pages -> library TOCs

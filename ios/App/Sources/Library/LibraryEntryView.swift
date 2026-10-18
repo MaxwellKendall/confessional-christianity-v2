@@ -61,6 +61,8 @@ struct LibraryEntryView: View {
                         .padding(.horizontal, 20)
                         .padding(.top, 22)
 
+                        shareRow(page)
+
                         if let reflection {
                             commentaryLink(reflection)
                         }
@@ -113,6 +115,34 @@ struct LibraryEntryView: View {
     private func navigate(to entryId: String) {
         path.removeLast()
         path.append(LibraryRoute.entry(slug: slug, entryId: entryId))
+    }
+
+    /// Share the clause being shown (with its Scripture) or the whole entry,
+    /// as a web link that unfurls into the quote's preview image.
+    @ViewBuilder
+    private func shareRow(_ page: EntryPage) -> some View {
+        let source = "\(page.documentTitle), \(entryPageLabel(page.item))"
+        HStack(spacing: 18) {
+            if let marker = activeMarker, groups.count > 1 {
+                ShareLink(
+                    item: WebLinks.share(slug: slug, entryId: entryId, marker: marker),
+                    subject: Text(source),
+                    message: Text("\u{201C}\(clauseForMarker(page.item, marker: marker))\u{201D} \u{2014} \(source)")
+                ) {
+                    Text("Share this clause").labelCaps(size: 9.5, tracking: 0.1, color: .ccInk).dottedUnderline(.ccInk)
+                }
+            }
+            ShareLink(
+                item: WebLinks.share(slug: slug, entryId: entryId, marker: nil),
+                subject: Text(source),
+                message: Text(source)
+            ) {
+                Text("Share").labelCaps(size: 9.5, tracking: 0.1, color: .ccInk).dottedUnderline(.ccInk)
+            }
+        }
+        .buttonStyle(.plain)
+        .frame(maxWidth: .infinity)
+        .padding(.top, 16)
     }
 
     @ViewBuilder
@@ -236,5 +266,26 @@ struct LibraryEntryView: View {
             Text(isNext ? "Next \(symbol)" : "\(symbol) Prev")
                 .labelCaps(size: 10, tracking: 0.1, color: .ccMuted)
         }
+    }
+}
+
+// Links from the app into the web app — today, share links. One host for
+// every outbound web URL, the same deployment EsvClient talks to; switch it
+// here when the custom domain points at v2. (Lives in this file rather than
+// its own so the committed XcodeGen project needs no regeneration.)
+enum WebLinks {
+    static let base = URL(string: "https://confessional-christianity-v2.vercel.app")!
+
+    /// /share/<document slug>/<entry segment>[?c=<marker>] — mirrors
+    /// sharePath in src/lib/share.ts. The page unfurls into a preview image
+    /// of the quote and its Scripture wherever the link is pasted.
+    static func share(slug: String, entryId: String, marker: String?) -> URL {
+        let documentId = String(entryId.split(separator: "-").first ?? "")
+        var components = URLComponents(url: base, resolvingAgainstBaseURL: false)!
+        components.path = "/share/\(slug)/\(entryIdToPathSegment(entryId, documentId))"
+        if let marker {
+            components.queryItems = [URLQueryItem(name: "c", value: marker)]
+        }
+        return components.url!
     }
 }
