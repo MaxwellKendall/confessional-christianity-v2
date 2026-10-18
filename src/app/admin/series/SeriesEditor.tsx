@@ -14,6 +14,7 @@ import type { DevotionSeries, SeriesPart, SeriesSource } from '@/lib/devotionSer
 import { SEASONS } from '@/lib/devotions';
 import { validateSeries } from '@/lib/devotionValidation';
 import { prefillCatechismParts, saveSeries, type SaveResponse } from '../actions';
+import { DraftStatus } from '../DraftStatus';
 
 const inputClass = 'w-full rounded-md border border-hairline bg-white px-2.5 py-1.5 font-body text-[14px] text-ink';
 
@@ -48,12 +49,14 @@ function SmallButton(
 const renumber = (parts: SeriesPart[]): SeriesPart[] => parts.map((p, i) => ({ ...p, day: i + 1 }));
 
 export function SeriesEditor(
-  { initial, isNew, lockedParts, otherSeries, pending: initialPending, mode }: {
+  { initial, isNew, lockedParts, otherSeries, pending: initialPending, published = true, mode }: {
     initial: DevotionSeries;
     isNew: boolean;
     lockedParts: number;
     otherSeries: DevotionSeries[];
     pending: { url: string; number: number } | null;
+    /** Whether a live version exists (on the base branch, or on disk). */
+    published?: boolean;
     mode: 'local' | 'github';
   },
 ) {
@@ -119,13 +122,13 @@ export function SeriesEditor(
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="m-0 heading-page">{series.title || (creating ? 'New series' : 'Untitled')}</h1>
-        <p className="m-0 mt-1 text-[13px] text-ink-3">
-          {pendingPr ? (
-            <>Unmerged edits in <a href={pendingPr.url} target="_blank" rel="noreferrer" className="text-ochre">pull request #{pendingPr.number} ↗</a> — the next save adds to it.</>
-          ) : creating ? 'Not saved yet.' : (
-            <>Live at <Link href={`/devotions/${series.slug}`} className="text-ink-2">/devotions/{series.slug}</Link></>
-          )}
-        </p>
+        <DraftStatus
+          kind="series"
+          slug={series.slug}
+          creating={creating}
+          published={published || (mode === 'local' && !creating)}
+          pending={pendingPr}
+        />
       </div>
 
       <section className="flex flex-col gap-3 rounded-md border border-hairline bg-white p-4">

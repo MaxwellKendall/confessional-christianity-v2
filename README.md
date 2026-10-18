@@ -80,6 +80,11 @@ save lands depends on where the admin runs:
   (decoupling iOS from builds is CC-25).
 - **Deployed without `ADMIN_PASSWORD`**: `/admin` returns 404.
 
+The devotions list also sets the hub's "Featured This Week" pick
+(`content/featured-devotion.json`; published devotions only). When saves open
+PRs, an editor can discard a draft: its PR closes unmerged and its branch is
+deleted, and any published version is left alone.
+
 Saves keep each file's existing JSON layout, so a diff shows only what
 changed. Slugs are fixed after the first save. Deleting a devotion or series
 is still done by hand.

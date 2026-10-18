@@ -18,6 +18,7 @@ import {
 } from '@/lib/devotionValidation';
 import type { WorshipElement } from '@/lib/worship';
 import { lookupScripture, saveDevotion, type SaveResponse } from '../actions';
+import { DraftStatus } from '../DraftStatus';
 
 const ELEMENT_LABELS: Record<ElementType, string> = {
   scripture: 'Scripture',
@@ -170,7 +171,7 @@ function SeriesFields(
   const current = link ? series.find((s) => s.slug === link.seriesSlug) : null;
   return (
     <div className="grid gap-3 sm:grid-cols-[12rem_1fr]">
-      <Field label="Series">
+      <Field label="Series" hint={current ? undefined : 'Pick one to fill a part of it'}>
         <select
           className={inputClass}
           value={link?.seriesSlug ?? ''}
@@ -201,6 +202,9 @@ function SeriesFields(
               );
             })}
           </select>
+          <Link href={`/admin/series/${current.slug}`} className="text-[11.5px] text-ink-3">
+            Edit the {current.title} series ›
+          </Link>
         </Field>
       )}
     </div>
@@ -451,11 +455,13 @@ const cleanDevotion = (devotion: Devotion): Devotion => ({
 });
 
 export function DevotionEditor(
-  { initial, series, isNew, pending: initialPending, mode }: {
+  { initial, series, isNew, pending: initialPending, published = true, mode }: {
     initial: Devotion;
     series: DevotionSeries[];
     isNew: boolean;
     pending: { url: string; number: number } | null;
+    /** Whether a live version exists (on the base branch, or on disk). */
+    published?: boolean;
     mode: 'local' | 'github';
   },
 ) {
@@ -497,13 +503,13 @@ export function DevotionEditor(
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="m-0 heading-page">{devotion.title || (creating ? 'New devotion' : 'Untitled')}</h1>
-          <p className="m-0 mt-1 text-[13px] text-ink-3">
-            {pendingPr ? (
-              <>Unmerged edits in <a href={pendingPr.url} target="_blank" rel="noreferrer" className="text-ochre">pull request #{pendingPr.number} ↗</a> — the next save adds to it.</>
-            ) : creating ? 'Not saved yet.' : (
-              <>Live at <Link href={`/devotions/${devotion.slug}`} className="text-ink-2">/devotions/{devotion.slug}</Link></>
-            )}
-          </p>
+          <DraftStatus
+            kind="devotion"
+            slug={devotion.slug}
+            creating={creating}
+            published={published || (mode === 'local' && !creating)}
+            pending={pendingPr}
+          />
         </div>
       </div>
 

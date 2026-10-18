@@ -25,6 +25,7 @@ export default async function NewSeriesPage() {
         lockedParts={0}
         otherSeries={await setup.store.series()}
         pending={null}
+        published={false}
         mode={setup.store.mode}
       />
     </>

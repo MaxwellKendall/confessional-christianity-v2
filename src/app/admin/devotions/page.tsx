@@ -5,6 +5,7 @@ import { getDevotionStore } from '@/lib/admin/store';
 import { findSeriesLink } from '@/lib/devotionValidation';
 import { groundingLabel } from '@/lib/devotions';
 import { AdminHeader } from '../AdminHeader';
+import { FeaturedPicker } from '../FeaturedPicker';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Devotions' };
@@ -19,7 +20,9 @@ export default async function AdminDevotionsPage() {
       </>
     );
   }
-  const [rows, series] = await Promise.all([setup.store.list(), setup.store.series()]);
+  const [rows, series, featured] = await Promise.all([
+    setup.store.list(), setup.store.series(), setup.store.featured(),
+  ]);
   const inReview = rows.filter((r) => r.pending).length;
 
   return (
@@ -39,6 +42,12 @@ export default async function AdminDevotionsPage() {
           New devotion
         </Link>
       </div>
+
+      <FeaturedPicker
+        current={featured.slug}
+        pending={featured.pending}
+        options={rows.filter((r) => r.published).map(({ devotion }) => ({ slug: devotion.slug, title: devotion.title }))}
+      />
 
       <div className="overflow-x-auto rounded-md border border-hairline bg-white">
         <table className="w-full border-collapse text-left text-[13.5px]">
@@ -60,11 +69,23 @@ export default async function AdminDevotionsPage() {
                     <Link href={`/admin/devotions/${devotion.slug}`} className="text-ink no-underline">
                       {devotion.title || <em className="text-ink-3">Untitled</em>}
                     </Link>
-                    <div className="font-mono text-[11px] text-ink-3">{devotion.slug}</div>
+                    <div className="flex gap-2 font-mono text-[11px] text-ink-3">
+                      {devotion.slug}
+                      {devotion.slug === featured.slug && <span className="font-body text-ochre">· featured</span>}
+                      {published && (
+                        <Link href={`/devotions/${devotion.slug}`} target="_blank" className="font-body text-ink-3">
+                          view ↗
+                        </Link>
+                      )}
+                    </div>
                   </td>
                   <td className="px-3 py-2.5 whitespace-nowrap text-ink-2">{groundingLabel(devotion.grounding)}</td>
                   <td className="px-3 py-2.5 text-ink-2">
-                    {linkedSeries ? `${linkedSeries.title} · Part ${link.day}` : '—'}
+                    {linkedSeries ? (
+                      <Link href={`/admin/series/${linkedSeries.slug}`} className="text-ink-2 no-underline">
+                        {linkedSeries.title} · Part {link.day}
+                      </Link>
+                    ) : '—'}
                   </td>
                   <td className="px-3 py-2.5 whitespace-nowrap">
                     {pending ? (

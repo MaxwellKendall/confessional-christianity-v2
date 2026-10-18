@@ -27,6 +27,8 @@ export const DEVOTIONS_DIR = 'content/devotions';
 export const SERIES_DIR = 'content/devotions/series';
 export const REVIEW_BRANCH_PREFIX = 'admin/devotions/';
 export const SERIES_BRANCH_PREFIX = 'admin/series/';
+export const FEATURED_BRANCH = 'admin/featured';
+export const FEATURED_PATH = 'content/featured-devotion.json';
 
 export const devotionPath = (slug: string) => `${DEVOTIONS_DIR}/${slug}.json`;
 export const seriesPath = (slug: string) => `${SERIES_DIR}/${slug}.json`;
@@ -87,7 +89,14 @@ export interface DevotionStore {
   listSeries(): Promise<AdminSeriesRow[]>;
   loadSeries(slug: string): Promise<LoadedSeries | null>;
   saveSeries(input: SeriesSaveInput): Promise<SaveResult>;
+  /** The hub's featured devotion, and the open PR changing it, if any. */
+  featured(): Promise<{ slug: string; pending: PullRequest | null }>;
+  setFeatured(slug: string): Promise<SaveResult>;
+  /** Closes a draft's review PR and deletes its branch (github only). */
+  discard(kind: 'devotion' | 'series', slug: string): Promise<void>;
 }
+
+const NO_DRAFTS = 'Drafts only exist when saves open pull requests; locally, discard changes with git.';
 
 type FileWrite = { path: string; content: string };
 
@@ -200,6 +209,19 @@ const createLocalStore = (root = process.cwd()): DevotionStore => {
       const current = (await readSeries()).find((s) => s.slug === input.series.slug) ?? null;
       const committed = await readCommittedSeries(input.series.slug);
       return write(await seriesFiles(input, current, committed, readText), input.isNew);
+    },
+    async featured() {
+      const text = await readText(FEATURED_PATH);
+      return { slug: text ? (JSON.parse(text) as { slug: string }).slug : '', pending: null };
+    },
+    async setFeatured(slug) {
+      if (!SLUG_PATTERN.test(slug) || (await readText(devotionPath(slug))) === null) {
+        throw new Error(`there is no devotion "${slug}" to feature`);
+      }
+      return write(await changedFiles([[FEATURED_PATH, { slug }]], readText), false);
+    },
+    async discard() {
+      throw new Error(NO_DRAFTS);
     },
   };
 };
@@ -359,6 +381,31 @@ const createGitHubStore = (github: GitHubClient): DevotionStore => {
         `${input.isNew ? 'New devotion series' : 'Edit devotion series'}: ${series.title}`,
         `the **${series.title}** series (\`${series.slug}\`)`,
       );
+    },
+    async featured() {
+      const pending = (await github.openPullRequests(FEATURED_BRANCH)).find((pr) => pr.branch === FEATURED_BRANCH) ?? null;
+      const featured = parse<{ slug: string }>(await github.readFile(FEATURED_PATH, pending?.branch ?? base));
+      return { slug: featured?.slug ?? '', pending };
+    },
+    async setFeatured(slug) {
+      // only a published devotion: the hub can't feature one still in review
+      if (!SLUG_PATTERN.test(slug) || (await github.readFile(devotionPath(slug))) === null) {
+        throw new Error(`"${slug}" isn't published yet, so it can't be featured`);
+      }
+      const existing = (await github.openPullRequests(FEATURED_BRANCH)).find((pr) => pr.branch === FEATURED_BRANCH) ?? null;
+      const ref = existing ? FEATURED_BRANCH : base;
+      const files = await changedFiles([[FEATURED_PATH, { slug }]], (p) => github.readFile(p, ref));
+      const title = getAllDevotions().find((d) => d.slug === slug)?.title ?? slug;
+      return commitForReview(
+        FEATURED_BRANCH, existing, files, `Feature the "${title}" devotion (${slug})`,
+        `Featured devotion: ${title}`, `**${title}** (\`${slug}\`) as the featured devotion`,
+      );
+    },
+    async discard(kind, slug) {
+      const prefix = kind === 'devotion' ? REVIEW_BRANCH_PREFIX : SERIES_BRANCH_PREFIX;
+      const pr = (await pendingBySlug(prefix)).get(slug);
+      if (!pr) throw new Error(`there is no draft of "${slug}" to discard`);
+      await github.discardPullRequest(pr);
     },
   };
 };

@@ -53,7 +53,12 @@ export default async function AdminSeriesPage() {
               <tr key={series.slug} className="border-b border-hairline-2 last:border-0 align-top">
                 <td className="px-3 py-2.5">
                   <Link href={`/admin/series/${series.slug}`} className="text-ink no-underline">{series.title}</Link>
-                  <div className="font-mono text-[11px] text-ink-3">{series.slug}</div>
+                  <div className="flex gap-2 font-mono text-[11px] text-ink-3">
+                    {series.slug}
+                    {published && (
+                      <Link href={`/devotions/${series.slug}`} target="_blank" className="font-body text-ink-3">view ↗</Link>
+                    )}
+                  </div>
                 </td>
                 <td className="px-3 py-2.5 whitespace-nowrap text-ink-2">{seriesSourceLabel(series)}</td>
                 <td className="px-3 py-2.5 whitespace-nowrap text-ink-2">

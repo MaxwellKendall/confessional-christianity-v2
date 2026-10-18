@@ -105,6 +105,30 @@ export async function saveSeries(input: {
   }
 }
 
+export async function setFeaturedDevotion(slug: string): Promise<SaveResponse> {
+  await requireAdmin();
+  const setup = getDevotionStore();
+  if (!setup.ok) return { ok: false, errors: [setup.reason] };
+  try {
+    return { ok: true, result: await setup.store.setFeatured(slug) };
+  } catch (error) {
+    return { ok: false, errors: [error instanceof Error ? error.message : String(error)] };
+  }
+}
+
+/** Closes a draft's PR and deletes its branch, then returns to the list. */
+export async function discardDraft(kind: 'devotion' | 'series', slug: string): Promise<{ error: string }> {
+  await requireAdmin();
+  const setup = getDevotionStore();
+  if (!setup.ok) return { error: setup.reason };
+  try {
+    await setup.store.discard(kind, slug);
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : String(error) };
+  }
+  redirect(kind === 'devotion' ? '/admin/devotions' : '/admin/series');
+}
+
 /** One part per top-level entry of a document, for prefilling a new run. */
 export async function prefillCatechismParts(documentId: string): Promise<SeriesPart[]> {
   await requireAdmin();

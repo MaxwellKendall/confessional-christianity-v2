@@ -34,6 +34,7 @@ export default async function EditSeriesPage({ params }: { params: Promise<{ slu
         lockedParts={loaded.lockedParts}
         otherSeries={loaded.otherSeries}
         pending={loaded.pending}
+        published={loaded.published}
         mode={setup.store.mode}
       />
     </>

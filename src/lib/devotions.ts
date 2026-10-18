@@ -10,6 +10,7 @@
 // Statically imported so the bundler traces the data (see programContent.ts)
 // — through a generated manifest, so adding a devotion is just adding its
 // content/devotions/<slug>.json (scripts/devotions/generate-manifest.mjs).
+import featuredJson from '../../content/featured-devotion.json';
 import { DEVOTION_JSON } from './devotionManifest.generated';
 import { getDocumentById } from './catechisms';
 import type { WorshipStep } from './worship';
@@ -78,8 +79,9 @@ export const SEASONS: DevotionSeason[] = [
 // Every content/devotions/*.json, in natural slug order.
 const DEVOTIONS = DEVOTION_JSON as Devotion[];
 
-/** The hub's "Featured This Week" pick (15a) — editorial, rotated by hand. */
-const FEATURED_SLUG = 'psalm-130';
+/** The hub's "Featured This Week" pick (15a) — editorial, rotated from
+ * /admin (content/featured-devotion.json). */
+const FEATURED_SLUG: string = featuredJson.slug;
 
 export const getAllDevotions = (): Devotion[] => DEVOTIONS;
 

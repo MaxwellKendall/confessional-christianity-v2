@@ -60,6 +60,7 @@ export default async function NewDevotionPage(
         series={series}
         isNew
         pending={null}
+        published={false}
         mode={store.mode}
       />
     </>

@@ -83,6 +83,17 @@ const fakeGitHub = () => {
       refs[p.slice('/git/refs/heads/'.length)] = body.sha;
       return json({});
     }
+    if (method === 'PATCH' && p.startsWith('/pulls/')) {
+      const n = Number(p.slice('/pulls/'.length));
+      const i = pulls.findIndex((pr) => pr.number === n);
+      if (i === -1) return json({}, 404);
+      pulls.splice(i, 1);
+      return json({ number: n, state: body.state });
+    }
+    if (method === 'DELETE' && p.startsWith('/git/refs/heads/')) {
+      delete refs[p.slice('/git/refs/heads/'.length)];
+      return new Response(null, { status: 204 });
+    }
     if (method === 'POST' && p === '/pulls') {
       const pr = { number: 40 + pulls.length, html_url: `https://github.com/owner/repo/pull/${40 + pulls.length}`, head: { ref: body.head, repo: { full_name: 'owner/repo' } } };
       pulls.push(pr);
@@ -201,6 +212,30 @@ describe('the GitHub-backed store', () => {
     expect(text).toContain('"tagline": "Waiting and Longing"');
     // one-line parts layout kept, links intact
     expect(text).toContain('{ "day": 3, "title": "A Star out of Jacob", "citation": "Numbers 24:15–17", "devotionSlug": "advent-3" },');
+  });
+
+  test('discarding a draft closes its PR and deletes its branch', async () => {
+    const s = store();
+    await s.save({ devotion: advent4(), link: null, isNew: true });
+    await s.discard('devotion', 'advent-4');
+    expect(gh.pulls).toEqual([]);
+    expect(gh.refs['admin/devotions/advent-4']).toBeUndefined();
+    expect(await s.load('advent-4')).toBeNull();
+    await expect(s.discard('devotion', 'advent-4')).rejects.toThrow(/no draft/);
+  });
+
+  test('featuring a devotion goes through review, and only published ones qualify', async () => {
+    const s = store();
+    expect(await s.featured()).toEqual({ slug: 'psalm-130', pending: null });
+    const result = await s.setFeatured('wsc-1');
+    expect(result).toMatchObject({ opened: true, pullRequest: { branch: 'admin/featured' }, paths: ['content/featured-devotion.json'] });
+    expect(gh.fileAt(gh.refs['admin/featured'], 'content/featured-devotion.json')).toBe('{ "slug": "wsc-1" }\n');
+    expect(await s.featured()).toMatchObject({ slug: 'wsc-1', pending: { branch: 'admin/featured' } });
+    // a second change rides the same PR
+    expect(await s.setFeatured('wsc-2')).toMatchObject({ opened: false });
+
+    await s.save({ devotion: advent4(), link: null, isNew: true });
+    await expect(s.setFeatured('advent-4')).rejects.toThrow(/isn't published yet/);
   });
 
   test('editing a published devotion reads it from the base branch', async () => {

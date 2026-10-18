@@ -33,6 +33,7 @@ export default async function EditDevotionPage({ params }: { params: Promise<{ s
         series={loaded.series}
         isNew={false}
         pending={loaded.pending}
+        published={loaded.published}
         mode={setup.store.mode}
       />
     </>

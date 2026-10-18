@@ -135,7 +135,20 @@ export const createGitHubClient = (config: GitHubConfig) => {
     return { number: pull.number, url: pull.html_url, branch };
   };
 
-  return { config, readFile, listDirectory, openPullRequests, commitFiles, openPullRequest };
+  /** Closes a review PR without merging and deletes its branch — what
+   * "Discard draft" means. A branch already gone is fine. */
+  const discardPullRequest = async (pr: PullRequest): Promise<void> => {
+    await request('PATCH', `/pulls/${pr.number}`, { state: 'closed' });
+    try {
+      await request('DELETE', `/git/refs/heads/${encodePath(pr.branch)}`);
+    } catch (error) {
+      if (!(error instanceof GitHubError && (error.status === 404 || error.status === 422))) throw error;
+    }
+  };
+
+  return {
+    config, readFile, listDirectory, openPullRequests, commitFiles, openPullRequest, discardPullRequest,
+  };
 };
 
 export type GitHubClient = ReturnType<typeof createGitHubClient>;
