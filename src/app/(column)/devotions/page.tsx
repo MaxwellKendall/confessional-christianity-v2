@@ -14,8 +14,10 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
-import { getDocumentById } from '@/lib/catechisms';
-import { catechismQuestionsAuthored, seriesForCatechism, seriesForSeason } from '@/lib/devotionSeries';
+import { CREEDAL_DOCUMENTS, getDocumentById } from '@/lib/catechisms';
+import {
+  catechismQuestionsAuthored, getAllSeries, seriesForCatechism, seriesForSeason, type DevotionSeries,
+} from '@/lib/devotionSeries';
 import {
   SEASONS, TOPICS, devotionsGroundedIn, scriptureDevotionsByBook,
 } from '@/lib/devotions';
@@ -37,12 +39,37 @@ function RowLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-// The catechisms the hub previews (mockup 15a) that have no run yet; their
-// devotion runs are authored one per question / Lord's Day. WSC has a real
-// run (turn 17) and renders from seriesForCatechism instead of this list.
-const CATECHISM_ROWS = [
-  { documentId: 'HC', unit: "One devotion per Lord's Day, 52 in all" },
+// The catechisms the hub previews (mockup 15a) while they have no run; their
+// devotion runs are authored one per question / Lord's Day. Once a series
+// exists for a document (turn 17's WSC run, or one added in /admin), its row
+// links to the run instead.
+const CATECHISM_PLACEHOLDERS: { documentId: string; unit: (totalItems: number) => string }[] = [
+  { documentId: 'WSC', unit: (total) => `One devotion per question, ${total} in all` },
+  { documentId: 'HC', unit: () => "One devotion per Lord's Day, 52 in all" },
 ];
+
+/** Catechism-sourced runs in library order, the WSC first. */
+const catechismRuns = (): DevotionSeries[] => {
+  const order = Object.keys(CREEDAL_DOCUMENTS);
+  return getAllSeries()
+    .filter((s) => s.source.kind === 'catechism')
+    .sort((a, b) => order.indexOf(seriesDocumentId(a)) - order.indexOf(seriesDocumentId(b)));
+};
+
+const seriesDocumentId = (series: DevotionSeries): string => (
+  series.source.kind === 'catechism' ? series.source.documentId : ''
+);
+
+/** "Questions 1–53 of 107, professed in order" for a question-by-question
+ * run; "4 of 52 parts written, in order" for one grouped otherwise. */
+const runProgress = (series: DevotionSeries, totalItems: number): string => {
+  const written = series.parts.filter((p) => p.devotionSlug).length;
+  if (written === 0) return `${series.parts.length} parts — in preparation`;
+  if (series.parts.every((p) => / Q\. \d/.test(p.citation))) {
+    return `Questions 1–${catechismQuestionsAuthored(series)} of ${totalItems}, professed in order`;
+  }
+  return `${written} of ${series.parts.length} parts written, in order`;
+};
 
 export default function DevotionsPage() {
   const scriptureCount = devotionsGroundedIn('scripture').length;
@@ -75,49 +102,38 @@ export default function DevotionsPage() {
       <ReadingPlansRow />
 
       <RowLabel>By Confession &amp; Catechism</RowLabel>
-      {(() => {
-        const wscDoc = getDocumentById('WSC');
-        const wscRun = seriesForCatechism('WSC');
-        if (!wscDoc) return null;
-        if (!wscRun) {
-          return (
-            <div className="border-t border-fill px-5 py-2.75 first-of-type:border-t-0">
-              <div className="font-display text-[13.5px] font-semibold text-ink-2">{wscDoc.name}</div>
-              <div className="font-body text-[12px] italic text-ink-3">
-                {`One devotion per question, ${wscDoc.totalItems} in all — in preparation`}
-              </div>
-            </div>
-          );
-        }
-        const authored = catechismQuestionsAuthored(wscRun);
+      {catechismRuns().map((run) => {
+        const doc = getDocumentById(seriesDocumentId(run));
+        if (!doc) return null;
         return (
           <Link
-            href={`/devotions/${wscRun.slug}`}
+            key={run.slug}
+            href={`/devotions/${run.slug}`}
             className="flex items-center justify-between border-t border-fill px-5 py-2.75 text-ink no-underline first-of-type:border-t-0"
           >
             <div>
-              <div className="font-display text-[13.5px] font-semibold">{wscDoc.name}</div>
-              <div className="font-body text-[12px] italic text-ink-3">
-                {`Questions 1–${authored} of ${wscDoc.totalItems}, professed in order`}
-              </div>
+              <div className="font-display text-[13.5px] font-semibold">{doc.name}</div>
+              <div className="font-body text-[12px] italic text-ink-3">{runProgress(run, doc.totalItems)}</div>
             </div>
             <span className="font-body text-ochre" aria-hidden="true">→</span>
           </Link>
         );
-      })()}
-      {CATECHISM_ROWS.map(({ documentId, unit }) => {
-        const doc = getDocumentById(documentId);
-        if (!doc) return null;
-        return (
-          <div key={documentId} className="border-t border-fill px-5 py-2.75 first-of-type:border-t-0">
-            <div className="font-display text-[13.5px] font-semibold text-ink-2">{doc.name}</div>
-            <div className="font-body text-[12px] italic text-ink-3">
-              {unit}
-              {' — in preparation'}
-            </div>
-          </div>
-        );
       })}
+      {CATECHISM_PLACEHOLDERS
+        .filter(({ documentId }) => !seriesForCatechism(documentId))
+        .map(({ documentId, unit }) => {
+          const doc = getDocumentById(documentId);
+          if (!doc) return null;
+          return (
+            <div key={documentId} className="border-t border-fill px-5 py-2.75 first-of-type:border-t-0">
+              <div className="font-display text-[13.5px] font-semibold text-ink-2">{doc.name}</div>
+              <div className="font-body text-[12px] italic text-ink-3">
+                {unit(doc.totalItems)}
+                {' — in preparation'}
+              </div>
+            </div>
+          );
+        })}
 
       <RowLabel>By Scripture</RowLabel>
       <Link

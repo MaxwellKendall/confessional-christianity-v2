@@ -63,11 +63,9 @@ private func loadSeries(_ slug: String) -> DevotionSeries {
     }
 }
 
-// Add an entry here for each authored series, same shape as advent/wsc.
-private let SERIES: [DevotionSeries] = [
-    loadSeries("advent"),
-    loadSeries("wsc"),
-]
+// Every authored series — one per content/devotions/series/<slug>.json,
+// listed in DevotionManifest.generated.swift by `npm run ios:sync-content`.
+private let SERIES: [DevotionSeries] = generatedSeriesSlugs.map(loadSeries)
 
 public func getAllSeries() -> [DevotionSeries] { SERIES }
 

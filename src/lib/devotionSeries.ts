@@ -11,8 +11,7 @@
 // completion, so Continue always has somewhere to send the household, but
 // nothing is locked — every authored part stays reachable straight from the
 // series page. No date attached anywhere.
-import adventSeries from '../../content/devotions/series/advent.json';
-import wscSeries from '../../content/devotions/series/wsc.json';
+import { SERIES_JSON } from './devotionManifest.generated';
 import { getDocumentById } from './catechisms';
 import { getDevotion, SEASONS, type Devotion } from './devotions';
 
@@ -47,12 +46,9 @@ export interface DevotionSeries {
   parts: SeriesPart[];
 }
 
-// Add a static import + entry here for each authored series, same shape as
-// advent. Slugs share the /devotions/[slug] namespace with devotions.
-const SERIES: DevotionSeries[] = [
-  adventSeries as DevotionSeries,
-  wscSeries as DevotionSeries,
-];
+// Every content/devotions/series/*.json (generated manifest). Slugs share
+// the /devotions/[slug] namespace with devotions.
+const SERIES = SERIES_JSON as DevotionSeries[];
 
 export const getAllSeries = (): DevotionSeries[] => SERIES;
 

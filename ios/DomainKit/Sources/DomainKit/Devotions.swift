@@ -109,14 +109,9 @@ func loadDevotion(_ slug: String) -> Devotion {
     }
 }
 
-// Every authored devotion — mirrors the manifest in devotions.ts (one entry
-// per content/devotions/<slug>.json). Numbers not listed here (41, 44, 46,
-// 48, 50, 52, 54, 56, 58, 60, 62, 64) are questions paired into the devotion
-// before them (e.g. wsc-40 covers WSC Q. 40-41) — deliberate skips, not gaps.
-private let authoredWscDevotions = Array(1...40) + [42, 43, 45, 47, 49, 51, 53, 55, 57, 59, 61, 63, 65]
-
-private let devotionSlugs = ["psalm-130", "advent-1", "advent-2", "advent-3"]
-    + authoredWscDevotions.map { "wsc-\($0)" }
+// Every authored devotion — one per content/devotions/<slug>.json, listed in
+// DevotionManifest.generated.swift by `npm run ios:sync-content`.
+private let devotionSlugs = generatedDevotionSlugs
 
 private let devotionsBySlug: [String: Devotion] = Dictionary(
     uniqueKeysWithValues: devotionSlugs.map { ($0, loadDevotion($0)) }

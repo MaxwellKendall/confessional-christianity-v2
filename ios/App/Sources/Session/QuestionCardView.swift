@@ -28,6 +28,31 @@ struct QuestionCardView: View {
         return truncateClause(segment.text)
     }
 
+    /// A question shares as the Library entry behind it. nil for a catechism
+    /// that is a program only (CFYC), which has no Library page to link to.
+    private var shareQuote: ShareQuote? {
+        guard let document = libraryDocumentForProgram(program),
+              let id = entryId(program, question.number)
+        else { return nil }
+        let groups = citations?.groups ?? []
+        let segments = citations?.answerSegments ?? []
+        let marker: String? = {
+            guard let activeMarker, groups.count > 1 else { return nil }
+            return activeMarker
+        }()
+        return ShareQuote(
+            documentTitle: program.title,
+            entryLabel: "Question \(question.number)",
+            slug: document.slug,
+            entryId: id,
+            clauseMarker: marker,
+            clauseText: marker.flatMap { m in segments.first { $0.marker == m }?.text },
+            entryText: segments.isEmpty ? question.answer : segments.map(\.text).joined(),
+            clauseRefCount: activeGroup?.refs.count ?? 0,
+            entryRefCount: groups.reduce(0) { $0 + $1.refs.count }
+        )
+    }
+
     private func resolvedVerseText(_ ref: ProofTextRef) -> String {
         guard let stored = verseTexts[ref.osis] else { return "\u{2026}" }
         return stored ?? ref.citation
@@ -108,6 +133,15 @@ struct QuestionCardView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.top, 4)
                 }
+            }
+
+            if let share = shareQuote {
+                HStack(spacing: 0) {
+                    Spacer()
+                    ShareEntryButton(quote: share)
+                }
+                .padding(.top, 4)
+                .padding(.trailing, -10)
             }
 
             Spacer().frame(height: 28)
