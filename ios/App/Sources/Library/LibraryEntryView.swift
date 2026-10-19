@@ -117,32 +117,40 @@ struct LibraryEntryView: View {
         path.append(LibraryRoute.entry(slug: slug, entryId: entryId))
     }
 
-    /// Share the clause being shown (with its Scripture) or the whole entry,
-    /// as a web link that unfurls into the quote's preview image.
+    /// Share the clause being shown (with its Scripture) or the whole entry.
+    /// One button, not the former pair of 9.5pt text links: those were under
+    /// the 44pt target, wore the same dotted underline as the citations and
+    /// the breadcrumb, and named neither the clause nor what would be sent.
+    /// The sheet shows the quote card first, so the choice is visible.
     @ViewBuilder
     private func shareRow(_ page: EntryPage) -> some View {
-        let source = "\(page.documentTitle), \(entryPageLabel(page.item))"
-        HStack(spacing: 18) {
-            if let marker = activeMarker, groups.count > 1 {
-                ShareLink(
-                    item: WebLinks.share(slug: slug, entryId: entryId, marker: marker),
-                    subject: Text(source),
-                    message: Text("\u{201C}\(clauseForMarker(page.item, marker: marker))\u{201D} \u{2014} \(source)")
-                ) {
-                    Text("Share this clause").labelCaps(size: 9.5, tracking: 0.1, color: .ccInk).dottedUnderline(.ccInk)
-                }
-            }
-            ShareLink(
-                item: WebLinks.share(slug: slug, entryId: entryId, marker: nil),
-                subject: Text(source),
-                message: Text(source)
-            ) {
-                Text("Share").labelCaps(size: 9.5, tracking: 0.1, color: .ccInk).dottedUnderline(.ccInk)
-            }
+        HStack(spacing: 0) {
+            Spacer()
+            ShareEntryButton(quote: shareQuote(page))
         }
-        .buttonStyle(.plain)
-        .frame(maxWidth: .infinity)
-        .padding(.top, 16)
+        .padding(.top, 4)
+        .padding(.trailing, -10)
+    }
+
+    private func shareQuote(_ page: EntryPage) -> ShareQuote {
+        ShareQuote(
+            documentTitle: page.documentTitle,
+            entryLabel: entryPageLabel(page.item),
+            slug: slug,
+            entryId: entryId,
+            clauseMarker: clauseMarker,
+            clauseText: clauseMarker.map { clauseForMarker(page.item, marker: $0) },
+            entryText: entryQuoteSegments(page.item).flatMap { $0 }.map(\.text).joined(),
+            clauseRefCount: activeGroup?.refs.count ?? 0,
+            entryRefCount: groups.reduce(0) { $0 + $1.refs.count }
+        )
+    }
+
+    /// The clause the sheet may offer: only when one is active and the entry
+    /// has more than one, so "this clause" never silently means all of it.
+    private var clauseMarker: String? {
+        guard let activeMarker, groups.count > 1 else { return nil }
+        return activeMarker
     }
 
     @ViewBuilder
@@ -288,4 +296,307 @@ enum WebLinks {
         }
         return components.url!
     }
+}
+
+/// What a share carries: the active clause, or the entry entire.
+enum ShareScope {
+    case clause
+    case article
+}
+
+/// Everything a share needs about one entry, so the sheet serves both the
+/// Library's reading page and the catechism session card without knowing
+/// which it is standing in.
+struct ShareQuote {
+    let documentTitle: String
+    /// "Article 1", "Question 2" — the entry's own heading.
+    let entryLabel: String
+    let slug: String
+    let entryId: String
+    /// nil when there is no clause worth distinguishing from the whole.
+    let clauseMarker: String?
+    let clauseText: String?
+    let entryText: String
+    let clauseRefCount: Int
+    let entryRefCount: Int
+
+    var source: String { "\(documentTitle), \(entryLabel)" }
+
+    /// "article", "question" — taken from the entry's own heading, so the
+    /// catechisms don't get called articles.
+    var entryNoun: String {
+        let head = entryLabel.split(separator: " ").first.map(String.init)?.lowercased() ?? "entry"
+        return head.hasPrefix("q") ? "question" : head
+    }
+
+    func quote(_ scope: ShareScope) -> String {
+        if scope == .clause, let clauseText { return truncateShareQuote(clauseText) }
+        return truncateShareQuote(entryText)
+    }
+
+    /// Markers are uppercase in the confessions and lowercase in the
+    /// catechisms; the shared text reads as one voice either way.
+    func sourceLine(_ scope: ShareScope) -> String {
+        guard scope == .clause, let clauseMarker else { return source }
+        return "\(source) \u{00B7} Clause \(clauseMarker.uppercased())"
+    }
+
+    func refCount(_ scope: ShareScope) -> Int {
+        scope == .clause && clauseMarker != nil ? clauseRefCount : entryRefCount
+    }
+
+    func url(_ scope: ShareScope) -> URL {
+        WebLinks.share(slug: slug, entryId: entryId, marker: scope == .clause ? clauseMarker : nil)
+    }
+
+    func text(_ scope: ShareScope) -> String {
+        "\u{201C}\(quote(scope))\u{201D} \u{2014} \(sourceLine(scope))\n\(url(scope).absoluteString)"
+    }
+}
+
+/// The share affordance both reading screens use: a bare glyph, sized small
+/// but padded out to a 44pt target, opening the sheet that shows the quote
+/// card. Replaces the former pair of 9.5pt text links, which were under the
+/// minimum target, wore the same dotted underline as the citations and the
+/// breadcrumb, and named neither the clause nor what would be sent.
+struct ShareEntryButton: View {
+    let quote: ShareQuote
+
+    @State private var isSharing = false
+    @State private var scope: ShareScope = .clause
+
+    var body: some View {
+        Button {
+            scope = quote.clauseMarker == nil ? .article : .clause
+            isSharing = true
+        } label: {
+            Image(systemName: "square.and.arrow.up")
+                .font(.system(size: 15))
+                .foregroundStyle(.ccInk2)
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Share")
+        .sheet(isPresented: $isSharing) {
+            ShareQuoteSheet(quote: quote, scope: $scope)
+                .presentationDetents([.fraction(0.64), .large])
+                .presentationDragIndicator(.visible)
+        }
+    }
+}
+
+/// The quote about to be shared, shown before anything is sent — the same
+/// card /share renders as its preview image. Copy text and the rendered
+/// image carry the quote on their own, which matters wherever a pasted link
+/// never unfurls (and everywhere, until /share is deployed).
+private struct ShareQuoteSheet: View {
+    let quote: ShareQuote
+    @Binding var scope: ShareScope
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var cardImage: Image?
+    @State private var didCopy = false
+
+    private var sourceLine: String { quote.sourceLine(scope) }
+    private var shareURL: URL { quote.url(scope) }
+    private var shareText: String { quote.text(scope) }
+
+    var body: some View {
+        VStack(spacing: 16) {
+            HStack {
+                Text("Share").labelCaps(size: 11, tracking: 0.14, color: .ccInk)
+                Spacer()
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(.ccInk2)
+                        .frame(width: 30, height: 30)
+                        .background(Circle().fill(Color.ccFill))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Close")
+            }
+
+            if let clauseMarker = quote.clauseMarker {
+                scopePicker(clauseMarker)
+            }
+
+            SharePreviewCard(
+                quote: quote.quote(scope),
+                source: sourceLine,
+                refCount: quote.refCount(scope)
+            )
+
+            ShareLink(item: shareURL, subject: Text(quote.source), message: Text(shareText)) {
+                HStack(spacing: 8) {
+                    Image(systemName: "square.and.arrow.up")
+                        .font(.system(size: 13))
+                    Text("Send link").labelCaps(size: 10.5, tracking: 0.12, color: .ccCard)
+                }
+                .foregroundStyle(.ccCard)
+                .frame(maxWidth: .infinity, minHeight: 48)
+                .background(RoundedRectangle(cornerRadius: 10).fill(Color.ccInk))
+            }
+            .buttonStyle(.plain)
+
+            HStack(spacing: 10) {
+                Button {
+                    UIPasteboard.general.string = shareText
+                    withAnimation(.easeOut(duration: 0.15)) { didCopy = true }
+                } label: {
+                    secondaryLabel(didCopy ? "Copied" : "Copy text")
+                }
+                .buttonStyle(.plain)
+
+                if let cardImage {
+                    ShareLink(item: cardImage, preview: SharePreview(sourceLine, image: cardImage)) {
+                        secondaryLabel("Share image")
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+
+            Text("Whoever opens the link lands on this quote.")
+                .font(.ccBody(12))
+                .italic()
+                .foregroundStyle(.ccInk3)
+                .multilineTextAlignment(.center)
+
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 20)
+        .padding(.bottom, 24)
+        .background(Color.ccCard)
+        .onAppear { cardImage = renderCard() }
+        .onChange(of: scope) { _, _ in
+            didCopy = false
+            cardImage = renderCard()
+        }
+    }
+
+    @ViewBuilder
+    private func scopePicker(_ marker: String) -> some View {
+        HStack(spacing: 4) {
+            scopeTab("Clause \(marker)", isOn: scope == .clause) { scope = .clause }
+            scopeTab("Whole \(quote.entryNoun)", isOn: scope == .article) { scope = .article }
+        }
+        .padding(4)
+        .background(RoundedRectangle(cornerRadius: 10).fill(Color.ccFill))
+    }
+
+    private func scopeTab(_ title: String, isOn: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title)
+                .labelCaps(size: 9.5, tracking: 0.1, color: isOn ? .ccCard : .ccInk2)
+                .frame(maxWidth: .infinity, minHeight: 40)
+                .background(RoundedRectangle(cornerRadius: 8).fill(isOn ? Color.ccInk : .clear))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func secondaryLabel(_ title: String) -> some View {
+        Text(title)
+            .labelCaps(size: 9.5, tracking: 0.1, color: .ccInk)
+            .frame(maxWidth: .infinity, minHeight: 44)
+            .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.ccHairline, lineWidth: 1))
+    }
+
+    /// The card as a flat image, for the chats that take a picture but never
+    /// fetch a link preview.
+    @MainActor
+    private func renderCard() -> Image? {
+        let renderer = ImageRenderer(
+            content: ShareCardImage(
+                documentTitle: quote.documentTitle,
+                quote: quote.quote(scope),
+                source: sourceLine
+            )
+        )
+        renderer.scale = 2
+        return renderer.uiImage.map(Image.init(uiImage:))
+    }
+}
+
+private struct SharePreviewCard: View {
+    let quote: String
+    let source: String
+    let refCount: Int
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Rectangle().fill(Color.ccOchre).frame(width: 34, height: 2)
+            Text("\u{201C}\(quote)\u{201D}")
+                .font(.ccBody(16))
+                .foregroundStyle(.ccInk)
+                .lineLimit(6)
+                .fixedSize(horizontal: false, vertical: true)
+            Text(source).labelCaps(size: 9, tracking: 0.12, color: .ccInk2)
+            Rectangle().fill(Color.ccHairline2).frame(height: 1)
+            HStack {
+                Text("confessionalchristianity.com").labelCaps(size: 8.5, tracking: 0.1)
+                Spacer()
+                Text(refCount == 1 ? "1 proof text" : "\(refCount) proof texts")
+                    .labelCaps(size: 8.5, tracking: 0.1)
+            }
+        }
+        .padding(18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 12).fill(Color.ccFill))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.ccHairline2, lineWidth: 1))
+    }
+}
+
+/// 1200x630, the size link previews crop to.
+private struct ShareCardImage: View {
+    let documentTitle: String
+    let quote: String
+    let source: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Rectangle().fill(Color.ccOchre).frame(height: 6)
+            VStack(alignment: .leading, spacing: 30) {
+                Text(documentTitle).labelCaps(size: 17, tracking: 0.18, color: .ccOchre)
+                Text("\u{201C}\(quote)\u{201D}")
+                    .font(.ccBody(50))
+                    .foregroundStyle(.ccInk)
+                    .lineSpacing(16)
+                    .lineLimit(6)
+                    .minimumScaleFactor(0.45)
+                Spacer(minLength: 0)
+                Rectangle().fill(Color.ccHairline).frame(height: 1)
+                HStack(alignment: .bottom) {
+                    Text(source).labelCaps(size: 20, tracking: 0.1, color: .ccInk)
+                    Spacer()
+                    Text("confessionalchristianity.com").labelCaps(size: 15, tracking: 0.12, color: .ccInk2)
+                }
+            }
+            .padding(.horizontal, 88)
+            .padding(.vertical, 76)
+        }
+        .frame(width: 1200, height: 630)
+        .background(Color.ccFill)
+    }
+}
+
+private let maxShareQuoteLength = 420
+
+/// Mirrors MAX_QUOTE_CHARS in src/lib/share.ts: past this a quote stops
+/// reading as a quote, so it is cut at a word boundary. Leading punctuation
+/// belongs to the clause before it (the session card's segments arrive
+/// unstripped, unlike clauseForMarker's), so it is shed first.
+private func truncateShareQuote(_ text: String) -> String {
+    let trimmed = text
+        .replacingOccurrences(of: "^[\\s,;:.]+", with: "", options: .regularExpression)
+        .trimmingCharacters(in: .whitespacesAndNewlines)
+    if trimmed.count <= maxShareQuoteLength { return trimmed }
+    let cut = String(trimmed.prefix(maxShareQuoteLength))
+    if let lastSpace = cut.range(of: " ", options: .backwards) {
+        return String(cut[..<lastSpace.lowerBound]) + "\u{2026}"
+    }
+    return cut + "\u{2026}"
 }

@@ -140,6 +140,13 @@ public func listQuestions(_ program: ProgramRef) -> [(number: Int, question: Str
 // Per-clause citation markers for the answer: the answer's own segments (so
 // markers render inline) plus the proof texts each marker supports, so a tap
 // can swap in that clause's specific verse.
+/// The Library document a program's catechism is published as — nil when it
+/// is published as a program only (CFYC), so callers that need a web URL for
+/// a question, such as a share link, know there is none.
+public func libraryDocumentForProgram(_ program: ProgramRef) -> LibraryDocument? {
+    LIBRARY_DOCUMENTS.first { $0.documentId == program.contentId.rawValue }
+}
+
 public func getQuestionCitations(_ program: ProgramRef, _ n: Int) -> (answerSegments: [TextSegment], groups: [ProofTextGroup])? {
     guard let entry = findEntry(program.contentId, n) else { return nil }
     let segments = entryQuoteSegments(entry)
