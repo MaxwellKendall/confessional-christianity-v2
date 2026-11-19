@@ -136,10 +136,8 @@ public func bundledEsvText(for osis: String) -> String? {
     bundledEsvTextMap[osis]
 }
 
-// The canon as a browsable structure (ported for reading plans —
-// src/lib/bible.ts's BIBLE_BOOKS): all 66 books in canonical order with
-// English chapter counts, so a plan's day-by-day schedule can be derived
-// from the canon itself rather than authored.
+// The canon as a browsable structure (src/lib/bible.ts's BIBLE_BOOKS): all
+// 66 books in canonical order with English chapter counts.
 public struct BibleBook: Sendable {
     public let osis: String
     public let name: String

@@ -15,24 +15,6 @@ private struct CatechismsDot: Shape {
     }
 }
 
-/// `M9 2 C9 2 4 6 4 11 A5 5 0 0 0 14 11 C14 6 9 2 9 2 Z` — a pointed-top,
-/// rounded-bottom dome/arch silhouette.
-private struct DevotionsDome: Shape {
-    func path(in rect: CGRect) -> Path {
-        let s = rect.width / 18
-        func pt(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
-            CGPoint(x: rect.minX + x * s, y: rect.minY + y * s)
-        }
-        var p = Path()
-        p.move(to: pt(9, 2))
-        p.addCurve(to: pt(4, 11), control1: pt(9, 2), control2: pt(4, 6))
-        p.addArc(center: pt(9, 11), radius: 5 * s, startAngle: .degrees(180), endAngle: .degrees(0), clockwise: false)
-        p.addCurve(to: pt(9, 2), control1: pt(14, 6), control2: pt(9, 2))
-        p.closeSubpath()
-        return p
-    }
-}
-
 /// Two quadrilaterals meeting at a center spine — an open book viewed from above.
 private struct ReflectionsBook: Shape {
     func path(in rect: CGRect) -> Path {
@@ -72,8 +54,6 @@ struct TabIcon: View {
         switch tab {
         case .catechisms:
             CatechismsDot().fill(color)
-        case .devotions:
-            DevotionsDome().stroke(color, lineWidth: 1.5)
         case .reflections:
             ReflectionsBook().stroke(color, lineWidth: 1.4)
         case .library:

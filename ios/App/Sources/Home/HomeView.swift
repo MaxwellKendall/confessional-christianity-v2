@@ -1,28 +1,21 @@
-// Mirrors the real web home page (src/components/HomeClient.tsx), not the
-// /programs index: the WSC devotion run card leading, a quiet "Or choose
-// today's devotion" link (deferred — it opens the full devotions hub, which
-// hasn't been ported), the "Your Catechism" continue card for whichever
-// program the visitor last worked in, a grid to the other three catechisms,
-// and a closing line pointing at the Library (also deferred — unbuilt).
+// The Catechisms tab's home: the "Your Catechism" continue card for whichever
+// program the visitor last worked in, a grid to the other catechisms, and a
+// closing line pointing at the Library. Devotions and reading plans led this
+// screen until TKL-856 cut them; it is a placeholder until the Today home
+// screen (TKL-825) replaces it.
 import SwiftUI
 import SwiftData
 import DomainKit
 
 struct HomeView: View {
     private let defaultProgram = PROGRAMS[0]
-    private let wscRun = seriesForCatechism("WSC")
-    private let flagshipPlan = READING_PLANS[0]
 
     @Binding var path: NavigationPath
 
     @Environment(\.modelContext) private var modelContext
     @State private var track: LocalCatechismTrack?
-    @State private var runCompletedDays: [Int] = []
-    @State private var planCompletedDays: [Int] = []
 
     private var store: LocalProgressStore { LocalProgressStore(context: modelContext) }
-    private var seriesStore: LocalSeriesProgressStore { LocalSeriesProgressStore(context: modelContext) }
-    private var readingPlanStore: LocalReadingPlanProgressStore { LocalReadingPlanProgressStore(context: modelContext) }
 
     private var trackProgram: ProgramDefinition? {
         guard let track else { return nil }
@@ -47,16 +40,6 @@ struct HomeView: View {
         PROGRAMS.filter { $0.slug != program.slug }
     }
 
-    private var runTotal: Int { wscRun?.parts.count ?? 0 }
-    private var runCurrentDay: Int? { wscRun.map { _ in currentPartDay(runCompletedDays, totalParts: runTotal) } ?? nil }
-    private var runCurrentPart: SeriesPart? {
-        guard let wscRun, let runCurrentDay else { return nil }
-        return wscRun.parts.first { $0.day == runCurrentDay }
-    }
-
-    private var planCurrentDay: Int? { currentPartDay(planCompletedDays, totalParts: flagshipPlan.totalDays) }
-    private var planToday: ReadingPlanDay? { planCurrentDay.flatMap { getReadingPlanDay(flagshipPlan, $0) } }
-
     var body: some View {
         NavigationStack(path: $path) {
             VStack(spacing: 0) {
@@ -68,33 +51,6 @@ struct HomeView: View {
             .navigationDestination(for: String.self) { slug in
                 if let program = getProgram(slug) {
                     SessionView(program: program, path: $path)
-                }
-            }
-            .navigationDestination(for: DevotionRoute.self) { route in
-                switch route {
-                case .series(let slug):
-                    if let series = getSeries(slug) {
-                        DevotionSeriesView(series: series, path: $path)
-                    }
-                case .devotion(let slug):
-                    if let devotion = getDevotion(slug) {
-                        DevotionLandingView(devotion: devotion, path: $path)
-                    }
-                case .worship(let slug, let startStep):
-                    if let devotion = getDevotion(slug) {
-                        DevotionWorshipView(devotion: devotion, startStep: startStep, path: $path)
-                    }
-                case .catechismHandoff(let programSlug, let devotionSlug, let returnStep):
-                    if let program = getProgram(programSlug) {
-                        SessionView(
-                            program: program, path: $path,
-                            handoff: DevotionHandoff(devotionSlug: devotionSlug, returnStep: returnStep)
-                        )
-                    }
-                case .readingPlan(let slug):
-                    if let plan = getReadingPlan(slug) {
-                        ReadingPlanView(plan: plan, path: $path)
-                    }
                 }
             }
             .navigationDestination(for: ScriptureRoute.self) { route in
@@ -122,10 +78,6 @@ struct HomeView: View {
             }
             .task {
                 track = store.activeTrack()
-                if let wscRun {
-                    runCompletedDays = seriesStore.getCompletedDays(wscRun.slug)
-                }
-                planCompletedDays = readingPlanStore.getCompletedDays(flagshipPlan.slug)
             }
         }
         .tint(.ccInk)
@@ -134,68 +86,6 @@ struct HomeView: View {
     private var homeScrollView: some View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    if let wscRun {
-                        Button {
-                            path.append(DevotionRoute.series(wscRun.slug))
-                        } label: {
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text(runCurrentDay == nil
-                                     ? "All \(runTotal) Parts Complete"
-                                     : "Part \(runCurrentDay!) of \(runTotal) \u{00B7} Westminster Shorter Catechism")
-                                    .labelCaps(size: 9.5, tracking: 0.14, color: .ccOchre)
-                                HStack(alignment: .firstTextBaseline) {
-                                    Text(runCurrentDay == nil
-                                         ? "The Whole Catechism, Professed"
-                                         : (runCompletedDays.isEmpty ? "Begin \u{2014} Part 1" : "Continue \u{2014} Part \(runCurrentDay!)"))
-                                        .headingPage()
-                                    Spacer()
-                                    Text("\u{2192}").font(.ccDisplay(18)).foregroundStyle(.ccOchre)
-                                }
-                                Text(runCurrentPart.map { "\($0.title) (\($0.citation))" } ?? "Beginning to end, in order")
-                                    .font(.ccBody(13.5))
-                                    .italic()
-                                    .foregroundStyle(.ccInk2)
-                            }
-                            .padding(.horizontal, 24)
-                            .padding(.vertical, 22)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Color.ccFill)
-                            .clipShape(RoundedRectangle(cornerRadius: 3))
-                        }
-                        .buttonStyle(.plain)
-                        .padding(.bottom, 12)
-                    }
-
-                    Button {
-                        path.append(DevotionRoute.readingPlan(flagshipPlan.slug))
-                    } label: {
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text(planCurrentDay == nil
-                                 ? "All \(flagshipPlan.totalDays) Days Read"
-                                 : "Day \(planCurrentDay!) of \(flagshipPlan.totalDays) \u{00B7} \(flagshipPlan.title)")
-                                .labelCaps(size: 9.5, tracking: 0.14, color: .ccOchre)
-                            HStack(alignment: .firstTextBaseline) {
-                                Text(planCurrentDay == nil
-                                     ? "The Whole Bible, Read"
-                                     : (planCompletedDays.isEmpty ? "Begin \u{2014} Day 1" : "Continue \u{2014} Day \(planCurrentDay!)"))
-                                    .headingPage()
-                                Spacer()
-                                Text("\u{2192}").font(.ccDisplay(18)).foregroundStyle(.ccOchre)
-                            }
-                            Text(planToday?.citation ?? "Genesis through Revelation, canonical order")
-                                .font(.ccBody(13.5))
-                                .italic()
-                                .foregroundStyle(.ccInk2)
-                        }
-                        .padding(.horizontal, 24)
-                        .padding(.vertical, 22)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color.ccFill)
-                        .clipShape(RoundedRectangle(cornerRadius: 3))
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.bottom, 32)
-
                     Text("Your Catechism")
                         .labelCaps(size: 9.5, tracking: 0.14)
                         .padding(.bottom, 10)

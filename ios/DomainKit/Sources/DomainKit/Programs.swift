@@ -4,7 +4,7 @@ import Foundation
 
 public struct ProgramDefinition: Equatable, Sendable {
     public let slug: String
-    /// loose grouping on /programs: family catechesis, scripture, devotional
+    /// loose grouping of programs: family catechesis, scripture, devotional
     public let kind: String
     public let title: String
     /// conversational short name used in CTAs ("Continue the {shortTitle}")

@@ -2,17 +2,13 @@ import type { MetadataRoute } from 'next';
 
 import { confessionSlugs } from '@/lib/confessionContent';
 import { getAllEntryParams } from '@/lib/library';
-import { getAllSeries } from '@/lib/devotionSeries';
-import { getAllDevotions } from '@/lib/devotions';
 import { listAuthors, loadReflections } from '@/lib/reflections';
 import { getAllScriptureParams } from '@/lib/scripture';
-import { PROGRAMS } from '@/lib/programs';
-import { READING_PLANS } from '@/lib/readingPlans';
 
 const BASE = 'https://confessionalchristianity.com';
 
-// Fully static: every canonical reading URL the redirect map points at, plus
-// the program landing pages. Transient/auth surfaces (search, session,
+// Fully static: every canonical reading URL the redirect map points at.
+// Transient/auth surfaces (search, session,
 // onboarding, invites) are intentionally absent.
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [entryParams, reflections, authors, scriptureParams] = await Promise.all([
@@ -24,29 +20,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     { url: `${BASE}/`, changeFrequency: 'weekly', priority: 1 },
-    { url: `${BASE}/programs`, changeFrequency: 'weekly', priority: 0.9 },
-    ...PROGRAMS.map(({ slug }) => ({
-      url: `${BASE}/programs/${slug}`,
-      changeFrequency: 'weekly' as const,
-      priority: 0.9,
-    })),
-    { url: `${BASE}/devotions`, changeFrequency: 'weekly', priority: 0.8 },
-    { url: `${BASE}/devotions/scripture`, changeFrequency: 'weekly', priority: 0.7 },
-    ...READING_PLANS.map(({ slug }) => ({
-      url: `${BASE}/devotions/reading-plans/${slug}`,
-      changeFrequency: 'weekly' as const,
-      priority: 0.7,
-    })),
-    ...getAllSeries().map(({ slug }) => ({
-      url: `${BASE}/devotions/${slug}`,
-      changeFrequency: 'monthly' as const,
-      priority: 0.7,
-    })),
-    ...getAllDevotions().map(({ slug }) => ({
-      url: `${BASE}/devotions/${slug}`,
-      changeFrequency: 'monthly' as const,
-      priority: 0.7,
-    })),
     { url: `${BASE}/library`, changeFrequency: 'monthly', priority: 0.9 },
     ...confessionSlugs.map((slug) => ({
       url: `${BASE}/library/${slug}`,

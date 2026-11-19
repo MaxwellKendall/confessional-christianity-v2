@@ -2,11 +2,10 @@ import Link from 'next/link';
 
 import { SearchIcon } from './SearchIcon';
 
-// Primary nav per PRD §4: wordmark, Catechisms first among small-caps text
-// links (Catechisms · Devotions · Resources · Library — Devotions joined in
-// mockup 12a), search icon. No per-child switcher lives here (§5.5). Sized
-// for the phone frame at the base scale, stepping up with the full-bleed
-// shell on wider screens.
+// Primary nav: wordmark, small-caps text links (Library · Resources), search
+// icon. Catechisms and Devotions left with TKL-856. No per-child switcher
+// lives here (§5.5). Sized for the phone frame at the base scale, stepping
+// up with the full-bleed shell on wider screens.
 export function SiteHeader() {
   return (
     <header className="border-b border-hairline px-5 pt-4 pb-3.5 text-center sm:px-10 sm:pt-6 sm:pb-5">
@@ -24,10 +23,8 @@ export function SiteHeader() {
         </Link>
       </div>
       <nav className="mt-3 flex justify-center gap-[22px] label-caps text-[9.5px] tracking-[0.1em] text-ink-3 sm:mt-4 sm:gap-9 sm:text-[11.5px]">
-        <Link href="/programs" className="text-ink no-underline">Catechisms</Link>
-        <Link href="/devotions" className="text-ink-3 no-underline">Devotions</Link>
+        <Link href="/library" className="text-ink no-underline">Library</Link>
         <Link href="/reflections" className="text-ink-3 no-underline">Resources</Link>
-        <Link href="/library" className="text-ink-3 no-underline">Library</Link>
       </nav>
     </header>
   );

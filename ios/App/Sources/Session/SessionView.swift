@@ -1,8 +1,8 @@
-// Mirrors src/app/(column)/programs/[slug]/session/SessionClient.tsx: the
+// Ported from the former web session (SessionClient.tsx, cut in TKL-856): the
 // question header ("Question N of Total ▾" opens Jump), the QuestionCard
 // centered in the frame, and a hairline-topped footer with Prev/Next plus
-// a "See Milestones →" link. Local progress via LocalProgressStore mirrors
-// useSessionTrack.ts's resume/advance/jump semantics.
+// a "See Milestones →" link. Local progress via LocalProgressStore:
+// resume where you left off, advance, jump.
 //
 // The question area also responds to a horizontal swipe (left = next,
 // right = prev — same convention as LibraryEntryView's paging), calling the
@@ -15,10 +15,6 @@ import DomainKit
 struct SessionView: View {
     let program: ProgramDefinition
     @Binding var path: NavigationPath
-    /// Set when a devotion's Professing Faith step handed off here — mirrors
-    /// SessionClient's `?devotion=` handling: "Next" becomes "Continue
-    /// Worship" and advancing returns to that devotion's stepper.
-    var handoff: DevotionHandoff?
     /// Set when Library deep-links a specific question into the real
     /// session — jumped to once on appear, same as tapping "Jump to
     /// Question", so arriving here also becomes the resume point.
@@ -188,7 +184,7 @@ struct SessionView: View {
                 Button {
                     goNext()
                 } label: {
-                    Text(handoff != nil ? "Continue Worship \u{2192}" : "Next \u{2192}")
+                    Text("Next \u{2192}")
                         .labelCaps(size: 11, tracking: 0.1, color: .ccInk)
                         .dottedUnderline(.ccInk)
                 }
@@ -238,9 +234,6 @@ struct SessionView: View {
 
     private func goNext() {
         advance()
-        if let handoff {
-            path.append(DevotionRoute.worship(slug: handoff.devotionSlug, startStep: handoff.returnStep))
-        }
     }
 
     private func goPrev() {

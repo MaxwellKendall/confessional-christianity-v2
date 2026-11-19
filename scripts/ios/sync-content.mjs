@@ -32,13 +32,10 @@ const FILES = [
   ['content/programs/catechizing-shorter-catechism/prayers.json', 'content/programs/catechizing-shorter-catechism/prayers.json'],
 ];
 
-// content/devotions holds every authored devotion and series manifest, and
-// content/commentary holds every authored reflection/commentary essay —
-// both are open-ended (grow as new essays/devotions are authored) rather
-// than a fixed subset, so they're copied recursively rather than enumerated
-// file-by-file.
+// content/commentary holds every authored reflection/commentary essay — it
+// is open-ended (grows as new essays are authored) rather than a fixed
+// subset, so it's copied recursively rather than enumerated file-by-file.
 const DIRECTORIES = [
-  ['content/devotions', 'content/devotions'],
   ['content/commentary', 'content/commentary'],
 ];
 

@@ -3,7 +3,7 @@ import type { NextConfig } from 'next';
 // The v1 reading routes are the site's organic entry point; these 301s are
 // non-negotiable and ship with the library surface (migration plan §3).
 // The :confession param is constrained to the eight real document slugs so
-// the patterns can never shadow /search, /programs, or other v2 routes.
+// the patterns can never shadow /search, /library, or other v2 routes.
 const CONFESSION_SLUGS = [
   'westminster-confession-of-faith',
   'westminster-larger-catechism',
@@ -14,6 +14,14 @@ const CONFESSION_SLUGS = [
   'thirty-nine-articles-of-religion',
   'martin-luthers-95-theses',
 ].join('|');
+
+// former /programs/<slug> -> its catechism's library slug (the Catechism for
+// Young Children has no library page and falls through to /library)
+const CUT_PROGRAMS = [
+  ['catechizing-shorter-catechism', 'westminster-shorter-catechism'],
+  ['catechizing-larger-catechism', 'westminster-larger-catechism'],
+  ['catechizing-heidelberg-catechism', 'heidelberg-catechism'],
+] as const;
 
 const nextConfig: NextConfig = {
   async redirects() {
@@ -48,6 +56,18 @@ const nextConfig: NextConfig = {
       // never indexed)
       { source: '/dashboard', destination: '/', permanent: false },
       { source: '/dashboard/:path*', destination: '/', permanent: false },
+      // TKL-856 cut devotions, reading plans, Family Worship and the web
+      // catechism session. All of them were in the sitemap, so each 301s to
+      // its nearest surviving page: a catechism program to that catechism in
+      // the library, everything else to the library index or the homepage.
+      ...CUT_PROGRAMS.map(([program, confession]) => ({
+        source: `/programs/${program}/:path*`,
+        destination: `/library/${confession}`,
+        permanent: true,
+      })),
+      { source: '/programs/:path*', destination: '/library', permanent: true },
+      { source: '/devotions/:path*', destination: '/', permanent: true },
+      { source: '/worship/:path*', destination: '/', permanent: true },
     ];
   },
 };

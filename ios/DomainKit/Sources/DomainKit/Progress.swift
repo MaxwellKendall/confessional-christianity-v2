@@ -1,5 +1,5 @@
 // Local, guest-only progress persistence — SwiftData port of
-// src/lib/localCatechismProgress.ts and src/lib/localSeriesProgress.ts. No
+// src/lib/localCatechismProgress.ts. No
 // account, no name capture, same as the web app: this is the only progress
 // store the app has in v1.
 //
@@ -63,9 +63,11 @@ public final class ProgressSettings {
     }
 }
 
-// SwiftData port of src/lib/localSeriesProgress.ts's per-series completions
-// record — one row per series slug, completed day numbers as they're
-// finished (order preserved, though only membership is ever read back).
+// RETIRED (TKL-856): devotion series progress. The devotions surface was cut,
+// and nothing reads or writes this any more, but the model shipped in the App
+// Store 1.0 store (build 2), so it stays in progressSchema: dropping a model
+// from a container that already exists on a device is a schema migration.
+// Remove it only with a VersionedSchema + SchemaMigrationPlan.
 @Model
 public final class SeriesProgressRecord {
     @Attribute(.unique) public var seriesSlug: String
@@ -87,11 +89,8 @@ public final class SeriesProgressRecord {
 // capability (Signing & Capabilities > App Groups) for both targets — see
 // ios/App/Sources/ConfessionalChristianity.entitlements and
 // ios/App/Widget/ConfessionalChristianityWidgetExtension.entitlements.
-// SwiftData port of src/lib/localReadingPlanProgress.ts's per-plan
-// completions record — a sibling to SeriesProgressRecord, not a reuse of it:
-// a plan's days are computed chapters (ReadingPlanContent.swift), not
-// authored devotions, so it gets its own row type rather than borrowing the
-// series store's namespace.
+// RETIRED (TKL-856): reading plan progress. Kept in progressSchema for the
+// same reason as SeriesProgressRecord above; nothing reads or writes it.
 @Model
 public final class ReadingPlanProgressRecord {
     @Attribute(.unique) public var planSlug: String
@@ -251,86 +250,5 @@ public final class LocalProgressStore {
         settings().activeCatechismId = catechismId
         save()
         return existing
-    }
-}
-
-// Ported from src/lib/localSeriesProgress.ts: which parts of each devotion
-// series this device has finished. Its own store beside LocalProgressStore,
-// same as those two sit beside each other on web. Only completions are
-// stored; the current part is derived at read time via DomainKit's
-// currentPartDay.
-@MainActor
-public final class LocalSeriesProgressStore {
-    private let context: ModelContext
-
-    public init(context: ModelContext) {
-        self.context = context
-    }
-
-    private func record(for seriesSlug: String) -> SeriesProgressRecord? {
-        let predicate = #Predicate<SeriesProgressRecord> { $0.seriesSlug == seriesSlug }
-        return try? context.fetch(FetchDescriptor(predicate: predicate)).first
-    }
-
-    public func getCompletedDays(_ seriesSlug: String) -> [Int] {
-        record(for: seriesSlug)?.completedDays ?? []
-    }
-
-    /// Idempotent, like recordWorshipCompletion — replaying a finished part
-    /// changes nothing, and progress never regresses.
-    public func recordCompletion(seriesSlug: String, day: Int) {
-        if let existing = record(for: seriesSlug) {
-            guard !existing.completedDays.contains(day) else { return }
-            existing.completedDays.append(day)
-            try? context.save()
-            return
-        }
-        context.insert(SeriesProgressRecord(seriesSlug: seriesSlug, completedDays: [day]))
-        try? context.save()
-    }
-}
-
-// Ported from src/lib/localReadingPlanProgress.ts: which days of each
-// reading plan this device has read. Its own store beside
-// LocalSeriesProgressStore, same shape, sibling domain — see
-// ReadingPlanProgressRecord's own comment for why it isn't a reuse of
-// SeriesProgressRecord.
-@MainActor
-public final class LocalReadingPlanProgressStore {
-    private let context: ModelContext
-
-    public init(context: ModelContext) {
-        self.context = context
-    }
-
-    private func record(for planSlug: String) -> ReadingPlanProgressRecord? {
-        let predicate = #Predicate<ReadingPlanProgressRecord> { $0.planSlug == planSlug }
-        return try? context.fetch(FetchDescriptor(predicate: predicate)).first
-    }
-
-    public func getCompletedDays(_ planSlug: String) -> [Int] {
-        record(for: planSlug)?.completedDays ?? []
-    }
-
-    /// Idempotent, like LocalSeriesProgressStore.recordCompletion — replaying
-    /// a read day changes nothing, and progress never regresses.
-    public func recordRead(planSlug: String, day: Int) {
-        if let existing = record(for: planSlug) {
-            guard !existing.completedDays.contains(day) else { return }
-            existing.completedDays.append(day)
-            try? context.save()
-            return
-        }
-        context.insert(ReadingPlanProgressRecord(planSlug: planSlug, completedDays: [day]))
-        try? context.save()
-    }
-
-    /// Reverses recordRead — a plan-only "undo," since a devotion series'
-    /// authored parts don't need unmarking but a reading plan's days (jumped
-    /// to freely, possibly by mistake) do.
-    public func markUnread(planSlug: String, day: Int) {
-        guard let existing = record(for: planSlug) else { return }
-        existing.completedDays.removeAll { $0 == day }
-        try? context.save()
     }
 }

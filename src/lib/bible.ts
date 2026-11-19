@@ -138,9 +138,8 @@ export const citationToOsis = (citation: string): string | null => {
   return `${start}-${book}.${endChapter ?? chapter}.${end}`;
 };
 
-// The canon as a browsable structure (turn 15's "By Scripture" screen):
-// all 66 books in canonical order with English chapter counts, so the
-// devotions library can index the whole Bible, not a curated sample.
+// The canon as a browsable structure: all 66 books in canonical order with
+// English chapter counts.
 export interface BibleBook {
   /** OSIS book id — the prefix of every osis ref in this book */
   osis: string;

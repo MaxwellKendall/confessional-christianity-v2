@@ -3,15 +3,16 @@
 ## What it is
 confessionalchristianity.com (Next.js 16, App Router, on Vercel) and the **Confessional Christianity** iOS app (SwiftUI,
 live on the App Store: 1.0 READY_FOR_SALE, build 2, Aug 2026). Catechizing a child through a historic catechism, plus
-the confessions, scripture, devotions and reading plans. Background: `README.md`, `docs/DOMAIN.md` (id grammar; read
+the confessions and scripture. Devotions, reading plans, Family Worship, the prayer list and the web
+catechism session (`/programs`) were cut in TKL-856; their old URLs 301 in `next.config.ts`. Background: `README.md`, `docs/DOMAIN.md` (id grammar; read
 before touching search or routing), `docs/catechism-first-prd.md`.
 Linear project: **confessional christianity** (team TKL): https://linear.app/software-studio/project/confessional-christianity-737c8c0f61f0
 
 ## Layout
-- `src/`: the website (App Router). `content/`: essays, devotions, program prayers (markdown/JSON, source of truth).
+- `src/`: the website (App Router). `content/`: essays, program prayers (markdown/JSON, source of truth).
 - `normalized-data/`, `dataMapping/`: confession text and the id → entry map (server-only).
 - `supabase/migrations/`: the account schema (live Supabase project shared with v1).
-- `scripts/`: Algolia indexing, prayers/devotions authoring, `ios/sync-content.mjs` (copies `content/` into the app bundle).
+- `scripts/`: Algolia indexing, prayers authoring, `ios/sync-content.mjs` (copies `content/` into the app bundle).
 - `ios/App/`: the app. `project.yml` is the XcodeGen spec (the `.xcodeproj` is generated; don't hand-edit it). `Sources/`, `Widget/` (Home Screen widget, App Group `group.com.confessionalchristianity.app`).
 - `ios/DomainKit/`: SwiftPM package with the app's pure logic and bundled content; its tests run on the host Mac.
 - `ios/AppStoreScreenshots/`, `ios/design-assets/`: listing art.
@@ -25,9 +26,9 @@ Linear project: **confessional christianity** (team TKL): https://linear.app/sof
 ## Test (from the repo root)
 | Suite | Command | Runtime |
 |---|---|---|
-| web unit | `npm test` (vitest, 163 tests) | ~1 s |
+| web unit | `npm test` (vitest, 114 tests) | ~1 s |
 | web build | `npm run build` (needs `.env.local`; ESLint enforced) | ~15 s |
-| DomainKit | `cd ios/DomainKit && swift test` (98 tests) | ~15 s |
+| DomainKit | `cd ios/DomainKit && swift test` (116 tests) | ~15 s |
 | iOS build | `cd ios/App && xcodegen generate && xcodebuild -scheme ConfessionalChristianity -destination 'platform=iOS Simulator,name=CC iPhone 17 Pro' -derivedDataPath ../../build/dd build` | ~1 min cold |
 | DB (pgTAP) | see "DB tests" below (local Supabase in Docker, 35 tests) | ~40 s |
 

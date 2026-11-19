@@ -1,8 +1,7 @@
 // Mirrors src/components/SiteHeader.tsx's wordmark row: a centered,
 // small-caps "Confessional Christianity" mark over a hairline bottom
 // border, balanced by a search icon (SearchIcon.tsx) at the trailing edge.
-// The nav row it sits above on web (Catechisms/Devotions/Resources/
-// Library) isn't ported — those destinations beyond what's already
+// The web nav row beneath it isn't ported — those destinations beyond what's already
 // reachable from Home aren't built yet, and a bar of dead-end taps would be
 // worse than no bar at all.
 import SwiftUI

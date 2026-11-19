@@ -1,4 +1,4 @@
-// Content pages (sessions, worship, reading, browse) keep the mockups'
+// Content pages (reading, browse) keep the mockups'
 // single centered column; the shell itself is full-bleed, so the column is
 // a reading measure on the page, not a framed card.
 export default function ColumnLayout({

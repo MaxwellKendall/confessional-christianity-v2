@@ -26,9 +26,6 @@ extension Color {
     static let ccOchre = Color(hex: 0xab7e2e)
     // the "reviewing" heart tone sits between muted and ochre
     static let ccHeartReviewing = Color(hex: 0xc9a468)
-    // the devotions library's one deep accent
-    static let ccFeatured = Color(hex: 0x3d4f47)
-    static let ccFeaturedInk = Color(hex: 0xd8ddd8)
     // the floating tab bar's selected-pill fill
     static let ccTabSelected = Color(hex: 0xede7d8)
 
@@ -58,8 +55,6 @@ extension ShapeStyle where Self == Color {
     static var ccMuted: Color { .ccMuted }
     static var ccOchre: Color { .ccOchre }
     static var ccHeartReviewing: Color { .ccHeartReviewing }
-    static var ccFeatured: Color { .ccFeatured }
-    static var ccFeaturedInk: Color { .ccFeaturedInk }
     static var ccTabSelected: Color { .ccTabSelected }
 }
 

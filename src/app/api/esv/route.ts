@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   if (!osis) {
     return NextResponse.json({ error: 'osis required' }, { status: 400 });
   }
-  // Proof texts (ScriptureView, DevotionWorshipView) render as a single
+  // Proof texts (ScriptureView) render as a single
   // flowing quote, so their whitespace is collapsed to one line below.
   // A full-chapter read (ReadingChapterView) wants the ESV API's own
   // paragraph breaks and poetry indentation intact instead.
