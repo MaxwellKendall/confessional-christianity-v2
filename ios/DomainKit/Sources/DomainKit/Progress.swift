@@ -120,6 +120,7 @@ public let sharedAppGroupID = "group.com.confessionalchristianity.app"
 // has to be truncated" once on that upgrade; nothing here reads history.
 public let progressSchema = Schema([
     LocalCatechismTrack.self, ProgressSettings.self, LocalChild.self, ChildCatechismTrack.self,
+    LordsDayNote.self, NoteCard.self,
 ] + syncModelTypes)
 
 /// The single ModelContainer both the app and the widget extension build
