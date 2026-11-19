@@ -1,0 +1,36 @@
+{
+  "query": "Romans 8:28\u201330",
+  "canonical": "Romans 8:28\u201330",
+  "parsed": [
+    [
+      45008028,
+      45008030
+    ]
+  ],
+  "passage_meta": [
+    {
+      "canonical": "Romans 8:28\u201330",
+      "chapter_start": [
+        45008001,
+        45008039
+      ],
+      "chapter_end": [
+        45008001,
+        45008039
+      ],
+      "prev_verse": 45008027,
+      "next_verse": 45008031,
+      "prev_chapter": [
+        45007001,
+        45007025
+      ],
+      "next_chapter": [
+        45009001,
+        45009033
+      ]
+    }
+  ],
+  "passages": [
+    "  [28] And we know that for those who love God all things work together for good, for those who are called according to his purpose. [29] For those whom he foreknew he also predestined to be conformed to the image of his Son, in order that he might be the firstborn among many brothers. [30] And those whom he predestined he also called, and those whom he called he also justified, and those whom he justified he also glorified.\n\n"
+  ]
+}

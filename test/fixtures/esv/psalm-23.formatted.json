@@ -1,0 +1,36 @@
+{
+  "query": "Psalm 23",
+  "canonical": "Psalm 23",
+  "parsed": [
+    [
+      19023001,
+      19023006
+    ]
+  ],
+  "passage_meta": [
+    {
+      "canonical": "Psalm 23",
+      "chapter_start": [
+        19023001,
+        19023006
+      ],
+      "chapter_end": [
+        19023001,
+        19023006
+      ],
+      "prev_verse": 19022031,
+      "next_verse": 19024001,
+      "prev_chapter": [
+        19022001,
+        19022031
+      ],
+      "next_chapter": [
+        19024001,
+        19024010
+      ]
+    }
+  ],
+  "passages": [
+    "A Psalm of David.\n\n    The LORD is my shepherd; I shall not want.\n        He makes me lie down in green pastures.\n    He leads me beside still waters.\n        He restores my soul.\n    He leads me in paths of righteousness\n        for his name\u2019s sake.\n    \n    \n    Even though I walk through the valley of the shadow of death,\n        I will fear no evil,\n    for you are with me;\n        your rod and your staff,\n        they comfort me.\n    \n    \n    You prepare a table before me\n        in the presence of my enemies;\n    you anoint my head with oil;\n        my cup overflows.\n    Surely goodness and mercy shall follow me\n        all the days of my life,\n    and I shall dwell in the house of the LORD\n        forever.\n    \n\n"
+  ]
+}

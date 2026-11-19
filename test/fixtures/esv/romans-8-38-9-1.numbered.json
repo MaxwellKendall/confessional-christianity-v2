@@ -1,0 +1,36 @@
+{
+  "query": "Romans 8:38\u20139:1",
+  "canonical": "Romans 8:38\u20139:1",
+  "parsed": [
+    [
+      45008038,
+      45009001
+    ]
+  ],
+  "passage_meta": [
+    {
+      "canonical": "Romans 8:38\u20139:1",
+      "chapter_start": [
+        45008001,
+        45008039
+      ],
+      "chapter_end": [
+        45009001,
+        45009033
+      ],
+      "prev_verse": 45008037,
+      "next_verse": 45009002,
+      "prev_chapter": [
+        45007001,
+        45007025
+      ],
+      "next_chapter": [
+        45010001,
+        45010021
+      ]
+    }
+  ],
+  "passages": [
+    "  [38] For I am sure that neither death nor life, nor angels nor rulers, nor things present nor things to come, nor powers, [39] nor height nor depth, nor anything else in all creation, will be able to separate us from the love of God in Christ Jesus our Lord.\n\n  [1] I am speaking the truth in Christ\u2014I am not lying; my conscience bears me witness in the Holy Spirit\u2014\n\n"
+  ]
+}
