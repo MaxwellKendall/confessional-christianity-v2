@@ -2,8 +2,7 @@
 
 ## What it is
 confessionalchristianity.com (Next.js 16, App Router, on Vercel) and the **Confessional Christianity** iOS app (SwiftUI,
-live on the App Store: 1.0 READY_FOR_SALE, build 2, Aug 2026). Catechizing a child through a historic catechism, plus
-the confessions and scripture. Devotions, reading plans, Family Worship, the prayer list and the web
+live on the App Store: 1.0 READY_FOR_SALE, build 2, Aug 2026). Its two pillars are catechizing children through a historic catechism and reflecting on Lord's Day sermon insights through weekly meditation. It also provides the confessions and scripture. Devotions, reading plans, Family Worship, the prayer list and the web
 catechism session (`/programs`) were cut in TKL-856; their old URLs 301 in `next.config.ts`. Background: `README.md`, `docs/DOMAIN.md` (id grammar; read
 before touching search or routing), `docs/catechism-first-prd.md`.
 Linear project: **confessional christianity** (team TKL): https://linear.app/software-studio/project/confessional-christianity-737c8c0f61f0

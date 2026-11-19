@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 import nextConfig from '../next.config';
 import sitemap from '@/app/sitemap';
 
-type Redirect = { source: string; destination: string; permanent?: boolean };
+type Redirect = { source: string; destination: string; statusCode?: number };
 
 // Just enough of Next's path matching for these rules: `:p(a|b)`, `:p*`, `:p`.
 const toRegExp = (source: string) => new RegExp(`^${source.replace(
@@ -41,7 +41,7 @@ describe('cut routes redirect permanently', () => {
   test.each(cases)('%s 301s to %s', async (path, destination) => {
     const rule = await resolve(path);
     expect(rule?.destination).toBe(destination);
-    expect(rule?.permanent).toBe(true);
+    expect(rule?.statusCode).toBe(301);
   });
 
   test('surviving routes are not redirected', async () => {

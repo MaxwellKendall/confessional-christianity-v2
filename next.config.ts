@@ -63,11 +63,11 @@ const nextConfig: NextConfig = {
       ...CUT_PROGRAMS.map(([program, confession]) => ({
         source: `/programs/${program}/:path*`,
         destination: `/library/${confession}`,
-        permanent: true,
+        statusCode: 301,
       })),
-      { source: '/programs/:path*', destination: '/library', permanent: true },
-      { source: '/devotions/:path*', destination: '/', permanent: true },
-      { source: '/worship/:path*', destination: '/', permanent: true },
+      { source: '/programs/:path*', destination: '/library', statusCode: 301 },
+      { source: '/devotions/:path*', destination: '/', statusCode: 301 },
+      { source: '/worship/:path*', destination: '/', statusCode: 301 },
     ];
   },
 };
