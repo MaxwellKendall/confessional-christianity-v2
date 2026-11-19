@@ -110,10 +110,12 @@ public final class ReadingPlanProgressRecord {
 
 public let sharedAppGroupID = "group.com.confessionalchristianity.app"
 
+// The sync engine's outbox and cursors (Sync.swift) live in this same store,
+// so a queued change and the row it describes are saved together.
 public let progressSchema = Schema([
     LocalCatechismTrack.self, ProgressSettings.self, SeriesProgressRecord.self,
     ReadingPlanProgressRecord.self,
-])
+] + syncModelTypes)
 
 /// The single ModelContainer both the app and the widget extension build
 /// from — same App Group file, so a session's progress the app just wrote is
