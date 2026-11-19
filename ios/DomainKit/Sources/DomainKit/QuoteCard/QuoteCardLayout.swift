@@ -320,14 +320,14 @@ enum Text {
     }
 
     /// The prototype's split: the first letter becomes the drop cap, the rest
-    /// of the first word a small-caps run-in. Leading punctuation is dropped,
-    /// as in the prototype.
+    /// of the first word a small-caps run-in. Preserve opening punctuation
+    /// with the drop cap so it remains in the quotation.
     static func dropCapSplit(_ text: String) -> (drop: String, runIn: String, rest: String)? {
         func isWord(_ c: Character) -> Bool { c.isLetter || c.isNumber || c == "_" }
         guard let first = text.firstIndex(where: isWord) else { return nil }
         let afterDrop = text.index(after: first)
         let runInEnd = text[afterDrop...].firstIndex { !(isWord($0) || $0 == "'" || $0 == "\u{2019}") } ?? text.endIndex
-        return (String(text[first]), String(text[afterDrop..<runInEnd]), String(text[runInEnd...]))
+        return (String(text[..<afterDrop]), String(text[afterDrop..<runInEnd]), String(text[runInEnd...]))
     }
 
     /// Scripture's LORD set in small caps (synthesised: Marcellus has no smcp).

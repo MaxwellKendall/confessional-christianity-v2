@@ -178,6 +178,16 @@ enum QuoteCardSamples {
         }
     }
 
+    @Test(arguments: ["'Tis grace that brought me safe thus far.", "−12 degrees of mercy.", "“Grace upon grace.”"])
+    func openingPunctuationIsPreserved(text: String) {
+        for format in QuoteCardFormat.allCases {
+            let layout = QuoteCardLayout(QuoteCardContent(text: text), format: format)
+            let drawn = layout.textItems.filter { [.dropCap, .quote].contains($0.role) }.map(\.text).joined()
+            func normalized(_ value: String) -> String { value.lowercased().filter { !$0.isWhitespace } }
+            #expect(normalized(drawn) == normalized(text), "\(format): \(drawn)")
+        }
+    }
+
     @Test func verseOpensWithALeadInNotADropCap() {
         let layout = QuoteCardLayout(QuoteCardSamples.all[4], format: .square)
         #expect(!layout.textItems.contains { $0.role == .dropCap })
