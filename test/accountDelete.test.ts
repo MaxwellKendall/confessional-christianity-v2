@@ -149,26 +149,49 @@ describe('POST /api/account/delete', () => {
     expect(deleteUser).toHaveBeenCalledWith(USER_ID);
   });
 
-  test('Apple user with env vars but no token in the body → logs a skip, still deletes', async () => {
+  test('Apple user with env vars but no credential → 400, nothing deleted', async () => {
     setAppleEnv();
     getUser.mockResolvedValue(userWith(['apple']));
     const fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);
     const res = await POST(request({ authorization: 'Bearer good-token' }));
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({ error: 'apple_credential_required' });
     expect(fetchMock).not.toHaveBeenCalled();
-    expect(console.info).toHaveBeenCalledWith(expect.stringContaining('Apple token revoke skipped'));
-    expect(deleteUser).toHaveBeenCalledWith(USER_ID);
+    expect(deleteUser).not.toHaveBeenCalled();
   });
 
-  test('Apple revoke failure is logged and does not block deletion', async () => {
+  test('Apple user with env vars and empty-string credentials → 400, nothing deleted', async () => {
+    setAppleEnv();
+    getUser.mockResolvedValue(userWith(['apple']));
+    vi.stubGlobal('fetch', vi.fn());
+    const res = await POST(
+      request({ authorization: 'Bearer good-token' }, { appleRefreshToken: '', appleAuthorizationCode: '' }),
+    );
+    expect(res.status).toBe(400);
+    expect(deleteUser).not.toHaveBeenCalled();
+  });
+
+  test('Apple revoke failure → 502, nothing deleted, so the app can retry', async () => {
     setAppleEnv();
     getUser.mockResolvedValue(userWith(['apple']));
     vi.stubGlobal('fetch', vi.fn(async () => new Response('bad', { status: 400 })));
     const res = await POST(request({ authorization: 'Bearer good-token' }, { appleRefreshToken: 'rt' }));
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(502);
+    expect(await res.json()).toEqual({ error: 'apple_revoke_failed' });
     expect(console.warn).toHaveBeenCalled();
-    expect(deleteUser).toHaveBeenCalledWith(USER_ID);
+    expect(deleteUser).not.toHaveBeenCalled();
+  });
+
+  test('Apple code exchange failure → 502, nothing deleted', async () => {
+    setAppleEnv();
+    getUser.mockResolvedValue(userWith(['apple']));
+    const fetchMock = vi.fn(async () => Response.json({ error: 'invalid_grant' }, { status: 400 }));
+    vi.stubGlobal('fetch', fetchMock);
+    const res = await POST(request({ authorization: 'Bearer good-token' }, { appleAuthorizationCode: 'stale' }));
+    expect(res.status).toBe(502);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(deleteUser).not.toHaveBeenCalled();
   });
 
   test('non-Apple user never calls Apple, even with env vars set', async () => {

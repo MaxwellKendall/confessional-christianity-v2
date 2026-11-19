@@ -48,18 +48,21 @@ export type AppleTokens = { refreshToken?: string; authorizationCode?: string };
 export type AppleRevokeResult =
   | { status: 'revoked' }
   | { status: 'skipped'; reason: string }
+  | { status: 'missing_credential'; reason: string }
   | { status: 'failed'; reason: string };
 
 // Revokes the user's Apple refresh token. Supabase does not keep Apple's
 // refresh token, so the app sends either the refresh token or a fresh
-// authorization code (exchanged here for one). Never throws.
+// authorization code (exchanged here for one). 'skipped' only when the Apple
+// key env vars are unset; a missing credential is its own status so the caller
+// can refuse to delete without revoking. Never throws.
 export async function revokeAppleTokens(
   config: AppleRevokeConfig | null,
   tokens: AppleTokens,
 ): Promise<AppleRevokeResult> {
   if (!config) return { status: 'skipped', reason: 'Apple key env vars not set' };
   if (!tokens.refreshToken && !tokens.authorizationCode) {
-    return { status: 'skipped', reason: 'no Apple refresh token or authorization code in the request' };
+    return { status: 'missing_credential', reason: 'no Apple refresh token or authorization code in the request' };
   }
   try {
     const clientSecret = makeAppleClientSecret(config);

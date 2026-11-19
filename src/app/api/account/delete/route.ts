@@ -10,7 +10,10 @@ import { getSupabaseServiceRole } from '@/lib/supabaseServiceRole';
 //
 // Optional JSON body for Sign in with Apple users:
 //   { appleRefreshToken?: string, appleAuthorizationCode?: string }
-// Revocation is best effort: a failure is logged and deletion still happens.
+// When the Apple key env vars are set, revocation must succeed before the
+// account is deleted: no credential → 400 apple_credential_required, a failed
+// token exchange or revoke → 502 apple_revoke_failed (the app can retry with a
+// fresh authorization code). Without the env vars the revoke is skipped and logged.
 export const dynamic = 'force-dynamic';
 
 const unauthorized = () => NextResponse.json({ error: 'unauthorized' }, { status: 401 });
@@ -44,8 +47,11 @@ export async function POST(request: Request) {
     });
     if (result.status === 'skipped') {
       console.info(`[account/delete] Apple token revoke skipped for ${user.id}: ${result.reason}`);
+    } else if (result.status === 'missing_credential') {
+      return NextResponse.json({ error: 'apple_credential_required' }, { status: 400 });
     } else if (result.status === 'failed') {
       console.warn(`[account/delete] Apple token revoke failed for ${user.id}: ${result.reason}`);
+      return NextResponse.json({ error: 'apple_revoke_failed' }, { status: 502 });
     }
   }
 
