@@ -63,57 +63,26 @@ public final class ProgressSettings {
     }
 }
 
-// RETIRED (TKL-856): devotion series progress. The devotions surface was cut,
-// and nothing reads or writes this any more, but the model shipped in the App
-// Store 1.0 store (build 2), so it stays in progressSchema: dropping a model
-// from a container that already exists on a device is a schema migration.
-// Remove it only with a VersionedSchema + SchemaMigrationPlan.
-@Model
-public final class SeriesProgressRecord {
-    @Attribute(.unique) public var seriesSlug: String
-    private var completedDaysData: Data
-
-    public var completedDays: [Int] {
-        get { (try? JSONDecoder().decode([Int].self, from: completedDaysData)) ?? [] }
-        set { completedDaysData = (try? JSONEncoder().encode(newValue)) ?? Data() }
-    }
-
-    public init(seriesSlug: String, completedDays: [Int] = []) {
-        self.seriesSlug = seriesSlug
-        self.completedDaysData = (try? JSONEncoder().encode(completedDays)) ?? Data()
-    }
-}
-
 // The App Group both the app and the widget extension share so they can see
 // the same SwiftData store across process boundaries. Registered as a real
 // capability (Signing & Capabilities > App Groups) for both targets — see
 // ios/App/Sources/ConfessionalChristianity.entitlements and
 // ios/App/Widget/ConfessionalChristianityWidgetExtension.entitlements.
-// RETIRED (TKL-856): reading plan progress. Kept in progressSchema for the
-// same reason as SeriesProgressRecord above; nothing reads or writes it.
-@Model
-public final class ReadingPlanProgressRecord {
-    @Attribute(.unique) public var planSlug: String
-    private var completedDaysData: Data
-
-    public var completedDays: [Int] {
-        get { (try? JSONDecoder().decode([Int].self, from: completedDaysData)) ?? [] }
-        set { completedDaysData = (try? JSONEncoder().encode(newValue)) ?? Data() }
-    }
-
-    public init(planSlug: String, completedDays: [Int] = []) {
-        self.planSlug = planSlug
-        self.completedDaysData = (try? JSONEncoder().encode(completedDays)) ?? Data()
-    }
-}
-
 public let sharedAppGroupID = "group.com.confessionalchristianity.app"
 
 // The sync engine's outbox and cursors (Sync.swift) live in this same store,
 // so a queued change and the row it describes are saved together.
+//
+// TKL-856 dropped SeriesProgressRecord and ReadingPlanProgressRecord (devotion
+// and reading-plan progress), which shipped in the App Store 1.0 store. The
+// migration is SwiftData's automatic lightweight one: opening an older store
+// with this schema drops the two tables and keeps everything else. That works
+// whichever older shape a device has (1.0 had no sync tables), where an
+// explicit VersionedSchema plan would have to match each shape exactly.
+// ProgressSchemaTests opens both shapes. Core Data logs "Persistent History
+// has to be truncated" once on that upgrade; nothing here reads history.
 public let progressSchema = Schema([
-    LocalCatechismTrack.self, ProgressSettings.self, SeriesProgressRecord.self,
-    ReadingPlanProgressRecord.self,
+    LocalCatechismTrack.self, ProgressSettings.self,
 ] + syncModelTypes)
 
 /// The single ModelContainer both the app and the widget extension build
