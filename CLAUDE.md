@@ -29,9 +29,27 @@ Linear project: **confessional christianity** (team TKL): https://linear.app/sof
 | web build | `npm run build` (needs `.env.local`; ESLint enforced) | ~15 s |
 | DomainKit | `cd ios/DomainKit && swift test` (98 tests) | ~15 s |
 | iOS build | `cd ios/App && xcodegen generate && xcodebuild -scheme ConfessionalChristianity -destination 'platform=iOS Simulator,name=CC iPhone 17 Pro' -derivedDataPath ../../build/dd build` | ~1 min cold |
+| DB (pgTAP) | see "DB tests" below (local Supabase in Docker, 35 tests) | ~40 s |
+
+### DB tests (pgTAP, local stack only)
+`supabase/config.toml` runs a local stack on ports 5542x (container `supabase_db_confessional-christianity`). Docker must be running.
+```sh
+supabase start -x studio,imgproxy,storage-api,realtime,edge-runtime,logflare,vector,supavisor,mailpit,postgres-meta
+supabase db reset        # local container only: never add --linked or --db-url
+out=$(for f in supabase/tests/*.test.sql; do
+  docker exec -i supabase_db_confessional-christianity psql -U postgres -q -tA -v ON_ERROR_STOP=1 < "$f" \
+    || echo "not ok - psql failed on $f"; done)
+echo "$out" | grep -c '^ok'                           # 35 today
+! echo "$out" | grep -E '^not ok|Looks like' && echo PASS
+supabase stop            # when done
+```
+Pass = `PASS` printed (no `not ok`, no pgTAP plan mismatch, no SQL error). Don't use `supabase test db` unattended: with
+CLI v2.39.2 it hung >5 min twice after `create extension pgtap` (pulling the pg_prove image, TKL-809). Run the DB tests when
+a change touches `supabase/`.
 
 ## Verify checks
 A change lands only with these green: `npm test`, `npm run build`, `swift test` in `ios/DomainKit`, and the iOS build.
+A change under `supabase/` also needs the DB tests (pgTAP, above) printing `PASS`.
 A UI change also gets a simulator screenshot (iOS) or a browser screenshot (web).
 
 ## Land
@@ -44,5 +62,6 @@ Never commit in the main checkout: it often holds Maxwell's uncommitted work on 
 - Content changes (`content/`) reach the app only through `npm run ios:sync-content` and a new build (TKL-683 would decouple that).
 
 ## Gotchas
-- Supabase migrations touch live user data: review required, never run against prod without Maxwell.
+- Supabase migrations touch live user data: review required. **Never run migrations against the live project** (no
+  `supabase db push`, `--linked`, or `--db-url` to prod); test them only on the local stack. Applying to prod is Maxwell's.
 - The Algolia Admin key is for `scripts/` only; the browser gets the search-only key.
