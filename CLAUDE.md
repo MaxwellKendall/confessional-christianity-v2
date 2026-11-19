@@ -15,6 +15,10 @@ Linear project: **confessional christianity** (team TKL): https://linear.app/sof
 - `scripts/`: Algolia indexing, prayers authoring, `ios/sync-content.mjs` (copies `content/` into the app bundle).
 - `ios/App/`: the app. `project.yml` is the XcodeGen spec (the `.xcodeproj` is generated; don't hand-edit it). `Sources/`, `Widget/` (Home Screen widget, App Group `group.com.confessionalchristianity.app`).
 - `ios/DomainKit/`: SwiftPM package with the app's pure logic and bundled content; its tests run on the host Mac.
+  `QuoteCard/` is the share-image renderer (TKL-842), with its own copy of the fonts in `QuoteCardFonts/`. Its snapshot
+  fixtures are in `Tests/DomainKitTests/Fixtures/QuoteCard/`: re-record `native/` with `QUOTE_CARD_RECORD=1 swift test`
+  after an intended visual change; regenerate `prototype/` (the approved TKL-840 design via headless Chrome) with
+  `ios/DomainKit/scripts/quote-card-prototype/render.sh`.
 - `ios/AppStoreScreenshots/`, `ios/design-assets/`: listing art.
 
 ## Setup
@@ -28,7 +32,7 @@ Linear project: **confessional christianity** (team TKL): https://linear.app/sof
 |---|---|---|
 | web unit | `npm test` (vitest, 114 tests) | ~1 s |
 | web build | `npm run build` (needs `.env.local`; ESLint enforced) | ~15 s |
-| DomainKit | `cd ios/DomainKit && swift test` (116 tests) | ~15 s |
+| DomainKit | `cd ios/DomainKit && swift test` (135 tests) | ~15 s |
 | iOS build | `cd ios/App && xcodegen generate && xcodebuild -scheme ConfessionalChristianity -destination 'platform=iOS Simulator,name=CC iPhone 17 Pro' -derivedDataPath ../../build/dd build` | ~1 min cold |
 | DB (pgTAP) | see "DB tests" below (local Supabase in Docker, 35 tests) | ~40 s |
 

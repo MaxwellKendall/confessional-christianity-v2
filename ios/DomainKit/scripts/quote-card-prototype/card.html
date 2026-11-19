@@ -1,0 +1,135 @@
+<!doctype html>
+<!-- Renders one card from the approved TKL-840 prototype at native size, for
+     ios/DomainKit quote-card snapshot comparison. The CSS and JS below are copied
+     verbatim from the prototype's card renderer ("card (native px)" block and
+     PAL/EX/FMT/baseFs/quoteHTML/cardHTML/fit). Fonts are the app's own TTFs.
+     One deliberate change from the prototype, required by TKL-842's acceptance
+     criteria: on story cards the brand line sits 304px (was 268px) from the bottom
+     so it clears the 300px safe zone, and the body ends at 362px (was 330px).
+     Hash: #<format>,<paletteIndex>  e.g. #story,3 -->
+<html><head><meta charset="utf-8"><style>
+@font-face{font-family:Cinzel;font-weight:400 500;src:url(../../../App/Sources/Fonts/Cinzel-Regular.ttf)}
+@font-face{font-family:Cinzel;font-weight:600;src:url(../../../App/Sources/Fonts/Cinzel-SemiBold.ttf)}
+@font-face{font-family:Marcellus;src:url(../../../App/Sources/Fonts/Marcellus-Regular.ttf)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#fff;overflow:hidden}
+.cw{position:relative;overflow:hidden;flex:none}
+.cc{position:absolute;left:0;top:0;transform-origin:0 0;background:radial-gradient(ellipse at 50% 38%,var(--f) 0,var(--fe) 120%);color:var(--k);font-family:Marcellus,Georgia,serif}
+.cc .fr{position:absolute;inset:34px;border:1.5px solid var(--fm)}
+.cc .fr::after{content:"";position:absolute;inset:8px;border:1.5px solid var(--fm);opacity:.55}
+.cc .body{position:absolute;left:130px;right:130px;display:flex;flex-direction:column;justify-content:center}
+.cc .orn{display:flex;align-items:center;gap:10px;margin-bottom:calc(var(--fs)*.55)}
+.cc .orn i{display:block;width:40px;height:1.5px;background:var(--a);opacity:.7}
+.cc .orn b{display:block;width:9px;height:9px;background:var(--a);transform:rotate(45deg)}
+.cc .q{font-size:var(--fs);line-height:1.36;text-wrap:pretty;hanging-punctuation:first}
+.cc .drop{float:left;font-family:Cinzel,serif;font-weight:500;color:var(--a);font-size:calc(var(--fs)*3.3);line-height:.8;margin:calc(var(--fs)*.1) calc(var(--fs)*.16) 0 -.04em}
+.cc .runin{font-family:Cinzel,serif;text-transform:uppercase;font-size:.8em;letter-spacing:.06em}
+.cc .lead{font-family:Cinzel,serif;font-weight:500;color:var(--a);text-transform:uppercase;letter-spacing:.03em;font-size:1.32em;line-height:1}
+.cc .sc{font-variant:small-caps;letter-spacing:.04em}
+.cc .qq{font-family:Cinzel,serif;font-size:calc(var(--fs)*.42);letter-spacing:.12em;text-transform:uppercase;color:var(--m);margin-bottom:calc(var(--fs)*.5);line-height:1.5}
+.cc .qq em{font-style:normal;color:var(--a);margin-right:.5em}
+.cc .attr{margin-top:calc(var(--fs)*.75);display:flex;flex-direction:column;align-items:center;gap:calc(var(--fs)*.16);text-align:center}
+.cc .who{font-family:Cinzel,serif;font-weight:600;color:var(--a);letter-spacing:.16em;text-transform:uppercase;font-size:max(22px,calc(var(--fs)*.4));display:flex;align-items:center;gap:22px}
+.cc .who::before,.cc .who::after{content:"";width:46px;height:1.5px;background:var(--a);opacity:.6}
+.cc .src{font-family:Cinzel,serif;color:var(--m);letter-spacing:.14em;text-transform:uppercase;font-size:max(17px,calc(var(--fs)*.29))}
+.cc .foot{position:absolute;left:64px;right:64px;display:flex;justify-content:space-between;align-items:center;font-family:Cinzel,serif;color:var(--m);font-size:17px;letter-spacing:.2em;text-transform:uppercase}
+.cc .foot .mk{display:flex;align-items:center;gap:10px}
+.cc .foot .mk b{width:7px;height:7px;background:var(--m);transform:rotate(45deg);display:block}
+.cc .foot .u{letter-spacing:.06em;text-transform:none;font-family:Marcellus,serif;font-size:19px}
+.cc.og .body{left:110px;right:110px}
+.cc.og .foot{font-size:15px}
+.cc.ghost .q{color:var(--m);opacity:.6}
+</style></head><body><div id="root"></div><script>
+const PAL = { // field, edge, ink, accent, muted, frame  (house palettes from quote-card/render.py)
+  vellum:["#f3ead8","#e6d8bc","#2a2119","#7b2323","#7c6a55","#b9a27f"],
+  psalter:["#1c2333","#121826","#ece3cf","#c9a45c","#9aa3b5","#4a5570"],
+  cloister:["#e5e8df","#d3d8cb","#253029","#4b6b50","#66756a","#a5b2a2"],
+  vespers:["#3b1619","#280d10","#f2e7d6","#d8b46a","#c9a9a0","#6e3a3c"],
+  hymnal:["#1d3529","#12241b","#ece4cf","#c8a65a","#a3b2a6","#3f5a4b"],
+  lectern:["#fbf9f4","#efebe1","#17140f","#8a6a3a","#80776a","#d2c7b3"],
+  ironstone:["#f5f3ee","#e6e3da","#1b2640","#2c4a80","#6a7286","#c3c8d4"],
+  ember:["#262422","#1a1817","#eee7dc","#d29a4e","#a29a8f","#4c4640"],
+  puritan:["#171615","#0d0c0c","#ece7dc","#c9a45c","#8f8a80","#3d3a36"]
+};
+const PNAMES = Object.keys(PAL);
+const SHORT = "confessionalchristianity.com/q/";
+const EX = [
+ {id:"7kd2", src:"notes", label:"Sermon note (sample preacher)", kind:"quote", pal:"vellum",
+  text:"The good of Romans 8:28 is not first our comfort but our conformity to Christ. God wastes nothing he puts in his children's hands.",
+  who:"Rev. J. Sample", line2:"Sample Presbyterian Church · Romans 8:28", date:"15 Nov 2026",
+  passage:{ref:"Romans 8:28", text:"And we know that for those who love God all things work together for good, for those who are called according to his purpose."}},
+ {id:"w1q1", src:"catechism", label:"Westminster Shorter Catechism Q.1", kind:"qa", pal:"psalter",
+  question:"What is the chief end of man?", text:"Man's chief end is to glorify God, and to enjoy him for ever.",
+  who:"Westminster Shorter Catechism", line2:"Question 1", passage:{ref:"1 Corinthians 10:31", text:"So, whether you eat or drink, or whatever you do, do all to the glory of God."}},
+ {id:"hc01", src:"catechism", label:"Heidelberg Catechism Q.1", kind:"qa", pal:"cloister",
+  question:"What is thy only comfort in life and death?", text:"That I with body and soul, both in life and death, am not my own, but belong unto my faithful Saviour Jesus Christ.",
+  who:"Heidelberg Catechism", line2:"Lord's Day 1 · Question 1", passage:{ref:"1 Corinthians 6:19–20", text:"You are not your own, for you were bought with a price. So glorify God in your body."}},
+ {id:"wcf7", src:"confession", label:"Westminster Confession 21.7", kind:"quote", pal:"lectern",
+  text:"He hath particularly appointed one day in seven, for a Sabbath, to be kept holy unto him.",
+  who:"Westminster Confession of Faith", line2:"Chapter 21 · Section 7", passage:{ref:"Exodus 20:8", text:"Remember the Sabbath day, to keep it holy."}},
+ {id:"mt28", src:"verse", label:"Matthew 11:28 (ESV)", kind:"verse", pal:"hymnal", lead:"Come to me,",
+  text:"all who labor and are heavy laden, and I will give you rest.", who:"Matthew 11:28", line2:"ESV",
+  passage:{ref:"Matthew 11:28–30", text:"Come to me, all who labor and are heavy laden, and I will give you rest. Take my yoke upon you, and learn from me, for I am gentle and lowly in heart, and you will find rest for your souls. For my yoke is easy, and my burden is light."}},
+ {id:"bcp3", src:"prayer", label:"Prayer: Collect for Peace (BCP 1662)", kind:"quote", pal:"vespers",
+  text:"O God, from whom all holy desires, all good counsels, and all just works do proceed: Give unto thy servants that peace which the world cannot give.",
+  who:"Collect for Peace", line2:"Book of Common Prayer, 1662", passage:{ref:"John 14:27", text:"Peace I leave with you; my peace I give to you. Not as the world gives do I give to you."}},
+ {id:"tw01", src:"reflection", label:"Reflection: Thomas Watson", kind:"quote", pal:"ironstone",
+  text:"In creation, God gave us ourselves; in the redemption, he gave us himself.",
+  who:"Thomas Watson", line2:"A Body of Divinity", passage:{ref:"Galatians 2:20", text:"I have been crucified with Christ. It is no longer I who live, but Christ who lives in me. And the life I now live in the flesh I live by faith in the Son of God, who loved me and gave himself for me."}}
+];
+const FMT = {square:[1080,1080], story:[1080,1920], og:[1200,630]};
+const LIMIT = {square:45, story:55, og:45}; // legibility limit in words; hard stop at 70
+const HARD = 70;
+
+/* ======== card renderer ======== */
+const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const words = s => (s||"").trim().split(/\s+/).filter(Boolean).length;
+function baseFs(n, fmt){
+  const c=(a,v,b)=>Math.max(a,Math.min(b,v));
+  if(fmt==="story") return Math.round(c(40, 98-n*1.1, 84));
+  if(fmt==="og") return Math.round(c(28, 66-n*.8, 58));
+  return Math.round(c(36, 92-n*1.2, 78));
+}
+function smallCapsLord(s){return esc(s).replace(/\bLORD\b/g,'<span class="sc">Lord</span>')}
+function quoteHTML(q){
+  const t=(q.text||"").trim();
+  if(q.kind==="verse"){
+    return `<div class="q"><span class="lead">${esc(q.lead||"")}</span> ${smallCapsLord(t)}</div>`;
+  }
+  if(!t) return `<div class="q">Your words will appear here.</div>`;
+  const m=t.match(/^(\W*)(\w)([\w’']*)(.*)$/s);
+  const qq = q.kind==="qa" && q.question ? `<div class="qq"><em>Q.</em>${esc(q.question)}</div>` : "";
+  if(!m) return qq+`<div class="q">${esc(t)}</div>`;
+  return qq+`<div class="q"><span class="drop">${esc(m[2])}</span><span class="runin">${esc(m[3])}</span>${esc(m[4])}</div>`;
+}
+function cardHTML(q, palName, fmt, w, opts={}){
+  const [W,H]=FMT[fmt], s=w/W, p=PAL[palName]||PAL.vellum;
+  const n=words(q.text)+(q.kind==="verse"?words(q.lead):0);
+  const fs=baseFs(n,fmt);
+  // vertical regions: story keeps clear of the top 250px and bottom 300px (Instagram UI)
+  const top = fmt==="story"?250:(fmt==="og"?60:96), bot = fmt==="story"?362:(fmt==="og"?96:130);
+  const footY = fmt==="story"? 304 : (fmt==="og"?56:66);
+  const url = opts.noLink ? "confessionalchristianity.com" : SHORT+(q.id||"7kd2");
+  const who = q.who ? `<div class="who">${esc(q.who)}</div>`:"";
+  const l2 = [q.line2, opts.date?q.date:null].filter(Boolean).join(" · ");
+  const orn = fmt==="og"?"":`<div class="orn"><i></i><b></b><i></i></div>`;
+  return `<div class="cw" style="width:${W*s}px;height:${H*s}px"><div class="cc ${fmt} ${opts.ghost?'ghost':''}" data-fs="${fs}" style="width:${W}px;height:${H}px;transform:scale(${s});--f:${p[0]};--fe:${p[1]};--k:${p[2]};--a:${p[3]};--m:${p[4]};--fm:${p[5]};--fs:${fs}px">
+    <div class="fr"></div>
+    <div class="body" style="top:${top}px;bottom:${bot}px">${orn}${quoteHTML(q)}<div class="attr">${who}${l2?`<div class="src">${esc(l2)}</div>`:""}</div></div>
+    <div class="foot" style="bottom:${footY}px"><span class="mk"><b></b>Confessional Christianity</span><span class="u">${esc(url)}</span></div>
+  </div></div>`;
+}
+// shrink type until the text fits its region
+function fit(root=document){
+  root.querySelectorAll(".cc").forEach(cc=>{
+    const body=cc.querySelector(".body"); let fs=+cc.dataset.fs, guard=0;
+    cc.style.setProperty("--fs",fs+"px");
+    while(body.scrollHeight>body.clientHeight+1 && guard++<30){fs=Math.round(fs*.95);cc.style.setProperty("--fs",fs+"px");}
+  });
+}
+const [fmt, pi] = (location.hash.slice(1) || "square,0").split(",");
+const pal = PNAMES[+pi], ex = EX[(+pi) % EX.length];
+const host = document.getElementById("root");
+host.innerHTML = cardHTML(ex, pal, fmt, FMT[fmt][0], {date: true});
+document.fonts.ready.then(() => { fit(host); document.title = "ready"; });
+</script></body></html>

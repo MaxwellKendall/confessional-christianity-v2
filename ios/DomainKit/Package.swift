@@ -13,7 +13,7 @@ let package = Package(
     targets: [
         .target(
             name: "DomainKit",
-            resources: [.copy("BundledContent")]
+            resources: [.copy("BundledContent"), .copy("QuoteCardFonts")]
         ),
         .testTarget(
             name: "DomainKitTests",
