@@ -82,7 +82,7 @@ public let sharedAppGroupID = "group.com.confessionalchristianity.app"
 // ProgressSchemaTests opens both shapes. Core Data logs "Persistent History
 // has to be truncated" once on that upgrade; nothing here reads history.
 public let progressSchema = Schema([
-    LocalCatechismTrack.self, ProgressSettings.self,
+    LocalCatechismTrack.self, ProgressSettings.self, LordsDayNote.self, NoteCard.self,
 ] + syncModelTypes)
 
 /// The single ModelContainer both the app and the widget extension build
