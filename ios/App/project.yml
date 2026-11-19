@@ -6,6 +6,11 @@ options:
 packages:
   DomainKit:
     path: ../DomainKit
+  # Accounts (TKL-812): auth now, PostgREST sync later. Talks to the website's
+  # Supabase project directly under RLS.
+  Supabase:
+    url: https://github.com/supabase/supabase-swift
+    from: "2.55.0"
 targets:
   ConfessionalChristianity:
     type: application
@@ -14,6 +19,8 @@ targets:
       - path: Sources
     dependencies:
       - package: DomainKit
+      - package: Supabase
+        product: Supabase
       - target: ConfessionalChristianityWidgetExtension
         embed: true
     info:
@@ -26,6 +33,11 @@ targets:
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         ITSAppUsesNonExemptEncryption: false
+        # Read by SupabaseConfig.swift. Values are the website's
+        # NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+        # (public by design; the service role key never ships in the app).
+        SupabaseURL: $(SUPABASE_URL)
+        SupabasePublishableKey: $(SUPABASE_PUBLISHABLE_KEY)
         UIAppFonts:
           - Cinzel-Regular.ttf
           - Cinzel-SemiBold.ttf
@@ -38,6 +50,8 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.confessionalchristianity.app
+        SUPABASE_URL: https://vzxoypketuxmomsbyspy.supabase.co
+        SUPABASE_PUBLISHABLE_KEY: sb_publishable_QDtg2bLu0MSTGaA_5hN7xw_QFSwo3UM
         MARKETING_VERSION: "0.1.0"
         CURRENT_PROJECT_VERSION: "1"
         TARGETED_DEVICE_FAMILY: "1"

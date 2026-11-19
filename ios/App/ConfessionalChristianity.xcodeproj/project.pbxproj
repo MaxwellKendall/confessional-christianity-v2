@@ -31,6 +31,7 @@
 		7C611E39E3B058BE6D93D933 /* SessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27A1DF330C4DA1EC70E025A1 /* SessionView.swift */; };
 		8B7CCA1620D28C8EE82E0212 /* CatechismWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C4BE3D3CA7C31C59ACB5286 /* CatechismWidget.swift */; };
 		8E1F53502D81DEB3DC3AACD0 /* ReflectionsRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0696F7777BB06E349FC8B348 /* ReflectionsRoute.swift */; };
+		92AB57C3C4070DC03CD83935 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = A17AE7748AFFEDE11B57938B /* Supabase */; };
 		93373EFF4BEEBB9305D97C2A /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82F6656D056CA75FE62409F4 /* AboutView.swift */; };
 		94F2A0DB1351CCA796EA6567 /* Cinzel-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E38A936D51B1960620B4EA13 /* Cinzel-SemiBold.ttf */; };
 		9508C7F34BAE8BD034467A77 /* DocumentTocView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CEC5FBB76D7BE63305F7369 /* DocumentTocView.swift */; };
@@ -49,10 +50,13 @@
 		C1E4EAF8F6E8528DE63DA7EB /* LibraryEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09DC9BA05478BE3F8C6ABE62 /* LibraryEntryView.swift */; };
 		C28489EE9B71F81F51910317 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 245AE89B18EF74ECA2A2C5B1 /* Assets.xcassets */; };
 		CCA59BAED520814729154AF4 /* HidesFloatingTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7CC21628E6787C6FD581730 /* HidesFloatingTabBar.swift */; };
+		CE1920ACD9DF2D32D7ADB5B3 /* SupabaseConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9C2D0D042691001D8C45CFD /* SupabaseConfig.swift */; };
+		D03240D8CA0391013DF1C22C /* AuthDebugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8AFA065463DB3F035B0045 /* AuthDebugView.swift */; };
 		D06F0AAC20B0B41A2FA46C6B /* DevotionLandingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D017E9C304663F35669084F /* DevotionLandingView.swift */; };
 		D5A5B50AC7558D9BF4B4A6E7 /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D65ACD5AC11EFE015FD5B666 /* SearchView.swift */; };
 		D7FD205440856F87ABC90190 /* ClauseLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58912A495665984DB2EDA36E /* ClauseLabel.swift */; };
 		DBC4E750237C57B736F4CC1F /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C45EC54D0EE5907B79FC4071 /* WidgetKit.framework */; };
+		DDA8BECCFA53AFFDA838939E /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 786FDD2AB314C8BC32806E54 /* AuthService.swift */; };
 		DE6921043A9DF51BC51CDB04 /* FlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = C23F51243C50FFC327642E50 /* FlowLayout.swift */; };
 		E7543DC35B02A71F5F4D81BE /* QuestionCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D892E4739FA3AAD34062EB53 /* QuestionCardView.swift */; };
 		E8964C2CFE0D60D51CB36BB9 /* DomainKit in Frameworks */ = {isa = PBXBuildFile; productRef = 98614B02AD068537C9D58C51 /* DomainKit */; };
@@ -109,6 +113,7 @@
 		6F0B1A13CFCB4351B4180520 /* LibraryRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryRoute.swift; sourceTree = "<group>"; };
 		72FB0289223150F84B4EF930 /* EsvClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EsvClient.swift; sourceTree = "<group>"; };
 		74DCA6EEDDCA17FB559A94C1 /* LibraryTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryTabView.swift; sourceTree = "<group>"; };
+		786FDD2AB314C8BC32806E54 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
 		7E69BB26BAE59E9A1DD9E9FB /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		81D5508EB376718085AA71A6 /* TabIcons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabIcons.swift; sourceTree = "<group>"; };
 		826FFB63796815E34180F9FC /* ReflectionDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReflectionDetailView.swift; sourceTree = "<group>"; };
@@ -125,6 +130,7 @@
 		A3BCFC7770E05C3C772E8A0D /* ConfessionalChristianity.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = ConfessionalChristianity.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A968AF70AD49E41C42492E83 /* DomainKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = DomainKit; path = ../DomainKit; sourceTree = SOURCE_ROOT; };
 		AA107B8B544A9F504E2D6E4F /* SiteHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiteHeaderView.swift; sourceTree = "<group>"; };
+		AA8AFA065463DB3F035B0045 /* AuthDebugView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthDebugView.swift; sourceTree = "<group>"; };
 		AFC0F6EBEA55CD22AC8831B1 /* FloatingTabBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingTabBarView.swift; sourceTree = "<group>"; };
 		BE787EFA6523867E8B169F3C /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		C108F4CBFD531B62601AE1E0 /* DevotionWorshipView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevotionWorshipView.swift; sourceTree = "<group>"; };
@@ -140,6 +146,7 @@
 		D892E4739FA3AAD34062EB53 /* QuestionCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionCardView.swift; sourceTree = "<group>"; };
 		E37A6F435C2C097A6586109B /* DevotionSeriesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevotionSeriesView.swift; sourceTree = "<group>"; };
 		E38A936D51B1960620B4EA13 /* Cinzel-SemiBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Cinzel-SemiBold.ttf"; sourceTree = "<group>"; };
+		E9C2D0D042691001D8C45CFD /* SupabaseConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseConfig.swift; sourceTree = "<group>"; };
 		EBA120F8482D994D28BEF11F /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		F624D84BEEED24C73E1385D2 /* JumpToReadingDayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JumpToReadingDayView.swift; sourceTree = "<group>"; };
 		FD56999FD625474310C151DA /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
@@ -162,6 +169,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				078ADB6E19374EF694819591 /* DomainKit in Frameworks */,
+				92AB57C3C4070DC03CD83935 /* Supabase in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -233,6 +241,7 @@
 				D210C306DA02A872ECFE942F /* Info.plist */,
 				7E69BB26BAE59E9A1DD9E9FB /* PrivacyInfo.xcprivacy */,
 				BE787EFA6523867E8B169F3C /* RootView.swift */,
+				FF68B6B0110CD04B315652C9 /* Auth */,
 				EE528B6742ED23B6A61D5A87 /* Devotions */,
 				F3129055BD870EC499700ADE /* Fonts */,
 				3B3495F63C7DCA40F6F59652 /* Home */,
@@ -349,6 +358,16 @@
 			path = Fonts;
 			sourceTree = "<group>";
 		};
+		FF68B6B0110CD04B315652C9 /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+				AA8AFA065463DB3F035B0045 /* AuthDebugView.swift */,
+				786FDD2AB314C8BC32806E54 /* AuthService.swift */,
+				E9C2D0D042691001D8C45CFD /* SupabaseConfig.swift */,
+			);
+			path = Auth;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -389,6 +408,7 @@
 			name = ConfessionalChristianity;
 			packageProductDependencies = (
 				17B689653BB9AF85B87373ED /* DomainKit */,
+				A17AE7748AFFEDE11B57938B /* Supabase */,
 			);
 			productName = ConfessionalChristianity;
 			productReference = A3BCFC7770E05C3C772E8A0D /* ConfessionalChristianity.app */;
@@ -423,6 +443,7 @@
 			mainGroup = 0546B90503556F6180741F49;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
+				A14A49564D124C962F4C7FA5 /* XCRemoteSwiftPackageReference "supabase-swift" */,
 				F720802E5B67E1BF149913B9 /* XCLocalSwiftPackageReference "../DomainKit" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -479,6 +500,8 @@
 			files = (
 				93373EFF4BEEBB9305D97C2A /* AboutView.swift in Sources */,
 				071133A6E8575DC8F1628D43 /* AlgoliaClient.swift in Sources */,
+				D03240D8CA0391013DF1C22C /* AuthDebugView.swift in Sources */,
+				DDA8BECCFA53AFFDA838939E /* AuthService.swift in Sources */,
 				D7FD205440856F87ABC90190 /* ClauseLabel.swift in Sources */,
 				58641ED3BB13D794A63BE99F /* ConfessionalChristianityApp.swift in Sources */,
 				9B0DF1151700DED8D5E7B074 /* DesignSystem.swift in Sources */,
@@ -515,6 +538,7 @@
 				D5A5B50AC7558D9BF4B4A6E7 /* SearchView.swift in Sources */,
 				7C611E39E3B058BE6D93D933 /* SessionView.swift in Sources */,
 				4BF1AA038DAF23E878D34262 /* SiteHeaderView.swift in Sources */,
+				CE1920ACD9DF2D32D7ADB5B3 /* SupabaseConfig.swift in Sources */,
 				B3F5CF1C182FCFD4301934FC /* TabIcons.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -603,6 +627,8 @@
 				MARKETING_VERSION = 0.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.confessionalchristianity.app;
 				SDKROOT = iphoneos;
+				SUPABASE_PUBLISHABLE_KEY = sb_publishable_QDtg2bLu0MSTGaA_5hN7xw_QFSwo3UM;
+				SUPABASE_URL = "https://vzxoypketuxmomsbyspy.supabase.co";
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
@@ -710,6 +736,8 @@
 				MARKETING_VERSION = 0.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.confessionalchristianity.app;
 				SDKROOT = iphoneos;
+				SUPABASE_PUBLISHABLE_KEY = sb_publishable_QDtg2bLu0MSTGaA_5hN7xw_QFSwo3UM;
+				SUPABASE_URL = "https://vzxoypketuxmomsbyspy.supabase.co";
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
@@ -776,6 +804,17 @@
 		};
 /* End XCLocalSwiftPackageReference section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		A14A49564D124C962F4C7FA5 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.55.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
 		17B689653BB9AF85B87373ED /* DomainKit */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -784,6 +823,11 @@
 		98614B02AD068537C9D58C51 /* DomainKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = DomainKit;
+		};
+		A17AE7748AFFEDE11B57938B /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A14A49564D124C962F4C7FA5 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
