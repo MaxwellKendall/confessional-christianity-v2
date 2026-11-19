@@ -53,7 +53,7 @@ targets:
         SUPABASE_URL: https://vzxoypketuxmomsbyspy.supabase.co
         SUPABASE_PUBLISHABLE_KEY: sb_publishable_QDtg2bLu0MSTGaA_5hN7xw_QFSwo3UM
         MARKETING_VERSION: "0.1.0"
-        CURRENT_PROJECT_VERSION: "1"
+        CURRENT_PROJECT_VERSION: "3"
         TARGETED_DEVICE_FAMILY: "1"
         SWIFT_VERSION: "6.0"
         CODE_SIGN_ENTITLEMENTS: Sources/ConfessionalChristianity.entitlements
@@ -109,7 +109,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.confessionalchristianity.app.widget
         MARKETING_VERSION: "0.1.0"
-        CURRENT_PROJECT_VERSION: "1"
+        CURRENT_PROJECT_VERSION: "3"
         TARGETED_DEVICE_FAMILY: "1"
         SWIFT_VERSION: "6.0"
         SKIP_INSTALL: "YES"
