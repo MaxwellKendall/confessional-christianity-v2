@@ -31,7 +31,7 @@ Linear project: **confessional christianity** (team TKL): https://linear.app/sof
 |---|---|---|
 | web unit | `npm test` (vitest, 114 tests) | ~1 s |
 | web build | `npm run build` (needs `.env.local`; ESLint enforced) | ~15 s |
-| DomainKit | `cd ios/DomainKit && swift test` (135 tests) | ~15 s |
+| DomainKit | `cd ios/DomainKit && swift test` (152 tests) | ~15 s |
 | iOS build | `cd ios/App && xcodegen generate && xcodebuild -scheme ConfessionalChristianity -destination 'platform=iOS Simulator,name=CC iPhone 17 Pro' -derivedDataPath ../../build/dd build` | ~1 min cold |
 | DB (pgTAP) | see "DB tests" below (local Supabase in Docker, 35 tests) | ~40 s |
 

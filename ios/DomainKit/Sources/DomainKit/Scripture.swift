@@ -38,6 +38,12 @@ private func buildScriptureIndex() -> [String: [ScriptureCitingEntry]] {
 
 private let scriptureIndex: [String: [ScriptureCitingEntry]] = buildScriptureIndex()
 
+/// Every cited osis key with its citing entries (the reader's per-verse
+/// lookup scans these for ranges containing a verse).
+func allScriptureIndexEntries() -> [(osis: String, entries: [ScriptureCitingEntry])] {
+    scriptureIndex.sorted { $0.key < $1.key }.map { (osis: $0.key, entries: $0.value) }
+}
+
 /// Every confession clause citing the reference, in library document order.
 public func getScriptureCitingEntries(_ osis: String) -> [ScriptureCitingEntry] {
     scriptureIndex[osis] ?? []
