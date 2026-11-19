@@ -26,6 +26,24 @@ import XCTest
         XCTAssertEqual(try store.archive(before: date.addingTimeInterval(8 * 86400)).map(\.id), [note.id])
     }
 
+    func testSavedNoteSurvivesReopening() throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).appendingPathExtension("sqlite")
+        defer { for suffix in ["", "-shm", "-wal"] { try? FileManager.default.removeItem(atPath: url.path + suffix) } }
+        let config = ModelConfiguration(schema: progressSchema, url: url)
+        let date = Date(timeIntervalSince1970: 1_700_000_000)
+        do {
+            let container = try ModelContainer(for: progressSchema, configurations: [config])
+            let store = LordsDayStore(context: ModelContext(container))
+            let note = LordsDayNote(serviceDate: date)
+            try store.save(note)
+            try store.appendCard(to: note, kind: .quote, body: "remember")
+        }
+        let reopened = try ModelContainer(for: progressSchema, configurations: [config])
+        let store = LordsDayStore(context: ModelContext(reopened))
+        let note = try XCTUnwrap(store.currentWeek(on: date))
+        XCTAssertEqual(try store.cards(for: note).map(\.body), ["remember"])
+    }
+
     func testTodayCardBoundaries() {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(secondsFromGMT: 0)!
