@@ -17,7 +17,7 @@ Linear project: **confessional christianity** (team TKL): https://linear.app/sof
 - `ios/AppStoreScreenshots/`, `ios/design-assets/`: listing art.
 
 ## Setup
-- Node 22, `npm install` (not `npm ci`: `package-lock.json` on `main` is out of sync with `package.json`, see Linear).
+- Node 22, `npm ci`.
 - Each worktree needs the gitignored `.env.local`: copy it from the main checkout (`cp ../confessional-christianity-v2/.env.local .`). Names are in `.env.example`; never print values.
 - Xcode 27, XcodeGen at `/opt/homebrew/bin/xcodegen`. Bundle id `com.confessionalchristianity.app`, team `7GZKY29XJH`, automatic signing. iOS 17.0 target, Swift 6.
 - Simulator: **"CC iPhone 17 Pro"** (its own, so runs don't fight barbrabell's shared "iPhone 17 Pro").
@@ -25,7 +25,7 @@ Linear project: **confessional christianity** (team TKL): https://linear.app/sof
 ## Test (from the repo root)
 | Suite | Command | Runtime |
 |---|---|---|
-| web unit | `npm test` (vitest, 148 tests) | ~1 s |
+| web unit | `npm test` (vitest, 163 tests) | ~1 s |
 | web build | `npm run build` (needs `.env.local`; ESLint enforced) | ~15 s |
 | DomainKit | `cd ios/DomainKit && swift test` (98 tests) | ~15 s |
 | iOS build | `cd ios/App && xcodegen generate && xcodebuild -scheme ConfessionalChristianity -destination 'platform=iOS Simulator,name=CC iPhone 17 Pro' -derivedDataPath ../../build/dd build` | ~1 min cold |
