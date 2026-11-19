@@ -12,6 +12,9 @@ import Testing
 /// pushed changes with the same last-write-wins rule the real backend uses.
 final class FakeTransport: SyncTransport, @unchecked Sendable {
     var rows: [String: [String: SyncRecord]] = [:]
+    /// The server's change counter: every accepted write gets the next value,
+    /// whatever its `updatedAt` (like a Postgres sequence bumped by trigger).
+    private(set) var lastChangeId: Int64 = 0
     var offline = false
     /// Acknowledge only this many changes of the next push, then stop.
     var ackLimit: Int?
@@ -19,6 +22,9 @@ final class FakeTransport: SyncTransport, @unchecked Sendable {
     private(set) var pullCalls: [(table: String, after: SyncCursor?)] = []
 
     func seed(_ record: SyncRecord) {
+        var record = record
+        lastChangeId += 1
+        record.changeId = lastChangeId
         rows[record.table, default: [:]][record.id] = record
     }
 
@@ -30,10 +36,10 @@ final class FakeTransport: SyncTransport, @unchecked Sendable {
             if let limit = ackLimit, index >= limit { break }
             let existing = rows[change.table]?[change.rowId]
             if existing == nil || existing!.updatedAt < change.updatedAt {
-                rows[change.table, default: [:]][change.rowId] = SyncRecord(
+                seed(SyncRecord(
                     table: change.table, id: change.rowId, payload: change.payload,
                     updatedAt: change.updatedAt, deletedAt: change.deletedAt
-                )
+                ))
             }
             acked.insert(change.id)
         }
@@ -45,11 +51,8 @@ final class FakeTransport: SyncTransport, @unchecked Sendable {
         if offline { throw URLError(.notConnectedToInternet) }
         pullCalls.append((table, cursor))
         let sorted = (rows[table].map { Array($0.values) } ?? [])
-            .sorted { ($0.updatedAt, $0.id) < ($1.updatedAt, $1.id) }
-            .filter { record in
-                guard let cursor else { return true }
-                return (record.updatedAt, record.id) > (cursor.updatedAt, cursor.id)
-            }
+            .sorted { $0.changeId < $1.changeId }
+            .filter { $0.changeId > (cursor?.changeId ?? 0) }
         return Array(sorted.prefix(limit))
     }
 }
@@ -62,9 +65,9 @@ final class FakeTable: SyncTableAdapter {
 
     init(_ table: String) { self.table = table }
 
-    func localUpdatedAt(id: String) -> Date? { rows[id]?.updatedAt }
-    func apply(_ record: SyncRecord) { rows[record.id] = (record.payload, record.updatedAt) }
-    func remove(id: String) { rows[id] = nil }
+    func localUpdatedAt(id: String, in context: ModelContext) throws -> Date? { rows[id]?.updatedAt }
+    func apply(_ record: SyncRecord, in context: ModelContext) throws { rows[record.id] = (record.payload, record.updatedAt) }
+    func remove(id: String, in context: ModelContext) throws { rows[id] = nil }
 }
 
 private func t(_ seconds: TimeInterval) -> Date { Date(timeIntervalSince1970: 1_800_000_000 + seconds) }
@@ -91,16 +94,16 @@ struct SyncEngineTests {
         let engine = SyncEngine(context: context, transport: server, tables: [prayers])
         server.offline = true
 
-        engine.recordLocalWrite(table: "prayer_requests", id: "a", payload: json("{\"t\":1}"), updatedAt: t(1))
-        engine.recordLocalWrite(table: "prayer_requests", id: "b", payload: json("{\"t\":2}"), updatedAt: t(2))
-        engine.recordLocalWrite(table: "prayer_requests", id: "a", payload: json("{\"t\":3}"), updatedAt: t(3))
+        try engine.recordLocalWrite(table: "prayer_requests", id: "a", payload: json("{\"t\":1}"), updatedAt: t(1))
+        try engine.recordLocalWrite(table: "prayer_requests", id: "b", payload: json("{\"t\":2}"), updatedAt: t(2))
+        try engine.recordLocalWrite(table: "prayer_requests", id: "a", payload: json("{\"t\":3}"), updatedAt: t(3))
 
         await #expect(throws: (any Error).self) { try await engine.sync() }
-        #expect(engine.pendingChanges().map(\.rowId) == ["a", "b", "a"])
+        #expect(try engine.pendingChanges().map(\.rowId) == ["a", "b", "a"])
 
         server.offline = false
         try await engine.sync()
-        #expect(engine.pendingChanges().isEmpty)
+        #expect(try engine.pendingChanges().isEmpty)
         #expect(server.pushedBatches.flatMap { $0 }.map(\.rowId) == ["a", "b", "a"])
         #expect(server.rows["prayer_requests"]?["a"]?.payload == json("{\"t\":3}"))
         #expect(server.rows["prayer_requests"]?["b"]?.updatedAt == t(2))
@@ -113,11 +116,11 @@ struct SyncEngineTests {
         do {
             let container = try ModelContainer(for: syncSchema, configurations: [ModelConfiguration(schema: syncSchema, url: url)])
             let engine = SyncEngine(context: ModelContext(container), transport: FakeTransport(), tables: [])
-            engine.recordLocalWrite(table: "favorites", id: "x", payload: json("{}"), updatedAt: t(1))
+            try engine.recordLocalWrite(table: "favorites", id: "x", payload: json("{}"), updatedAt: t(1))
         }
         let container = try ModelContainer(for: syncSchema, configurations: [ModelConfiguration(schema: syncSchema, url: url)])
         let engine = SyncEngine(context: ModelContext(container), transport: FakeTransport(), tables: [])
-        #expect(engine.pendingChanges().map(\.rowId) == ["x"])
+        #expect(try engine.pendingChanges().map(\.rowId) == ["x"])
     }
 
     @Test("a push failure keeps the whole outbox")
@@ -125,11 +128,11 @@ struct SyncEngineTests {
         let context = try makeContext()
         let server = FakeTransport()
         let engine = SyncEngine(context: context, transport: server, tables: [])
-        engine.recordLocalWrite(table: "favorites", id: "x", payload: json("{}"), updatedAt: t(1))
-        engine.recordLocalWrite(table: "favorites", id: "y", payload: json("{}"), updatedAt: t(2))
+        try engine.recordLocalWrite(table: "favorites", id: "x", payload: json("{}"), updatedAt: t(1))
+        try engine.recordLocalWrite(table: "favorites", id: "y", payload: json("{}"), updatedAt: t(2))
         server.offline = true
         await #expect(throws: (any Error).self) { try await engine.push() }
-        #expect(engine.pendingChanges().map(\.rowId) == ["x", "y"])
+        #expect(try engine.pendingChanges().map(\.rowId) == ["x", "y"])
     }
 
     @Test("only acknowledged entries leave the outbox; the rest stay in order")
@@ -138,13 +141,13 @@ struct SyncEngineTests {
         let server = FakeTransport()
         let engine = SyncEngine(context: context, transport: server, tables: [])
         for (i, id) in ["x", "y", "z"].enumerated() {
-            engine.recordLocalWrite(table: "favorites", id: id, payload: json("{}"), updatedAt: t(Double(i)))
+            try engine.recordLocalWrite(table: "favorites", id: id, payload: json("{}"), updatedAt: t(Double(i)))
         }
         server.ackLimit = 1
         await #expect(throws: SyncError.self) { try await engine.push() }
-        #expect(engine.pendingChanges().map(\.rowId) == ["y", "z"])
+        #expect(try engine.pendingChanges().map(\.rowId) == ["y", "z"])
         try await engine.push()
-        #expect(engine.pendingChanges().isEmpty)
+        #expect(try engine.pendingChanges().isEmpty)
     }
 
     @Test("push sends batches in outbox order")
@@ -153,7 +156,7 @@ struct SyncEngineTests {
         let server = FakeTransport()
         let engine = SyncEngine(context: context, transport: server, tables: [], pushBatchSize: 2)
         for i in 0..<5 {
-            engine.recordLocalWrite(table: "favorites", id: "r\(i)", payload: json("{}"), updatedAt: t(Double(i)))
+            try engine.recordLocalWrite(table: "favorites", id: "r\(i)", payload: json("{}"), updatedAt: t(Double(i)))
         }
         try await engine.push()
         #expect(server.pushedBatches.map { $0.map(\.rowId) } == [["r0", "r1"], ["r2", "r3"], ["r4"]])
@@ -174,17 +177,17 @@ struct SyncEngineTests {
         try await engine.pull()
         #expect(Set(prayers.rows.keys) == ["a", "b", "c"])
         #expect(favorites.rows["f"]?.payload == json("4"))
-        #expect(engine.cursor(for: "prayer_requests") == SyncCursor(updatedAt: t(2), id: "c"))
-        #expect(engine.cursor(for: "favorites") == SyncCursor(updatedAt: t(5), id: "f"))
+        #expect(try engine.cursor(for: "prayer_requests") == SyncCursor(changeId: 3))
+        #expect(try engine.cursor(for: "favorites") == SyncCursor(changeId: 4))
 
         // A second pull asks only for what's newer than the stored cursor.
         server.seed(SyncRecord(table: "prayer_requests", id: "d", payload: json("5"), updatedAt: t(9)))
         let callsBefore = server.pullCalls.count
         try await engine.pull()
         let prayerCalls = server.pullCalls[callsBefore...].filter { $0.table == "prayer_requests" }
-        #expect(prayerCalls.first?.after == SyncCursor(updatedAt: t(2), id: "c"))
+        #expect(prayerCalls.first?.after == SyncCursor(changeId: 3))
         #expect(prayers.rows["d"] != nil)
-        #expect(engine.cursor(for: "prayer_requests") == SyncCursor(updatedAt: t(9), id: "d"))
+        #expect(try engine.cursor(for: "prayer_requests") == SyncCursor(changeId: 5))
     }
 
     @Test("a failed pull leaves the cursor where it was")
@@ -196,7 +199,7 @@ struct SyncEngineTests {
         try await engine.pull()
         server.offline = true
         await #expect(throws: (any Error).self) { try await engine.pull() }
-        #expect(engine.cursor(for: "favorites") == SyncCursor(updatedAt: t(1), id: "f"))
+        #expect(try engine.cursor(for: "favorites") == SyncCursor(changeId: 1))
     }
 
     @Test("last write wins: a newer remote row replaces an older local one")
@@ -219,7 +222,7 @@ struct SyncEngineTests {
         let engine = SyncEngine(context: context, transport: server, tables: [prayers])
         server.seed(SyncRecord(table: "prayer_requests", id: "a", payload: json("\"remote\""), updatedAt: t(1)))
         prayers.rows["a"] = (json("\"local\""), t(2))
-        engine.recordLocalWrite(table: "prayer_requests", id: "a", payload: json("\"local\""), updatedAt: t(2))
+        try engine.recordLocalWrite(table: "prayer_requests", id: "a", payload: json("\"local\""), updatedAt: t(2))
 
         try await engine.pull()
         #expect(prayers.rows["a"]?.payload == json("\"local\""))
@@ -235,7 +238,7 @@ struct SyncEngineTests {
         let prayers = FakeTable("prayer_requests")
         let engine = SyncEngine(context: context, transport: server, tables: [prayers])
         // Deleted locally (row gone, tombstone queued); the server still has an older live copy.
-        engine.recordLocalWrite(table: "prayer_requests", id: "a", payload: nil, updatedAt: t(5), deletedAt: t(5))
+        try engine.recordLocalWrite(table: "prayer_requests", id: "a", payload: nil, updatedAt: t(5), deletedAt: t(5))
         server.seed(SyncRecord(table: "prayer_requests", id: "a", payload: json("\"old\""), updatedAt: t(1)))
         try await engine.pull()
         #expect(prayers.rows["a"] == nil)
@@ -248,11 +251,11 @@ struct SyncEngineTests {
         let prayers = FakeTable("prayer_requests")
         let engine = SyncEngine(context: context, transport: server, tables: [prayers])
         prayers.rows["a"] = (json("\"local\""), t(1))
-        engine.recordLocalWrite(table: "prayer_requests", id: "a", payload: json("\"local\""), updatedAt: t(1))
-        engine.recordLocalWrite(table: "prayer_requests", id: "b", payload: json("\"b\""), updatedAt: t(1))
+        try engine.recordLocalWrite(table: "prayer_requests", id: "a", payload: json("\"local\""), updatedAt: t(1))
+        try engine.recordLocalWrite(table: "prayer_requests", id: "b", payload: json("\"b\""), updatedAt: t(1))
         server.seed(SyncRecord(table: "prayer_requests", id: "a", payload: json("\"remote\""), updatedAt: t(3)))
         try await engine.pull()
-        #expect(engine.pendingChanges().map(\.rowId) == ["b"])
+        #expect(try engine.pendingChanges().map(\.rowId) == ["b"])
         #expect(prayers.rows["a"]?.payload == json("\"remote\""))
     }
 
@@ -266,7 +269,7 @@ struct SyncEngineTests {
         server.seed(SyncRecord(table: "prayer_requests", id: "a", payload: nil, updatedAt: t(2), deletedAt: t(2)))
         try await engine.pull()
         #expect(prayers.rows["a"] == nil)
-        #expect(engine.cursor(for: "prayer_requests") == SyncCursor(updatedAt: t(2), id: "a"))
+        #expect(try engine.cursor(for: "prayer_requests") == SyncCursor(changeId: 1))
     }
 
     @Test("a local delete is pushed as a soft delete (deleted_at set)")
@@ -275,7 +278,7 @@ struct SyncEngineTests {
         let server = FakeTransport()
         let engine = SyncEngine(context: context, transport: server, tables: [FakeTable("prayer_requests")])
         server.seed(SyncRecord(table: "prayer_requests", id: "a", payload: json("\"x\""), updatedAt: t(1)))
-        engine.recordLocalWrite(table: "prayer_requests", id: "a", payload: nil, updatedAt: t(2), deletedAt: t(2))
+        try engine.recordLocalWrite(table: "prayer_requests", id: "a", payload: nil, updatedAt: t(2), deletedAt: t(2))
         try await engine.push()
         #expect(server.rows["prayer_requests"]?["a"]?.deletedAt == t(2))
     }
@@ -288,6 +291,124 @@ struct SyncEngineTests {
         try await engine.pull()
         #expect(server.pullCalls.map(\.table) == ["favorites"])
     }
+
+    // MARK: Late offline arrivals ([verify] round 1, finding 1)
+
+    @Test("a row written offline earlier than the cursor's newest row still reaches other devices")
+    func lateOfflineUploadIsPulled() async throws {
+        let server = FakeTransport()
+        let tableA = FakeTable("prayer_requests")
+        let tableB = FakeTable("prayer_requests")
+        let deviceA = SyncEngine(context: try makeContext(), transport: server, tables: [tableA])
+        let deviceB = SyncEngine(context: try makeContext(), transport: server, tables: [tableB])
+
+        // Device B writes "late" offline at t=100.
+        tableB.rows["late"] = (json("\"b\""), t(100))
+        try deviceB.recordLocalWrite(table: "prayer_requests", id: "late", payload: json("\"b\""), updatedAt: t(100))
+
+        // Device A writes and syncs "early" at t=200, so A has already seen t=200.
+        tableA.rows["early"] = (json("\"a\""), t(200))
+        try deviceA.recordLocalWrite(table: "prayer_requests", id: "early", payload: json("\"a\""), updatedAt: t(200))
+        try await deviceA.sync()
+
+        // B reconnects and uploads its older-timestamped row; A must still get it.
+        try await deviceB.sync()
+        try await deviceA.sync()
+        #expect(tableA.rows["late"]?.payload == json("\"b\""))
+        #expect(tableB.rows["early"]?.payload == json("\"a\""))
+
+        // A soft delete B made offline, stamped before A's newest row, also arrives.
+        tableB.rows["late"] = nil
+        try deviceB.recordLocalWrite(table: "prayer_requests", id: "late", payload: nil, updatedAt: t(150), deletedAt: t(150))
+        try await deviceB.sync()
+        try await deviceA.sync()
+        #expect(tableA.rows["late"] == nil)
+    }
+
+    // MARK: Storage failures ([verify] round 1, finding 2)
+
+    @Test("a failed save makes recordLocalWrite throw and leaves nothing queued")
+    func recordLocalWriteSurfacesSaveFailure() async throws {
+        let context = try makeContext()
+        let saver = FailingSaver()
+        let engine = SyncEngine(context: context, transport: FakeTransport(), tables: [], save: saver.save)
+        saver.failNext = true
+        #expect(throws: DiskFull.self) {
+            try engine.recordLocalWrite(table: "favorites", id: "x", payload: json("{}"), updatedAt: t(1))
+        }
+        #expect(try engine.pendingChanges().isEmpty)
+        try engine.recordLocalWrite(table: "favorites", id: "y", payload: json("{}"), updatedAt: t(2))
+        #expect(try engine.pendingChanges().map(\.rowId) == ["y"])
+    }
+
+    @Test("a failed save after a push keeps the outbox and fails the sync")
+    func pushSurfacesSaveFailure() async throws {
+        let context = try makeContext()
+        let saver = FailingSaver()
+        let server = FakeTransport()
+        let engine = SyncEngine(context: context, transport: server, tables: [], save: saver.save)
+        try engine.recordLocalWrite(table: "favorites", id: "x", payload: json("{}"), updatedAt: t(1))
+        saver.failNext = true
+        await #expect(throws: DiskFull.self) { try await engine.sync() }
+        #expect(try engine.pendingChanges().map(\.rowId) == ["x"])
+        // The retry re-sends it; the server's LWW makes that harmless.
+        try await engine.sync()
+        #expect(try engine.pendingChanges().isEmpty)
+    }
+
+    @Test("a failed save during pull fails the sync and does not advance the cursor")
+    func pullSurfacesSaveFailure() async throws {
+        let context = try makeContext()
+        let saver = FailingSaver()
+        let server = FakeTransport()
+        let favorites = FakeTable("favorites")
+        let engine = SyncEngine(context: context, transport: server, tables: [favorites], save: saver.save)
+        server.seed(SyncRecord(table: "favorites", id: "f", payload: json("1"), updatedAt: t(1)))
+        try await engine.pull()
+        server.seed(SyncRecord(table: "favorites", id: "g", payload: json("2"), updatedAt: t(2)))
+        saver.failNext = true
+        await #expect(throws: DiskFull.self) { try await engine.pull() }
+        #expect(try engine.cursor(for: "favorites") == SyncCursor(changeId: 1))
+        try await engine.pull()
+        #expect(try engine.cursor(for: "favorites") == SyncCursor(changeId: 2))
+    }
+
+    @Test("an adapter error fails the pull and does not advance the cursor")
+    func adapterErrorKeepsCursor() async throws {
+        let context = try makeContext()
+        let server = FakeTransport()
+        let table = BrokenTable("favorites")
+        let engine = SyncEngine(context: context, transport: server, tables: [table])
+        server.seed(SyncRecord(table: "favorites", id: "f", payload: json("1"), updatedAt: t(1)))
+        await #expect(throws: DiskFull.self) { try await engine.pull() }
+        #expect(try engine.cursor(for: "favorites") == nil)
+    }
+}
+
+struct DiskFull: Error {}
+
+/// Stands in for a full disk: fails the next save, then saves normally.
+@MainActor
+final class FailingSaver {
+    var failNext = false
+    var save: SyncEngine.Save {
+        { [unowned self] context in
+            if self.failNext {
+                self.failNext = false
+                throw DiskFull()
+            }
+            try context.save()
+        }
+    }
+}
+
+@MainActor
+final class BrokenTable: SyncTableAdapter {
+    let table: String
+    init(_ table: String) { self.table = table }
+    func localUpdatedAt(id: String, in context: ModelContext) throws -> Date? { nil }
+    func apply(_ record: SyncRecord, in context: ModelContext) throws { throw DiskFull() }
+    func remove(id: String, in context: ModelContext) throws { throw DiskFull() }
 }
 
 // MARK: - Scheduler
