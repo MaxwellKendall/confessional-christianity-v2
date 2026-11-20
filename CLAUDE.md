@@ -33,7 +33,7 @@ Linear project: **confessional christianity** (team TKL): https://linear.app/sof
 | web build | `npm run build` (needs `.env.local`; ESLint enforced) | ~15 s |
 | DomainKit | `cd ios/DomainKit && swift test` (152 tests) | ~15 s |
 | iOS build | `cd ios/App && xcodegen generate && xcodebuild -scheme ConfessionalChristianity -destination 'platform=iOS Simulator,name=CC iPhone 17 Pro' -derivedDataPath ../../build/dd build` | ~1 min cold |
-| DB (pgTAP) | see "DB tests" below (local Supabase in Docker, 35 tests) | ~40 s |
+| DB (pgTAP) | see "DB tests" below (local Supabase in Docker, 54 tests) | ~40 s |
 
 ### DB tests (pgTAP, local stack only)
 `supabase/config.toml` runs a local stack on ports 5542x (container `supabase_db_confessional-christianity`). Docker must be running.
@@ -43,7 +43,7 @@ supabase db reset        # local container only: never add --linked or --db-url
 out=$(for f in supabase/tests/*.test.sql; do
   docker exec -i supabase_db_confessional-christianity psql -U postgres -q -tA -v ON_ERROR_STOP=1 < "$f" \
     || echo "not ok - psql failed on $f"; done)
-echo "$out" | grep -c '^ok'                           # 35 today
+echo "$out" | grep -c '^ok'                           # 54 today
 ! echo "$out" | grep -E '^not ok|Looks like' && echo PASS
 supabase stop            # when done
 ```
