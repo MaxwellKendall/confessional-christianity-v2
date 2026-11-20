@@ -56,3 +56,7 @@ ios/**/.swiftpm/
 # downloaded Claude Design export (design reference, not project source)
 /latest-designs.zip
 /latest-designs/
+
+# infra (CDK)
+/infra/node_modules
+/infra/cdk.out

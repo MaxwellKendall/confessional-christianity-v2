@@ -1,0 +1,17 @@
+{
+  "app": "npx tsx bin/app.ts",
+  "context": {
+    "stage": "dev",
+    "region": "us-east-1",
+    "stages": {
+      "dev": {
+        "mailDomain": "cc-dev-mail.barbrabell.com",
+        "hostedZone": "barbrabell.com",
+        "testInbox": true
+      },
+      "prod": {
+        "mailDomain": "confessionalchristianity.com"
+      }
+    }
+  }
+}

@@ -15,6 +15,8 @@ const eslintConfig = defineConfig([
     "scripts/**",
     // Design reference bundle, not app code.
     "docs/design-handoff/**",
+    // CDK app with its own tsconfig and tests (infra/).
+    "infra/**",
   ]),
   {
     rules: {

@@ -19,6 +19,8 @@ Linear project: **confessional christianity** (team TKL): https://linear.app/sof
   after an intended visual change; regenerate `prototype/` (the approved TKL-840 design via headless Chrome) with
   `ios/DomainKit/scripts/quote-card-prototype/render.sh`.
 - `ios/AppStoreScreenshots/`, `ios/design-assets/`: listing art.
+- `infra/`: AWS CDK (TypeScript) for accounts, the Cognito pools (see "Accounts" below and `infra/README.md`).
+  `ios/App/Resources/amplify_outputs.{dev,prod}.json` are its generated, committed client configs.
 
 ## Setup
 - Node 22, `npm ci`.
@@ -33,6 +35,7 @@ Linear project: **confessional christianity** (team TKL): https://linear.app/sof
 | web build | `npm run build` (needs `.env.local`; ESLint enforced) | ~15 s |
 | DomainKit | `cd ios/DomainKit && swift test` (152 tests) | ~15 s |
 | iOS build | `cd ios/App && xcodegen generate && xcodebuild -scheme ConfessionalChristianity -destination 'platform=iOS Simulator,name=CC iPhone 17 Pro' -derivedDataPath ../../build/dd build` | ~1 min cold |
+| infra | `cd infra && npm ci && npm test` (vitest CDK assertions, 12 tests) | ~6 s |
 | DB (pgTAP) | see "DB tests" below (local Supabase in Docker, 22 tests) | ~40 s |
 
 ### DB tests (pgTAP, local stack only)
@@ -54,6 +57,7 @@ a change touches `supabase/`.
 ## Verify checks
 A change lands only with these green: `npm test`, `npm run build`, `swift test` in `ios/DomainKit`, and the iOS build.
 A change under `supabase/` also needs the DB tests (pgTAP, above) printing `PASS`.
+A change under `infra/` also needs `cd infra && npm test`.
 A UI change also gets a simulator screenshot (iOS) or a browser screenshot (web).
 
 ## Land
@@ -70,6 +74,25 @@ Never commit in the main checkout: it often holds Maxwell's uncommitted work on 
   `/v1/builds?filter[app]=6797692942` (app id) rather than the builds list on the app, which hides expired builds.
 - Internal TestFlight group: **"updates"** (`isInternalGroup: true`, `hasAccessToAllBuilds: true`, so new builds reach it once processed). A tester stays `NOT_INVITED` and gets no email while no build is valid; once one is, send the invite with `POST /v1/betaTesterInvitations`.
 - Content changes (`content/`) reach the app only through `npm run ios:sync-content` and a new build (TKL-683 would decouple that).
+
+## Accounts (`infra/`)
+Cognito user pools, sign-in by a code emailed to the person (`USER_AUTH` + `EMAIL_OTP`; codes are 8 digits, sign-up
+codes 6). CDK app in `infra/`, account `397614038040`, profile `aicoach-dev`, us-east-1. Four stacks:
+`ConfessionalChristianityMail-{dev,prod}` (the SES sending domain) and `ConfessionalChristianity-{dev,prod}` (pool + public
+iOS client). Stage from `-c stage=…` (default dev). Nothing is created in the console. Details: `infra/README.md`.
+- From `infra/` on a worktree of `origin/main`: `npm test`, then `npx cdk diff --all --profile aicoach-dev -c stage=prod`,
+  read it, then `npx cdk deploy --all --profile aicoach-dev -c stage=prod` (dev: drop `-c stage=prod`).
+- **Stop** if the diff replaces or removes the user pool, its app client or the prod SES identity: the prod pool is `RETAIN`
+  with deletion protection, and replacing it loses every account.
+- A new mail domain must show `SUCCESS` in `aws sesv2 get-email-identity` before its pool stack deploys.
+- After a deploy: `AWS_PROFILE=aicoach-dev npm run outputs [dev|prod]` rewrites `ios/App/Resources/amplify_outputs.{stage}.json`
+  (commit it) and prints `COGNITO_USER_POOL_ID` / `COGNITO_CLIENT_ID` for the server. The IDs aren't secrets.
+- Dev: pool `us-east-1_Tbhzx2V7a`, client `1qibu96101fa0n6iaiuqmpklq1`, mail from `cc-dev-mail.barbrabell.com`. Codes sent to
+  `otp-test@cc-dev-mail.barbrabell.com` land in S3: `AWS_PROFILE=aicoach-dev infra/scripts/inbox-code.sh <since-epoch>` prints
+  the newest. Never send codes to made-up outside addresses (bounces hurt the sender); SES is still in the sandbox.
+- Prod: sends from `confessionalchristianity.com`, whose DNS is on Vercel (not reachable by agents). Its DKIM records are the
+  `DkimRecords` output of `ConfessionalChristianityMail-prod`; the prod pool can't deploy until they verify.
+- The Supabase account code in `supabase/` and the app is being replaced (TKL-812, TKL-890).
 
 ## Gotchas
 - Supabase migrations touch live user data: review required. **Never run migrations against the live project** (no
