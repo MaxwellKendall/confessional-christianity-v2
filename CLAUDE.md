@@ -62,13 +62,13 @@ Never commit in the main checkout: it often holds Maxwell's uncommitted work on 
 
 ## Deploy
 - **Web:** Vercel serves https://confessionalchristianity.com (`server: Vercel`). Whether a push to `main` deploys by itself is unverified; check the Vercel project before relying on it. Post-deploy: `/`, `/library`, `/search` return 200.
-- **iOS:** no release script yet. Bump `CURRENT_PROJECT_VERSION` (and `MARKETING_VERSION` for a new App Store version) in `ios/App/project.yml`, archive and upload with Xcode (`xcodebuild archive` + `-exportArchive`, `-allowProvisioningUpdates`). **Signing blocks this today (TKL-880):** `archive` succeeds, but `-exportArchive` fails — team 7GZKY29XJH has no Apple Distribution certificate (`GET /v1/certificates` shows only DEVELOPMENT and DEVELOPER_ID_APPLICATION), this Mac has only an `Apple Development` identity, and the ASC API key lacks cloud-managed distribution signing, so `-allowProvisioningUpdates` cannot create one. Don't spend an archive discovering this: check `security find-identity -v -p codesigning` for an `Apple Distribution` identity first. App Store Connect API key: `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_PATH` in `~/dev/.secrets.env` (same team as barbrabell). Versions stay on manual release.
-- **iOS build numbers so far** (App Store Connect, checked 2026-11-19): pre-release version string is `0.1.0`, builds **1** and **2**
-  (both uploaded Aug 2026, both now expired in TestFlight). The App Store *version record* is `1.0` READY_FOR_SALE and points at
-  build 2, so the store version string and the build's version string differ — don't infer the next build number from the store
-  version. Next build number is one above the highest ever uploaded, expired or not; query
+- **iOS:** no release script yet. Bump `CURRENT_PROJECT_VERSION` (and `MARKETING_VERSION` for a new App Store version) in `ios/App/project.yml`, archive and upload with Xcode (`xcodebuild archive` + `-exportArchive`, `-allowProvisioningUpdates`). **Signing (TKL-880, fixed 2026-11-20):** distribution signing is cloud-managed and works only through the Xcode account signed in on this Mac: plain `xcodebuild -exportArchive -allowProvisioningUpdates` (method `app-store-connect`, destination `upload`) signs with `Apple Distribution` and uploads. Passing the ASC API key (`-authenticationKey*`) to `-exportArchive` fails ("not given access to cloud-managed distribution certificates"), so don't; there is still no local `Apple Distribution` identity. App Store Connect API key: `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_PATH` in `~/dev/.secrets.env` (same team as barbrabell). Versions stay on manual release.
+- **iOS build numbers so far** (App Store Connect, checked 2026-11-20): builds **1** and **2** were version `0.1.0` (Aug 2026, expired);
+  build **3** is version `1.1` (uploaded 2026-11-20). The `0.1.0` train is closed (a `0.1.0` build was approved), so uploads need a
+  `MARKETING_VERSION` above it. The App Store *version record* is `1.0` READY_FOR_SALE and points at build 2, so don't infer the next
+  build number from the store version. Next build number is one above the highest ever uploaded, expired or not; query
   `/v1/builds?filter[app]=6797692942` (app id) rather than the builds list on the app, which hides expired builds.
-- Internal TestFlight group: **"updates"** (`isInternalGroup: true`). Assign each uploaded build to it or no one can install.
+- Internal TestFlight group: **"updates"** (`isInternalGroup: true`, `hasAccessToAllBuilds: true`, so new builds reach it once processed). A tester stays `NOT_INVITED` and gets no email while no build is valid; once one is, send the invite with `POST /v1/betaTesterInvitations`.
 - Content changes (`content/`) reach the app only through `npm run ios:sync-content` and a new build (TKL-683 would decouple that).
 
 ## Gotchas
