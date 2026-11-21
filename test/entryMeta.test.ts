@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 import { loadConfessionContent } from '@/lib/confessionContent';
 import { entryMetaDescription, entryMetaTitle, titleCase } from '@/lib/entryMeta';
-import { getAllEntryParams, getEntryPage } from '@/lib/library';
+import { getAllEntryParams, getEntryPage, getLibraryDocument } from '@/lib/library';
 
 const metaFor = async (confession: string, entry: string) => {
   const page = await getEntryPage(confession, entry);
@@ -76,11 +76,29 @@ describe('every entry page', () => {
   it('has a unique title and a unique description of at most 160 characters', async () => {
     const params = await getAllEntryParams();
     expect(params.length).toBeGreaterThan(500);
+    // The sweep only needs metadata. Load each document once and leave
+    // out the work of computing previous/next navigation for every route.
+    const documents = new Map<string, {
+      name: string;
+      content: NonNullable<Awaited<ReturnType<typeof loadConfessionContent>>>;
+    }>();
     const titles = new Map<string, string>();
     const descriptions = new Map<string, string>();
     for (const { confession, entry } of params) {
       const key = `${confession}/${entry}`;
-      const { title, description } = await metaFor(confession, entry);
+      let document = documents.get(confession);
+      if (!document) {
+        const libraryDocument = getLibraryDocument(confession);
+        const content = await loadConfessionContent(confession);
+        if (!libraryDocument || !content) throw new Error(`no library document ${confession}`);
+        document = { name: libraryDocument.name, content };
+        documents.set(confession, document);
+      }
+      const { contentById, documentId } = document.content;
+      const item = contentById[`${documentId}-${entry}`];
+      if (!item || item.isParent) throw new Error(`no entry ${key}`);
+      const title = entryMetaTitle(document.name, item, contentById);
+      const description = entryMetaDescription(document.name, item, contentById);
       expect(title, key).not.toMatch(/\[[a-z0-9]+\]/i);
       expect(description, key).not.toMatch(/\[[a-z0-9]+\]/i);
       expect(description.length, key).toBeLessThanOrEqual(161);
