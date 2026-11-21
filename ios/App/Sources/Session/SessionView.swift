@@ -250,6 +250,10 @@ struct SessionView: View {
     // practice reminder) rather than building out a full notifications UI.
     private func offerNotificationsIfNeeded() async {
         guard !notificationsOffered else { return }
+        #if DEBUG
+        // Screenshot runs (`-SkipNotificationOffer YES`) can't dismiss the system prompt.
+        if UserDefaults.standard.bool(forKey: "SkipNotificationOffer") { return }
+        #endif
         notificationsOffered = true
         guard await PracticeReminderScheduler.requestAuthorizationIfNeeded() else { return }
         PracticeReminderScheduler.scheduleDaily(hour: 17, minute: 0, programTitle: program.shortTitle)

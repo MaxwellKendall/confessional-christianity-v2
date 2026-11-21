@@ -101,6 +101,8 @@ struct LibraryTabView: View {
                 switch route {
                 case .detail(let osis):
                     ScriptureView(osis: osis, path: $path)
+                case .reader(let source):
+                    VerseReaderView(source: source)
                 }
             }
             .navigationDestination(for: SearchRoute.self) { _ in

@@ -38,6 +38,10 @@ actor EsvClient {
     }
 
     private static func fetchVerses(osis: String) async -> [ReaderVerse]? {
+        #if DEBUG
+        // Screenshot hook: `-EsvOffline YES` simulates no network for the reader.
+        if UserDefaults.standard.bool(forKey: "EsvOffline") { return nil }
+        #endif
         guard var components = URLComponents(string: baseURL) else { return nil }
         components.queryItems = [
             URLQueryItem(name: "osis", value: osis),

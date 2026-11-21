@@ -27,6 +27,11 @@ Linear project: **confessional christianity** (team TKL): https://linear.app/sof
 - Each worktree needs the gitignored `.env.local`: copy it from the main checkout (`cp ../confessional-christianity-v2/.env.local .`). Names are in `.env.example`; never print values.
 - Xcode 27, XcodeGen at `/opt/homebrew/bin/xcodegen`. Bundle id `com.confessionalchristianity.app`, team `7GZKY29XJH`, automatic signing. iOS 17.0 target, Swift 6.
 - Simulator: **"CC iPhone 17 Pro"** (its own, so runs don't fight barbrabell's shared "iPhone 17 Pro").
+- Screenshots without taps (DEBUG launch args, `xcrun simctl launch <dev> com.confessionalchristianity.app -Key value`; the simulator
+  runs headless, so there is no window to click): `-VerseReaderFixture verse|notes|end|loading|error`,
+  `-ReaderChapterReference Rom.8.28`, `-ProofTextSession catechizing-shorter-catechism:32[:Rom.8.30]` (session at Q. 32, optionally
+  with the proof-text reader pushed) plus `-ProofTextReaderCard verse|end`, `-EsvOffline YES` (reader acts offline), and
+  `-SkipNotificationOffer YES` (always pass it: an unanswered notification prompt survives reinstalls until the simulator reboots).
 
 ## Test (from the repo root)
 | Suite | Command | Runtime |

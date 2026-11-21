@@ -73,6 +73,7 @@ struct VerseReaderView: View {
         }
         .background(paper.paper.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar, .tabBar)
+        .hidesFloatingTabBar()
         .navigationDestination(item: $contextChapter) { chapter in
             ReaderChapterView(chapterOSIS: chapter, passageOSIS: osis, settings: settings)
         }
@@ -101,8 +102,12 @@ struct VerseReaderView: View {
     }
 
     private func pages(_ verses: [ReaderVerse]) -> [(offset: Int, element: ReaderCard)] {
-        let pages = readerCards(for: source, verses: verses).enumerated()
+        let pages = Array(readerCards(for: source, verses: verses).enumerated())
         #if DEBUG
+        if fixtureStart == nil, let card = UserDefaults.standard.string(forKey: "ProofTextReaderCard") {
+            let start = ["verse": 1, "end": pages.count - 1][card] ?? 0
+            return Array(pages.dropFirst(start))
+        }
         return Array(pages.dropFirst(fixtureStart ?? 0))
         #else
         return Array(pages)
@@ -245,8 +250,7 @@ struct VerseReaderView: View {
     }
 
     private func catechismLabel(_ slug: String, number: Int) -> String {
-        let title = LIBRARY_DOCUMENTS.first(where: { $0.slug == slug })?.name ?? "Catechism"
-        return "\(title) · Q. \(number)"
+        "\(readerCatechismName(for: slug)) · Q. \(number)"
     }
 
     private func verse(_ text: String, reference: String, osis: String?, palette: Palette) -> some View {

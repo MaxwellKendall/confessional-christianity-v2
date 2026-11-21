@@ -187,3 +187,26 @@ public func readerVerseFontSize(textLength: Int, textSize: Int) -> Double {
     let offset = ReaderSettings.clampTextSize(textSize) - ReaderSettings.defaultTextSize
     return base + Double(offset * 2)
 }
+
+// MARK: - Catechism proof texts (TKL-878)
+
+/// The reader source for a proof text tapped in a catechism session. The
+/// slug is the catechism's library document when it has one (so the
+/// reader's label matches Library), else the program's own slug.
+public func proofTextReaderSource(program: ProgramDefinition, question: ProgramQuestion, osis: String) -> ReaderSource {
+    let slug = LIBRARY_DOCUMENTS.first { $0.documentId == program.contentId.rawValue }?.slug ?? program.slug
+    return .proofText(
+        catechismSlug: slug,
+        questionNumber: question.number,
+        question: question.question,
+        answer: question.answer,
+        osis: osis
+    )
+}
+
+/// The catechism's display name for a proof-text source's slug.
+public func readerCatechismName(for slug: String) -> String {
+    LIBRARY_DOCUMENTS.first { $0.slug == slug }?.name
+        ?? PROGRAMS.first { $0.slug == slug }?.title
+        ?? "Catechism"
+}
