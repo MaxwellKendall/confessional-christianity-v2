@@ -1,0 +1,984 @@
+{
+  "summary": {
+    "model": "gemini-3.8-flash",
+    "date": "2026-11-21T20:11:34.163Z",
+    "passed": 12,
+    "total": 12,
+    "costUsdTotal": 0.1983165,
+    "costUsdPerPhoto": 0.016526375,
+    "medianSeconds": 13.946,
+    "rejectedTotal": 0
+  },
+  "results": [
+    {
+      "id": "sermon-01",
+      "pass": true,
+      "checks": {
+        "atLeast3Cards": true,
+        "passageFound": true,
+        "keySpans": true
+      },
+      "kinds": [
+        "verse",
+        "verse",
+        "quote",
+        "verse",
+        "verse",
+        "quote",
+        "verse",
+        "key_point"
+      ],
+      "verses": [
+        "2Thess.3",
+        "Num.6",
+        "Luke.24",
+        "Gen.27",
+        "Ps.3"
+      ],
+      "otherPassagesFound": "3/3",
+      "spansInCards": "3/4",
+      "spansInTranscript": "4/4",
+      "quotesKept": 2,
+      "rejected": 0,
+      "costUsd": 0.014726999999999999,
+      "seconds": 12.52,
+      "streamedBeforeDone": true,
+      "cards": [
+        {
+          "id": "p0-0",
+          "kind": "verse",
+          "page": 0,
+          "order": 0,
+          "reference": "2 Thessalonians 3:17",
+          "osis": "2Thess.3.17"
+        },
+        {
+          "id": "p0-1",
+          "kind": "verse",
+          "page": 0,
+          "order": 1,
+          "reference": "Numbers 6",
+          "osis": "Num.6"
+        },
+        {
+          "id": "p0-2",
+          "kind": "quote",
+          "page": 0,
+          "order": 2,
+          "text": "This blessing was said to \"put God's name\" upon his people."
+        },
+        {
+          "id": "p0-3",
+          "kind": "verse",
+          "page": 0,
+          "order": 3,
+          "reference": "Luke 24",
+          "osis": "Luke.24"
+        },
+        {
+          "id": "p0-4",
+          "kind": "verse",
+          "page": 0,
+          "order": 4,
+          "reference": "Genesis 27",
+          "osis": "Gen.27"
+        },
+        {
+          "id": "p0-5",
+          "kind": "quote",
+          "page": 0,
+          "order": 5,
+          "text": "The benediction, then, is from God rather than men."
+        },
+        {
+          "id": "p0-6",
+          "kind": "verse",
+          "page": 0,
+          "order": 6,
+          "reference": "Psalms 3",
+          "osis": "Ps.3"
+        },
+        {
+          "id": "p0-7",
+          "kind": "key_point",
+          "page": 0,
+          "order": 7,
+          "text": "Believers live expectantly, hoping for Christ's return and trusting in His good hand upon them."
+        }
+      ]
+    },
+    {
+      "id": "sermon-02",
+      "pass": true,
+      "checks": {
+        "atLeast3Cards": true,
+        "passageFound": true,
+        "keySpans": true
+      },
+      "kinds": [
+        "verse",
+        "verse",
+        "quote",
+        "quote",
+        "key_point",
+        "verse",
+        "quote"
+      ],
+      "verses": [
+        "Matt.5",
+        "Matt.5",
+        "Ps.86"
+      ],
+      "otherPassagesFound": "1/1",
+      "spansInCards": "3/4",
+      "spansInTranscript": "4/4",
+      "quotesKept": 3,
+      "rejected": 0,
+      "costUsd": 0.017142,
+      "seconds": 18.918,
+      "streamedBeforeDone": true,
+      "cards": [
+        {
+          "id": "p0-0",
+          "kind": "verse",
+          "page": 0,
+          "order": 0,
+          "reference": "Matthew 5:9",
+          "osis": "Matt.5.9"
+        },
+        {
+          "id": "p0-1",
+          "kind": "verse",
+          "page": 0,
+          "order": 1,
+          "reference": "Matthew 5:43-48",
+          "osis": "Matt.5.43-Matt.5.48"
+        },
+        {
+          "id": "p0-2",
+          "kind": "quote",
+          "page": 0,
+          "order": 2,
+          "text": "The posture and disposition of strength is to seek and desire peace."
+        },
+        {
+          "id": "p0-3",
+          "kind": "quote",
+          "page": 0,
+          "order": 3,
+          "text": "The gospel is the foundation of peace: it makes peace, but is not peace keepg."
+        },
+        {
+          "id": "p0-4",
+          "kind": "key_point",
+          "page": 0,
+          "order": 4,
+          "text": "Having received eternal and internal peace with God, believers are called to bring peace to those around them."
+        },
+        {
+          "id": "p0-5",
+          "kind": "verse",
+          "page": 0,
+          "order": 5,
+          "reference": "Psalms 86:5",
+          "osis": "Ps.86.5"
+        },
+        {
+          "id": "p0-6",
+          "kind": "quote",
+          "page": 0,
+          "order": 6,
+          "text": "God is ready to forgive."
+        }
+      ]
+    },
+    {
+      "id": "sermon-03",
+      "pass": true,
+      "checks": {
+        "atLeast3Cards": true,
+        "passageFound": true,
+        "keySpans": true
+      },
+      "kinds": [
+        "verse",
+        "quote",
+        "key_point",
+        "key_point",
+        "key_point",
+        "quote"
+      ],
+      "verses": [
+        "Ps.1"
+      ],
+      "otherPassagesFound": "0/0",
+      "spansInCards": "3/4",
+      "spansInTranscript": "4/4",
+      "quotesKept": 2,
+      "rejected": 0,
+      "costUsd": 0.0378045,
+      "seconds": 91.896,
+      "streamedBeforeDone": true,
+      "cards": [
+        {
+          "id": "p0-0",
+          "kind": "verse",
+          "page": 0,
+          "order": 0,
+          "reference": "Psalms 1",
+          "osis": "Ps.1"
+        },
+        {
+          "id": "p0-1",
+          "kind": "quote",
+          "page": 0,
+          "order": 1,
+          "text": "Love is the fountain of all our duties concerning God and man."
+        },
+        {
+          "id": "p0-2",
+          "kind": "key_point",
+          "page": 0,
+          "order": 2,
+          "text": "Genuine love for others draws people to Christ and delights in seeing others blessed."
+        },
+        {
+          "id": "p0-3",
+          "kind": "key_point",
+          "page": 0,
+          "order": 3,
+          "text": "Walking in fellowship requires practicing unity, humility, and forgiveness toward difficult people."
+        },
+        {
+          "id": "p0-4",
+          "kind": "key_point",
+          "page": 0,
+          "order": 4,
+          "text": "Watchfulness and admonishment must start with ourselves, aiming for Christ's glory and our neighbor's good."
+        },
+        {
+          "id": "p0-5",
+          "kind": "quote",
+          "page": 0,
+          "order": 5,
+          "text": "Hiding, removing, covering offenses is from the footsteps of Christ..."
+        }
+      ]
+    },
+    {
+      "id": "sermon-04",
+      "pass": true,
+      "checks": {
+        "atLeast3Cards": true,
+        "passageFound": true,
+        "keySpans": true
+      },
+      "kinds": [
+        "verse",
+        "key_point",
+        "verse",
+        "verse",
+        "quote",
+        "key_point",
+        "verse"
+      ],
+      "verses": [
+        "Mal.1",
+        "Deut.7",
+        "Eph.1",
+        "John.3"
+      ],
+      "otherPassagesFound": "3/3",
+      "spansInCards": "3/4",
+      "spansInTranscript": "4/4",
+      "quotesKept": 1,
+      "rejected": 0,
+      "costUsd": 0.0209595,
+      "seconds": 20.589,
+      "streamedBeforeDone": true,
+      "cards": [
+        {
+          "id": "p0-0",
+          "kind": "verse",
+          "page": 0,
+          "order": 0,
+          "reference": "Malachi 1:2-5",
+          "osis": "Mal.1.2-Mal.1.5"
+        },
+        {
+          "id": "p0-1",
+          "kind": "key_point",
+          "page": 0,
+          "order": 1,
+          "text": "Israel expected God to fulfill their felt needs, but His covenant love comes through unconditional election."
+        },
+        {
+          "id": "p0-2",
+          "kind": "verse",
+          "page": 0,
+          "order": 2,
+          "reference": "Deuteronomy 7:6",
+          "osis": "Deut.7.6"
+        },
+        {
+          "id": "p0-3",
+          "kind": "verse",
+          "page": 0,
+          "order": 3,
+          "reference": "Ephesians 1",
+          "osis": "Eph.1"
+        },
+        {
+          "id": "p0-4",
+          "kind": "quote",
+          "page": 0,
+          "order": 4,
+          "text": "This should create wonder in worship, zeal in our service and perspective in our trials"
+        },
+        {
+          "id": "p0-5",
+          "kind": "key_point",
+          "page": 0,
+          "order": 5,
+          "text": "God's covenant love is proven through His sovereign choice, embracing His people while opposing His enemies."
+        },
+        {
+          "id": "p0-6",
+          "kind": "verse",
+          "page": 0,
+          "order": 6,
+          "reference": "John 3:17",
+          "osis": "John.3.17"
+        }
+      ]
+    },
+    {
+      "id": "sermon-05",
+      "pass": true,
+      "checks": {
+        "atLeast3Cards": true,
+        "passageFound": true,
+        "keySpans": true
+      },
+      "kinds": [
+        "verse",
+        "key_point",
+        "quote",
+        "verse",
+        "key_point"
+      ],
+      "verses": [
+        "Ps.98",
+        "Rom.3"
+      ],
+      "otherPassagesFound": "1/1",
+      "spansInCards": "3/4",
+      "spansInTranscript": "4/4",
+      "quotesKept": 1,
+      "rejected": 0,
+      "costUsd": 0.0120645,
+      "seconds": 13.612,
+      "streamedBeforeDone": true,
+      "cards": [
+        {
+          "id": "p0-0",
+          "kind": "verse",
+          "page": 0,
+          "order": 0,
+          "reference": "Psalms 98",
+          "osis": "Ps.98"
+        },
+        {
+          "id": "p0-1",
+          "kind": "key_point",
+          "page": 0,
+          "order": 1,
+          "text": "Christians are called to rejoice, give thanks, and praise God in every circumstance based on His works."
+        },
+        {
+          "id": "p0-2",
+          "kind": "quote",
+          "page": 0,
+          "order": 2,
+          "text": "The birds are singing but man will not."
+        },
+        {
+          "id": "p0-3",
+          "kind": "verse",
+          "page": 0,
+          "order": 3,
+          "reference": "Romans 3:23",
+          "osis": "Rom.3.23"
+        },
+        {
+          "id": "p0-4",
+          "kind": "key_point",
+          "page": 0,
+          "order": 4,
+          "text": "Being found means glorifying God in worship and joyfully fulfilling our creation ordinances in work, family, and Sabbath rest."
+        }
+      ]
+    },
+    {
+      "id": "sermon-06",
+      "pass": true,
+      "checks": {
+        "atLeast3Cards": true,
+        "passageFound": true,
+        "keySpans": true
+      },
+      "kinds": [
+        "verse",
+        "key_point",
+        "quote",
+        "quote",
+        "key_point",
+        "verse"
+      ],
+      "verses": [
+        "Ps.98",
+        "Acts.16"
+      ],
+      "otherPassagesFound": "1/1",
+      "spansInCards": "4/4",
+      "spansInTranscript": "4/4",
+      "quotesKept": 2,
+      "rejected": 0,
+      "costUsd": 0.011892,
+      "seconds": 11.964,
+      "streamedBeforeDone": true,
+      "cards": [
+        {
+          "id": "p0-0",
+          "kind": "verse",
+          "page": 0,
+          "order": 0,
+          "reference": "Psalms 98",
+          "osis": "Ps.98"
+        },
+        {
+          "id": "p0-1",
+          "kind": "key_point",
+          "page": 0,
+          "order": 1,
+          "text": "Singing expresses our unity in Christ as a compelled response to the marvelous salvation God has worked."
+        },
+        {
+          "id": "p0-2",
+          "kind": "quote",
+          "page": 0,
+          "order": 2,
+          "text": "A silent Christian appears to be unbelieving regarding these things."
+        },
+        {
+          "id": "p0-3",
+          "kind": "quote",
+          "page": 0,
+          "order": 3,
+          "text": "It is the \"marvel\" of God's work which elicits our songs."
+        },
+        {
+          "id": "p0-4",
+          "kind": "key_point",
+          "page": 0,
+          "order": 4,
+          "text": "God commands us to sing because He knows our needs and designed triumphant singing to witness to and encourage others."
+        },
+        {
+          "id": "p0-5",
+          "kind": "verse",
+          "page": 0,
+          "order": 5,
+          "reference": "Acts 16:25",
+          "osis": "Acts.16.25"
+        }
+      ]
+    },
+    {
+      "id": "sermon-07",
+      "pass": true,
+      "checks": {
+        "atLeast3Cards": true,
+        "passageFound": true,
+        "keySpans": true
+      },
+      "kinds": [
+        "verse",
+        "quote",
+        "verse",
+        "verse",
+        "verse",
+        "key_point",
+        "key_point"
+      ],
+      "verses": [
+        "Rev.1",
+        "Rev.13",
+        "Rev.1",
+        "Rev.19"
+      ],
+      "otherPassagesFound": "2/2",
+      "spansInCards": "2/4",
+      "spansInTranscript": "4/4",
+      "quotesKept": 1,
+      "rejected": 0,
+      "costUsd": 0.018597000000000002,
+      "seconds": 15.926,
+      "streamedBeforeDone": true,
+      "cards": [
+        {
+          "id": "p0-0",
+          "kind": "verse",
+          "page": 0,
+          "order": 0,
+          "reference": "Revelation 1:1-3",
+          "osis": "Rev.1.1-Rev.1.3"
+        },
+        {
+          "id": "p0-1",
+          "kind": "quote",
+          "page": 0,
+          "order": 1,
+          "text": "God knows it often feels like Satan\nis winning."
+        },
+        {
+          "id": "p0-2",
+          "kind": "verse",
+          "page": 0,
+          "order": 2,
+          "reference": "Revelation 13",
+          "osis": "Rev.13"
+        },
+        {
+          "id": "p0-3",
+          "kind": "verse",
+          "page": 0,
+          "order": 3,
+          "reference": "Revelation 1:5-9",
+          "osis": "Rev.1.5-Rev.1.9"
+        },
+        {
+          "id": "p0-4",
+          "kind": "verse",
+          "page": 0,
+          "order": 4,
+          "reference": "Revelation 19",
+          "osis": "Rev.19"
+        },
+        {
+          "id": "p0-5",
+          "kind": "key_point",
+          "page": 0,
+          "order": 5,
+          "text": "Although the Church faces a great spiritual war, worldly powers are doomed to destruction while the suffering Church is destined for glory."
+        },
+        {
+          "id": "p0-6",
+          "kind": "key_point",
+          "page": 0,
+          "order": 6,
+          "text": "Great blessing comes to those who hear and keep the words of Revelation, no matter the cost."
+        }
+      ]
+    },
+    {
+      "id": "sermon-08",
+      "pass": true,
+      "checks": {
+        "atLeast3Cards": true,
+        "passageFound": true,
+        "keySpans": true
+      },
+      "kinds": [
+        "verse",
+        "key_point",
+        "quote",
+        "verse",
+        "verse",
+        "verse",
+        "key_point"
+      ],
+      "verses": [
+        "Gal.5",
+        "John.15",
+        "John.14",
+        "John.19"
+      ],
+      "otherPassagesFound": "2/2",
+      "spansInCards": "3/4",
+      "spansInTranscript": "4/4",
+      "quotesKept": 1,
+      "rejected": 0,
+      "costUsd": 0.0085245,
+      "seconds": 7.525,
+      "streamedBeforeDone": true,
+      "cards": [
+        {
+          "id": "p0-0",
+          "kind": "verse",
+          "page": 0,
+          "order": 0,
+          "reference": "Galatians 5:16-26",
+          "osis": "Gal.5.16-Gal.5.26"
+        },
+        {
+          "id": "p0-1",
+          "kind": "key_point",
+          "page": 0,
+          "order": 1,
+          "text": "Believers use the righteous standing God has given them to fulfill the law of love."
+        },
+        {
+          "id": "p0-2",
+          "kind": "quote",
+          "page": 0,
+          "order": 2,
+          "text": "We see, or ought to see, these fruits in him before we look for them in ourselves."
+        },
+        {
+          "id": "p0-3",
+          "kind": "verse",
+          "page": 0,
+          "order": 3,
+          "reference": "John 15:13",
+          "osis": "John.15.13"
+        },
+        {
+          "id": "p0-4",
+          "kind": "verse",
+          "page": 0,
+          "order": 4,
+          "reference": "John 14:27",
+          "osis": "John.14.27"
+        },
+        {
+          "id": "p0-5",
+          "kind": "verse",
+          "page": 0,
+          "order": 5,
+          "reference": "John 19:1",
+          "osis": "John.19.1"
+        },
+        {
+          "id": "p0-6",
+          "kind": "key_point",
+          "page": 0,
+          "order": 6,
+          "text": "We must fight for consistency between our confession and our walk."
+        }
+      ]
+    },
+    {
+      "id": "sermon-09",
+      "pass": true,
+      "checks": {
+        "atLeast3Cards": true,
+        "passageFound": true,
+        "keySpans": true
+      },
+      "kinds": [
+        "verse",
+        "key_point",
+        "quote",
+        "key_point",
+        "quote"
+      ],
+      "verses": [
+        "Phil.4"
+      ],
+      "otherPassagesFound": "0/0",
+      "spansInCards": "4/4",
+      "spansInTranscript": "4/4",
+      "quotesKept": 2,
+      "rejected": 0,
+      "costUsd": 0.013962,
+      "seconds": 13.946,
+      "streamedBeforeDone": true,
+      "cards": [
+        {
+          "id": "p0-0",
+          "kind": "verse",
+          "page": 0,
+          "order": 0,
+          "reference": "Philippians 4:14-20",
+          "osis": "Phil.4.14-Phil.4.20"
+        },
+        {
+          "id": "p0-1",
+          "kind": "key_point",
+          "page": 0,
+          "order": 1,
+          "text": "True gospel partnership means bearing one another's burdens and sharing troubles, not merely writing checks."
+        },
+        {
+          "id": "p0-2",
+          "kind": "quote",
+          "page": 0,
+          "order": 2,
+          "text": "Not just \"writing checks\" but encouraging one another."
+        },
+        {
+          "id": "p0-3",
+          "kind": "key_point",
+          "page": 0,
+          "order": 3,
+          "text": "God is pleased with sacrificial giving and promises to provide for all our needs."
+        },
+        {
+          "id": "p0-4",
+          "kind": "quote",
+          "page": 0,
+          "order": 4,
+          "text": "We give for the right purposes. To see God's glory."
+        }
+      ]
+    },
+    {
+      "id": "sermon-10",
+      "pass": true,
+      "checks": {
+        "atLeast3Cards": true,
+        "passageFound": true,
+        "keySpans": true
+      },
+      "kinds": [
+        "verse",
+        "quote",
+        "verse",
+        "key_point",
+        "key_point",
+        "key_point"
+      ],
+      "verses": [
+        "Luke.18",
+        "Gen.3"
+      ],
+      "otherPassagesFound": "1/1",
+      "spansInCards": "4/4",
+      "spansInTranscript": "4/4",
+      "quotesKept": 1,
+      "rejected": 0,
+      "costUsd": 0.0130695,
+      "seconds": 12.787,
+      "streamedBeforeDone": true,
+      "cards": [
+        {
+          "id": "p0-0",
+          "kind": "verse",
+          "page": 0,
+          "order": 0,
+          "reference": "Luke 18:9-14",
+          "osis": "Luke.18.9-Luke.18.14"
+        },
+        {
+          "id": "p0-1",
+          "kind": "quote",
+          "page": 0,
+          "order": 1,
+          "text": "God be merciful to me, a sinner"
+        },
+        {
+          "id": "p0-2",
+          "kind": "verse",
+          "page": 0,
+          "order": 2,
+          "reference": "Genesis 3",
+          "osis": "Gen.3"
+        },
+        {
+          "id": "p0-3",
+          "kind": "key_point",
+          "page": 0,
+          "order": 3,
+          "text": "Jesus directed this parable toward those who trusted in themselves that they were righteous."
+        },
+        {
+          "id": "p0-4",
+          "kind": "key_point",
+          "page": 0,
+          "order": 4,
+          "text": "The Pharisee's prayer was marked by comparing himself to others and relying on himself without expressing any need for God."
+        },
+        {
+          "id": "p0-5",
+          "kind": "key_point",
+          "page": 0,
+          "order": 5,
+          "text": "A humble and contrite approach to God seeking His mercy and atonement is fundamental to the Christian faith."
+        }
+      ]
+    },
+    {
+      "id": "sermon-11",
+      "pass": true,
+      "checks": {
+        "atLeast3Cards": true,
+        "passageFound": true,
+        "keySpans": true
+      },
+      "kinds": [
+        "verse",
+        "quote",
+        "verse",
+        "verse",
+        "key_point",
+        "verse"
+      ],
+      "verses": [
+        "Acts.4",
+        "Acts.4",
+        "Acts.4",
+        "Isa.37"
+      ],
+      "otherPassagesFound": "1/1",
+      "spansInCards": "3/4",
+      "spansInTranscript": "4/4",
+      "quotesKept": 1,
+      "rejected": 0,
+      "costUsd": 0.0152595,
+      "seconds": 14.901,
+      "streamedBeforeDone": true,
+      "cards": [
+        {
+          "id": "p0-0",
+          "kind": "verse",
+          "page": 0,
+          "order": 0,
+          "reference": "Acts 4:23-31",
+          "osis": "Acts.4.23-Acts.4.31"
+        },
+        {
+          "id": "p0-1",
+          "kind": "quote",
+          "page": 0,
+          "order": 1,
+          "text": "A lack of prayer for the\nlost is a red flag."
+        },
+        {
+          "id": "p0-2",
+          "kind": "verse",
+          "page": 0,
+          "order": 2,
+          "reference": "Acts 4:18",
+          "osis": "Acts.4.18"
+        },
+        {
+          "id": "p0-3",
+          "kind": "verse",
+          "page": 0,
+          "order": 3,
+          "reference": "Acts 4:20",
+          "osis": "Acts.4.20"
+        },
+        {
+          "id": "p0-4",
+          "kind": "key_point",
+          "page": 0,
+          "order": 4,
+          "text": "When facing adversity, we pray by remembering God's creation to strengthen our faith and placing worldly hostility in perspective under His plan."
+        },
+        {
+          "id": "p0-5",
+          "kind": "verse",
+          "page": 0,
+          "order": 5,
+          "reference": "Isaiah 37",
+          "osis": "Isa.37"
+        }
+      ]
+    },
+    {
+      "id": "sermon-12",
+      "pass": true,
+      "checks": {
+        "atLeast3Cards": true,
+        "passageFound": true,
+        "keySpans": true
+      },
+      "kinds": [
+        "verse",
+        "verse",
+        "verse",
+        "key_point",
+        "quote",
+        "key_point",
+        "quote",
+        "key_point"
+      ],
+      "verses": [
+        "Mark.4",
+        "Isa.41",
+        "Matt.5"
+      ],
+      "otherPassagesFound": "2/2",
+      "spansInCards": "4/4",
+      "spansInTranscript": "4/4",
+      "quotesKept": 2,
+      "rejected": 0,
+      "costUsd": 0.014314499999999999,
+      "seconds": 13.585,
+      "streamedBeforeDone": true,
+      "cards": [
+        {
+          "id": "p0-0",
+          "kind": "verse",
+          "page": 0,
+          "order": 0,
+          "reference": "Mark 4:35-41",
+          "osis": "Mark.4.35-Mark.4.41"
+        },
+        {
+          "id": "p0-1",
+          "kind": "verse",
+          "page": 0,
+          "order": 1,
+          "reference": "Isaiah 41",
+          "osis": "Isa.41"
+        },
+        {
+          "id": "p0-2",
+          "kind": "verse",
+          "page": 0,
+          "order": 2,
+          "reference": "Matthew 5",
+          "osis": "Matt.5"
+        },
+        {
+          "id": "p0-3",
+          "kind": "key_point",
+          "page": 0,
+          "order": 3,
+          "text": "In difficult circumstances, believers can be taught to trust God rather than give in to fear."
+        },
+        {
+          "id": "p0-4",
+          "kind": "quote",
+          "page": 0,
+          "order": 4,
+          "text": "The truth is, we learn much by affliction."
+        },
+        {
+          "id": "p0-5",
+          "kind": "key_point",
+          "page": 0,
+          "order": 5,
+          "text": "Suffering and affliction are essential to discipleship because they teach us and cause us to long for heaven."
+        },
+        {
+          "id": "p0-6",
+          "kind": "quote",
+          "page": 0,
+          "order": 6,
+          "text": "He is in the boat, indeed, on the earth precisely because he cares."
+        },
+        {
+          "id": "p0-7",
+          "kind": "key_point",
+          "page": 0,
+          "order": 7,
+          "text": "Jesus is God with us who entered human suffering out of love and has the divine authority to command the storm."
+        }
+      ]
+    }
+  ]
+}

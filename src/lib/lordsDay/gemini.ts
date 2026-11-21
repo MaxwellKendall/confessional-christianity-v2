@@ -4,10 +4,13 @@ import { GENERATION_SCHEMA } from './cards';
 // Gemini, model behind an env override, JSON enforced at the API, cost per call,
 // typed errors, and a golden eval (evals/lords-day-cards) that picks the model.
 
-// gemini-3.8-flash: remix's box-detection default. Eval baseline NOT YET RUN: the
-// shared Gemini key's prepaid credits were depleted on 2026-11-21 (402). Once
-// topped up, `npm run eval:cards` for this and gemini-3.5-flash-lite, compare on
-// realized cost (thinking tokens bill as output), and record both scores here.
+// gemini-3.8-flash over gemini-3.5-flash-lite (eval 2026-11-21, 12 real note photos,
+// evals/lords-day-cards/results): flash passed 12/12 then 11/12 across two runs
+// (sermon-07 fell to 1 of 4 key spans once); flash-lite passed 8/12, missing the
+// sermon passage's Verse card on 3 photos and the key spans on 1. Realized cost for
+// flash: ~$0.017 per photo, thinking included, median ~14-16 s. flash-lite ran ~2 s
+// and under $0.006 per photo even priced at flash's rates below, but a third of its
+// sermons lose the passage or the points, so the cheaper call is a false economy.
 export const GEMINI_CARDS_MODEL_DEFAULT = 'gemini-3.8-flash';
 // Standard rates from 2027-01-01 (intro pricing until then is half this): errs high.
 // Same model and rates as remix's GEMINI_BOX_* constants.
