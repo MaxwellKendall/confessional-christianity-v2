@@ -56,10 +56,14 @@ describe("user pool", () => {
       const statements = Object.values(t.findResources("AWS::IAM::Policy"))
         .flatMap((r) => (r as { Properties: { PolicyDocument: { Statement: Record<string, unknown>[] } } }).Properties.PolicyDocument.Statement);
       const set = statements.filter((s) => JSON.stringify(s.Action).includes("cognito-idp"));
-      expect(set).toHaveLength(1);
-      expect(set[0].Action).toBe("cognito-idp:AdminSetUserPassword");
+      // NoPassword sets passwords; appleStart (TKL-889) finds, creates and confirms Apple users. Nothing else.
+      expect(set.map((s) => s.Action)).toEqual(expect.arrayContaining([
+        "cognito-idp:AdminSetUserPassword",
+        ["cognito-idp:AdminGetUser", "cognito-idp:AdminCreateUser", "cognito-idp:AdminSetUserPassword"],
+      ]));
+      expect(set).toHaveLength(2);
       const userPoolLogicalId = Object.keys(t.findResources("AWS::Cognito::UserPool"))[0];
-      expect(set[0].Resource).toEqual({ "Fn::GetAtt": [userPoolLogicalId, "Arn"] });
+      for (const s of set) expect(s.Resource).toEqual({ "Fn::GetAtt": [userPoolLogicalId, "Arn"] });
     }
   });
 
@@ -93,16 +97,16 @@ describe("user pool", () => {
 });
 
 describe("app client", () => {
-  it("is public and allows only choice-based sign-in and refresh: no password or SRP flows", () => {
+  it("is public and allows only choice-based sign-in, Apple's custom auth and refresh: no password or SRP flows", () => {
     for (const t of [dev.accounts, prod.accounts]) {
       t.hasResourceProperties("AWS::Cognito::UserPoolClient", {
         GenerateSecret: false,
         PreventUserExistenceErrors: "ENABLED",
-        ExplicitAuthFlows: ["ALLOW_USER_AUTH", "ALLOW_REFRESH_TOKEN_AUTH"],
+        ExplicitAuthFlows: ["ALLOW_USER_AUTH", "ALLOW_CUSTOM_AUTH", "ALLOW_REFRESH_TOKEN_AUTH"],
       });
       const flows = Object.values(t.findResources("AWS::Cognito::UserPoolClient"))
         .flatMap((r) => (r as { Properties: { ExplicitAuthFlows: string[] } }).Properties.ExplicitAuthFlows);
-      for (const banned of ["ALLOW_USER_PASSWORD_AUTH", "ALLOW_USER_SRP_AUTH", "ALLOW_ADMIN_USER_PASSWORD_AUTH", "ALLOW_CUSTOM_AUTH"]) {
+      for (const banned of ["ALLOW_USER_PASSWORD_AUTH", "ALLOW_USER_SRP_AUTH", "ALLOW_ADMIN_USER_PASSWORD_AUTH"]) {
         expect(flows).not.toContain(banned);
       }
     }
@@ -122,7 +126,73 @@ describe("app client", () => {
   });
 
   it("outputs what the app and the server need", () => {
-    for (const name of ["Region", "UserPoolId", "AppClientId"]) prod.accounts.hasOutput(name, {});
+    for (const name of ["Region", "UserPoolId", "AppClientId", "AppleStartUrl"]) prod.accounts.hasOutput(name, {});
+  });
+
+  it("can write only the email: nobody can set an Apple subject on themselves", () => {
+    for (const t of [dev.accounts, prod.accounts]) {
+      t.hasResourceProperties("AWS::Cognito::UserPoolClient", { WriteAttributes: ["email"] });
+    }
+  });
+});
+
+describe("native Sign in with Apple (TKL-889)", () => {
+  type Pool = { Properties: { LambdaConfig: Record<string, unknown>; Schema: Record<string, unknown>[] } };
+  const pool = (t: Template) => Object.values(t.findResources("AWS::Cognito::UserPool"))[0] as Pool;
+  const functionFor = (t: Template, arn: unknown) => {
+    const id = (arn as { "Fn::GetAtt": [string, string] })["Fn::GetAtt"][0];
+    return (t.findResources("AWS::Lambda::Function")[id] as { Properties: { Handler: string } }).Properties.Handler;
+  };
+
+  it("binds an immutable Apple subject, and keeps Apple's email and its verification as immutable metadata", () => {
+    for (const t of [dev.accounts, prod.accounts]) {
+      const schema = pool(t).Properties.Schema;
+      // These already exist in dev: Cognito can never remove or change a custom attribute, so they must stay exactly so.
+      expect(schema).toEqual(expect.arrayContaining([
+        { Name: "appleSubject", AttributeDataType: "String", Mutable: false, StringAttributeConstraints: { MaxLength: "255" } },
+        { Name: "appleEmail", AttributeDataType: "String", Mutable: false, StringAttributeConstraints: { MaxLength: "2048" } },
+        { Name: "appleEmailVerified", AttributeDataType: "String", Mutable: false, StringAttributeConstraints: { MaxLength: "5" } },
+      ]));
+    }
+  });
+
+  it("wires the custom auth triggers, the reserved-address sign-up guard and the email guard", () => {
+    for (const t of [dev.accounts, prod.accounts]) {
+      const cfg = pool(t).Properties.LambdaConfig;
+      expect(functionFor(t, cfg.DefineAuthChallenge)).toBe("auth.define");
+      expect(functionFor(t, cfg.CreateAuthChallenge)).toBe("auth.create");
+      expect(functionFor(t, cfg.VerifyAuthChallengeResponse)).toBe("auth.verifyChallenge");
+      expect(functionFor(t, cfg.PreSignUp)).toBe("auth.reserveAppleAddress");
+      expect(functionFor(t, cfg.CustomMessage)).toBe("auth.protectAppleEmail");
+      // Email OTP's password scrambler stays.
+      expect(functionFor(t, cfg.PreAuthentication)).toBe("index.handler");
+    }
+  });
+
+  it("serves appleStart on a public Function URL that knows its pool", () => {
+    for (const t of [dev.accounts, prod.accounts]) {
+      const fns = t.findResources("AWS::Lambda::Function", { Properties: { Handler: "start.handler" } });
+      const [id] = Object.keys(fns);
+      expect(Object.keys(fns)).toHaveLength(1);
+      const poolId = Object.keys(t.findResources("AWS::Cognito::UserPool"))[0];
+      t.hasResourceProperties("AWS::Lambda::Function", {
+        Handler: "start.handler",
+        Runtime: "nodejs22.x",
+        Environment: { Variables: { USER_POOL_ID: { Ref: poolId } } },
+      });
+      t.hasResourceProperties("AWS::Lambda::Url", { AuthType: "NONE", TargetFunctionArn: { "Fn::GetAtt": [id, "Arn"] } });
+      t.hasOutput("AppleStartUrl", { Value: Match.objectLike({ "Fn::GetAtt": [Match.stringLikeRegexp("^AppleStartFunctionUrl"), "FunctionUrl"] }) });
+    }
+  });
+
+  it("keeps the original email until a new one is verified", () => {
+    for (const t of [dev.accounts, prod.accounts]) {
+      t.hasResourceProperties("AWS::Cognito::UserPool", { UserAttributeUpdateSettings: { AttributesRequireVerificationBeforeUpdate: ["email"] } });
+    }
+  });
+
+  it("adds no hosted-UI Apple identity provider", () => {
+    for (const t of [dev.accounts, prod.accounts]) t.resourceCountIs("AWS::Cognito::UserPoolIdentityProvider", 0);
   });
 });
 
