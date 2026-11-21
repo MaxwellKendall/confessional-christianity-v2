@@ -46,10 +46,6 @@ layer, indexing pipeline, and Supabase project were **ported**, the UI was
   subtitle, author, date, optional slug/series/part)
 - `content/programs/<slug>/prayers.json` — authored session prayers, written
   progressively
-- `supabase/migrations/` — the single source of truth for the account schema
-  (same live Supabase project as v1). **The programs migration
-  (`20260710000000_programs_domain.sql`) must be applied before program
-  features work.**
 
 ## URL continuity
 

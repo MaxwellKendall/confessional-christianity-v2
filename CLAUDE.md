@@ -10,7 +10,6 @@ Linear project: **confessional christianity** (team TKL): https://linear.app/sof
 ## Layout
 - `src/`: the website (App Router). `content/`: essays, program prayers (markdown/JSON, source of truth).
 - `normalized-data/`, `dataMapping/`: confession text and the id → entry map (server-only).
-- `supabase/migrations/`: the account schema (live Supabase project shared with v1).
 - `scripts/`: Algolia indexing, prayers authoring, `ios/sync-content.mjs` (copies `content/` into the app bundle).
 - `ios/App/`: the app. `project.yml` is the XcodeGen spec (the `.xcodeproj` is generated; don't hand-edit it). `Sources/`, `Widget/` (Home Screen widget, App Group `group.com.confessionalchristianity.app`).
 - `ios/DomainKit/`: SwiftPM package with the app's pure logic and bundled content; its tests run on the host Mac.
@@ -41,7 +40,6 @@ Linear project: **confessional christianity** (team TKL): https://linear.app/sof
 | DomainKit | `cd ios/DomainKit && swift test` (152 tests) | ~15 s |
 | iOS build | `cd ios/App && xcodegen generate && xcodebuild -scheme ConfessionalChristianity -destination 'platform=iOS Simulator,name=CC iPhone 17 Pro' -derivedDataPath ../../build/dd build` | ~1 min cold |
 | infra | `cd infra && npm ci && npm test` (vitest CDK assertions, 20 tests) | ~6 s |
-| DB (pgTAP) | see "DB tests" below (local Supabase in Docker, 22 tests) | ~40 s |
 
 ### Lord's Day cards eval (paid, never in `npm test`)
 `POST /api/lords-day/cards` (src/lib/lordsDay/handler.ts has the contract) drafts cards from sermon-note photos with
@@ -51,25 +49,8 @@ Gemini. Server env: `GEMINI_API_KEY`, optional `GEMINI_CARDS_MODEL` (default `ge
 `EVAL_CASES=sermon-02` for one case); ~1 cent per photo. Prints per-case PASS/FAIL and a total, and writes
 `evals/lords-day-cards/results/<model>.json`. A 402 from Gemini means the key's prepaid credits are spent (Maxwell tops up).
 
-### DB tests (pgTAP, local stack only)
-`supabase/config.toml` runs a local stack on ports 5542x (container `supabase_db_confessional-christianity`). Docker must be running.
-```sh
-supabase start -x studio,imgproxy,storage-api,realtime,edge-runtime,logflare,vector,supavisor,mailpit,postgres-meta
-supabase db reset        # local container only: never add --linked or --db-url
-out=$(for f in supabase/tests/*.test.sql; do
-  docker exec -i supabase_db_confessional-christianity psql -U postgres -q -tA -v ON_ERROR_STOP=1 < "$f" \
-    || echo "not ok - psql failed on $f"; done)
-echo "$out" | grep -c '^ok'                           # 22 today
-! echo "$out" | grep -E '^not ok|Looks like' && echo PASS
-supabase stop            # when done
-```
-Pass = `PASS` printed (no `not ok`, no pgTAP plan mismatch, no SQL error). Don't use `supabase test db` unattended: with
-CLI v2.39.2 it hung >5 min twice after `create extension pgtap` (pulling the pg_prove image, TKL-809). Run the DB tests when
-a change touches `supabase/`.
-
 ## Verify checks
 A change lands only with these green: `npm test`, `npm run build`, `swift test` in `ios/DomainKit`, and the iOS build.
-A change under `supabase/` also needs the DB tests (pgTAP, above) printing `PASS`.
 A change under `infra/` also needs `cd infra && npm test`.
 A UI change also gets a simulator screenshot (iOS) or a browser screenshot (web).
 
@@ -122,9 +103,7 @@ iOS client). Stage from `-c stage=…` (default dev). Nothing is created in the 
   the newest. Never send codes to made-up outside addresses (bounces hurt the sender); SES is still in the sandbox.
 - Prod: sends from `confessionalchristianity.com`, whose DNS is on Vercel (not reachable by agents). Its DKIM records are the
   `DkimRecords` output of `ConfessionalChristianityMail-prod`; the prod pool can't deploy until they verify.
-- The Supabase account code in `supabase/` and the app is being replaced (TKL-812, TKL-890).
+- Account sync uses DynamoDB behind Cognito-authorized AppSync (TKL-891).
 
 ## Gotchas
-- Supabase migrations touch live user data: review required. **Never run migrations against the live project** (no
-  `supabase db push`, `--linked`, or `--db-url` to prod); test them only on the local stack. Applying to prod is Maxwell's.
 - The Algolia Admin key is for `scripts/` only; the browser gets the search-only key.
