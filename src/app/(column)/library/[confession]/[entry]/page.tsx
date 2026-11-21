@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 
 import { ProofTexts } from '@/components/ProofTexts';
 import { entryPageLabel, entryQuoteSegments, proofTextGroups } from '@/lib/entryDisplay';
-import { truncateForMeta } from '@/lib/helpers';
+import { entryMetaDescription, entryMetaTitle } from '@/lib/entryMeta';
 import { getAllEntryParams, getEntryPage } from '@/lib/library';
 import { loadConfessionContent } from '@/lib/confessionContent';
 import { getReflectionByEntryId } from '@/lib/reflections';
@@ -27,11 +27,17 @@ export async function generateMetadata(
   const page = await getEntryPage(confession, entry);
   if (!page) return {};
   const content = await loadConfessionContent(confession);
-  const label = entryPageLabel(page.item, content?.contentById);
+  const contentById = content?.contentById ?? {};
+  const title = entryMetaTitle(page.documentTitle, page.item, contentById);
+  const description = entryMetaDescription(page.documentTitle, page.item, contentById);
+  const canonical = `/library/${confession}/${entry}`;
+  // absolute: the entry title already names the document; the site-name
+  // suffix would push the question past what search results show.
   return {
-    title: `${page.documentTitle} — ${label}`,
-    description: truncateForMeta(page.item.text ?? page.item.title),
-    alternates: { canonical: `/library/${confession}/${entry}` },
+    title: { absolute: title },
+    description,
+    alternates: { canonical },
+    openGraph: { title, description, url: canonical, type: 'article' },
   };
 }
 
