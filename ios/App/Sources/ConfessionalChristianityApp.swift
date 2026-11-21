@@ -9,6 +9,7 @@ struct ConfessionalChristianityApp: App {
     // app-private store, so a session's progress is visible to the widget's
     // next timeline refresh with no sync step.
     private let container = makeSharedModelContainer()
+    private let showsOpening = DailyOpening.claim(in: .standard)
 
     // Account session (guest by default); restored from the Keychain at launch.
     @State private var auth = AuthService()
@@ -43,6 +44,7 @@ struct ConfessionalChristianityApp: App {
 
     private var root: some View {
         RootView()
+            .modifier(LaunchOpening(showing: showsOpening))
             .environment(auth)
             #if DEBUG
             .sheet(isPresented: $showsAuthDebug) {
