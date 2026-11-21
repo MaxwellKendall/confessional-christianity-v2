@@ -21,7 +21,9 @@ struct ConfessionalChristianityApp: App {
         WindowGroup {
             #if DEBUG
             if let scene = UserDefaults.standard.string(forKey: "VerseReaderFixture") {
-                VerseReaderView.fixture(scene)
+                let appearances: [String: ColorScheme] = ["light": .light, "dark": .dark]
+                let appearance = UserDefaults.standard.string(forKey: "VerseReaderFixtureAppearance") ?? ""
+                VerseReaderView.fixture(scene).preferredColorScheme(appearances[appearance])
             } else {
                 root
             }

@@ -9,6 +9,13 @@ struct VerseReaderView: View {
         case unavailable
     }
 
+    private struct CitationSelection: Identifiable {
+        let id: String
+        let text: String
+        let reference: String
+        let entries: [ScriptureCitingEntry]
+    }
+
     let source: ReaderSource
 
     @Environment(\.dismiss) private var dismiss
@@ -17,6 +24,7 @@ struct VerseReaderView: View {
     @State private var passage = Passage.loading
     @State private var attempt = 0
     @State private var showsSettings = false
+    @State private var citation: CitationSelection?
     #if DEBUG
     private var fixtureStart: Int?
     #endif
@@ -56,7 +64,15 @@ struct VerseReaderView: View {
                         screen(paper, top, bottom) { offline }
                     case let .bundled(text):
                         screen(paper, top, bottom) {
-                            verse(text, reference: title, osis: nil, palette: paper)
+                            VStack(spacing: 24) {
+                                verse(text, reference: title, palette: paper)
+                                HStack(spacing: 28) {
+                                    confessionsSeal(osis: osis, text: text, reference: title, color: gilt)
+                                    ShareLink(item: "\(text)\n— \(title)") {
+                                        actionLabel("Share", icon: "square.and.arrow.up")
+                                    }
+                                }
+                            }
                         } footer: { copyright }
                     case let .verses(verses):
                         ForEach(pages(verses), id: \.offset) { index, card in
@@ -78,6 +94,13 @@ struct VerseReaderView: View {
                 .presentationDetents([.medium])
                 .presentationDragIndicator(.visible)
                 .environment(\.colorScheme, dark ? .dark : .light)
+        }
+        .sheet(item: $citation) { selection in
+            ReaderConfessionsSheet(
+                verseText: selection.text, reference: selection.reference, entries: selection.entries,
+                paper: paper.paper, ink: paper.ink, gilt: gilt, chapel: chapel, onChapel: onChapel
+            )
+            .environment(\.colorScheme, dark ? .dark : .light)
         }
         .task(id: LoadKey(osis: osis, attempt: attempt)) {
             #if DEBUG
@@ -157,7 +180,7 @@ struct VerseReaderView: View {
             let sealColor = paletteIndex == 3 && !dark ? Color(hex: 0xd9b46a) : gilt
             let reference = parseOsisBibleReference(item.osis)
             screen(palette, top, bottom) {
-                verse(item.text, reference: reference, osis: item.osis, palette: palette)
+                verse(item.text, reference: reference, palette: palette)
             } footer: {
                 verseActions(item, reference: reference, sealColor: sealColor)
             }
@@ -245,37 +268,41 @@ struct VerseReaderView: View {
         return "\(title) · Q. \(number)"
     }
 
-    private func verse(_ text: String, reference: String, osis: String?, palette: Palette) -> some View {
+    private func verse(_ text: String, reference: String, palette: Palette) -> some View {
         VStack(spacing: 24) {
             Text(text)
                 .font(.ccBody(readerVerseFontSize(textLength: text.count, textSize: settings.textSize)))
                 .lineSpacing(5)
                 .minimumScaleFactor(0.55)
             kicker(reference, palette: palette)
-            if osis == nil {
-                ShareLink(item: "\(text)\n— \(reference)") { actionLabel("Share", icon: "square.and.arrow.up") }
-            }
         }
     }
 
     private func verseActions(_ verse: ReaderVerse, reference: String, sealColor: Color) -> some View {
-        let count = settings.showConfessionMarks ? citingEntries(forVerse: verse.osis).count : 0
-        return HStack(spacing: 28) {
-            if count > 0 {
-                Button {} label: {
-                    VStack(spacing: 5) {
-                        Text("\(count)").font(.ccDisplay(12, semibold: true))
-                            .frame(width: 30, height: 30)
-                            .overlay { Circle().strokeBorder(lineWidth: 1.5) }
-                        Text("Confessions").font(.caption2)
-                    }
-                    .foregroundStyle(sealColor)
-                    .frame(minWidth: 44, minHeight: 48)
-                }
-                .accessibilityLabel("Confessions, \(count) citations")
-            }
+        HStack(spacing: 28) {
+            confessionsSeal(osis: verse.osis, text: verse.text, reference: reference, color: sealColor)
             Button {} label: { actionLabel("In context", icon: "text.alignleft") }
             ShareLink(item: "\(verse.text)\n— \(reference)") { actionLabel("Share", icon: "square.and.arrow.up") }
+        }
+    }
+
+    @ViewBuilder
+    private func confessionsSeal(osis: String, text: String, reference: String, color: Color) -> some View {
+        let entries = settings.showConfessionMarks ? citingEntries(forVerse: osis) : []
+        if !entries.isEmpty {
+            Button {
+                citation = CitationSelection(id: osis, text: text, reference: reference, entries: entries)
+            } label: {
+                VStack(spacing: 5) {
+                    Text("\(entries.count)").font(.ccDisplay(12, semibold: true))
+                        .frame(width: 30, height: 30)
+                        .overlay { Circle().strokeBorder(lineWidth: 1.5) }
+                    Text("Confessions").font(.caption2)
+                }
+                .foregroundStyle(color)
+                .frame(minWidth: 44, minHeight: 48)
+            }
+            .accessibilityLabel("Confessions, \(entries.count) \(entries.count == 1 ? "citation" : "citations")")
         }
     }
 
@@ -384,6 +411,29 @@ struct VerseReaderView: View {
 
     #if DEBUG
     static func fixture(_ scene: String) -> Self {
+        if scene == "bundled-citations" {
+            let osis = "Prov.31.23"
+            var view = Self(source: .sermonText(
+                passageOsis: osis, weekday: "Wednesday", dayIndex: 3, daysInWeek: 6, notesKeyPoint: nil
+            ))
+            view.fixtureStart = 0
+            view._passage = State(initialValue: bundledEsvText(for: osis).map(Passage.bundled) ?? .unavailable)
+            return view
+        }
+
+        if scene == "citations" || scene == "uncited" {
+            let cited = scene == "citations"
+            let verse = cited
+                ? ReaderVerse(osis: "Rom.8.16", verse: 16, text: "The Spirit itself beareth witness with our spirit, that we are the children of God:")
+                : ReaderVerse(osis: "Rom.16.24", verse: 24, text: "The grace of our Lord Jesus Christ be with you all. Amen.")
+            var view = Self(source: .sermonText(
+                passageOsis: verse.osis, weekday: "Wednesday", dayIndex: 3, daysInWeek: 6, notesKeyPoint: nil
+            ))
+            view.fixtureStart = cited ? 0 : 1
+            view._passage = State(initialValue: .verses([verse]))
+            return view
+        }
+
         let verses = [
             ReaderVerse(osis: "Rom.8.28", verse: 28, text: "And we know that all things work together for good to them that love God, to them who are the called according to his purpose."),
             ReaderVerse(osis: "Rom.8.29", verse: 29, text: "For whom he did foreknow, he also did predestinate to be conformed to the image of his Son."),

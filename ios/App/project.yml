@@ -69,6 +69,8 @@ targets:
           config: Debug
         test:
           config: Debug
+          targets:
+            - ReaderUITests
 
   # A Home Screen widget previewing the visitor's active catechism session
   # (current question, progress) — reads the same App Group-backed SwiftData
@@ -116,3 +118,14 @@ targets:
         CODE_SIGN_ENTITLEMENTS: Widget/ConfessionalChristianityWidgetExtension.entitlements
         DEVELOPMENT_TEAM: 7GZKY29XJH
         CODE_SIGN_STYLE: Automatic
+
+  ReaderUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [UITests]
+    dependencies:
+      - target: ConfessionalChristianity
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.confessionalchristianity.app.reader-ui-tests
