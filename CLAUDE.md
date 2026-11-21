@@ -43,6 +43,14 @@ Linear project: **confessional christianity** (team TKL): https://linear.app/sof
 | infra | `cd infra && npm ci && npm test` (vitest CDK assertions, 20 tests) | ~6 s |
 | DB (pgTAP) | see "DB tests" below (local Supabase in Docker, 22 tests) | ~40 s |
 
+### Lord's Day cards eval (paid, never in `npm test`)
+`POST /api/lords-day/cards` (src/lib/lordsDay/handler.ts has the contract) drafts cards from sermon-note photos with
+Gemini. Server env: `GEMINI_API_KEY`, optional `GEMINI_CARDS_MODEL` (default `gemini-3.8-flash`), `COGNITO_USER_POOL_ID`,
+`COGNITO_CLIENT_ID`. Golden set: `evals/lords-day-cards/` (12 real note photos, `truth.json`). Run from the repo root:
+`set -a; source ~/dev/.secrets.env; set +a; npm run eval:cards` (prefix `GEMINI_CARDS_MODEL=<model>` to compare models,
+`EVAL_CASES=sermon-02` for one case); ~1 cent per photo. Prints per-case PASS/FAIL and a total, and writes
+`evals/lords-day-cards/results/<model>.json`. A 402 from Gemini means the key's prepaid credits are spent (Maxwell tops up).
+
 ### DB tests (pgTAP, local stack only)
 `supabase/config.toml` runs a local stack on ports 5542x (container `supabase_db_confessional-christianity`). Docker must be running.
 ```sh

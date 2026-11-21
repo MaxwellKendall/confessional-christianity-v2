@@ -1,0 +1,101 @@
+{
+  "_about": "Golden set for POST /api/lords-day/cards (TKL-861). Twelve real handwritten sermon-note pages, photographed by the note-taker on an iPhone and shared for this eval on TKL-861 (2026-11-21); uprighted, downscaled to 1600 px and stripped of all metadata (EXIF/GPS) before commit. Per case: the sermon passage a Verse card must name (OSIS book.chapter), other passages the notes name (recall only, not scored), and key spans: ideas a Key point or Quote card should carry. A span matches when any of its '|' alternatives is a substring of the normalised card text. Written by reading each photo.",
+  "cases": [
+    {
+      "id": "sermon-01",
+      "photo": "photos/sermon-01.jpg",
+      "notes": "2 Thessalonians 3:17, Benediction",
+      "passage": "2Thess.3",
+      "otherPassages": ["Num.6", "Luke.24", "Ps.3"],
+      "keySpans": ["bless|benediction", "aaronic|god s name|gods name", "lifter", "good hand|expectant|return"]
+    },
+    {
+      "id": "sermon-02",
+      "photo": "photos/sermon-02.jpg",
+      "notes": "Matthew 5:9; 43-48, peacemakers",
+      "passage": "Matt.5",
+      "otherPassages": ["Ps.86"],
+      "keySpans": ["peacemaker|make peace|bring peace", "gospel", "strife|war", "forgive|difficult"]
+    },
+    {
+      "id": "sermon-03",
+      "photo": "photos/sermon-03.jpg",
+      "notes": "Rules for walking in fellowship (John Owen); no sermon passage in the heading, Psalm 1 is the first named",
+      "passage": "Ps.1",
+      "otherPassages": [],
+      "keySpans": ["love", "unity|forgiveness|humility", "encourag|edif|exhort", "admonish|watchful"]
+    },
+    {
+      "id": "sermon-04",
+      "photo": "photos/sermon-04.jpg",
+      "notes": "Malachi 1:2-5, God's covenant love",
+      "passage": "Mal.1",
+      "otherPassages": ["Deut.7", "Eph.1", "John.3"],
+      "keySpans": ["covenant", "love", "elect|chos", "esau|jacob|edom"]
+    },
+    {
+      "id": "sermon-05",
+      "photo": "photos/sermon-05.jpg",
+      "notes": "Psalm 98, congregational singing (pt II), then a second intro on being found",
+      "passage": "Ps.98",
+      "otherPassages": ["Rom.3"],
+      "keySpans": ["prais", "rejoic|thanks", "ends of the earth|all the earth|universal", "worship|found|lost"]
+    },
+    {
+      "id": "sermon-06",
+      "photo": "photos/sermon-06.jpg",
+      "notes": "Psalm 98, congregational singing to the glory of God",
+      "passage": "Ps.98",
+      "otherPassages": ["Acts.16"],
+      "keySpans": ["sing|song", "marvel", "salvation", "command|witness|encourag"]
+    },
+    {
+      "id": "sermon-07",
+      "photo": "photos/sermon-07.jpg",
+      "notes": "Triumph of the Lamb, Revelation 1:1-3 (two-page spread, small writing)",
+      "passage": "Rev.1",
+      "otherPassages": ["Rev.13", "Rev.19"],
+      "keySpans": ["sovereign|triumph|victory|reign", "spiritual battle|spiritual war|battle", "bless|keep", "preterist|futurist|historicist|idealist|view"]
+    },
+    {
+      "id": "sermon-08",
+      "photo": "photos/sermon-08.jpg",
+      "notes": "Galatians 5:16-26, fruit of the Spirit",
+      "passage": "Gal.5",
+      "otherPassages": ["John.15", "John.14"],
+      "keySpans": ["fruit|produce", "love", "gentle|self control|patience|kindness|faithful", "flesh|consisten|confession"]
+    },
+    {
+      "id": "sermon-09",
+      "photo": "photos/sermon-09.jpg",
+      "notes": "Gospel partnership, Philippians 4:14-20 (passage written out in full)",
+      "passage": "Phil.4",
+      "otherPassages": [],
+      "keySpans": ["partner", "giv", "glory", "burden|trouble"]
+    },
+    {
+      "id": "sermon-10",
+      "photo": "photos/sermon-10.jpg",
+      "notes": "A tale of two prayers, Luke 18:9-14",
+      "passage": "Luke.18",
+      "otherPassages": ["Gen.3"],
+      "keySpans": ["merc", "sinner", "pharisee|self righteous|compar", "humble|contrite|tax collector"]
+    },
+    {
+      "id": "sermon-11",
+      "photo": "photos/sermon-11.jpg",
+      "notes": "Acts 4:23-31, a prayer of bold witness",
+      "passage": "Acts.4",
+      "otherPassages": ["Isa.37"],
+      "keySpans": ["pray", "evangelism|lost", "seen and heard|speak|bold|witness", "creation|hostility|satan"]
+    },
+    {
+      "id": "sermon-12",
+      "photo": "photos/sermon-12.jpg",
+      "notes": "Mark 4:33-41, a fearful circumstance; the page names the preacher (Rev Ross Hodges)",
+      "passage": "Mark.4",
+      "otherPassages": ["Isa.41", "Matt.5"],
+      "keySpans": ["fear|anxious", "storm|affliction", "disciple", "care|god with us|loves us"]
+    }
+  ]
+}
