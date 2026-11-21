@@ -60,3 +60,7 @@ AWS_PROFILE=aicoach-dev npm run outputs prod
 ```
 
 Prod's user pool and SES identity are `RETAIN`, and the pool has deletion protection.
+
+## Account sync
+
+See [Account sync](SYNC.md) for the AppSync transport, guardian access and account deletion contract.

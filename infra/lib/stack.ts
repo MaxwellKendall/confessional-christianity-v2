@@ -5,6 +5,7 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as logs from "aws-cdk-lib/aws-logs";
 import type { Construct } from "constructs";
 import { fileURLToPath } from "node:url";
+import { addAccountSync } from "./sync.ts";
 
 export type Stage = "dev" | "prod";
 
@@ -82,6 +83,8 @@ export class AccountsStack extends Stack {
       refreshTokenValidity: Duration.days(3650),
     });
     (appClient.node.defaultChild as cognito.CfnUserPoolClient).explicitAuthFlows = ["ALLOW_USER_AUTH", "ALLOW_REFRESH_TOKEN_AUTH"];
+
+    addAccountSync(this, userPool, stage);
 
     new CfnOutput(this, "Region", { value: this.region });
     new CfnOutput(this, "UserPoolId", { value: userPool.userPoolId });

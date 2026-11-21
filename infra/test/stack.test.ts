@@ -163,3 +163,22 @@ describe("mail", () => {
     prod.mail.resourceCountIs("AWS::S3::Bucket", 0);
   });
 });
+
+describe("account sync", () => {
+  it("uses only the stage user pool and exposes push and pull on a private table", () => {
+    for (const { accounts } of [dev, prod]) {
+      const pool = Object.keys(accounts.findResources("AWS::Cognito::UserPool"))[0];
+      accounts.hasResourceProperties("AWS::AppSync::GraphQLApi", {
+        AuthenticationType: "AMAZON_COGNITO_USER_POOLS",
+        UserPoolConfig: { UserPoolId: { Ref: pool }, DefaultAction: "ALLOW" },
+        AdditionalAuthenticationProviders: Match.absent(),
+      });
+      accounts.hasResourceProperties("AWS::DynamoDB::Table", {
+        KeySchema: [{ AttributeName: "pk", KeyType: "HASH" }, { AttributeName: "sk", KeyType: "RANGE" }],
+      });
+      accounts.hasResourceProperties("AWS::AppSync::Resolver", { TypeName: "Mutation", FieldName: "pushSync" });
+      accounts.hasResourceProperties("AWS::AppSync::Resolver", { TypeName: "Query", FieldName: "pullSync" });
+    }
+    prod.accounts.hasResource("AWS::DynamoDB::Table", { DeletionPolicy: "Retain" });
+  });
+});

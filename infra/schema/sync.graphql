@@ -1,0 +1,27 @@
+input SyncChangeInput {
+  id: ID!
+  table: String!
+  row_id: ID!
+  child_id: ID!
+  updated_at: AWSDateTime!
+  deleted_at: AWSDateTime
+  payload: String
+}
+
+type SyncRecord {
+  table: String!
+  id: ID!
+  child_id: ID!
+  updated_at: AWSDateTime!
+  deleted_at: AWSDateTime
+  payload: String
+  change_id: String!
+}
+
+type Query {
+  pullSync(table: String!, after: String = "0", limit: Int = 50): [SyncRecord!]!
+}
+
+type Mutation {
+  pushSync(changes: [SyncChangeInput!]!): [ID!]!
+}

@@ -1,0 +1,37 @@
+# Account sync
+
+Use the stage stack's `AccountSyncUrl` with a Cognito user-pool JWT from that stage. AppSync verifies the token. The resolver uses its `sub` for every ownership check and derives the stream from that subject. The client cannot supply a stream, owner or guardian.
+
+## Rows
+
+| Table | Stable row ID | JSON payload fields |
+| --- | --- | --- |
+| `children` | Local child UUID, also used as `child_id` | `name`, `age`, `created_at`, `active_catechism_id` |
+| `catechism_assignments` | Persisted UUID per child's catechism assignment | `catechism_slug`, `started_at`, `started_at_question` |
+| `catechism_pacing` | Persisted UUID per child's catechism pacing row | `catechism_slug`, `current_question` |
+| `catechism_milestones` | Persisted UUID per child's catechism question milestone | `catechism_slug`, `question`, `state`, `introduced_at`, `review_count` |
+
+Clients can create UUIDs offline. Reuse the same row ID for future updates, and treat UUID casing as insignificant. The server returns lowercase UUIDs. Each ID is unique per table and bound to one child. The payload is a complete row snapshot, encoded as a JSON object string (up to 4 KiB). Its fields take scalar JSON values: names, slugs, timestamps and milestone states are strings, and ages, question numbers and review counts are numbers. Omit unset fields or use null.
+
+Creating a child makes the verified caller its owner. A co-guardian may read and edit its records, including the profile. Only the owner may tombstone the profile. Tombstones are row-level. A transport removing a child should enqueue separate tombstones for its progress rows and remove its local child and progress from the UI.
+
+Membership is stored on the child access item as a map of stable membership UUIDs to verified Cognito subjects. Membership is managed by trusted backend code. The public API provides no membership writes or invitation endpoint. Trusted provisioning must verify the owner and grantee, cap the child at eight co-guardians, and update the access item's version whenever membership changes. For existing rows to appear in a new guardian's stream, grant provisioning must append references with fresh cursor values under the same counter compare-and-swap described below, rechecking the row revision and access version for each backfill. Stream reads recheck current membership before serving data.
+
+## Push and pull
+
+`pushSync(changes: [SyncChangeInput!]!): [ID!]!` accepts up to 20 changes per request, in outbox order. Each change carries the outbox UUID `id`, `table`, stable `row_id`, `child_id`, `updated_at`, optional `deleted_at` and `payload`. Use UTC ISO 8601 instants with at most millisecond precision. Omit payload for a tombstone.
+
+The response echoes acknowledged outbox UUIDs, including authorized changes that match or precede the stored `updated_at`. An equal timestamp keeps the first accepted write. After a partial failure, resend the batch with its original timestamps and IDs. Each accepted change commits independently, and already accepted changes replay as no-ops.
+
+`pullSync(table: String!, after: String = "0", limit: Int = 50): [SyncRecord!]!` returns up to 100 rows per page. Each row includes `table`, `id` (the stored row UUID), `child_id`, `updated_at`, `deleted_at`, `payload` and `change_id`. Decode the decimal cursor string as a Swift `Int64` and store it per signed-in subject and table. Start with `"0"`, and request subsequent pages strictly after the last applied `change_id` until fewer than the requested count are returned. Apply a non-null `deleted_at` as a local delete.
+
+A DynamoDB transaction replaces the canonical row, compares the child access version, and advances and publishes each authorized guardian's stream together. Counters live on the account partition and monotonically increase across tables, so gaps in a table are expected. Pull uses strongly consistent reads and returns only the current row revision. Superseded references and rows the caller can no longer access are filtered before returning a page.
+
+## Account deletion contract (TKL-890)
+
+The deletion worker must use the same stage table and the verified Cognito subject. It must be able to resume the following steps after a partial failure.
+
+1. After any required Apple revocation succeeds, set an `account#<sub>` / `disabled` item before enumerating data. Keep a version on the marker. Push checks for absence in every transaction. Keep the marker after removing the Cognito user, so an unexpired JWT cannot recreate or read sync data.
+2. Query `owned#` entries under `account#<sub>`. Verify the `owner` on each `child#<id>` / `access` item. Use a conditional write to retire access with a new `version` and `retired: true`. Keep the original owner and membership map on the retired item until cleanup finishes so a retry can confirm ownership and remove the co-guardians’ reverse membership entries. Enumerate the child's `row#<table>#<id>` catalog entries and delete their `record#<table>#<id>` / `value` items and the catalog entries. Remove each ownership index entry only after the child cleanup succeeds. Retiring access first invalidates in-flight writers. After cleanup, retain only the version and retired flag to reserve the child UUID without keeping an owner or guardian list. Other guardians' old stream references no longer resolve to data.
+3. Remove this subject from the access maps of children owned by other accounts using a conditional update on the access version. Trusted membership provisioning should maintain a reverse `member#<child-id>` entry under the guardian's account in the same transaction as the grant, and condition the grant on the guardian's disabled marker being absent. Remove both membership entries together. Preserve the other owner's child, progress and other co-guardians.
+4. Purge the departing subject's published references under `change#` after all of their memberships and owned children have been removed, then remove their sequence. References in other accounts contain only row locators, revision identifiers and cursors. The deletion worker may remove references to purged child rows without renumbering or resetting any remaining guardian's sequence. Delete the Cognito user after cleanup.
