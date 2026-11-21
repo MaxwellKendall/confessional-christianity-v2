@@ -31,6 +31,8 @@ struct ConfessionalChristianityApp: App {
                 NavigationStack {
                     VerseReaderView.fixture(scene)
                 }
+            } else if let scene = UserDefaults.standard.string(forKey: "LordsDayCaptureFixture") {
+                CaptureFixture(scene: scene)
             } else {
                 root
             }

@@ -33,6 +33,9 @@ targets:
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         ITSAppUsesNonExemptEncryption: false
+        # Lord's Day capture (TKL-860): photographing sermon notes.
+        NSCameraUsageDescription: Photograph your handwritten sermon notes so the app can turn them into cards for the week. Photos are kept on your iPhone, sent only to draft the cards, and not stored online.
+        NSPhotoLibraryUsageDescription: Choose a photo of your sermon notes you already took, to turn it into cards for the week.
         # Read by SupabaseConfig.swift. Values are the website's
         # NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
         # (public by design; the service role key never ships in the app).
