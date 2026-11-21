@@ -59,6 +59,39 @@ actor EsvClient {
         let verses: [ReaderVerse]?
     }
 
+    private var chapterCache: [String: Task<ReaderChapter?, Never>] = [:]
+
+    func chapter(for osis: String) async -> ReaderChapter? {
+        if let existing = chapterCache[osis] {
+            return await existing.value
+        }
+        let task = Task<ReaderChapter?, Never> {
+            let chapter = await Self.fetchChapter(osis: osis)
+            if chapter == nil { chapterCache[osis] = nil }
+            return chapter
+        }
+        chapterCache[osis] = task
+        return await task.value
+    }
+
+    private static func fetchChapter(osis: String) async -> ReaderChapter? {
+        guard var components = URLComponents(string: baseURL) else { return nil }
+        components.queryItems = [
+            URLQueryItem(name: "osis", value: ReaderChapter.queryOSIS(for: osis)),
+            URLQueryItem(name: "formatted", value: "true"),
+            URLQueryItem(name: "anchors", value: "true")
+        ]
+        guard let url = components.url else { return nil }
+        do {
+            let (data, response) = try await readerSession.data(from: url)
+            guard let http = response as? HTTPURLResponse, http.statusCode == 200 else { return nil }
+            let chapter = try JSONDecoder().decode(ReaderChapter.self, from: data)
+            return chapter.matches(osis) ? chapter : nil
+        } catch {
+            return nil
+        }
+    }
+
     private var cache: [String: Task<String?, Never>] = [:]
 
     func text(for osis: String) async -> String? {

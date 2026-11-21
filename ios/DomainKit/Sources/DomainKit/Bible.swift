@@ -68,7 +68,7 @@ public func toOsis(_ str: String) -> String? {
 }
 
 // Books the ESV cites without a chapter number ("Jude 4" means Jude 1:4").
-private let singleChapterBooks: Set<String> = ["Obad", "Phlm", "2John", "3John", "Jude"]
+let singleChapterBooks: Set<String> = ["Obad", "Phlm", "2John", "3John", "Jude"]
 
 private let citationRegex = try! NSRegularExpression(
     pattern: #"^([1-3]?\s?[A-Za-z ]+?)\s+(\d+)(?::(\d+))?(?:\s*-\s*(?:(\d+):)?(\d+))?$"#

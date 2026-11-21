@@ -17,6 +17,7 @@ struct VerseReaderView: View {
     @State private var passage = Passage.loading
     @State private var attempt = 0
     @State private var showsSettings = false
+    @State private var contextChapter: String?
     #if DEBUG
     private var fixtureStart: Int?
     #endif
@@ -72,6 +73,9 @@ struct VerseReaderView: View {
         }
         .background(paper.paper.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar, .tabBar)
+        .navigationDestination(item: $contextChapter) { chapter in
+            ReaderChapterView(chapterOSIS: chapter, passageOSIS: osis, settings: settings)
+        }
         .sheet(isPresented: $showsSettings) {
             Text("Reading settings")
                 .font(.ccDisplay(19, semibold: true))
@@ -274,7 +278,11 @@ struct VerseReaderView: View {
                 }
                 .accessibilityLabel("Confessions, \(count) citations")
             }
-            Button {} label: { actionLabel("In context", icon: "text.alignleft") }
+            if let chapter = ReaderChapter.chapterOSIS(for: verse.osis) {
+                Button { contextChapter = chapter } label: {
+                    actionLabel("In context", icon: "text.alignleft")
+                }
+            }
             ShareLink(item: "\(verse.text)\n— \(reference)") { actionLabel("Share", icon: "square.and.arrow.up") }
         }
     }
@@ -303,11 +311,12 @@ struct VerseReaderView: View {
                     .font(.subheadline)
                     .foregroundStyle(palette.secondary)
                 primaryButton("Done for today") { dismiss() }
-                let chapter = osis.split(separator: "-").first?.split(separator: ".").prefix(2).joined(separator: ".")
-                Button {} label: {
-                    Text(chapter.map { "Read all of \(parseOsisBibleReference($0))" } ?? "In context")
-                        .padding(10)
-                        .overlay { Capsule().strokeBorder() }
+                if let chapter = ReaderChapter.chapterOSIS(for: osis) {
+                    Button { contextChapter = chapter } label: {
+                        Text("Read all of \(parseOsisBibleReference(chapter))")
+                            .padding(10)
+                            .overlay { Capsule().strokeBorder() }
+                    }
                 }
             case let .proofText(slug, number, _, answer, _):
                 kicker(catechismLabel(slug, number: number), palette: palette)

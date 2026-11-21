@@ -20,8 +20,15 @@ struct ConfessionalChristianityApp: App {
     var body: some Scene {
         WindowGroup {
             #if DEBUG
-            if let scene = UserDefaults.standard.string(forKey: "VerseReaderFixture") {
-                VerseReaderView.fixture(scene)
+            if let passage = UserDefaults.standard.string(forKey: "ReaderChapterReference"),
+               let chapter = ReaderChapter.chapterOSIS(for: passage) {
+                NavigationStack {
+                    ReaderChapterView(chapterOSIS: chapter, passageOSIS: passage, settings: .load())
+                }
+            } else if let scene = UserDefaults.standard.string(forKey: "VerseReaderFixture") {
+                NavigationStack {
+                    VerseReaderView.fixture(scene)
+                }
             } else {
                 root
             }
