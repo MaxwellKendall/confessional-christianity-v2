@@ -57,3 +57,66 @@ import XCTest
         XCTAssertNil(todayCardIndex(serviceDate: sunday, today: day(-1), cardCount: 2, calendar: calendar))
     }
 }
+
+// TKL-859: the app is live, so adding the Lord's Day models must be additive.
+// A store written with progressSchema as it stands on origin/main (no Lord's
+// Day models) must open with this container and keep every record.
+@MainActor final class LordsDayUpgradeTests: XCTestCase {
+    func testStoreWithoutLordsDayModelsOpensAndKeepsEveryRecord() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("tkl859-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let url = dir.appendingPathComponent("Progress.sqlite")
+
+        let mainSchema = Schema([
+            LocalCatechismTrack.self, ProgressSettings.self, LocalChild.self, ChildCatechismTrack.self,
+        ] + syncModelTypes)
+        XCTAssertFalse(mainSchema.entities.map(\.name).contains("LordsDayNote"))
+
+        let started = Date(timeIntervalSince1970: 100)
+        let milestones = [
+            "3": MilestoneRecord(state: "mastered", introducedAt: started, reviewCount: 8),
+            "4": MilestoneRecord(state: "reviewing", introducedAt: started, reviewCount: 2),
+        ]
+        let firstId: UUID, secondId: UUID
+        do {
+            let old = try ModelContainer(for: mainSchema, configurations: [ModelConfiguration(schema: mainSchema, url: url)])
+            let store = LocalProgressStore(context: old.mainContext)
+            let first = try store.addChild(name: "Samuel", age: 7)
+            let second = try store.addChild(name: "Hannah")
+            firstId = first.id; secondId = second.id
+            let wsc = try XCTUnwrap(store.startTrack(childId: first.id, catechismId: "WSC", startingQuestion: 3))
+            wsc.milestones = milestones
+            wsc.currentQuestion = 9
+            _ = try XCTUnwrap(store.startTrack(childId: second.id, catechismId: "HC", startingQuestion: 1))
+            old.mainContext.insert(SyncOutboxEntry(sequence: 1, table: "children", rowId: first.id.uuidString,
+                                                   payload: Data("{}".utf8), updatedAt: started, deletedAt: nil))
+            old.mainContext.insert(SyncCursorRecord(table: "children", changeId: 42))
+            try old.mainContext.save()
+        }
+
+        let upgraded = try openProgressContainer(at: url)
+        let context = upgraded.mainContext
+        let progress = LocalProgressStore(context: context)
+        XCTAssertEqual(progress.activeChildId, firstId)
+        XCTAssertEqual(Set(try context.fetch(FetchDescriptor<LocalChild>()).map(\.id)), [firstId, secondId])
+        XCTAssertEqual(try context.fetch(FetchDescriptor<LocalChild>()).first { $0.id == firstId }?.age, 7)
+        let wsc = try XCTUnwrap(progress.activeTrack(childId: firstId))
+        XCTAssertEqual(wsc.catechismId, "WSC")
+        XCTAssertEqual(wsc.currentQuestion, 9)
+        XCTAssertEqual(wsc.startedAtQuestion, 3)
+        XCTAssertEqual(wsc.milestones, milestones)
+        XCTAssertEqual(progress.activeTrack(childId: secondId)?.catechismId, "HC")
+        XCTAssertEqual(try context.fetchCount(FetchDescriptor<ChildCatechismTrack>()), 2)
+        XCTAssertEqual(try context.fetch(FetchDescriptor<SyncOutboxEntry>()).map(\.rowId), [firstId.uuidString])
+        XCTAssertEqual(try context.fetch(FetchDescriptor<SyncCursorRecord>()).map(\.changeId), [42])
+        XCTAssertEqual(try context.fetchCount(FetchDescriptor<LordsDayNote>()), 0)
+
+        // The new tables are usable in the upgraded store.
+        let lordsDay = LordsDayStore(context: context)
+        let note = LordsDayNote(serviceDate: started)
+        try lordsDay.save(note)
+        try lordsDay.appendCard(to: note, kind: .verse, body: "", verseRef: "Psalm 1:1")
+        XCTAssertEqual(try lordsDay.cards(for: note).map(\.verseRef), ["Psalm 1:1"])
+    }
+}
