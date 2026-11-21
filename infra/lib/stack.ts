@@ -1,6 +1,10 @@
 import { CfnOutput, Duration, RemovalPolicy, Stack, type StackProps } from "aws-cdk-lib";
 import * as cognito from "aws-cdk-lib/aws-cognito";
+import * as iam from "aws-cdk-lib/aws-iam";
+import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as logs from "aws-cdk-lib/aws-logs";
 import type { Construct } from "constructs";
+import { fileURLToPath } from "node:url";
 
 export type Stage = "dev" | "prod";
 
@@ -11,10 +15,12 @@ export interface AccountsStackProps extends StackProps {
 }
 
 /**
- * TKL-850: accounts. A Cognito user pool where people sign in with a 6-digit code emailed to them
+ * TKL-850: accounts. A Cognito user pool where people sign in with a code emailed to them
  * (choice-based USER_AUTH, EMAIL_OTP). Cognito requires PASSWORD in the allowed first factors, so
- * "no passwords" is enforced on the client: it allows only USER_AUTH and refresh (no SRP, no
- * USER_PASSWORD_AUTH), and account recovery is off so ForgotPassword can't set one.
+ * "no passwords" is enforced three ways: the client allows only USER_AUTH and refresh (no SRP, no
+ * USER_PASSWORD_AUTH); account recovery is off so ForgotPassword can't set one; and the NoPassword
+ * trigger replaces any password with a random, never-seen one on confirmation and before every sign-in,
+ * so a password passed to SignUp or ChangePassword can't sign anyone in.
  */
 export class AccountsStack extends Stack {
   constructor(scope: Construct, id: string, props: AccountsStackProps) {
@@ -45,6 +51,27 @@ export class AccountsStack extends Stack {
       deletionProtection: isProd,
       removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
     });
+
+    const noPassword = new lambda.Function(this, "NoPassword", {
+      description: "Replaces any Cognito password with a random unknown one (sign-in is by emailed code only)",
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: "index.handler",
+      code: lambda.Code.fromAsset(fileURLToPath(new URL("../lambda/no-password", import.meta.url))),
+      timeout: Duration.seconds(5),
+      memorySize: 256,
+      logGroup: new logs.LogGroup(this, "NoPasswordLogs", {
+        retention: logs.RetentionDays.ONE_MONTH,
+        removalPolicy: RemovalPolicy.DESTROY,
+      }),
+    });
+    userPool.addTrigger(cognito.UserPoolOperation.POST_CONFIRMATION, noPassword);
+    userPool.addTrigger(cognito.UserPoolOperation.PRE_AUTHENTICATION, noPassword);
+    // A separate policy (not on the function's role) so the pool -> function -> pool reference isn't circular.
+    noPassword.role!.attachInlinePolicy(
+      new iam.Policy(this, "NoPasswordSetPassword", {
+        statements: [new iam.PolicyStatement({ actions: ["cognito-idp:AdminSetUserPassword"], resources: [userPool.userPoolArn] })],
+      }),
+    );
 
     const appClient = userPool.addClient("App", {
       userPoolClientName: "ios",

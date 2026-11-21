@@ -11,14 +11,23 @@ lib/stack.ts             ConfessionalChristianity-{stage}: user pool + public iO
 lib/mail.ts              ConfessionalChristianityMail-{stage}: the SES domain identity the codes come from
 scripts/outputs.ts       writes ../ios/App/Resources/amplify_outputs.{stage}.json, prints the server's settings
 scripts/inbox-code.sh    dev only: prints the newest code mailed to the test inbox
+scripts/password-probe.sh dev only: live check that passwords can't sign in
+lambda/no-password/      PostConfirmation/PreAuthentication trigger that scrambles passwords
 test/                    vitest: CDK template assertions
 ```
 
 ## Sign-in rules
 
-- Cognito insists `PASSWORD` stays in the pool's allowed first factors, so "no passwords" lives on the
-  client: it allows only `ALLOW_USER_AUTH` and `ALLOW_REFRESH_TOKEN_AUTH` (no SRP, no
-  `USER_PASSWORD_AUTH`), and account recovery is off, so `ForgotPassword` can't set a password.
+- Cognito insists `PASSWORD` stays in the pool's allowed first factors, so "no passwords" is enforced
+  three ways: the client allows only `ALLOW_USER_AUTH` and `ALLOW_REFRESH_TOKEN_AUTH` (no SRP, no
+  `USER_PASSWORD_AUTH`); account recovery is off, so `ForgotPassword` can't set a password; and the
+  `NoPassword` Lambda (`lambda/no-password/`, PostConfirmation + PreAuthentication triggers) replaces any
+  password with a random one nobody sees, so a password passed to `SignUp` or `ChangePassword` never
+  signs anyone in. If that Lambda fails, the confirmation or sign-in fails too.
+- Because every user ends up with a (random) password, `USER_AUTH` without a preference answers
+  `SELECT_CHALLENGE`: the app must send `PREFERRED_CHALLENGE=EMAIL_OTP`.
+- `AWS_PROFILE=aicoach-dev scripts/password-probe.sh` (dev, live) signs up a test user with a password,
+  checks both password paths are refused and the emailed code still works, then deletes the user.
 - Sign-up codes are 6 digits; `EMAIL_OTP` sign-in codes are **8 digits** (Cognito's fixed length).
 - Sign up: `SignUp` with only the email (no password), then `ConfirmSignUp` with the emailed code.
   Sign in: `InitiateAuth USER_AUTH` with `PREFERRED_CHALLENGE=EMAIL_OTP`, then

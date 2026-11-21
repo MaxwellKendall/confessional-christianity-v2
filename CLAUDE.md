@@ -35,7 +35,7 @@ Linear project: **confessional christianity** (team TKL): https://linear.app/sof
 | web build | `npm run build` (needs `.env.local`; ESLint enforced) | ~15 s |
 | DomainKit | `cd ios/DomainKit && swift test` (152 tests) | ~15 s |
 | iOS build | `cd ios/App && xcodegen generate && xcodebuild -scheme ConfessionalChristianity -destination 'platform=iOS Simulator,name=CC iPhone 17 Pro' -derivedDataPath ../../build/dd build` | ~1 min cold |
-| infra | `cd infra && npm ci && npm test` (vitest CDK assertions, 12 tests) | ~6 s |
+| infra | `cd infra && npm ci && npm test` (vitest CDK assertions, 20 tests) | ~6 s |
 | DB (pgTAP) | see "DB tests" below (local Supabase in Docker, 22 tests) | ~40 s |
 
 ### DB tests (pgTAP, local stack only)
@@ -77,7 +77,9 @@ Never commit in the main checkout: it often holds Maxwell's uncommitted work on 
 
 ## Accounts (`infra/`)
 Cognito user pools, sign-in by a code emailed to the person (`USER_AUTH` + `EMAIL_OTP`; codes are 8 digits, sign-up
-codes 6). CDK app in `infra/`, account `397614038040`, profile `aicoach-dev`, us-east-1. Four stacks:
+codes 6). No passwords: the `NoPassword` trigger scrambles any password on confirmation and before each sign-in,
+so clients must send `PREFERRED_CHALLENGE=EMAIL_OTP`; after a pool change run `AWS_PROFILE=aicoach-dev
+infra/scripts/password-probe.sh` (dev, prints `PASS`). CDK app in `infra/`, account `397614038040`, profile `aicoach-dev`, us-east-1. Four stacks:
 `ConfessionalChristianityMail-{dev,prod}` (the SES sending domain) and `ConfessionalChristianity-{dev,prod}` (pool + public
 iOS client). Stage from `-c stage=…` (default dev). Nothing is created in the console. Details: `infra/README.md`.
 - From `infra/` on a worktree of `origin/main`: `npm test`, then `npx cdk diff --all --profile aicoach-dev -c stage=prod`,

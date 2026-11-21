@@ -40,6 +40,29 @@ describe("user pool", () => {
     });
   });
 
+  it("replaces any password with an unknown one on confirmation and before every sign-in", () => {
+    for (const t of [dev.accounts, prod.accounts]) {
+      const pool = Object.values(t.findResources("AWS::Cognito::UserPool"))[0] as { Properties: { LambdaConfig?: Record<string, unknown> } };
+      const cfg = pool.Properties.LambdaConfig ?? {};
+      expect(cfg.PostConfirmation).toBeDefined();
+      expect(cfg.PreAuthentication).toBeDefined();
+      expect(JSON.stringify(cfg.PostConfirmation)).toBe(JSON.stringify(cfg.PreAuthentication));
+      t.hasResourceProperties("AWS::Lambda::Function", { Handler: "index.handler", Runtime: "nodejs22.x" });
+    }
+  });
+
+  it("lets that function set passwords only in its own pool", () => {
+    for (const t of [dev.accounts, prod.accounts]) {
+      const statements = Object.values(t.findResources("AWS::IAM::Policy"))
+        .flatMap((r) => (r as { Properties: { PolicyDocument: { Statement: Record<string, unknown>[] } } }).Properties.PolicyDocument.Statement);
+      const set = statements.filter((s) => JSON.stringify(s.Action).includes("cognito-idp"));
+      expect(set).toHaveLength(1);
+      expect(set[0].Action).toBe("cognito-idp:AdminSetUserPassword");
+      const userPoolLogicalId = Object.keys(t.findResources("AWS::Cognito::UserPool"))[0];
+      expect(set[0].Resource).toEqual({ "Fn::GetAtt": [userPoolLogicalId, "Arn"] });
+    }
+  });
+
   it("has no account recovery, so ForgotPassword can't set a password", () => {
     prod.accounts.hasResourceProperties("AWS::Cognito::UserPool", {
       AccountRecoverySetting: { RecoveryMechanisms: [{ Name: "admin_only", Priority: 1 }] },
