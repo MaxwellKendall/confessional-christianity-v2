@@ -28,6 +28,10 @@ extension Color {
     static let ccHeartReviewing = Color(hex: 0xc9a468)
     // the floating tab bar's selected-pill fill
     static let ccTabSelected = Color(hex: 0xede7d8)
+    // Chapel tokens from TKL-885's approved prototype (Today's primary card).
+    static let ccChapel = Color(hex: 0x2e4a3e)
+    static let ccOnChapel = Color(hex: 0xf2f4ef)
+    static let ccGilt = Color(hex: 0xa67a2c)
 
     init(hex: UInt32) {
         self.init(
@@ -56,6 +60,9 @@ extension ShapeStyle where Self == Color {
     static var ccOchre: Color { .ccOchre }
     static var ccHeartReviewing: Color { .ccHeartReviewing }
     static var ccTabSelected: Color { .ccTabSelected }
+    static var ccChapel: Color { .ccChapel }
+    static var ccOnChapel: Color { .ccOnChapel }
+    static var ccGilt: Color { .ccGilt }
 }
 
 // Cinzel: display/labels (tracked uppercase). Marcellus: body/reading.

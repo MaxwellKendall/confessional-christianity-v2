@@ -1,8 +1,6 @@
-// Push target for the Reflections tab's NavigationStack (mirrors
-// /reflections/[slug]). Also registered as a navigationDestination inside
-// LibraryTabView's own stack, so a Library entry's "† Commentary" link can
-// push the same detail view without a parallel copy — same pattern as
-// LibraryRoute.session reusing SessionView across tabs.
+// Push target for a reflection essay (mirrors /reflections/[slug]). The
+// Reflections tab went away in TKL-825; a Library entry's "† Commentary" link
+// pushes it through the shared tab destinations (AppDestinations).
 import Foundation
 
 enum ReflectionsRoute: Hashable {

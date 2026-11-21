@@ -1,47 +1,49 @@
-// Geometric glyphs ported point-for-point from the design handoff's inline
-// SVGs (18x18 viewBox) — not a stock icon set, per that handoff's "Assets"
-// note. Each Shape normalizes to its `rect` so it scales cleanly at the
-// mockup's 17x17 point size.
+// Tab glyphs ported from TKL-885's prototype SVGs (24x24 viewBox, 1.8pt
+// stroke): a sun for Today, an open book for Catechism, a church for the
+// Lord's Day. Each Shape normalizes to its `rect`.
 import SwiftUI
 
-private struct CatechismsDot: Shape {
-    func path(in rect: CGRect) -> Path {
-        let s = rect.width / 18
-        let r = 7 * s
-        let center = CGPoint(x: rect.minX + 9 * s, y: rect.minY + 9 * s)
+private extension CGRect {
+    func pt(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
+        CGPoint(x: minX + x * width / 24, y: minY + y * height / 24)
+    }
+}
+
+private struct TodaySun: Shape {
+    func path(in r: CGRect) -> Path {
         var p = Path()
-        p.addEllipse(in: CGRect(x: center.x - r, y: center.y - r, width: r * 2, height: r * 2))
+        let s = r.width / 24
+        p.addEllipse(in: CGRect(x: r.minX + 8 * s, y: r.minY + 8 * s, width: 8 * s, height: 8 * s))
+        let rays: [(CGFloat, CGFloat, CGFloat, CGFloat)] = [
+            (12, 2, 12, 5), (12, 19, 12, 22), (2, 12, 5, 12), (19, 12, 22, 12),
+            (4.9, 4.9, 7, 7), (17, 17, 19.1, 19.1), (4.9, 19.1, 7, 17), (17, 7, 19.1, 4.9),
+        ]
+        for (x1, y1, x2, y2) in rays {
+            p.move(to: r.pt(x1, y1)); p.addLine(to: r.pt(x2, y2))
+        }
         return p
     }
 }
 
-/// Two quadrilaterals meeting at a center spine — an open book viewed from above.
-private struct ReflectionsBook: Shape {
-    func path(in rect: CGRect) -> Path {
-        let s = rect.width / 18
-        func pt(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
-            CGPoint(x: rect.minX + x * s, y: rect.minY + y * s)
-        }
+private struct CatechismBook: Shape {
+    func path(in r: CGRect) -> Path {
         var p = Path()
-        p.move(to: pt(2, 5)); p.addLine(to: pt(9, 2)); p.addLine(to: pt(9, 15)); p.addLine(to: pt(2, 12))
-        p.closeSubpath()
-        p.move(to: pt(16, 5)); p.addLine(to: pt(9, 2)); p.addLine(to: pt(9, 15)); p.addLine(to: pt(16, 12))
-        p.closeSubpath()
+        p.move(to: r.pt(4, 5.5)); p.addLine(to: r.pt(4, 18.5)); p.addLine(to: r.pt(5.5, 20))
+        p.addLine(to: r.pt(11, 20)); p.addLine(to: r.pt(11, 4)); p.addLine(to: r.pt(5.5, 4)); p.closeSubpath()
+        p.move(to: r.pt(20, 5.5)); p.addLine(to: r.pt(20, 18.5)); p.addLine(to: r.pt(18.5, 20))
+        p.addLine(to: r.pt(13, 20)); p.addLine(to: r.pt(13, 4)); p.addLine(to: r.pt(18.5, 4)); p.closeSubpath()
         return p
     }
 }
 
-/// Three vertical spines/bars.
-private struct LibraryBars: Shape {
-    func path(in rect: CGRect) -> Path {
-        let s = rect.width / 18
-        func bar(_ x: CGFloat) -> CGRect {
-            CGRect(x: rect.minX + x * s, y: rect.minY + 2 * s, width: 3 * s, height: 14 * s)
-        }
+private struct LordsDayChurch: Shape {
+    func path(in r: CGRect) -> Path {
         var p = Path()
-        p.addRect(bar(3))
-        p.addRect(bar(7.5))
-        p.addRect(bar(12))
+        p.move(to: r.pt(12, 3)); p.addLine(to: r.pt(12, 9))
+        p.move(to: r.pt(9, 6)); p.addLine(to: r.pt(15, 6))
+        p.move(to: r.pt(6, 21)); p.addLine(to: r.pt(6, 12)); p.addLine(to: r.pt(12, 9))
+        p.addLine(to: r.pt(18, 12)); p.addLine(to: r.pt(18, 21))
+        p.move(to: r.pt(10, 21)); p.addLine(to: r.pt(10, 17)); p.addLine(to: r.pt(14, 17)); p.addLine(to: r.pt(14, 21))
         return p
     }
 }
@@ -51,13 +53,11 @@ struct TabIcon: View {
     let color: Color
 
     var body: some View {
+        let style = StrokeStyle(lineWidth: 1.4, lineCap: .round, lineJoin: .round)
         switch tab {
-        case .catechisms:
-            CatechismsDot().fill(color)
-        case .reflections:
-            ReflectionsBook().stroke(color, lineWidth: 1.4)
-        case .library:
-            LibraryBars().stroke(color, lineWidth: 1.4)
+        case .today: TodaySun().stroke(color, style: style)
+        case .catechism: CatechismBook().stroke(color, style: style)
+        case .lordsDay: LordsDayChurch().stroke(color, style: style)
         }
     }
 }

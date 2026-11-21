@@ -1,19 +1,33 @@
-// The Library tab's root: mirrors src/app/(column)/library/page.tsx — every
+// The Library index, pushed from the Catechism tab since TKL-825 removed the
+// Library tab. Mirrors src/app/(column)/library/page.tsx — every
 // document listed with its editorial blurb, plus a quiet nudge toward the
 // Shorter Catechism for first-time visitors.
 import SwiftUI
 import DomainKit
 
-struct LibraryTabView: View {
+struct LibraryIndexView: View {
     @Binding var path: NavigationPath
 
+    @Environment(\.dismiss) private var dismiss
+
     var body: some View {
-        NavigationStack(path: $path) {
-            VStack(spacing: 0) {
+        VStack(spacing: 0) {
                 SiteHeaderView(path: $path)
                 ScrollView {
                     VStack(spacing: 0) {
-                        Text("Library").headingPage().padding(.top, 24).padding(.bottom, 4)
+                        HStack {
+                            Button {
+                                dismiss()
+                            } label: {
+                                Text("Back")
+                                    .labelCaps(size: 9.5, tracking: 0.1, color: .ccInk3)
+                                    .dottedUnderline(.ccInk3)
+                            }
+                            .buttonStyle(.plain)
+                            Spacer()
+                        }
+                        .padding(.top, 16)
+                        Text("Library").headingPage().padding(.top, 16).padding(.bottom, 4)
 
                         VStack(spacing: 0) {
                             ForEach(LIBRARY_DOCUMENTS, id: \.slug) { doc in
@@ -77,38 +91,5 @@ struct LibraryTabView: View {
             }
             .background(Color.ccCard)
             .toolbar(.hidden, for: .navigationBar)
-            .navigationDestination(for: LibraryRoute.self) { route in
-                switch route {
-                case .document(let slug):
-                    DocumentTocView(slug: slug, path: $path)
-                case .entry(let slug, let entryId):
-                    LibraryEntryView(slug: slug, entryId: entryId, path: $path)
-                case .session(let programSlug, let questionNumber):
-                    if let program = getProgram(programSlug) {
-                        SessionView(program: program, path: $path, startQuestion: questionNumber)
-                    }
-                case .about:
-                    AboutView(path: $path)
-                }
-            }
-            .navigationDestination(for: ReflectionsRoute.self) { route in
-                switch route {
-                case .detail(let slug):
-                    ReflectionDetailView(slug: slug, path: $path)
-                }
-            }
-            .navigationDestination(for: ScriptureRoute.self) { route in
-                switch route {
-                case .detail(let osis):
-                    ScriptureView(osis: osis, path: $path)
-                case .reader(let source):
-                    VerseReaderView(source: source)
-                }
-            }
-            .navigationDestination(for: SearchRoute.self) { _ in
-                SearchView(path: $path)
-            }
-        }
-        .tint(.ccInk)
     }
 }

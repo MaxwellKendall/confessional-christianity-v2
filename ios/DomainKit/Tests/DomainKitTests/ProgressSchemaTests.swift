@@ -103,6 +103,28 @@ struct ProgressSchemaTests {
         #expect(try reopened.mainContext.fetchCount(FetchDescriptor<ChildCatechismTrack>()) == 2)
     }
 
+    // TKL-825: a new guest must reach Today's empty state, so a store with no
+    // progress to move gets no placeholder child. The first child is added by
+    // the person (or by starting a session).
+    @Test("a brand-new store opens with no children, and stays that way on reopen")
+    @MainActor
+    func freshStoreHasNoChildren() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let url = dir.appendingPathComponent("Progress.sqlite")
+        do {
+            let fresh = try openProgressContainer(at: url)
+            #expect(try fresh.mainContext.fetchCount(FetchDescriptor<LocalChild>()) == 0)
+            #expect(LocalProgressStore(context: fresh.mainContext).activeChildId == nil)
+        }
+        let reopened = try openProgressContainer(at: url)
+        #expect(try reopened.mainContext.fetchCount(FetchDescriptor<LocalChild>()) == 0)
+        let store = LocalProgressStore(context: reopened.mainContext)
+        let first = try store.addChild(name: "Samuel")
+        #expect(store.activeChildId == first.id)
+    }
+
     @Test("child profiles isolate tracks and delete only their own progress")
     @MainActor
     func managesChildren() throws {

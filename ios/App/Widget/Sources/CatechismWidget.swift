@@ -1,5 +1,5 @@
 // A Home Screen widget previewing the visitor's active catechism session —
-// same "Your Catechism" data HomeView shows, read straight from the shared
+// same "Your Catechism" data CatechismTabView shows, read straight from the shared
 // App Group SwiftData store (see DomainKit's makeSharedModelContainer) and
 // DomainKit's bundled question text, so this renders with no network and no
 // dependency on the app being foregrounded.
@@ -27,7 +27,7 @@ struct CatechismEntry: TimelineEntry {
         return Double(questionNumber - 1) / Double(totalQuestions)
     }
 
-    // The same WSC Q1 a fresh install's HomeView shows before any track
+    // The same WSC Q1 a fresh install's CatechismTabView shows before any track
     // exists — a real, honest default rather than placeholder-looking copy.
     // Used only for WidgetKit's `placeholder(in:)`, which must return
     // instantly with no store access.

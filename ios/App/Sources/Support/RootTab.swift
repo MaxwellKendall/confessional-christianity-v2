@@ -1,18 +1,19 @@
-// The primary sections of the floating tab bar, from the design handoff
-// (design_handoff_confessional_christianity/18c-floating-tab-bar.dc.html).
-// Devotions was cut in TKL-856; TKL-825 rebuilds the bar around three tabs.
+// The three tabs (TKL-825, approved prototype TKL-885): Today (the one thing
+// to do now), Catechism (pillar one) and The Lord's Day (pillar two). The
+// Library, search and reflections are lookups pushed from inside a tab, and
+// Settings sits behind Today's avatar.
 import Foundation
 
-enum RootTab: Int, CaseIterable, Hashable {
-    case catechisms
-    case reflections
-    case library
+enum RootTab: String, CaseIterable, Hashable {
+    case today
+    case catechism
+    case lordsDay
 
     var label: String {
         switch self {
-        case .catechisms: return "Catechisms"
-        case .reflections: return "Reflections"
-        case .library: return "Library"
+        case .today: return "Today"
+        case .catechism: return "Catechism"
+        case .lordsDay: return "Lord's Day"
         }
     }
 }

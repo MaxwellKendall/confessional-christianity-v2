@@ -1,19 +1,24 @@
-// The Catechisms tab's home: the "Your Catechism" continue card for whichever
-// program the visitor last worked in, a grid to the other catechisms, and a
-// closing line pointing at the Library. Devotions and reading plans led this
-// screen until TKL-856 cut them; it is a placeholder until the Today home
-// screen (TKL-825) replaces it.
+// The Catechism tab (pillar one): the "Your Catechism" continue card for the
+// active child's program, a grid to the other catechisms, and a closing link
+// into the Library, which TKL-825 made a lookup instead of a tab.
 import SwiftUI
 import SwiftData
 import DomainKit
 
-struct HomeView: View {
+struct CatechismTabView: View {
     private let defaultProgram = PROGRAMS[0]
 
     @Binding var path: NavigationPath
 
     @Environment(\.modelContext) private var modelContext
-    @State private var track: ChildCatechismTrack?
+    // Observed only so the card re-renders when a session, Today or Settings
+    // changes the active child or their place; the store answers the question.
+    @Query private var observedTracks: [ChildCatechismTrack]
+    @Query private var observedSettings: [ProgressSettings]
+
+    private var track: ChildCatechismTrack? {
+        store.activeChildId.flatMap { store.activeTrack(childId: $0) }
+    }
 
     private var store: LocalProgressStore { LocalProgressStore(context: modelContext) }
 
@@ -41,6 +46,9 @@ struct HomeView: View {
     }
 
     var body: some View {
+        // Reading the queries registers them as dependencies of this body.
+        let _ = observedTracks.map(\.updatedAt)
+        let _ = observedSettings.first?.activeChildId
         NavigationStack(path: $path) {
             VStack(spacing: 0) {
                 SiteHeaderView(path: $path)
@@ -48,39 +56,7 @@ struct HomeView: View {
             }
             .background(Color.ccCard)
             .toolbar(.hidden, for: .navigationBar)
-            .navigationDestination(for: String.self) { slug in
-                if let program = getProgram(slug) {
-                    SessionView(program: program, path: $path)
-                }
-            }
-            .navigationDestination(for: ScriptureRoute.self) { route in
-                switch route {
-                case .detail(let osis):
-                    ScriptureView(osis: osis, path: $path)
-                case .reader(let source):
-                    VerseReaderView(source: source)
-                }
-            }
-            .navigationDestination(for: LibraryRoute.self) { route in
-                switch route {
-                case .document(let slug):
-                    DocumentTocView(slug: slug, path: $path)
-                case .entry(let slug, let entryId):
-                    LibraryEntryView(slug: slug, entryId: entryId, path: $path)
-                case .session(let programSlug, let questionNumber):
-                    if let program = getProgram(programSlug) {
-                        SessionView(program: program, path: $path, startQuestion: questionNumber)
-                    }
-                case .about:
-                    AboutView(path: $path)
-                }
-            }
-            .navigationDestination(for: SearchRoute.self) { _ in
-                SearchView(path: $path)
-            }
-            .task {
-                track = store.activeChildId.flatMap { store.activeTrack(childId: $0) }
-            }
+            .appDestinations(path: $path)
         }
         .tint(.ccInk)
     }
@@ -140,15 +116,24 @@ struct HomeView: View {
                             .padding(.top, 12)
                     }
 
-                    HStack {
-                        Spacer()
-                        Text("Or explore the confessions and catechisms directly in the Library.")
-                            .font(.ccBody(13))
-                            .italic()
-                            .foregroundStyle(.ccInk2)
-                            .multilineTextAlignment(.center)
-                        Spacer()
+                    Button {
+                        path.append(LibraryRoute.index)
+                    } label: {
+                        HStack(spacing: 4) {
+                            Spacer()
+                            Text("Or explore the confessions in the")
+                                .font(.ccBody(13))
+                                .italic()
+                                .foregroundStyle(.ccInk2)
+                            Text("Library")
+                                .font(.ccBody(13))
+                                .italic()
+                                .foregroundStyle(.ccInk)
+                                .dottedUnderline(.ccInk)
+                            Spacer()
+                        }
                     }
+                    .buttonStyle(.plain)
                     .padding(.top, 28)
                     .padding(.top, 20)
                     .overlay(alignment: .top) {

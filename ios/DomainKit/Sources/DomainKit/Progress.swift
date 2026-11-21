@@ -157,23 +157,26 @@ func openProgressContainer(at url: URL) throws -> ModelContainer {
         let legacyTracks = try context.fetch(FetchDescriptor<LocalCatechismTrack>())
         let settings = priorSettings ?? ProgressSettings()
         if priorSettings == nil { context.insert(settings) }
-        let child = LocalChild(name: "My child")
-        context.insert(child)
-        child.activeCatechismId = settings.activeCatechismId
-        settings.activeCatechismId = nil
-        settings.activeChildId = child.id
         settings.didInitializeChildren = true
-
-        for legacy in legacyTracks {
-            let track = ChildCatechismTrack(
-                childId: child.id, catechismId: legacy.catechismId,
-                currentQuestion: legacy.currentQuestion, startedAtQuestion: legacy.startedAtQuestion,
-                startedAt: legacy.startedAt, updatedAt: legacy.updatedAt
-            )
-            track.milestonesData = legacy.milestonesData
-            context.insert(track)
-            context.delete(legacy)
+        // Only progress that already exists needs a child to hold it. A new
+        // store stays childless so a new guest sees Today's empty state (TKL-825).
+        if !legacyTracks.isEmpty {
+            let child = LocalChild(name: "My child")
+            context.insert(child)
+            child.activeCatechismId = settings.activeCatechismId
+            settings.activeChildId = child.id
+            for legacy in legacyTracks {
+                let track = ChildCatechismTrack(
+                    childId: child.id, catechismId: legacy.catechismId,
+                    currentQuestion: legacy.currentQuestion, startedAtQuestion: legacy.startedAtQuestion,
+                    startedAt: legacy.startedAt, updatedAt: legacy.updatedAt
+                )
+                track.milestonesData = legacy.milestonesData
+                context.insert(track)
+                context.delete(legacy)
+            }
         }
+        settings.activeCatechismId = nil
         try context.save()
     }
     return container
@@ -185,7 +188,7 @@ func openProgressContainer(at url: URL) throws -> ModelContainer {
 // contentId (e.g. "WSC"), matching program.contentId — not the program slug.
 @MainActor
 public final class LocalProgressStore {
-    private let context: ModelContext
+    let context: ModelContext
 
     public init(context: ModelContext) {
         self.context = context

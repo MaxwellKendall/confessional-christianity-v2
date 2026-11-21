@@ -9,6 +9,8 @@
 import Foundation
 
 enum LibraryRoute: Hashable {
+    /// Every document (TKL-825: no longer a tab; pushed from the Catechism tab).
+    case index
     case document(slug: String)
     case entry(slug: String, entryId: String)
     /// A document row that belongs to a catechism program (WSC/WLC/HC) —
