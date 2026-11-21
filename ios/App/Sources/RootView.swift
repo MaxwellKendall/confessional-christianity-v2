@@ -51,7 +51,7 @@ struct RootView: View {
                 .onHidesFloatingTabBarChange { catechismHidesBar = $0 }
                 .opacity(selected == .catechism ? 1 : 0)
                 .allowsHitTesting(selected == .catechism)
-            LordsDayTabView(path: $lordsDayPath)
+            LordsDayTabView(path: $lordsDayPath, isActive: selected == .lordsDay)
                 .onHidesFloatingTabBarChange { lordsDayHidesBar = $0 }
                 .opacity(selected == .lordsDay ? 1 : 0)
                 .allowsHitTesting(selected == .lordsDay)

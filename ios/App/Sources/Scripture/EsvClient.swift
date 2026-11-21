@@ -111,6 +111,9 @@ actor EsvClient {
     }
 
     private static func fetch(osis: String) async -> String? {
+        #if DEBUG
+        if UserDefaults.standard.bool(forKey: "EsvOffline") { return nil }
+        #endif
         guard let encoded = osis.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
               let url = URL(string: "\(baseURL)?osis=\(encoded)") else {
             return nil

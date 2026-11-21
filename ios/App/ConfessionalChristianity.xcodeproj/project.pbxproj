@@ -28,6 +28,7 @@
 		78B5CAD5AED7EEBC4EEBAB97 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 7E69BB26BAE59E9A1DD9E9FB /* PrivacyInfo.xcprivacy */; };
 		792F3E7354EBF8639091C677 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ED45E06DF435369D44194FD /* TodayView.swift */; };
 		7C611E39E3B058BE6D93D933 /* SessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27A1DF330C4DA1EC70E025A1 /* SessionView.swift */; };
+		7F658028A04AEB6639B58A82 /* LordsDayFeedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1C91F026BE4FEE54E8BB42E /* LordsDayFeedView.swift */; };
 		8B6C145E341F77C8E643D573 /* CameraController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B457BF311BED9BFB4321BC0F /* CameraController.swift */; };
 		8B7CCA1620D28C8EE82E0212 /* CatechismWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C4BE3D3CA7C31C59ACB5286 /* CatechismWidget.swift */; };
 		8E1F53502D81DEB3DC3AACD0 /* ReflectionsRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0696F7777BB06E349FC8B348 /* ReflectionsRoute.swift */; };
@@ -150,6 +151,7 @@
 		E00C25ED916B66A447B8C411 /* CaptureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureView.swift; sourceTree = "<group>"; };
 		E38A936D51B1960620B4EA13 /* Cinzel-SemiBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Cinzel-SemiBold.ttf"; sourceTree = "<group>"; };
 		E9C2D0D042691001D8C45CFD /* SupabaseConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseConfig.swift; sourceTree = "<group>"; };
+		F1C91F026BE4FEE54E8BB42E /* LordsDayFeedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LordsDayFeedView.swift; sourceTree = "<group>"; };
 		F9026BA4701C493912921EF2 /* LordsDayTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LordsDayTabView.swift; sourceTree = "<group>"; };
 		FD56999FD625474310C151DA /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		FFB9FC7991ABDA560217F657 /* ConfessionalChristianity.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ConfessionalChristianity.entitlements; sourceTree = "<group>"; };
@@ -304,6 +306,7 @@
 				B457BF311BED9BFB4321BC0F /* CameraController.swift */,
 				DFB100594401DF03A33600E0 /* CaptureModel.swift */,
 				E00C25ED916B66A447B8C411 /* CaptureView.swift */,
+				F1C91F026BE4FEE54E8BB42E /* LordsDayFeedView.swift */,
 				F9026BA4701C493912921EF2 /* LordsDayTabView.swift */,
 			);
 			path = LordsDay;
@@ -538,6 +541,7 @@
 				C1E4EAF8F6E8528DE63DA7EB /* LibraryEntryView.swift in Sources */,
 				975E7B40260BACEB03F8649A /* LibraryIndexView.swift in Sources */,
 				322478282EA26DE9CAF459C3 /* LibraryRoute.swift in Sources */,
+				7F658028A04AEB6639B58A82 /* LordsDayFeedView.swift in Sources */,
 				C801FA2EAE0401DFF8830CAE /* LordsDayTabView.swift in Sources */,
 				A8520A15B4644D91821657B7 /* MarkdownText.swift in Sources */,
 				744A53A6115745E063B78CE1 /* MilestonesView.swift in Sources */,

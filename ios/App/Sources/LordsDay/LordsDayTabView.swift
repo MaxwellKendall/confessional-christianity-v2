@@ -1,19 +1,54 @@
-// The Lord's Day tab (pillar two, TKL-825). The week's card feed (TKL-862)
-// and the archive (TKL-865) are separate tickets; until they land this is the
-// tab's empty state from TKL-885's prototype, saying what the pillar does, with
-// the way into photographing Sunday's notes (TKL-860).
+// The Lord's Day tab (pillar two, TKL-825). With cards for this week it is the
+// week's card feed (TKL-862), read from the local store only. Without them it
+// is the empty state from TKL-885's prototype (TKL-868 replaces it), with the
+// way into photographing Sunday's notes (TKL-860). The archive is TKL-865.
 import SwiftUI
 import SwiftData
 import DomainKit
 
 struct LordsDayTabView: View {
     @Binding var path: NavigationPath
+    /// Every tab stays mounted from launch; only an on-screen feed may fetch verse text.
+    var isActive = true
     @Environment(\.modelContext) private var context
     @State private var capture: CaptureModel?
     @State private var status = CaptureStatus()
+    @State private var feed: LordsDayFeed?
 
     var body: some View {
         NavigationStack(path: $path) {
+            Group {
+                if let feed {
+                    LordsDayFeedView(feed: feed, allowsNetwork: isActive)
+                        .overlay(alignment: .topTrailing) { captureButton }
+                } else {
+                    emptyState
+                }
+            }
+            .toolbar(.hidden, for: .navigationBar)
+            .appDestinations(path: $path)
+        }
+        .tint(.ccInk)
+        .fullScreenCover(item: $capture, onDismiss: refresh) { model in
+            CaptureView(model: model, onClose: { capture = nil })
+        }
+        .onAppear(perform: refresh)
+    }
+
+    /// Until the Sunday cover card (TKL-864) carries it, the way back to the camera.
+    private var captureButton: some View {
+        Button { capture = CaptureModel(context: context) } label: {
+            Image(systemName: "camera")
+                .font(.system(size: 16, weight: .medium))
+                .frame(width: 40, height: 40)
+                .background(.ultraThinMaterial, in: Circle())
+        }
+        .padding(.trailing, 16)
+        .padding(.top, 40)
+        .accessibilityLabel(status.resumable ? "Continue Sunday's notes" : "Photograph Sunday's notes")
+    }
+
+    private var emptyState: some View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     Text("Pillar two")
@@ -62,18 +97,16 @@ struct LordsDayTabView: View {
                 .frame(maxWidth: .infinity)
             }
             .background(Color.ccCard)
-            .toolbar(.hidden, for: .navigationBar)
-            .appDestinations(path: $path)
-        }
-        .tint(.ccInk)
-        .fullScreenCover(item: $capture, onDismiss: refresh) { model in
-            CaptureView(model: model, onClose: { capture = nil })
-        }
-        .onAppear(perform: refresh)
     }
 
     private func refresh() {
         status = CaptureStatus(context: context)
+        let store = LordsDayStore(context: context)
+        if let note = try? store.currentWeek(), let cards = try? store.cards(for: note), !cards.isEmpty {
+            feed = LordsDayFeed(note: note, cards: cards)
+        } else {
+            feed = nil
+        }
     }
 }
 
