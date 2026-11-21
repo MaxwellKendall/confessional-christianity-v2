@@ -1,13 +1,4 @@
-// Local, guest-only progress persistence — SwiftData port of
-// src/lib/localCatechismProgress.ts. No
-// account, no name capture, same as the web app: this is the only progress
-// store the app has in v1.
-//
-// Lives in DomainKit (not the App target) so the Home Screen widget
-// extension — a separate process — can read the exact same models and
-// resolution logic as the app, both pointed at the same App Group container
-// (see ConfessionalChristianityApp.swift's sharedModelContainer and the
-// widget's own TimelineProvider).
+import Darwin
 import Foundation
 import SwiftData
 
@@ -23,14 +14,57 @@ public struct MilestoneRecord: Codable, Equatable, Sendable {
     }
 }
 
+// Retain the shipped entity so SwiftData can open every older store shape.
+// The shared container transfers and deletes its rows in one save.
 @Model
-public final class LocalCatechismTrack {
-    @Attribute(.unique) public var catechismId: String
+final class LocalCatechismTrack {
+    @Attribute(.unique) var catechismId: String
+    var currentQuestion: Int
+    var startedAtQuestion: Int
+    var startedAt: Date
+    var updatedAt: Date
+    fileprivate var milestonesData: Data
+
+    init(catechismId: String, currentQuestion: Int, startedAtQuestion: Int,
+         startedAt: Date, updatedAt: Date, milestonesData: Data) {
+        self.catechismId = catechismId
+        self.currentQuestion = currentQuestion
+        self.startedAtQuestion = startedAtQuestion
+        self.startedAt = startedAt
+        self.updatedAt = updatedAt
+        self.milestonesData = milestonesData
+    }
+}
+
+@Model
+public final class LocalChild {
+    @Attribute(.unique) public private(set) var id: UUID
+    public fileprivate(set) var name: String
+    public private(set) var age: Int?
+    public private(set) var createdAt: Date
+    public fileprivate(set) var updatedAt: Date
+    fileprivate var activeCatechismId: String?
+
+    init(name: String, age: Int? = nil) {
+        self.id = UUID()
+        self.name = name
+        self.age = age
+        let now = Date()
+        self.createdAt = now
+        self.updatedAt = now
+    }
+}
+
+@Model
+public final class ChildCatechismTrack {
+    @Attribute(.unique) private var childCatechismKey: String
+    public private(set) var childId: UUID
+    public private(set) var catechismId: String
     public var currentQuestion: Int
     public var startedAtQuestion: Int
     public var startedAt: Date
     public var updatedAt: Date
-    private var milestonesData: Data
+    fileprivate var milestonesData: Data
 
     public var milestones: [String: MilestoneRecord] {
         get { (try? JSONDecoder().decode([String: MilestoneRecord].self, from: milestonesData)) ?? [:] }
@@ -38,6 +72,7 @@ public final class LocalCatechismTrack {
     }
 
     public init(
+        childId: UUID,
         catechismId: String,
         currentQuestion: Int,
         startedAtQuestion: Int,
@@ -45,6 +80,8 @@ public final class LocalCatechismTrack {
         updatedAt: Date,
         milestones: [String: MilestoneRecord] = [:]
     ) {
+        self.childCatechismKey = childId.uuidString + ":" + catechismId
+        self.childId = childId
         self.catechismId = catechismId
         self.currentQuestion = currentQuestion
         self.startedAtQuestion = startedAtQuestion
@@ -54,13 +91,13 @@ public final class LocalCatechismTrack {
     }
 }
 
-// Mirrors the top-level `activeCatechismId` field of the localStorage blob.
+// activeCatechismId is retained for stores written before child profiles.
 @Model
 public final class ProgressSettings {
-    public var activeCatechismId: String?
-    public init(activeCatechismId: String? = nil) {
-        self.activeCatechismId = activeCatechismId
-    }
+    var activeCatechismId: String?
+    public fileprivate(set) var activeChildId: UUID?
+    fileprivate var didInitializeChildren: Bool?
+    init() {}
 }
 
 // The App Group both the app and the widget extension share so they can see
@@ -82,7 +119,7 @@ public let sharedAppGroupID = "group.com.confessionalchristianity.app"
 // ProgressSchemaTests opens both shapes. Core Data logs "Persistent History
 // has to be truncated" once on that upgrade; nothing here reads history.
 public let progressSchema = Schema([
-    LocalCatechismTrack.self, ProgressSettings.self,
+    LocalCatechismTrack.self, ProgressSettings.self, LocalChild.self, ChildCatechismTrack.self,
 ] + syncModelTypes)
 
 /// The single ModelContainer both the app and the widget extension build
@@ -90,16 +127,56 @@ public let progressSchema = Schema([
 /// visible to the widget's next timeline refresh with no sync step. Crashes
 /// loudly on failure (matching SwiftData's own default `.modelContainer`
 /// behavior) since there's no reasonable way to run either target without it.
+@MainActor
 public func makeSharedModelContainer() -> ModelContainer {
     guard let groupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: sharedAppGroupID) else {
         fatalError("DomainKit: App Group '\(sharedAppGroupID)' container unavailable — check the App Groups capability/entitlements.")
     }
-    let config = ModelConfiguration(schema: progressSchema, url: groupURL.appending(path: "Progress.sqlite"))
     do {
-        return try ModelContainer(for: progressSchema, configurations: [config])
+        return try openProgressContainer(at: groupURL.appending(path: "Progress.sqlite"))
     } catch {
         fatalError("DomainKit: failed to open shared ModelContainer: \(error)")
     }
+}
+
+// The app and widget can both be the first process to open the upgraded store.
+@MainActor
+func openProgressContainer(at url: URL) throws -> ModelContainer {
+    let lock = open(url.appendingPathExtension("lock").path, O_CREAT | O_RDWR, 0o600)
+    guard lock >= 0 else { throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO) }
+    defer { close(lock) }
+    while flock(lock, LOCK_EX) != 0 {
+        if errno != EINTR { throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO) }
+    }
+
+    let config = ModelConfiguration(schema: progressSchema, url: url)
+    let container = try ModelContainer(for: progressSchema, configurations: [config])
+    let context = ModelContext(container)
+    let priorSettings = try context.fetch(FetchDescriptor<ProgressSettings>()).first
+    if priorSettings?.didInitializeChildren != true {
+        let legacyTracks = try context.fetch(FetchDescriptor<LocalCatechismTrack>())
+        let settings = priorSettings ?? ProgressSettings()
+        if priorSettings == nil { context.insert(settings) }
+        let child = LocalChild(name: "My child")
+        context.insert(child)
+        child.activeCatechismId = settings.activeCatechismId
+        settings.activeCatechismId = nil
+        settings.activeChildId = child.id
+        settings.didInitializeChildren = true
+
+        for legacy in legacyTracks {
+            let track = ChildCatechismTrack(
+                childId: child.id, catechismId: legacy.catechismId,
+                currentQuestion: legacy.currentQuestion, startedAtQuestion: legacy.startedAtQuestion,
+                startedAt: legacy.startedAt, updatedAt: legacy.updatedAt
+            )
+            track.milestonesData = legacy.milestonesData
+            context.insert(track)
+            context.delete(legacy)
+        }
+        try context.save()
+    }
+    return container
 }
 
 // Ported from src/lib/localCatechismProgress.ts + src/hooks/useSessionTrack.ts:
@@ -114,8 +191,12 @@ public final class LocalProgressStore {
         self.context = context
     }
 
-    private func settings() -> ProgressSettings {
-        if let existing = try? context.fetch(FetchDescriptor<ProgressSettings>()).first {
+    public var activeChildId: UUID? {
+        (try? context.fetch(FetchDescriptor<ProgressSettings>()).first)?.activeChildId
+    }
+
+    private func settings() throws -> ProgressSettings {
+        if let existing = try context.fetch(FetchDescriptor<ProgressSettings>()).first {
             return existing
         }
         let created = ProgressSettings()
@@ -123,21 +204,75 @@ public final class LocalProgressStore {
         return created
     }
 
-    private func track(for catechismId: String) -> LocalCatechismTrack? {
-        let predicate = #Predicate<LocalCatechismTrack> { $0.catechismId == catechismId }
-        return try? context.fetch(FetchDescriptor(predicate: predicate)).first
+    private func child(for childId: UUID) throws -> LocalChild? {
+        let predicate = #Predicate<LocalChild> { $0.id == childId }
+        return try context.fetch(FetchDescriptor(predicate: predicate)).first
     }
 
-    /// The track the visitor last worked in: the recorded active catechism
-    /// when it still has a track, otherwise the most recently updated track —
-    /// mirrors getActiveLocalCatechismTrack verbatim (covers stores written
-    /// before activeCatechismId was kept in sync).
-    public func activeTrack() -> LocalCatechismTrack? {
-        let all = (try? context.fetch(FetchDescriptor<LocalCatechismTrack>())) ?? []
-        if let activeId = settings().activeCatechismId, let match = all.first(where: { $0.catechismId == activeId }) {
+    @discardableResult
+    public func addChild(name: String, age: Int? = nil) throws -> LocalChild {
+        let settings = try settings()
+        let child = LocalChild(name: name, age: age)
+        context.insert(child)
+        if settings.activeChildId == nil { settings.activeChildId = child.id }
+        try commitChanges()
+        return child
+    }
+
+    public func renameChild(childId: UUID, name: String) throws {
+        guard let child = try child(for: childId) else { return }
+        child.name = name
+        child.updatedAt = Date()
+        try commitChanges()
+    }
+
+    public func selectChild(childId: UUID) throws {
+        guard try child(for: childId) != nil else { return }
+        try settings().activeChildId = childId
+        try commitChanges()
+    }
+
+    public func deleteChild(childId: UUID) throws {
+        guard let child = try child(for: childId) else { return }
+        let childTracks = try context.fetch(tracks(for: childId))
+        let settings = try settings()
+        if settings.activeChildId == childId {
+            let others = try context.fetch(FetchDescriptor<LocalChild>(sortBy: [SortDescriptor(\.createdAt)]))
+            settings.activeChildId = others.first(where: { $0.id != childId })?.id
+        }
+        for track in childTracks { context.delete(track) }
+        context.delete(child)
+        try commitChanges()
+    }
+
+    private func tracks(for childId: UUID) -> FetchDescriptor<ChildCatechismTrack> {
+        FetchDescriptor(predicate: #Predicate { $0.childId == childId })
+    }
+
+    private func track(childId: UUID, catechismId: String) throws -> ChildCatechismTrack? {
+        let predicate = #Predicate<ChildCatechismTrack> {
+            $0.childId == childId && $0.catechismId == catechismId
+        }
+        return try context.fetch(FetchDescriptor(predicate: predicate)).first
+    }
+
+    /// The selected child's last catechism, falling back to their latest track.
+    public func activeTrack(childId: UUID) -> ChildCatechismTrack? {
+        guard let child = try? child(for: childId) else { return nil }
+        let all = (try? context.fetch(tracks(for: childId))) ?? []
+        if let activeId = child.activeCatechismId, let match = all.first(where: { $0.catechismId == activeId }) {
             return match
         }
         return all.max { $0.updatedAt < $1.updatedAt }
+    }
+
+    private func commitChanges() throws {
+        do {
+            try context.save()
+        } catch {
+            context.rollback()
+            throw error
+        }
     }
 
     // SwiftData's autosave only flushes to disk on its own schedule (scene
@@ -147,54 +282,67 @@ public final class LocalProgressStore {
     // explicitly after every mutation is what makes "answer a question in
     // the app" show up in the widget on its next refresh instead of
     // whenever autosave next happens to run.
-    private func save() {
-        try? context.save()
-    }
-
-    /// Resumes the existing track for this catechism, or starts a fresh one
-    /// at question 1 — the same fallback `useSessionTrack` applies with no
-    /// `?start=` param.
-    @discardableResult
-    public func resumeOrStartTrack(catechismId: String) -> LocalCatechismTrack {
-        if let existing = track(for: catechismId) {
-            settings().activeCatechismId = catechismId
-            save()
-            return existing
+    private func saveTrack(_ track: ChildCatechismTrack, for child: LocalChild) -> ChildCatechismTrack? {
+        child.activeCatechismId = track.catechismId
+        do {
+            try commitChanges()
+            return track
+        } catch {
+            return nil
         }
-        return startTrack(catechismId: catechismId, startingQuestion: 1)
     }
 
-    /// Always (re)starts the track at `startingQuestion`, clearing milestones —
-    /// mirrors startLocalCatechismTrack's overwrite semantics verbatim.
+    /// Resumes the existing track for this catechism, or starts a fresh one at question 1.
     @discardableResult
-    public func startTrack(catechismId: String, startingQuestion: Int) -> LocalCatechismTrack {
-        let now = Date()
-        if let existing = track(for: catechismId) {
+    public func resumeOrStartTrack(childId: UUID, catechismId: String) -> ChildCatechismTrack? {
+        guard let child = try? child(for: childId) else { return nil }
+        do {
+            if let existing = try track(childId: childId, catechismId: catechismId) {
+                return saveTrack(existing, for: child)
+            }
+            return createTrack(for: child, catechismId: catechismId, startingQuestion: 1)
+        } catch {
+            return nil
+        }
+    }
+
+    /// Starts at `startingQuestion`, clearing existing milestones for this child's catechism.
+    @discardableResult
+    public func startTrack(childId: UUID, catechismId: String, startingQuestion: Int) -> ChildCatechismTrack? {
+        guard let child = try? child(for: childId) else { return nil }
+        do {
+            guard let existing = try track(childId: childId, catechismId: catechismId) else {
+                return createTrack(for: child, catechismId: catechismId, startingQuestion: startingQuestion)
+            }
+            let now = Date()
             existing.currentQuestion = startingQuestion
             existing.startedAtQuestion = startingQuestion
             existing.startedAt = now
             existing.updatedAt = now
             existing.milestones = [:]
-            settings().activeCatechismId = catechismId
-            save()
-            return existing
+            return saveTrack(existing, for: child)
+        } catch {
+            return nil
         }
-        let created = LocalCatechismTrack(
-            catechismId: catechismId, currentQuestion: startingQuestion,
+    }
+
+    private func createTrack(for child: LocalChild, catechismId: String, startingQuestion: Int) -> ChildCatechismTrack? {
+        let now = Date()
+        let created = ChildCatechismTrack(
+            childId: child.id, catechismId: catechismId, currentQuestion: startingQuestion,
             startedAtQuestion: startingQuestion, startedAt: now, updatedAt: now
         )
         context.insert(created)
-        settings().activeCatechismId = catechismId
-        save()
-        return created
+        return saveTrack(created, for: child)
     }
 
     // The "Next Question" primitive: the current question enters the record
     // as introduced and the position advances, clamped one past the end so a
     // finished track reads as complete.
     @discardableResult
-    public func advanceQuestion(catechismId: String, totalQuestions: Int) -> LocalCatechismTrack? {
-        guard let existing = track(for: catechismId) else { return nil }
+    public func advanceQuestion(childId: UUID, catechismId: String, totalQuestions: Int) -> ChildCatechismTrack? {
+        guard let child = try? child(for: childId),
+              let existing = try? track(childId: childId, catechismId: catechismId) else { return nil }
         let now = Date()
         let key = String(existing.currentQuestion)
         if existing.currentQuestion <= totalQuestions, existing.milestones[key] == nil {
@@ -204,20 +352,17 @@ public final class LocalProgressStore {
         }
         existing.currentQuestion = min(totalQuestions + 1, existing.currentQuestion + 1)
         existing.updatedAt = now
-        settings().activeCatechismId = catechismId
-        save()
-        return existing
+        return saveTrack(existing, for: child)
     }
 
     // Jumping to an arbitrary question repositions the track without
     // touching milestones — it's browsing, not re-introducing material.
     @discardableResult
-    public func jumpToQuestion(catechismId: String, questionNumber: Int, totalQuestions: Int) -> LocalCatechismTrack? {
-        guard let existing = track(for: catechismId) else { return nil }
+    public func jumpToQuestion(childId: UUID, catechismId: String, questionNumber: Int, totalQuestions: Int) -> ChildCatechismTrack? {
+        guard let child = try? child(for: childId),
+              let existing = try? track(childId: childId, catechismId: catechismId) else { return nil }
         existing.currentQuestion = min(totalQuestions, max(1, questionNumber))
         existing.updatedAt = Date()
-        settings().activeCatechismId = catechismId
-        save()
-        return existing
+        return saveTrack(existing, for: child)
     }
 }

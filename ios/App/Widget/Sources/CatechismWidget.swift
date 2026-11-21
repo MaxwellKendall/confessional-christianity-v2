@@ -72,7 +72,7 @@ struct CatechismProvider: TimelineProvider {
     private static func loadEntry() -> CatechismEntry {
         let context = ModelContext(makeSharedModelContainer())
         let store = LocalProgressStore(context: context)
-        let track = store.activeTrack()
+        let track = store.activeChildId.flatMap { store.activeTrack(childId: $0) }
         let program = track
             .flatMap { t in PROGRAMS.first { $0.contentId.rawValue == t.catechismId } }
             ?? PROGRAMS[0]

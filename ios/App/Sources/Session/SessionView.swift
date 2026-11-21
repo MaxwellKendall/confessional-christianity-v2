@@ -22,7 +22,7 @@ struct SessionView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    @State private var track: LocalCatechismTrack?
+    @State private var track: ChildCatechismTrack?
     @State private var showJump = false
     @State private var showMilestones = false
     @State private var notificationsOffered = false
@@ -211,22 +211,26 @@ struct SessionView: View {
     }
 
     private func load() {
-        track = store.resumeOrStartTrack(catechismId: program.contentId.rawValue)
+        let store = self.store
+        guard let childId = store.activeChildId ?? (try? store.addChild(name: "My child").id) else { return }
+        track = store.resumeOrStartTrack(childId: childId, catechismId: program.contentId.rawValue)
     }
 
     private func advance() {
+        guard let childId = track?.childId else { return }
         navDirection = .trailing
         withAnimation(.easeInOut(duration: 0.28)) {
-            track = store.advanceQuestion(catechismId: program.contentId.rawValue, totalQuestions: program.totalQuestions)
+            track = store.advanceQuestion(childId: childId, catechismId: program.contentId.rawValue, totalQuestions: program.totalQuestions)
         }
         WidgetCenter.shared.reloadTimelines(ofKind: "CatechismWidget")
     }
 
     private func jump(to number: Int) {
+        guard let childId = track?.childId else { return }
         navDirection = number >= (track?.currentQuestion ?? 1) ? .trailing : .leading
         withAnimation(.easeInOut(duration: 0.28)) {
             track = store.jumpToQuestion(
-                catechismId: program.contentId.rawValue, questionNumber: number, totalQuestions: program.totalQuestions
+                childId: childId, catechismId: program.contentId.rawValue, questionNumber: number, totalQuestions: program.totalQuestions
             )
         }
         WidgetCenter.shared.reloadTimelines(ofKind: "CatechismWidget")

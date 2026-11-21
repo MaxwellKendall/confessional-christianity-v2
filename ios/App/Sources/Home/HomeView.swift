@@ -13,7 +13,7 @@ struct HomeView: View {
     @Binding var path: NavigationPath
 
     @Environment(\.modelContext) private var modelContext
-    @State private var track: LocalCatechismTrack?
+    @State private var track: ChildCatechismTrack?
 
     private var store: LocalProgressStore { LocalProgressStore(context: modelContext) }
 
@@ -24,7 +24,7 @@ struct HomeView: View {
 
     private var program: ProgramDefinition { trackProgram ?? defaultProgram }
 
-    private var activeTrack: LocalCatechismTrack? { trackProgram != nil ? track : nil }
+    private var activeTrack: ChildCatechismTrack? { trackProgram != nil ? track : nil }
 
     private var questionNumber: Int {
         guard let activeTrack else { return 1 }
@@ -77,7 +77,7 @@ struct HomeView: View {
                 SearchView(path: $path)
             }
             .task {
-                track = store.activeTrack()
+                track = store.activeChildId.flatMap { store.activeTrack(childId: $0) }
             }
         }
         .tint(.ccInk)
