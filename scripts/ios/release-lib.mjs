@@ -72,20 +72,29 @@ export function archiveArgs({ archivePath, overrides }) {
   return args;
 }
 
-// Signing is cloud-managed through the Xcode account on this Mac (TKL-880). Passing the ASC
-// API key here fails with "not given access to cloud-managed distribution certificates".
-export function exportArgs({ archivePath, exportPath, plistPath }) {
-  return ['-exportArchive', '-archivePath', archivePath, '-exportPath', exportPath, '-exportOptionsPlist', plistPath,
+// Signing: the export first tries the ASC API key (works once the key may use cloud-managed distribution
+// certificates, or this Mac holds an Apple Distribution identity). Today the key is refused (TKL-880), so
+// release.mjs falls back to the Xcode account's cloud signing when cloudSigningDenied() matches.
+export function exportArgs({ archivePath, exportPath, plistPath, auth }) {
+  const args = ['-exportArchive', '-archivePath', archivePath, '-exportPath', exportPath, '-exportOptionsPlist', plistPath,
     '-allowProvisioningUpdates'];
+  if (auth) args.push('-authenticationKeyPath', auth.keyPath, '-authenticationKeyID', auth.keyId, '-authenticationKeyIssuerID', auth.issuerId);
+  return args;
 }
 
-export function exportPlist({ upload }) {
+/** True when an -exportArchive failure is the distribution-signing refusal, not some other error. */
+export function cloudSigningDenied(output) {
+  return /cloud signing permission error|access to cloud-managed distribution certificates|No signing certificate "iOS Distribution" found/i.test(String(output));
+}
+
+// Always a local .ipa: the upload is a separate step, authenticated by the ASC API key (altoolArgs).
+export function exportPlist() {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
   <key>method</key><string>app-store-connect</string>
-  <key>destination</key><string>${upload ? 'upload' : 'export'}</string>
+  <key>destination</key><string>export</string>
   <key>signingStyle</key><string>automatic</string>
   <key>teamID</key><string>${TEAM_ID}</string>
   <key>uploadSymbols</key><true/>
@@ -93,6 +102,24 @@ export function exportPlist({ upload }) {
 </dict>
 </plist>
 `;
+}
+
+const ALTOOL_ACTIONS = { validate: '--validate-app', upload: '--upload-app' };
+
+/** `xcrun` arguments to validate or upload an .ipa, authenticated only by the ASC API key. */
+export function altoolArgs({ action, ipa, auth }) {
+  const flag = ALTOOL_ACTIONS[action];
+  if (!flag) throw new Error(`altool action must be validate or upload, got "${action}"`);
+  if (!auth?.keyId || !auth?.issuerId || !auth?.keyPath) throw new Error('altool needs the ASC API key (keyId, issuerId, keyPath)');
+  return ['altool', flag, '-f', ipa, '-t', 'ios', '--api-key', auth.keyId, '--api-issuer', auth.issuerId,
+    '--p8-file-path', auth.keyPath, '--output-format', 'json'];
+}
+
+/** altool has exited 0 while reporting errors, so check the output as well as the exit code. */
+export function altoolFailed(code, output) {
+  if (code !== 0) return true;
+  const text = String(output);
+  return /"product-errors"\s*:\s*\[\s*\{/.test(text) || /\*\*\* Error:|^\s*ERROR:/m.test(text);
 }
 
 export function redact(text, secrets) {

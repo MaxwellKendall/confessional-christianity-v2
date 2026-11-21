@@ -4,7 +4,10 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import {
   APP_ID,
+  altoolArgs,
+  altoolFailed,
   archiveArgs,
+  cloudSigningDenied,
   exportArgs,
   exportPlist,
   highestBuildNumber,
@@ -109,17 +112,56 @@ describe('xcodebuild arguments', () => {
     expect(args).toContain('MARKETING_VERSION=1.2');
   });
 
-  it('exports with provisioning updates and never with the ASC key (TKL-880)', () => {
+  const auth = { keyId: 'KEY123', issuerId: 'ISS-456', keyPath: '/keys/AuthKey_KEY123.p8' };
+
+  it('exports with provisioning updates through the Xcode account when no key is given', () => {
     const args = exportArgs({ archivePath: 'a', exportPath: 'b', plistPath: 'c' });
     expect(args).toEqual(['-exportArchive', '-archivePath', 'a', '-exportPath', 'b', '-exportOptionsPlist', 'c', '-allowProvisioningUpdates']);
-    expect(args.join(' ')).not.toMatch(/authenticationKey/);
   });
 
-  it('uploads on a real run and exports locally on a dry run', () => {
-    expect(exportPlist({ upload: true })).toContain('<key>destination</key><string>upload</string>');
-    expect(exportPlist({ upload: false })).toContain('<key>destination</key><string>export</string>');
-    expect(exportPlist({ upload: true })).toContain('<string>app-store-connect</string>');
-    expect(exportPlist({ upload: true })).toContain('<string>7GZKY29XJH</string>');
+  it('exports with the ASC key when given one', () => {
+    const args = exportArgs({ archivePath: 'a', exportPath: 'b', plistPath: 'c', auth });
+    expect(args.slice(0, 8)).toEqual(['-exportArchive', '-archivePath', 'a', '-exportPath', 'b', '-exportOptionsPlist', 'c', '-allowProvisioningUpdates']);
+    expect(args.slice(8)).toEqual(['-authenticationKeyPath', '/keys/AuthKey_KEY123.p8', '-authenticationKeyID', 'KEY123', '-authenticationKeyIssuerID', 'ISS-456']);
+  });
+
+  it('always exports a local .ipa: the upload is a separate, key-authenticated step', () => {
+    const plist = exportPlist();
+    expect(plist).toContain('<key>destination</key><string>export</string>');
+    expect(plist).not.toContain('<string>upload</string>');
+    expect(plist).toContain('<string>app-store-connect</string>');
+    expect(plist).toContain('<string>7GZKY29XJH</string>');
+  });
+
+  it('recognises the cloud-signing permission error, and only that', () => {
+    expect(cloudSigningDenied("error: exportArchive Cloud signing permission error\n  You haven't been given access to cloud-managed distribution certificates.")).toBe(true);
+    expect(cloudSigningDenied('error: exportArchive No signing certificate "iOS Distribution" found')).toBe(true);
+    expect(cloudSigningDenied('error: exportArchive The data couldn’t be read because it isn’t in the correct format.')).toBe(false);
+  });
+});
+
+describe('altool arguments (upload authenticated by the ASC API key)', () => {
+  const auth = { keyId: 'KEY123', issuerId: 'ISS-456', keyPath: '/keys/AuthKey_KEY123.p8' };
+  const key = ['--api-key', 'KEY123', '--api-issuer', 'ISS-456', '--p8-file-path', '/keys/AuthKey_KEY123.p8'];
+
+  it('validates the .ipa with the key', () => {
+    expect(altoolArgs({ action: 'validate', ipa: 'x.ipa', auth })).toEqual(['altool', '--validate-app', '-f', 'x.ipa', '-t', 'ios', ...key, '--output-format', 'json']);
+  });
+
+  it('uploads the .ipa with the key', () => {
+    expect(altoolArgs({ action: 'upload', ipa: 'x.ipa', auth })).toEqual(['altool', '--upload-app', '-f', 'x.ipa', '-t', 'ios', ...key, '--output-format', 'json']);
+  });
+
+  it('refuses any other action and a missing key', () => {
+    expect(() => altoolArgs({ action: 'submit', ipa: 'x.ipa', auth })).toThrow(/action/);
+    expect(() => altoolArgs({ action: 'upload', ipa: 'x.ipa', auth: { keyId: 'K' } })).toThrow(/key/);
+  });
+
+  it('treats a non-zero exit or a reported error as failure', () => {
+    expect(altoolFailed(0, '{"success-message":"No errors uploading archive"}')).toBe(false);
+    expect(altoolFailed(1, '')).toBe(true);
+    expect(altoolFailed(0, '{"product-errors":[{"message":"Invalid bundle"}]}')).toBe(true);
+    expect(altoolFailed(0, '*** Error: Unable to authenticate')).toBe(true);
   });
 });
 
@@ -134,6 +176,10 @@ describe('release.mjs never submits or releases', () => {
     expect(APP_ID).toBe('6797692942');
     expect(releaseSource).not.toMatch(/method:\s*['"](POST|PATCH|DELETE|PUT)/);
     expect(releaseSource).not.toMatch(/reviewSubmissions|appStoreVersionSubmissions|appStoreVersionReleaseRequests|betaAppReviewSubmissions/);
-    expect(releaseSource).not.toMatch(/authenticationKey/);
+  });
+
+  it('uploads only through altool with the ASC key, never through an Xcode upload destination', () => {
+    expect(releaseSource).toMatch(/altoolArgs\(\{ action: 'upload'/);
+    expect(releaseSource).not.toMatch(/destination.*upload|exportPlist\(\{\s*upload/);
   });
 });

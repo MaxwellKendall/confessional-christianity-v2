@@ -5,18 +5,23 @@
 //   npm run ios:release                              bump the build number, archive, upload, wait until VALID
 //   npm run ios:release -- --marketing-version 1.2   also set MARKETING_VERSION
 //
-// The App Store Connect API key (ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_PATH in ~/dev/.secrets.env) is
-// used only to read builds; it is never printed. Signing and the upload go through the Xcode account
-// on this Mac (TKL-880). This script never submits for review and never releases a version.
+// The App Store Connect API key (ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_PATH in ~/dev/.secrets.env; never
+// printed) authenticates every call to Apple: reading builds, `altool --validate-app`, `altool --upload-app`
+// and polling processing. Signing tries the key first; while the key may not use cloud-managed distribution
+// certificates (TKL-880) it falls back to the Xcode account's cloud signing on this Mac and says so.
+// This script never submits for review and never releases a version.
 import { spawn } from 'node:child_process';
 import { createSign } from 'node:crypto';
-import { createWriteStream, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { createWriteStream, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   APP_ID,
+  altoolArgs,
+  altoolFailed,
   archiveArgs,
+  cloudSigningDenied,
   exportArgs,
   exportPlist,
   highestBuildNumber,
@@ -99,14 +104,16 @@ function run(command, args, { cwd = root, log } = {}) {
     const child = spawn(command, args, { cwd, env: process.env });
     const file = log ? createWriteStream(log) : null;
     let tail = '';
+    let all = '';
     const take = (chunk) => {
       file?.write(chunk);
       tail = (tail + chunk.toString()).slice(-4000);
+      if (all.length < 4_000_000) all += chunk.toString();
     };
     child.stdout.on('data', take);
     child.stderr.on('data', take);
     child.on('error', (error) => { take(String(error)); });
-    child.on('close', (code) => { file?.end(); resolvePromise({ code: code ?? 1, tail }); });
+    child.on('close', (code) => { file?.end(); resolvePromise({ code: code ?? 1, tail, all }); });
   });
 }
 
@@ -163,13 +170,19 @@ async function main() {
   const archivePath = join(outDir, 'ConfessionalChristianity.xcarchive');
   const exportPath = join(outDir, 'export');
   const plistPath = join(outDir, 'ExportOptions.plist');
-  writeFileSync(plistPath, exportPlist({ upload: !args.dryRun }));
+  writeFileSync(plistPath, exportPlist());
 
+  let ipa;
+  let signing;
   try {
     await step('xcodegen generate', 'xcodegen', ['generate', '--quiet'], { cwd: appDir });
     await step('xcodebuild archive', 'xcodebuild',
       archiveArgs({ archivePath, overrides: args.dryRun ? { build, marketing } : undefined }),
       { cwd: appDir, log: join(outDir, 'archive.log') });
+    signing = await exportIpa({ auth, archivePath, exportPath, plistPath });
+    ipa = findIpa(exportPath);
+    say(`- exported ${ipa} (${(statSync(ipa).size / 1e6).toFixed(1)} MB), signed via ${signing}`);
+    await altool('altool --validate-app (ASC API key)', altoolArgs({ action: 'validate', ipa, auth }), join(outDir, 'validate.log'));
   } catch (error) {
     if (!args.dryRun) {
       // Nothing was uploaded, so the build number is not used up: put project.yml back.
@@ -180,22 +193,61 @@ async function main() {
     throw error;
   }
 
-  await step(args.dryRun ? 'xcodebuild -exportArchive (local .ipa)' : 'xcodebuild -exportArchive (upload to App Store Connect)',
-    'xcodebuild', exportArgs({ archivePath, exportPath, plistPath }), { cwd: appDir, log: join(outDir, 'export.log') });
-
   if (args.dryRun) {
-    const ipa = join(exportPath, 'ConfessionalChristianity.ipa');
-    const size = existsSync(ipa) ? `${(statSync(ipa).size / 1e6).toFixed(1)} MB` : 'missing';
-    say(`- exported ${ipa} (${size})`);
-    say(`RESULT dry-run build=${build} marketing=${marketing} uploaded=no`);
+    say(`RESULT dry-run build=${build} marketing=${marketing} signing=${signing} validated=yes uploaded=no`);
     say('Nothing was uploaded, submitted or released.');
     return;
   }
 
+  try {
+    await altool('altool --upload-app (ASC API key)', altoolArgs({ action: 'upload', ipa, auth }), join(outDir, 'upload.log'));
+  } catch (error) {
+    say(`- project.yml keeps build ${build}: an upload may have reached Apple, and build numbers only need to increase`);
+    throw error;
+  }
+
   say('- waiting for App Store Connect processing');
   await waitForProcessing(auth, build, marketing);
-  say(`RESULT build=${build} marketing=${marketing} uploaded=yes state=VALID`);
+  say(`RESULT build=${build} marketing=${marketing} signing=${signing} uploaded=yes state=VALID`);
   say('Not submitted for review and not released. Commit and push ios/App/project.yml and the regenerated project.pbxproj.');
+}
+
+/** Sign and export a local .ipa: with the ASC key if Apple allows it, else through the Xcode account (TKL-880). */
+async function exportIpa({ auth, archivePath, exportPath, plistPath }) {
+  const started = Date.now();
+  say('- xcodebuild -exportArchive, signing with the ASC API key…');
+  const keyed = await run('xcodebuild', exportArgs({ archivePath, exportPath, plistPath, auth }), { cwd: appDir, log: join(outDir, 'export-key.log') });
+  if (keyed.code === 0) {
+    say(`  ok (${Math.round((Date.now() - started) / 1000)}s)`);
+    return 'asc-key';
+  }
+  if (!cloudSigningDenied(keyed.all)) {
+    say(keyed.tail.split('\n').slice(-25).join('\n'));
+    throw new Error(`xcodebuild -exportArchive failed (exit ${keyed.code}); full log: ${join(outDir, 'export-key.log')}`);
+  }
+  say('  the ASC key may not use cloud-managed distribution certificates (TKL-880); falling back to the Xcode account');
+  rmSync(exportPath, { recursive: true, force: true });
+  await step('xcodebuild -exportArchive, signing through the Xcode account', 'xcodebuild',
+    exportArgs({ archivePath, exportPath, plistPath }), { cwd: appDir, log: join(outDir, 'export.log') });
+  return 'xcode-account';
+}
+
+function findIpa(dir) {
+  const ipas = existsSync(dir) ? readdirSync(dir).filter((f) => f.endsWith('.ipa')) : [];
+  if (ipas.length !== 1) throw new Error(`expected one .ipa in ${dir}, found ${ipas.length}`);
+  return join(dir, ipas[0]);
+}
+
+async function altool(label, args, log) {
+  const started = Date.now();
+  say(`- ${label}…`);
+  const { code, all } = await run('xcrun', args, { cwd: root, log });
+  const secs = Math.round((Date.now() - started) / 1000);
+  if (altoolFailed(code, all)) {
+    say(all.split('\n').slice(-25).join('\n'));
+    throw new Error(`${label} failed (exit ${code}, ${secs}s); full log: ${log}`);
+  }
+  say(`  ok (${secs}s)`);
 }
 
 main().catch((error) => {

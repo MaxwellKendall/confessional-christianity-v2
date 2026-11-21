@@ -68,12 +68,20 @@ Never commit in the main checkout: it often holds Maxwell's uncommitted work on 
 - **Web:** Vercel serves https://confessionalchristianity.com (`server: Vercel`). Whether a push to `main` deploys by itself is unverified; check the Vercel project before relying on it. Post-deploy: `/`, `/library`, `/search` return 200.
 - **iOS:** `npm run ios:release` (`scripts/ios/release.mjs`, TKL-814) from a worktree of `origin/main`. It reads every build
   ever uploaded from App Store Connect, sets `CURRENT_PROJECT_VERSION` in `ios/App/project.yml` to one above the highest (local
-  or uploaded), runs `xcodegen generate`, `xcodebuild archive` and `-exportArchive -allowProvisioningUpdates` (destination
-  `upload`), then polls App Store Connect until the build is `VALID` (up to 45 min) and prints `RESULT build=N marketing=M
-  uploaded=yes state=VALID`. Add `--marketing-version 1.2` for a new App Store version. `--dry-run` archives and exports a
-  signed `.ipa` to `build/release/export/` without uploading or changing any file (~4 min). Logs: `build/release/{archive,export}.log`.
+  or uploaded), runs `xcodegen generate`, `xcodebuild archive`, `-exportArchive -allowProvisioningUpdates` to a local `.ipa`,
+  `xcrun altool --validate-app`, then `xcrun altool --upload-app`, then polls App Store Connect until the build is `VALID` (up to
+  45 min) and prints `RESULT build=N marketing=M signing=S uploaded=yes state=VALID`. Add `--marketing-version 1.2` for a new App
+  Store version. `--dry-run` does everything up to and including `altool --validate-app` (a real check against Apple with the
+  key) but never uploads or changes a file (~8 min). Logs: `build/release/{archive,export-key,export,validate,upload}.log`.
   It never submits for review or releases. After a real run, commit and push the bumped `project.yml` and regenerated
-  `project.pbxproj` (the script leaves them modified; if the archive fails it restores them). **Signing (TKL-880, fixed 2026-11-20):** distribution signing is cloud-managed and works only through the Xcode account signed in on this Mac: plain `xcodebuild -exportArchive -allowProvisioningUpdates` (method `app-store-connect`, destination `upload`) signs with `Apple Distribution` and uploads. Passing the ASC API key (`-authenticationKey*`) to `-exportArchive` fails ("not given access to cloud-managed distribution certificates"), so don't; there is still no local `Apple Distribution` identity. App Store Connect API key: `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_PATH` in `~/dev/.secrets.env` (same team as barbrabell). Versions stay on manual release.
+  `project.pbxproj` (if anything fails before the upload it restores them; after an upload attempt it keeps the bump).
+  **Authentication:** the App Store Connect API key (`ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_PATH` in `~/dev/.secrets.env`, same
+  team as barbrabell; never printed) authenticates every call to Apple: reading builds, validate, upload and polling.
+  **Signing (TKL-880):** the export tries the API key first (`signing=asc-key`). Today Apple refuses it ("not given access to
+  cloud-managed distribution certificates") and there is no local `Apple Distribution` identity, so the script falls back to
+  cloud signing through the Xcode account signed in on this Mac (`signing=xcode-account`). That fallback is the one remaining
+  dependency on the account; it goes away once the key is allowed cloud-managed distribution certificates or this Mac holds an
+  `Apple Distribution` identity, with no code change. Versions stay on manual release.
 - **iOS build numbers so far** (App Store Connect, checked 2026-11-20): builds **1** and **2** were version `0.1.0` (Aug 2026, expired);
   build **3** is version `1.1` (uploaded 2026-11-20). The `0.1.0` train is closed (a `0.1.0` build was approved), so uploads need a
   `MARKETING_VERSION` above it. The App Store *version record* is `1.0` READY_FOR_SALE and points at build 2, so don't infer the next
