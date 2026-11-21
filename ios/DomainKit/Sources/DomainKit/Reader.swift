@@ -6,7 +6,7 @@
 import Foundation
 
 /// One verse as the server splits a passage (`GET /api/esv?verses=true`).
-public struct ReaderVerse: Equatable, Hashable, Sendable {
+public struct ReaderVerse: Decodable, Equatable, Hashable, Sendable {
     public let osis: String
     public let verse: Int
     public let text: String

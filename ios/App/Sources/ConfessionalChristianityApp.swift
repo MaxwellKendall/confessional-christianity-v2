@@ -19,14 +19,26 @@ struct ConfessionalChristianityApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView()
-                .environment(auth)
-                #if DEBUG
-                .sheet(isPresented: $showsAuthDebug) {
-                    AuthDebugView().environment(auth)
-                }
-                #endif
+            #if DEBUG
+            if let scene = UserDefaults.standard.string(forKey: "VerseReaderFixture") {
+                VerseReaderView.fixture(scene)
+            } else {
+                root
+            }
+            #else
+            root
+            #endif
         }
         .modelContainer(container)
+    }
+
+    private var root: some View {
+        RootView()
+            .environment(auth)
+            #if DEBUG
+            .sheet(isPresented: $showsAuthDebug) {
+                AuthDebugView().environment(auth)
+            }
+            #endif
     }
 }

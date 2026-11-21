@@ -23,7 +23,7 @@ struct AboutView: View {
 
                     section(
                         title: "Scripture",
-                        body: "Scripture quotations are from the ESV® Bible (The Holy Bible, English Standard Version®), copyright \u{00A9} 2001 by Crossway, a publishing ministry of Good News Publishers. Used by permission. All rights reserved."
+                        body: EsvClient.copyrightNotice
                     )
 
                     section(

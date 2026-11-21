@@ -15,6 +15,50 @@ actor EsvClient {
 
     private static let baseURL = "https://confessional-christianity-v2.vercel.app/api/esv"
 
+    static let copyrightNotice = "Scripture quotations are from the ESV® Bible (The Holy Bible, English Standard Version®), copyright © 2001 by Crossway, a publishing ministry of Good News Publishers. Used by permission. All rights reserved."
+
+    private static let readerSession: URLSession = {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.urlCache = nil
+        return URLSession(configuration: configuration)
+    }()
+    private var verseCache: [String: Task<[ReaderVerse]?, Never>] = [:]
+
+    func verses(for osis: String) async -> [ReaderVerse]? {
+        if let existing = verseCache[osis] {
+            return await existing.value
+        }
+        let task = Task<[ReaderVerse]?, Never> {
+            let verses = await Self.fetchVerses(osis: osis)
+            if verses == nil { verseCache[osis] = nil }
+            return verses
+        }
+        verseCache[osis] = task
+        return await task.value
+    }
+
+    private static func fetchVerses(osis: String) async -> [ReaderVerse]? {
+        guard var components = URLComponents(string: baseURL) else { return nil }
+        components.queryItems = [
+            URLQueryItem(name: "osis", value: osis),
+            URLQueryItem(name: "verses", value: "true")
+        ]
+        guard let url = components.url else { return nil }
+        do {
+            let (data, response) = try await readerSession.data(from: url)
+            guard let http = response as? HTTPURLResponse, http.statusCode == 200,
+                  let verses = try JSONDecoder().decode(VerseResponse.self, from: data).verses,
+                  !verses.isEmpty else { return nil }
+            return verses
+        } catch {
+            return nil
+        }
+    }
+
+    private struct VerseResponse: Decodable {
+        let verses: [ReaderVerse]?
+    }
+
     private var cache: [String: Task<String?, Never>] = [:]
 
     func text(for osis: String) async -> String? {
