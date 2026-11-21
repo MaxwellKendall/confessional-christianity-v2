@@ -10,6 +10,7 @@ const out = await stackOutputs(`ConfessionalChristianity-${stage}`);
 // Sign-in is passwordless (USER_AUTH with EMAIL_OTP): no OAuth domain, no password policy for the app.
 const config = {
   version: "1.4",
+  custom: { delete_account_url: out.DeleteAccountUrl },
   auth: {
     aws_region: out.Region,
     user_pool_id: out.UserPoolId,

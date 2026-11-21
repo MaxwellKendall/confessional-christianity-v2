@@ -36,6 +36,7 @@
 		9B0DF1151700DED8D5E7B074 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0622E7353216946347CF3DD1 /* DesignSystem.swift */; };
 		A33BEF33F6012F5244225E37 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0622E7353216946347CF3DD1 /* DesignSystem.swift */; };
 		A37246ABCD770C1EB341917E /* RootTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98A25657E65FD99C28C300E6 /* RootTab.swift */; };
+		A56C84960C4D791864614828 /* amplify_outputs.dev.json in Resources */ = {isa = PBXBuildFile; fileRef = E5B9751431F844A576E40DBE /* amplify_outputs.dev.json */; };
 		A5FB9081D12F27A77BBA509D /* Marcellus-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 8E695AE85593396B01EA0946 /* Marcellus-Regular.ttf */; };
 		A8520A15B4644D91821657B7 /* MarkdownText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CA73F64DC39A88E251E81D2 /* MarkdownText.swift */; };
 		ABC676EECAD6EB2A5DDE8916 /* Marcellus-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 8E695AE85593396B01EA0946 /* Marcellus-Regular.ttf */; };
@@ -133,6 +134,7 @@
 		D721D4D4D91E53FCEF7C32EB /* ConfessionalChristianityApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfessionalChristianityApp.swift; sourceTree = "<group>"; };
 		D892E4739FA3AAD34062EB53 /* QuestionCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionCardView.swift; sourceTree = "<group>"; };
 		E38A936D51B1960620B4EA13 /* Cinzel-SemiBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Cinzel-SemiBold.ttf"; sourceTree = "<group>"; };
+		E5B9751431F844A576E40DBE /* amplify_outputs.dev.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = amplify_outputs.dev.json; sourceTree = "<group>"; };
 		E9C2D0D042691001D8C45CFD /* SupabaseConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseConfig.swift; sourceTree = "<group>"; };
 		EBA120F8482D994D28BEF11F /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		FD56999FD625474310C151DA /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
@@ -176,6 +178,7 @@
 			isa = PBXGroup;
 			children = (
 				DB2DFAF2900515D7DE6DFB02 /* Packages */,
+				E4AA443E5E1002D7372831CC /* Resources */,
 				3B45A31B522B3C69805EA03E /* Sources */,
 				381C2E5B8BD926422E6D33D4 /* Sources */,
 				7311746DCA348ED1EC41B2C3 /* Frameworks */,
@@ -319,6 +322,14 @@
 			name = Packages;
 			sourceTree = "<group>";
 		};
+		E4AA443E5E1002D7372831CC /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				E5B9751431F844A576E40DBE /* amplify_outputs.dev.json */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
 		F3129055BD870EC499700ADE /* Fonts */ = {
 			isa = PBXGroup;
 			children = (
@@ -449,6 +460,7 @@
 				94F2A0DB1351CCA796EA6567 /* Cinzel-SemiBold.ttf in Resources */,
 				ABC676EECAD6EB2A5DDE8916 /* Marcellus-Regular.ttf in Resources */,
 				78B5CAD5AED7EEBC4EEBAB97 /* PrivacyInfo.xcprivacy in Resources */,
+				A56C84960C4D791864614828 /* amplify_outputs.dev.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
