@@ -20,7 +20,7 @@ let prod: ReturnType<typeof synth>;
 beforeAll(() => {
   dev = synth("dev");
   prod = synth("prod");
-});
+}, 60_000);
 
 describe("user pool", () => {
   it("is on the Essentials plan, signs in by email, and allows self sign-up", () => {
@@ -55,7 +55,7 @@ describe("user pool", () => {
     for (const t of [dev.accounts, prod.accounts]) {
       const statements = Object.values(t.findResources("AWS::IAM::Policy"))
         .flatMap((r) => (r as { Properties: { PolicyDocument: { Statement: Record<string, unknown>[] } } }).Properties.PolicyDocument.Statement);
-      const set = statements.filter((s) => JSON.stringify(s.Action).includes("cognito-idp"));
+      const set = statements.filter((s) => JSON.stringify(s.Action).includes("cognito-idp:AdminSetUserPassword"));
       expect(set).toHaveLength(1);
       expect(set[0].Action).toBe("cognito-idp:AdminSetUserPassword");
       const userPoolLogicalId = Object.keys(t.findResources("AWS::Cognito::UserPool"))[0];
@@ -161,5 +161,34 @@ describe("mail", () => {
     });
     prod.mail.resourceCountIs("AWS::SES::ReceiptRule", 0);
     prod.mail.resourceCountIs("AWS::S3::Bucket", 0);
+  });
+});
+
+describe("account deletion", () => {
+  it.each(["dev", "prod"] as const)("exposes a URL and restricts deletion and secret access in %s", (stage) => {
+    const { accounts } = stage === "dev" ? dev : prod;
+    const pool = Object.keys(accounts.findResources("AWS::Cognito::UserPool"))[0];
+    accounts.hasOutput("DeleteAccountUrl", { Value: { "Fn::GetAtt": [Match.anyValue(), "FunctionUrl"] } });
+    accounts.hasResourceProperties("AWS::Lambda::Url", { AuthType: "NONE" });
+    accounts.hasResourceProperties("AWS::Lambda::Permission", {
+      Action: "lambda:InvokeFunction",
+      InvokedViaFunctionUrl: true,
+    });
+    accounts.hasResourceProperties("AWS::Lambda::Function", {
+      Environment: { Variables: {
+        USER_POOL_ID: { Ref: pool },
+        APP_CLIENT_ID: { Ref: Object.keys(accounts.findResources("AWS::Cognito::UserPoolClient"))[0] },
+        APPLE_SECRET_ID: `confessional/${stage}/apple-signin`,
+      } },
+    });
+    accounts.hasResourceProperties("AWS::IAM::Policy", {
+      PolicyDocument: { Statement: Match.arrayEquals([
+        { Action: "cognito-idp:AdminDeleteUser", Effect: "Allow", Resource: { "Fn::GetAtt": [pool, "Arn"] } },
+        { Action: "secretsmanager:GetSecretValue", Effect: "Allow", Resource: {
+          "Fn::Join": ["", ["arn:", { Ref: "AWS::Partition" },
+            `:secretsmanager:${env.region}:${env.account}:secret:confessional/${stage}/apple-signin-??????`]],
+        } },
+      ]) },
+    });
   });
 });

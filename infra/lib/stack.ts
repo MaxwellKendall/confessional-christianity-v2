@@ -1,7 +1,8 @@
-import { CfnOutput, Duration, RemovalPolicy, Stack, type StackProps } from "aws-cdk-lib";
+import { ArnFormat, CfnOutput, Duration, RemovalPolicy, Stack, type StackProps } from "aws-cdk-lib";
 import * as cognito from "aws-cdk-lib/aws-cognito";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
+import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import * as logs from "aws-cdk-lib/aws-logs";
 import type { Construct } from "constructs";
 import { fileURLToPath } from "node:url";
@@ -82,6 +83,32 @@ export class AccountsStack extends Stack {
       refreshTokenValidity: Duration.days(3650),
     });
     (appClient.node.defaultChild as cognito.CfnUserPoolClient).explicitAuthFlows = ["ALLOW_USER_AUTH", "ALLOW_REFRESH_TOKEN_AUTH"];
+
+    const appleSecretId = `confessional/${stage}/apple-signin`;
+    const deleteAccount = new NodejsFunction(this, "DeleteAccount", {
+      entry: fileURLToPath(new URL("../lambda/deleteAccount.ts", import.meta.url)),
+      runtime: lambda.Runtime.NODEJS_22_X,
+      timeout: Duration.seconds(25),
+      environment: {
+        USER_POOL_ID: userPool.userPoolId,
+        APP_CLIENT_ID: appClient.userPoolClientId,
+        APPLE_SECRET_ID: appleSecretId,
+      },
+      logGroup: new logs.LogGroup(this, "DeleteAccountLogs", {
+        retention: logs.RetentionDays.ONE_MONTH,
+        removalPolicy: RemovalPolicy.DESTROY,
+      }),
+    });
+    deleteAccount.addToRolePolicy(new iam.PolicyStatement({
+      actions: ["cognito-idp:AdminDeleteUser"],
+      resources: [userPool.userPoolArn],
+    }));
+    deleteAccount.addToRolePolicy(new iam.PolicyStatement({
+      actions: ["secretsmanager:GetSecretValue"],
+      resources: [this.formatArn({ service: "secretsmanager", resource: "secret", resourceName: `${appleSecretId}-??????`, arnFormat: ArnFormat.COLON_RESOURCE_NAME })],
+    }));
+    const deleteAccountUrl = deleteAccount.addFunctionUrl({ authType: lambda.FunctionUrlAuthType.NONE });
+    new CfnOutput(this, "DeleteAccountUrl", { value: deleteAccountUrl.url });
 
     new CfnOutput(this, "Region", { value: this.region });
     new CfnOutput(this, "UserPoolId", { value: userPool.userPoolId });
