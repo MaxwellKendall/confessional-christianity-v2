@@ -30,7 +30,7 @@ const nextConfig: NextConfig = {
       {
         source: `/:confession(${CONFESSION_SLUGS})`,
         destination: '/library/:confession',
-        permanent: true,
+        statusCode: 301,
       },
       // v1 entry pages: the [...entry] catch-all collapses to one dash-joined
       // segment, so each old path depth maps explicitly (docs/DOMAIN.md ids
@@ -38,20 +38,21 @@ const nextConfig: NextConfig = {
       {
         source: `/:confession(${CONFESSION_SLUGS})/:a`,
         destination: '/library/:confession/:a',
-        permanent: true,
+        statusCode: 301,
       },
       {
         source: `/:confession(${CONFESSION_SLUGS})/:a/:b`,
         destination: '/library/:confession/:a-:b',
-        permanent: true,
+        statusCode: 301,
       },
       {
         source: `/:confession(${CONFESSION_SLUGS})/:a/:b/:c`,
         destination: '/library/:confession/:a-:b-:c',
-        permanent: true,
+        statusCode: 301,
       },
+      { source: '/about', destination: '/', statusCode: 301 },
       // the commentary index moved to reflections
-      { source: '/study', destination: '/reflections', permanent: true },
+      { source: '/study', destination: '/reflections', statusCode: 301 },
       // dashboards fold into the homepage child-switcher (convenience only,
       // never indexed)
       { source: '/dashboard', destination: '/', permanent: false },

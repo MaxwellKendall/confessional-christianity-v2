@@ -58,3 +58,18 @@ describe('sitemap', () => {
     expect(urls).toContain('/library');
   });
 });
+
+describe('v1 sitemap routes redirect permanently', () => {
+  test.each([
+    ['/about', '/'],
+    ['/study', '/reflections'],
+    ['/westminster-shorter-catechism', '/library/:confession'],
+    ['/westminster-shorter-catechism/1', '/library/:confession/:a'],
+    ['/westminster-confession-of-faith/1/1', '/library/:confession/:a-:b'],
+    ['/canons-of-dort/1/articles/1', '/library/:confession/:a-:b-:c'],
+  ])('%s 301s to %s', async (path, destination) => {
+    const rule = await resolve(path);
+    expect(rule?.destination).toBe(destination);
+    expect(rule?.statusCode).toBe(301);
+  });
+});

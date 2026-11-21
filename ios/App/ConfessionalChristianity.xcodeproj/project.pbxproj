@@ -38,6 +38,7 @@
 		94F2A0DB1351CCA796EA6567 /* Cinzel-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E38A936D51B1960620B4EA13 /* Cinzel-SemiBold.ttf */; };
 		9508C7F34BAE8BD034467A77 /* DocumentTocView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CEC5FBB76D7BE63305F7369 /* DocumentTocView.swift */; };
 		958E1E27094E04B8F5121E51 /* ConfessionalChristianityWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = CFC6793E7895E7D3636BA94F /* ConfessionalChristianityWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		9724BDE7A6364650FE852BE2 /* WebLinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AC1A22AE440A42245983156 /* WebLinks.swift */; };
 		975E7B40260BACEB03F8649A /* LibraryIndexView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3408CF58E549F6A7311C1707 /* LibraryIndexView.swift */; };
 		999D61DC39AB1C28CB92457F /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 96AC6B242BD5EEB00B86DCB9 /* PrivacyInfo.xcprivacy */; };
 		9B0DF1151700DED8D5E7B074 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0622E7353216946347CF3DD1 /* DesignSystem.swift */; };
@@ -133,6 +134,7 @@
 		96AC6B242BD5EEB00B86DCB9 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		98A25657E65FD99C28C300E6 /* RootTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootTab.swift; sourceTree = "<group>"; };
 		99285AF1E154635D23996AA9 /* CatechismTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatechismTabView.swift; sourceTree = "<group>"; };
+		9AC1A22AE440A42245983156 /* WebLinks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebLinks.swift; sourceTree = "<group>"; };
 		9C4BE3D3CA7C31C59ACB5286 /* CatechismWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatechismWidget.swift; sourceTree = "<group>"; };
 		A18960952FB0E4DF82B9E736 /* PrayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrayerView.swift; sourceTree = "<group>"; };
 		A3BCFC7770E05C3C772E8A0D /* ConfessionalChristianity.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = ConfessionalChristianity.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -220,6 +222,7 @@
 				98A25657E65FD99C28C300E6 /* RootTab.swift */,
 				AA107B8B544A9F504E2D6E4F /* SiteHeaderView.swift */,
 				81D5508EB376718085AA71A6 /* TabIcons.swift */,
+				9AC1A22AE440A42245983156 /* WebLinks.swift */,
 			);
 			path = Support;
 			sourceTree = "<group>";
@@ -580,6 +583,7 @@
 				792F3E7354EBF8639091C677 /* TodayView.swift in Sources */,
 				AEE99A080D3E2A0466FC17D6 /* VersePickerView.swift in Sources */,
 				D89F5D29E702D31D1EE15377 /* VerseReaderView.swift in Sources */,
+				9724BDE7A6364650FE852BE2 /* WebLinks.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

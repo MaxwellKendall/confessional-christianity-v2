@@ -13,7 +13,7 @@ import DomainKit
 actor EsvClient {
     static let shared = EsvClient()
 
-    private static let baseURL = "https://confessional-christianity-v2.vercel.app/api/esv"
+    private static let baseURL = "\(WebLinks.base)/api/esv"
 
     static let copyrightNotice = "Scripture quotations are from the ESV® Bible (The Holy Bible, English Standard Version®), copyright © 2001 by Crossway, a publishing ministry of Good News Publishers. Used by permission. All rights reserved."
 
