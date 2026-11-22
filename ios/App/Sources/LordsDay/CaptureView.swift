@@ -16,6 +16,8 @@ private let camPaper = Color(hex: 0xfbf8ef)
 struct CaptureView: View {
     @State var model: CaptureModel
     var onClose: () -> Void
+    /// Done: the notes are ready to draft cards from (TKL-863). Without it, Done just closes.
+    var onFinish: (() -> Void)? = nil
     /// DEBUG screenshots: the simulator has no camera, so show a sample page in the viewfinder.
     var simulatedViewfinder: UIImage? = nil
 
@@ -251,7 +253,7 @@ struct CaptureView: View {
     private var footer: some View {
         Button {
             model.finish()
-            onClose()
+            (onFinish ?? onClose)()
         } label: {
             Text(finishLabel)
                 .font(.system(size: 16, weight: .semibold))

@@ -31,6 +31,7 @@ final class CaptureModel {
     /// False until the note has something in it, so an untouched capture leaves no empty note behind.
     private var isPersisted: Bool
 
+    var noteId: UUID { note.id }
     var canFinish: Bool { CaptureContent(pageCount: pages.count, typedText: typedText).canFinish }
     var canAddPage: Bool { retakeTarget != nil || draft.canAddPage }
     var hasContent: Bool { canFinish || isPersisted }

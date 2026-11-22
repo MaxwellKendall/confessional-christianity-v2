@@ -41,10 +41,10 @@ public enum CardKind: String, Codable, CaseIterable, Sendable {
     public var updatedAt: Date
     public var deletedAt: Date?
 
-    fileprivate init(noteId: UUID, userId: UUID?, kind: CardKind, body: String, verseRef: String?, position: Int) {
+    fileprivate init(noteId: UUID, userId: UUID?, kind: CardKind, body: String, verseRef: String?, position: Int, attribution: String? = nil, editedByUser: Bool = false) {
         self.id = UUID(); self.noteId = noteId; self.userId = userId; self.kind = kind
-        self.body = body; self.verseRef = verseRef; self.position = position
-        self.editedByUser = false; self.createdAt = Date(); self.updatedAt = Date()
+        self.body = body; self.verseRef = verseRef; self.position = position; self.attribution = attribution
+        self.editedByUser = editedByUser; self.createdAt = Date(); self.updatedAt = Date()
     }
     fileprivate func update(kind: CardKind, body: String, verseRef: String?) {
         self.kind = kind; self.body = body; self.verseRef = verseRef
@@ -89,6 +89,19 @@ public func todayCardIndex(serviceDate: Date, today: Date, cardCount: Int, calen
         let body = kind == .verse ? "" : card.body
         try validate(kind: kind, body: body, verseRef: verseRef)
         card.update(kind: kind, body: body, verseRef: kind == .verse ? verseRef : nil); try context.save()
+    }
+    /// Finishing a review (TKL-863): the note's cards become exactly `kept`, in order.
+    /// Every card is validated first, so a rejected keep changes nothing.
+    public func keepCards(_ kept: [KeptCard], for note: LordsDayNote) throws {
+        for card in kept { try validate(kind: card.kind, body: card.body, verseRef: card.verseRef) }
+        let now = Date()
+        for old in try cards(for: note) { old.deletedAt = now; old.updatedAt = now }
+        for (position, card) in kept.enumerated() {
+            context.insert(NoteCard(noteId: note.id, userId: note.userId, kind: card.kind, body: card.body, verseRef: card.verseRef,
+                                    position: position, attribution: card.kind == .quote ? card.attribution : nil, editedByUser: card.editedByUser))
+        }
+        note.updatedAt = now
+        try context.save()
     }
     public func removeCard(_ card: NoteCard) throws { card.deletedAt = Date(); card.updatedAt = Date(); try context.save() }
     public func currentWeek(on date: Date = Date(), calendar: Calendar = .current) throws -> LordsDayNote? {

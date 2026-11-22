@@ -27,6 +27,7 @@
 		771DFCA83B8D42C191A78FB7 /* AppDestinations.swift in Sources */ = {isa = PBXBuildFile; fileRef = B311EBE166E5671F929E97A1 /* AppDestinations.swift */; };
 		78B5CAD5AED7EEBC4EEBAB97 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 7E69BB26BAE59E9A1DD9E9FB /* PrivacyInfo.xcprivacy */; };
 		792F3E7354EBF8639091C677 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ED45E06DF435369D44194FD /* TodayView.swift */; };
+		7B246BA5EFD0AB22AE029116 /* CardsGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52EFEC9F374B7B3FE8384E73 /* CardsGenerator.swift */; };
 		7C611E39E3B058BE6D93D933 /* SessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27A1DF330C4DA1EC70E025A1 /* SessionView.swift */; };
 		7F658028A04AEB6639B58A82 /* LordsDayFeedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1C91F026BE4FEE54E8BB42E /* LordsDayFeedView.swift */; };
 		8B6C145E341F77C8E643D573 /* CameraController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B457BF311BED9BFB4321BC0F /* CameraController.swift */; };
@@ -45,12 +46,15 @@
 		A5FB9081D12F27A77BBA509D /* Marcellus-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 8E695AE85593396B01EA0946 /* Marcellus-Regular.ttf */; };
 		A8520A15B4644D91821657B7 /* MarkdownText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CA73F64DC39A88E251E81D2 /* MarkdownText.swift */; };
 		ABC676EECAD6EB2A5DDE8916 /* Marcellus-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 8E695AE85593396B01EA0946 /* Marcellus-Regular.ttf */; };
+		AEE99A080D3E2A0466FC17D6 /* VersePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF90EFD2FCB8FC6A14A57EEA /* VersePickerView.swift */; };
 		B3F5CF1C182FCFD4301934FC /* TabIcons.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81D5508EB376718085AA71A6 /* TabIcons.swift */; };
+		B47AC25335237324631051A6 /* ReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CB00260AC3C7D9B2C799DB8 /* ReviewView.swift */; };
 		B660D8E3C77CCE66F8AA8BE1 /* PracticeReminderScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2803DDC4DF75B0849AF89D85 /* PracticeReminderScheduler.swift */; };
 		B97CE4E17FAB9A8257350F08 /* Cinzel-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0DEE3A1FB42239248ABA0E9F /* Cinzel-Regular.ttf */; };
 		C1E4EAF8F6E8528DE63DA7EB /* LibraryEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09DC9BA05478BE3F8C6ABE62 /* LibraryEntryView.swift */; };
 		C28489EE9B71F81F51910317 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 245AE89B18EF74ECA2A2C5B1 /* Assets.xcassets */; };
 		C801FA2EAE0401DFF8830CAE /* LordsDayTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9026BA4701C493912921EF2 /* LordsDayTabView.swift */; };
+		CA89F33BD75237A05A952DD6 /* ReviewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C643620A0907843D1122CAB4 /* ReviewModel.swift */; };
 		CCA59BAED520814729154AF4 /* HidesFloatingTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7CC21628E6787C6FD581730 /* HidesFloatingTabBar.swift */; };
 		CE1920ACD9DF2D32D7ADB5B3 /* SupabaseConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9C2D0D042691001D8C45CFD /* SupabaseConfig.swift */; };
 		D03240D8CA0391013DF1C22C /* AuthDebugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8AFA065463DB3F035B0045 /* AuthDebugView.swift */; };
@@ -112,11 +116,13 @@
 		3408CF58E549F6A7311C1707 /* LibraryIndexView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryIndexView.swift; sourceTree = "<group>"; };
 		3DE21E2EC93C342F162E7EB8 /* ScriptureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptureView.swift; sourceTree = "<group>"; };
 		4ED45E06DF435369D44194FD /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
+		52EFEC9F374B7B3FE8384E73 /* CardsGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardsGenerator.swift; sourceTree = "<group>"; };
 		58912A495665984DB2EDA36E /* ClauseLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClauseLabel.swift; sourceTree = "<group>"; };
 		6F0B1A13CFCB4351B4180520 /* LibraryRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryRoute.swift; sourceTree = "<group>"; };
 		72FB0289223150F84B4EF930 /* EsvClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EsvClient.swift; sourceTree = "<group>"; };
 		786FDD2AB314C8BC32806E54 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
 		78ABC84F127EEF53401B4B8F /* ReaderChapterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderChapterView.swift; sourceTree = "<group>"; };
+		7CB00260AC3C7D9B2C799DB8 /* ReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewView.swift; sourceTree = "<group>"; };
 		7E69BB26BAE59E9A1DD9E9FB /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		81D5508EB376718085AA71A6 /* TabIcons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabIcons.swift; sourceTree = "<group>"; };
 		826FFB63796815E34180F9FC /* ReflectionDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReflectionDetailView.swift; sourceTree = "<group>"; };
@@ -140,6 +146,7 @@
 		BE787EFA6523867E8B169F3C /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		C23F51243C50FFC327642E50 /* FlowLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowLayout.swift; sourceTree = "<group>"; };
 		C45EC54D0EE5907B79FC4071 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		C643620A0907843D1122CAB4 /* ReviewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewModel.swift; sourceTree = "<group>"; };
 		C7CC21628E6787C6FD581730 /* HidesFloatingTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HidesFloatingTabBar.swift; sourceTree = "<group>"; };
 		CA5673ACB1419E8AFFF76F5A /* MilestonesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MilestonesView.swift; sourceTree = "<group>"; };
 		CFC6793E7895E7D3636BA94F /* ConfessionalChristianityWidgetExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = ConfessionalChristianityWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -151,6 +158,7 @@
 		E00C25ED916B66A447B8C411 /* CaptureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureView.swift; sourceTree = "<group>"; };
 		E38A936D51B1960620B4EA13 /* Cinzel-SemiBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Cinzel-SemiBold.ttf"; sourceTree = "<group>"; };
 		E9C2D0D042691001D8C45CFD /* SupabaseConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseConfig.swift; sourceTree = "<group>"; };
+		EF90EFD2FCB8FC6A14A57EEA /* VersePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VersePickerView.swift; sourceTree = "<group>"; };
 		F1C91F026BE4FEE54E8BB42E /* LordsDayFeedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LordsDayFeedView.swift; sourceTree = "<group>"; };
 		F9026BA4701C493912921EF2 /* LordsDayTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LordsDayTabView.swift; sourceTree = "<group>"; };
 		FD56999FD625474310C151DA /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
@@ -306,8 +314,12 @@
 				B457BF311BED9BFB4321BC0F /* CameraController.swift */,
 				DFB100594401DF03A33600E0 /* CaptureModel.swift */,
 				E00C25ED916B66A447B8C411 /* CaptureView.swift */,
+				52EFEC9F374B7B3FE8384E73 /* CardsGenerator.swift */,
 				F1C91F026BE4FEE54E8BB42E /* LordsDayFeedView.swift */,
 				F9026BA4701C493912921EF2 /* LordsDayTabView.swift */,
+				C643620A0907843D1122CAB4 /* ReviewModel.swift */,
+				7CB00260AC3C7D9B2C799DB8 /* ReviewView.swift */,
+				EF90EFD2FCB8FC6A14A57EEA /* VersePickerView.swift */,
 			);
 			path = LordsDay;
 			sourceTree = "<group>";
@@ -528,6 +540,7 @@
 				8B6C145E341F77C8E643D573 /* CameraController.swift in Sources */,
 				E05748719EA05C3738219BC2 /* CaptureModel.swift in Sources */,
 				D0AEC860FC03BD3CCA1EC43C /* CaptureView.swift in Sources */,
+				7B246BA5EFD0AB22AE029116 /* CardsGenerator.swift in Sources */,
 				735B92C856F999EE4F7294F6 /* CatechismTabView.swift in Sources */,
 				D7FD205440856F87ABC90190 /* ClauseLabel.swift in Sources */,
 				58641ED3BB13D794A63BE99F /* ConfessionalChristianityApp.swift in Sources */,
@@ -551,6 +564,8 @@
 				4C9F8EC58B6134846888E049 /* ReaderChapterView.swift in Sources */,
 				F9A6A194E510D0FB131952FF /* ReflectionDetailView.swift in Sources */,
 				8E1F53502D81DEB3DC3AACD0 /* ReflectionsRoute.swift in Sources */,
+				CA89F33BD75237A05A952DD6 /* ReviewModel.swift in Sources */,
+				B47AC25335237324631051A6 /* ReviewView.swift in Sources */,
 				A37246ABCD770C1EB341917E /* RootTab.swift in Sources */,
 				EF6180A42307C70469D1AAF6 /* RootView.swift in Sources */,
 				2940242738B000E1BE7AE7E0 /* ScriptureRoute.swift in Sources */,
@@ -563,6 +578,7 @@
 				CE1920ACD9DF2D32D7ADB5B3 /* SupabaseConfig.swift in Sources */,
 				B3F5CF1C182FCFD4301934FC /* TabIcons.swift in Sources */,
 				792F3E7354EBF8639091C677 /* TodayView.swift in Sources */,
+				AEE99A080D3E2A0466FC17D6 /* VersePickerView.swift in Sources */,
 				D89F5D29E702D31D1EE15377 /* VerseReaderView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

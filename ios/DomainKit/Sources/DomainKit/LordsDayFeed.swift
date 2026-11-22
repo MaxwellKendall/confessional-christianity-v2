@@ -88,7 +88,8 @@ public struct LordsDayFeed: Equatable, Sendable {
             let attribution: String? = switch card.kind {
             case .keyPoint: passage.map { "From your notes on \($0)" } ?? "From your notes"
             case .quote:
-                [normalizedNoteField(card.attribution) ?? preacher, passage].compactMap { $0 }.joined(separator: " · ").nilIfEmpty
+                // Nil means "the preacher"; empty means the user cleared it in review (TKL-863).
+                [card.attribution == nil ? preacher : normalizedNoteField(card.attribution), passage].compactMap { $0 }.joined(separator: " · ").nilIfEmpty
             case .verse: nil
             }
             let ref = normalizedNoteField(card.verseRef)

@@ -30,15 +30,17 @@ Linear project: **confessional christianity** (team TKL): https://linear.app/sof
   runs headless, so there is no window to click): `-VerseReaderFixture verse|notes|end|loading|error`,
   `-ReaderChapterReference Rom.8.28`, `-ProofTextSession catechizing-shorter-catechism:32[:Rom.8.30]` (session at Q. 32, optionally
   with the proof-text reader pushed) plus `-ProofTextReaderCard verse|end`, `-LordsDayFeedFixture key_point|quote|verse|verse_offline` (the week's card feed from an in-memory sample week, opened
-  at today's card of that kind; `verse_offline` is a verse with no bundled text), `-EsvOffline YES` (reader and verse cards act offline), and
+  at today's card of that kind; `verse_offline` is a verse with no bundled text), `-LordsDayReviewFixture filling|complete` (reviewing drafted cards, TKL-863: sample drafts replayed into a throwaway
+  folder; `filling` stays mid-fill) plus `-LordsDayReviewCard p0-1|drafting` (open at that card), `-EsvOffline YES` (reader,
+  verse cards and the cards generator act offline), and
   `-SkipNotificationOffer YES` (always pass it: an unanswered notification prompt survives reinstalls until the simulator reboots).
 
 ## Test (from the repo root)
 | Suite | Command | Runtime |
 |---|---|---|
-| web unit | `npm test` (vitest, 156 tests, incl. `scripts/**/*.test.mjs`) | ~1 s |
+| web unit | `npm test` (vitest, 210 tests, incl. `scripts/**/*.test.mjs`) | ~1 s |
 | web build | `npm run build` (needs `.env.local`; ESLint enforced) | ~15 s |
-| DomainKit | `cd ios/DomainKit && swift test` (199 tests: 175 Swift Testing + 24 XCTest) | ~15 s |
+| DomainKit | `cd ios/DomainKit && swift test` (218 tests: 178 Swift Testing + 40 XCTest) | ~15 s |
 | iOS build | `cd ios/App && xcodegen generate && xcodebuild -scheme ConfessionalChristianity -destination 'platform=iOS Simulator,name=CC iPhone 17 Pro' -derivedDataPath ../../build/dd build` | ~1 min cold |
 | infra | `cd infra && npm ci && npm test` (vitest CDK assertions, 20 tests) | ~6 s |
 

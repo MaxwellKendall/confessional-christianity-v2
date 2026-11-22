@@ -1,7 +1,9 @@
 // The Lord's Day tab (pillar two, TKL-825). With cards for this week it is the
 // week's card feed (TKL-862), read from the local store only. Without them it
 // is the empty state from TKL-885's prototype (TKL-868 replaces it), with the
-// way into photographing Sunday's notes (TKL-860). The archive is TKL-865.
+// way into photographing Sunday's notes (TKL-860). Finishing a capture opens
+// the review of the drafted cards (TKL-863), which can be left and reopened
+// from here until the week is kept. The archive is TKL-865.
 import SwiftUI
 import SwiftData
 import DomainKit
@@ -14,13 +16,23 @@ struct LordsDayTabView: View {
     @State private var capture: CaptureModel?
     @State private var status = CaptureStatus()
     @State private var feed: LordsDayFeed?
+    @State private var review: ReviewModel?
+    /// Set by the capture's Done, so its cover's dismissal opens the review.
+    @State private var reviewAfterCapture: UUID?
 
     var body: some View {
         NavigationStack(path: $path) {
             Group {
                 if let feed {
                     LordsDayFeedView(feed: feed, allowsNetwork: isActive)
-                        .overlay(alignment: .topTrailing) { captureButton }
+                        .overlay(alignment: .topTrailing) {
+                            HStack(spacing: 8) {
+                                if status.reviewable { reviewButton }
+                                captureButton
+                            }
+                            .padding(.trailing, 16)
+                            .padding(.top, 40)
+                        }
                 } else {
                     emptyState
                 }
@@ -29,8 +41,14 @@ struct LordsDayTabView: View {
             .appDestinations(path: $path)
         }
         .tint(.ccInk)
-        .fullScreenCover(item: $capture, onDismiss: refresh) { model in
-            CaptureView(model: model, onClose: { capture = nil })
+        .fullScreenCover(item: $capture, onDismiss: afterCapture) { model in
+            CaptureView(model: model, onClose: { capture = nil }, onFinish: {
+                reviewAfterCapture = model.noteId
+                capture = nil
+            })
+        }
+        .fullScreenCover(item: $review, onDismiss: refresh) { model in
+            ReviewView(model: model, onClose: { review = nil }, onFinish: { review = nil })
         }
         .onAppear(perform: refresh)
     }
@@ -43,9 +61,17 @@ struct LordsDayTabView: View {
                 .frame(width: 40, height: 40)
                 .background(.ultraThinMaterial, in: Circle())
         }
-        .padding(.trailing, 16)
-        .padding(.top, 40)
         .accessibilityLabel(status.resumable ? "Continue Sunday's notes" : "Photograph Sunday's notes")
+    }
+
+    private var reviewButton: some View {
+        Button(action: openReview) {
+            Label("Review cards", systemImage: "rectangle.stack")
+                .font(.system(size: 14, weight: .semibold))
+                .padding(.horizontal, 14)
+                .frame(height: 40)
+                .background(.ultraThinMaterial, in: Capsule())
+        }
     }
 
     private var emptyState: some View {
@@ -70,6 +96,17 @@ struct LordsDayTabView: View {
                             .lineSpacing(3)
                             .foregroundStyle(.ccInk2)
                             .fixedSize(horizontal: false, vertical: true)
+                        if status.reviewable {
+                            Button(action: openReview) {
+                                Label("Review your cards", systemImage: "rectangle.stack")
+                                    .font(.system(size: 15.5, weight: .semibold))
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 13)
+                                    .background(Color.ccChapel, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                    .foregroundStyle(Color.ccOnChapel)
+                            }
+                            .padding(.top, 16)
+                        }
                         Button { capture = CaptureModel(context: context) } label: {
                             Label(status.resumable ? "Continue Sunday's notes" : "Photograph Sunday's notes", systemImage: "camera")
                                 .font(.system(size: 15.5, weight: .semibold))
@@ -99,6 +136,20 @@ struct LordsDayTabView: View {
             .background(Color.ccCard)
     }
 
+    private func afterCapture() {
+        refresh()
+        guard let id = reviewAfterCapture else { return }
+        reviewAfterCapture = nil
+        if let note = try? context.fetch(FetchDescriptor<LordsDayNote>(predicate: #Predicate { $0.id == id })).first {
+            review = ReviewModel.session(for: note, context: context)
+        }
+    }
+
+    private func openReview() {
+        guard let note = try? LordsDayStore(context: context).currentWeek() else { return }
+        review = ReviewModel.session(for: note, context: context)
+    }
+
     private func refresh() {
         status = CaptureStatus(context: context)
         let store = LordsDayStore(context: context)
@@ -113,6 +164,8 @@ struct LordsDayTabView: View {
 /// What the tab says about this week's notes until the feed (TKL-862) shows them.
 private struct CaptureStatus {
     var resumable = false
+    /// This week's notes have drafts waiting for review, or were never drafted.
+    var reviewable = false
     var savedLine: String?
 
     init() {}
@@ -120,8 +173,10 @@ private struct CaptureStatus {
     @MainActor init(context: ModelContext) {
         resumable = (try? CaptureDraft.activeNoteId()) != nil
         guard !resumable, let note = try? LordsDayStore(context: context).currentWeek() else { return }
+        let hasCards = !((try? LordsDayStore(context: context).cards(for: note)) ?? []).isEmpty
+        reviewable = ReviewModel.isPending(note, hasCards: hasCards)
         let pages = (try? CaptureDraft(noteId: note.id))?.pages.count ?? 0
         let what = pages > 0 ? "\(pages) page\(pages == 1 ? "" : "s")" : "typed notes"
-        savedLine = "Saved: \(note.serviceDate.formatted(.dateTime.weekday(.wide).day().month())) · \(what). Cards from your notes arrive in the next update."
+        savedLine = "Saved: \(note.serviceDate.formatted(.dateTime.weekday(.wide).day().month())) · \(what)."
     }
 }
