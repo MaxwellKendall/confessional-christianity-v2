@@ -230,8 +230,12 @@ public final class LocalProgressStore {
         try commitChanges()
     }
 
+    private enum SelectionError: Error {
+        case childNotFound
+    }
+
     public func selectChild(childId: UUID) throws {
-        guard try child(for: childId) != nil else { return }
+        guard try child(for: childId) != nil else { throw SelectionError.childNotFound }
         try settings().activeChildId = childId
         try commitChanges()
     }

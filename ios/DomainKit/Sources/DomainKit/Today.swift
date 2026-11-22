@@ -115,6 +115,12 @@ public func planToday(_ input: TodayInput) -> TodayPlan {
 }
 
 extension LocalProgressStore {
+    /// Supplies a navigation destination only after the tapped child's selection is saved.
+    public func selectChildForSession(_ child: TodayChild) throws -> String {
+        try selectChild(childId: child.id)
+        return child.programSlug
+    }
+
     /// Every child in the order they were added, each at the next question of
     /// their current catechism (the Shorter Catechism at Q. 1 if not started).
     /// "Practised today" means a question was introduced today.

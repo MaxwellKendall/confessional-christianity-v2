@@ -168,3 +168,75 @@ struct TodayChildrenTests {
         #expect(row.learned == 107)
     }
 }
+
+extension TodayChildrenTests {
+    @Test("a failed child selection produces no session route and leaves existing progress alone")
+    func failedSessionSelection() throws {
+        let samuel = try store.addChild(name: "Samuel")
+        let track = try #require(store.startTrack(childId: samuel.id, catechismId: "WSC", startingQuestion: 9))
+        let tapped = child("Thomas")
+        let previousUpdate = track.updatedAt
+
+        #expect(throws: (any Error).self) {
+            try store.selectChildForSession(tapped)
+        }
+        #expect(store.activeChildId == samuel.id)
+        #expect(track.currentQuestion == 9)
+        #expect(track.updatedAt == previousUpdate)
+        #expect(!container.mainContext.hasChanges)
+    }
+
+    @Test("a failed selection save leaves the prior child's progress untouched")
+    func failedSessionSelectionSave() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let url = directory.appendingPathComponent("Progress.sqlite")
+        let writable = ModelConfiguration(schema: progressSchema, url: url)
+        let writer = try ModelContainer(for: progressSchema, configurations: [writable])
+        let writerStore = LocalProgressStore(context: writer.mainContext)
+        let samuel = try writerStore.addChild(name: "Samuel")
+        let thomas = try writerStore.addChild(name: "Thomas")
+        let track = try #require(writerStore.startTrack(childId: samuel.id, catechismId: "WSC", startingQuestion: 9))
+
+        let readOnly = ModelConfiguration(schema: progressSchema, url: url, allowsSave: false)
+        let reader = try ModelContainer(for: progressSchema, configurations: [readOnly])
+        let readerStore = LocalProgressStore(context: reader.mainContext)
+        let tapped = try #require(readerStore.todayChildren().first { $0.id == thomas.id })
+        let previousUpdate = track.updatedAt
+        #expect(readerStore.activeChildId == samuel.id)
+
+        #expect(throws: (any Error).self) {
+            try readerStore.selectChildForSession(tapped)
+        }
+        let persistedContext = ModelContext(writer)
+        #expect(LocalProgressStore(context: persistedContext).activeChildId == samuel.id)
+        let tracks = try persistedContext.fetch(FetchDescriptor<ChildCatechismTrack>())
+        let savedTrack = try #require(tracks.first)
+        #expect(tracks.count == 1)
+        #expect(savedTrack.childId == samuel.id)
+        #expect(savedTrack.currentQuestion == 9)
+        #expect(savedTrack.updatedAt == previousUpdate)
+        #expect(!reader.mainContext.hasChanges)
+    }
+
+    @Test("a Today session route loads the tapped child's track after switching children")
+    func sessionSelectionLoadsTappedChild() throws {
+        let samuel = try store.addChild(name: "Samuel")
+        let thomas = try store.addChild(name: "Thomas")
+        store.startTrack(childId: samuel.id, catechismId: "WSC", startingQuestion: 9)
+        store.startTrack(childId: thomas.id, catechismId: "WSC", startingQuestion: 4)
+        #expect(store.activeChildId == samuel.id)
+        let tapped = try #require(store.todayChildren().first { $0.id == thomas.id })
+
+        let slug = try store.selectChildForSession(tapped)
+        let program = try #require(getProgram(slug))
+        let activeChildId = try #require(store.activeChildId)
+        let track = try #require(store.resumeOrStartTrack(
+            childId: activeChildId, catechismId: program.contentId.rawValue
+        ))
+
+        #expect(track.childId == thomas.id)
+        #expect(track.currentQuestion == 4)
+    }
+}

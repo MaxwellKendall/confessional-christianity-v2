@@ -21,6 +21,7 @@ struct TodayView: View {
 
     @State private var showsSettings = false
     @State private var showsAddChild = false
+    @State private var showsSessionError = false
 
     private var store: LocalProgressStore { LocalProgressStore(context: modelContext) }
 
@@ -62,6 +63,11 @@ struct TodayView: View {
         .tint(.ccInk)
         .sheet(isPresented: $showsSettings) { SettingsView() }
         .sheet(isPresented: $showsAddChild) { AddChildView() }
+        .alert("Couldn’t start practice", isPresented: $showsSessionError) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("The child selection couldn’t be saved. Please try again.")
+        }
     }
 
     // MARK: header
@@ -200,8 +206,12 @@ struct TodayView: View {
     /// Starts this child's session: they become the active child (SessionView
     /// works on the active child), then their catechism is pushed.
     private func begin(_ child: TodayChild) {
-        try? store.selectChild(childId: child.id)
-        path.append(child.programSlug)
+        do {
+            let slug = try store.selectChildForSession(child)
+            path.append(slug)
+        } catch {
+            showsSessionError = true
+        }
     }
 }
 
