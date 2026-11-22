@@ -236,7 +236,7 @@ struct LordsDayFeedFixture: View {
         ZStack {
             if let feed { LordsDayFeedView(feed: feed) }
         }
-        .overlay(alignment: .bottom) { FloatingTabBarView(selected: .constant(.lordsDay)) }
+        .overlay { FloatingTabBarView(selected: .constant(.lordsDay)) }
         .task { feed = Self.makeFeed(scene) }
     }
 

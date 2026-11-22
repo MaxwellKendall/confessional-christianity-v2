@@ -3,6 +3,7 @@
 // and the Linear document "Design tokens: Chapel (app 1.1)". Where they
 // disagree the prototype wins. Every colour follows the light or dark
 // setting; screens take colours, type and shapes from here, never a hex.
+// Corners are circular, as the prototype draws them.
 // scripts/ios/chapel-design.test.mjs holds the values to the prototype's.
 // Also compiled into the widget, so nothing here may use app-only types.
 import SwiftUI
@@ -59,7 +60,7 @@ extension Color {
     /// Resolves against the colour scheme where it's drawn, so a screen that
     /// forces dark (the camera, the reader's night setting) gets the dark value.
     init(light: UInt32, dark: UInt32, lightAlpha: CGFloat = 1, darkAlpha: CGFloat = 1) {
-        self.init(uiColor: UIColor { traits in
+        self.init(uiColor: UIColor { @Sendable traits in
             let isDark = traits.userInterfaceStyle == .dark
             let hex = isDark ? dark : light
             return UIColor(
@@ -262,7 +263,7 @@ extension View {
 extension View {
     /// A bordered card on surface: pillar cards and lists.
     func chapelCard() -> some View {
-        let shape = RoundedRectangle(cornerRadius: ChapelRadius.card, style: .continuous)
+        let shape = RoundedRectangle(cornerRadius: ChapelRadius.card, style: .circular)
         return padding(1) // the border takes space, as in the prototype
             .background(Color.ccSurface, in: shape)
             .overlay(shape.strokeBorder(Color.ccLine, lineWidth: 1))
@@ -313,7 +314,7 @@ private struct ChapelButtonLabel: View {
             .multilineTextAlignment(.center)
             .foregroundStyle(ink)
             .frame(maxWidth: .infinity, minHeight: ChapelSize.buttonHeight)
-            .background(fill, in: RoundedRectangle(cornerRadius: ChapelRadius.control, style: .continuous))
+            .background(fill, in: RoundedRectangle(cornerRadius: ChapelRadius.control, style: .circular))
             .contentShape(Rectangle())
             .opacity(configuration.isPressed ? 0.85 : 1)
     }
@@ -359,7 +360,7 @@ struct ChapelHeroCard: View {
         }
         .padding(20)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.ccChapel, in: RoundedRectangle(cornerRadius: ChapelRadius.card, style: .continuous))
+        .background(Color.ccChapel, in: RoundedRectangle(cornerRadius: ChapelRadius.card, style: .circular))
     }
 }
 
@@ -377,7 +378,7 @@ struct ChapelListRow<Lead: View>: View {
                 .font(.ccRowInitial)
                 .foregroundStyle(.ccInk)
                 .frame(width: ChapelSize.rowWell, height: ChapelSize.rowWell)
-                .background(Color.ccFill, in: RoundedRectangle(cornerRadius: ChapelRadius.well, style: .continuous))
+                .background(Color.ccFill, in: RoundedRectangle(cornerRadius: ChapelRadius.well, style: .circular))
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .font(.ccUI())

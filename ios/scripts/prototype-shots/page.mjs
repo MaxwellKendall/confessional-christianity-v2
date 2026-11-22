@@ -27,6 +27,8 @@ export function prototypePage(html, name, fontsUrl) {
     face('Marcellus', 400, 'Marcellus-Regular.ttf'),
     '.bar,.note{display:none!important}',
     '.phone{position:fixed!important;left:0;top:0;width:390px!important;max-width:none!important;border-radius:0;box-shadow:none}',
+    // iOS draws text with greyscale smoothing; Chrome on a Mac is heavier by default.
+    'body{-webkit-font-smoothing:antialiased}',
     '*{transition:none!important;animation:none!important}',
   ].join('\n');
 

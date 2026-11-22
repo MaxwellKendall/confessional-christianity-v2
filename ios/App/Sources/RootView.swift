@@ -58,11 +58,7 @@ struct RootView: View {
         }
         .overlay {
             if isTabBarVisible {
-                // Placed from the screen's edge, as in the prototype, and left
-                // under the keyboard like a system tab bar.
                 FloatingTabBarView(selected: $selected)
-                    .frame(maxHeight: .infinity, alignment: .bottom)
-                    .ignoresSafeArea(edges: .bottom)
                     .transition(.opacity)
             }
         }

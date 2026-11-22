@@ -31,9 +31,15 @@ Linear project: **confessional christianity** (team TKL): https://linear.app/sof
   `-ReaderChapterReference Rom.8.28`, `-ProofTextSession catechizing-shorter-catechism:32[:Rom.8.30]` (session at Q. 32, optionally
   with the proof-text reader pushed) plus `-ProofTextReaderCard verse|end`, `-LordsDayFeedFixture key_point|quote|verse|verse_offline` (the week's card feed from an in-memory sample week, opened
   at today's card of that kind; `verse_offline` is a verse with no bundled text), `-LordsDayReviewFixture filling|complete` (reviewing drafted cards, TKL-863: sample drafts replayed into a throwaway
-  folder; `filling` stays mid-fill) plus `-LordsDayReviewCard p0-1|drafting` (open at that card), `-EsvOffline YES` (reader,
+  folder; `filling` stays mid-fill) plus `-LordsDayReviewCard p0-1|drafting` (open at that card), `-LordsDayCaptureFixture camera|strip|type`
+  (the notes camera with a sample page), `-StartTab today|catechism|lordsDay` (open on that tab), `-SeedChildren "Samuel:9,Thomas:4"`
+  (those children at those questions, only when there are none yet: a fresh install is the empty state), `-EsvOffline YES` (reader,
   verse cards and the cards generator act offline), and
   `-SkipNotificationOffer YES` (always pass it: an unanswered notification prompt survives reinstalls until the simulator reboots).
+  The app follows the system light/dark setting (there is no launch arg): `xcrun simctl ui <dev> appearance light|dark`.
+- Design: colours, type, shapes and shared components are Chapel, in `ios/App/Sources/DesignSystem.swift`; no hex in screens.
+  Pair a screen with the approved home and navigation prototype (TKL-885):
+  `ios/scripts/prototype-shots/render.sh today-full-dark out.png [simulator.png]` (states are listed in the script).
 
 ## Test (from the repo root)
 | Suite | Command | Runtime |

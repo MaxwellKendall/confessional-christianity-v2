@@ -12,6 +12,8 @@ import DomainKit
 private let camBackground = Color(hex: 0x0d0f0e)
 private let camGilt = Color(hex: 0xd3a654)
 private let camPaper = Color(hex: 0xfbf8ef)
+// The camera is always dark, so its light button can't be the adaptive on-chapel (dark text's colour there).
+private let camButton = Color(hex: 0xf2f4ef)
 
 struct CaptureView: View {
     @State var model: CaptureModel
@@ -259,7 +261,7 @@ struct CaptureView: View {
                 .font(.system(size: 16, weight: .semibold))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 15)
-                .background(Color.ccOnChapel, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .background(camButton, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                 .foregroundStyle(Color(hex: 0x102019))
         }
         .disabled(!model.canFinish)
