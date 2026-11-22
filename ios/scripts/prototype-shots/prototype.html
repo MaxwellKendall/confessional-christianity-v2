@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TKL-885 · Home and navigation · Confessional Christianity</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Marcellus&display=swap" rel="stylesheet">
+<style>
+/* Chapel tokens (Linear doc "Design tokens: Chapel (app 1.1)") */
+:root{
+  --paper:#f5f5f1;--surface:#fcfcfa;--fill:#ecede7;--line:#d9dbd2;--ink:#1c1f1c;--ink-2:#545a53;--ink-3:#858b83;
+  --chapel:#2e4a3e;--on-chapel:#f2f4ef;--gilt:#a67a2c;--danger:#9b3328;--danger-fill:#f6e9e6;
+  --sp1:4px;--sp2:8px;--sp3:12px;--sp4:16px;--sp5:24px;--sp6:32px;--gut:20px;
+  --r-sheet:22px;--r-card:14px;--r-ctl:12px;--r-tab:26px;
+  --sys:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif;
+}
+.dark{
+  --paper:#121513;--surface:#1a1e1b;--fill:#232823;--line:#2e342f;--ink:#ebece6;--ink-2:#aeb4ac;--ink-3:#7d847c;
+  --chapel:#a8c6b6;--on-chapel:#102019;--gilt:#d3a654;--danger:#ec8a7c;--danger-fill:#2c1b18;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sys);background:#d8d9d3;color:#1c1f1c;min-height:100vh;display:flex;flex-direction:column;align-items:center;gap:14px;padding:14px 8px 40px}
+body.dark-page{background:#0b0d0c;color:#ebece6}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+
+/* ---- state bar (outside the phone) ---- */
+.bar{width:100%;max-width:820px;display:flex;flex-wrap:wrap;gap:8px 16px;justify-content:center;font-size:12.5px}
+.bar .grp{display:flex;align-items:center;gap:4px}
+.bar .grp b{font-weight:600;margin-right:4px;opacity:.7}
+.bar button{padding:5px 10px;border-radius:999px;background:rgba(0,0,0,.07)}
+body.dark-page .bar button{background:rgba(255,255,255,.1)}
+.bar button.on,body.dark-page .bar button.on{background:#2e4a3e;color:#f2f4ef}
+.note{max-width:620px;font-size:12.5px;line-height:1.5;opacity:.75;text-align:center}
+
+/* ---- phone ---- */
+.phone{width:390px;max-width:100%;height:844px;border-radius:48px;background:var(--paper);color:var(--ink);position:relative;overflow:hidden;box-shadow:0 0 0 10px #111,0 20px 60px rgba(0,0,0,.35)}
+.status{height:50px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 30px 6px;font-size:15px;font-weight:600;position:relative;z-index:30}
+.screen{position:absolute;inset:50px 0 0 0;overflow-y:auto;overflow-x:hidden;display:none;padding-bottom:110px;scrollbar-width:none}
+.screen::-webkit-scrollbar{display:none}
+.screen.on{display:block}
+
+/* type */
+.caps{font-family:Cinzel,serif;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3)}
+.title{font-family:Cinzel,serif;font-weight:600;font-size:25px;letter-spacing:.01em}
+.h2{font-family:Cinzel,serif;font-weight:600;font-size:19px}
+.read{font-family:Marcellus,serif;font-size:16.5px;line-height:1.5}
+.meta{font-size:13px;color:var(--ink-2)}
+
+/* header */
+.hdr{display:flex;align-items:flex-start;justify-content:space-between;padding:8px var(--gut) 16px}
+.avatar{width:38px;height:38px;border-radius:50%;background:var(--fill);display:grid;place-items:center;font-family:Cinzel,serif;font-weight:600;font-size:14px;position:relative;flex:none}
+.avatar .dot{position:absolute;right:0;top:0;width:10px;height:10px;border-radius:50%;background:var(--gilt);border:2px solid var(--paper)}
+.iconbtn{width:38px;height:38px;border-radius:50%;background:var(--fill);display:grid;place-items:center;flex:none}
+.iconbtn svg{width:18px;height:18px;stroke:var(--ink);fill:none;stroke-width:1.8}
+
+/* hero card */
+.hero{margin:0 var(--gut);background:var(--chapel);color:var(--on-chapel);border-radius:var(--r-card);padding:20px;position:relative;overflow:hidden}
+.hero .caps{color:var(--on-chapel);opacity:.75}
+.hero .q{font-family:Marcellus,serif;font-size:21px;line-height:1.35;margin:10px 0 16px}
+.hero .prog{height:4px;background:rgba(255,255,255,.18);border-radius:2px;overflow:hidden;margin-bottom:6px}
+.dark .hero .prog{background:rgba(0,0,0,.15)}
+.hero .prog i{display:block;height:100%;background:var(--gilt)}
+.hero .sub{font-size:13px;opacity:.8;margin-bottom:16px}
+.btn{height:50px;border-radius:var(--r-ctl);font-size:16.5px;font-weight:600;width:100%;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn.primary{background:var(--chapel);color:var(--on-chapel)}
+.hero .btn.primary{background:var(--on-chapel);color:var(--chapel)}
+.btn.quiet{background:var(--fill);color:var(--ink)}
+.btn.danger{background:var(--danger-fill);color:var(--danger)}
+.btn.link{height:auto;padding:12px;color:var(--ink-2);font-weight:500;font-size:15px}
+
+/* rows */
+.sec{padding:24px var(--gut) 8px}
+.list{margin:0 var(--gut);background:var(--surface);border-radius:var(--r-card);border:1px solid var(--line);overflow:hidden}
+.row{display:flex;align-items:center;gap:12px;padding:14px 16px;font-size:15.5px;width:100%;text-align:left}
+.row+.row{border-top:1px solid var(--line)}
+.row .lead{width:34px;height:34px;border-radius:10px;background:var(--fill);display:grid;place-items:center;flex:none;font-family:Cinzel,serif;font-size:13px;font-weight:600}
+.row .lead svg{width:17px;height:17px;stroke:var(--ink-2);fill:none;stroke-width:1.8}
+.row .txt{flex:1;min-width:0}
+.row .txt small{display:block;font-size:13px;color:var(--ink-2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .chev{color:var(--ink-3);font-size:18px}
+.row.done .txt{color:var(--ink-3)}
+.tick{width:22px;height:22px;border-radius:50%;background:var(--gilt);color:#fff;display:grid;place-items:center;font-size:12px}
+
+/* share strip on Today */
+.sharecard{margin:0 var(--gut);border-radius:var(--r-card);overflow:hidden;display:flex;align-items:stretch;border:1px solid var(--line);background:var(--surface)}
+.sharecard .mini{width:118px;flex:none;padding:12px;display:flex;flex-direction:column;justify-content:space-between}
+.sharecard .mini p{font-family:Marcellus,serif;font-size:12px;line-height:1.3}
+.sharecard .mini span{font-family:Cinzel,serif;font-size:7px;letter-spacing:.14em;text-transform:uppercase}
+.sharecard .body{padding:14px;flex:1;display:flex;flex-direction:column;gap:6px;justify-content:center}
+.pill{align-self:flex-start;height:34px;padding:0 14px;border-radius:999px;background:var(--fill);font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px}
+.pill svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2}
+
+/* pillar cards (empty state) */
+.pillar{margin:0 var(--gut) 12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card);padding:20px;text-align:left;width:calc(100% - 40px);display:block}
+.pillar .h2{margin:8px 0 6px}
+.pillar .go{margin-top:14px;font-weight:600;font-size:15px;color:var(--chapel)}
+
+/* inline notes */
+.inote{margin:0 var(--gut) 14px;padding:12px 14px;border-radius:var(--r-ctl);background:var(--danger-fill);font-size:14px;display:flex;align-items:center;gap:10px}
+.inote span{flex:1}
+.inote button{font-weight:600;color:var(--danger)}
+.synced{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink-3)}
+.synced i{width:7px;height:7px;border-radius:50%;background:var(--gilt)}
+
+/* skeleton */
+.sk{background:linear-gradient(90deg,var(--fill) 0%,var(--line) 50%,var(--fill) 100%);background-size:200% 100%;animation:sh 1.2s infinite linear;border-radius:var(--r-card)}
+@keyframes sh{to{background-position:-200% 0}}
+
+/* tab bar */
+.tabs{position:absolute;left:16px;right:16px;bottom:24px;height:64px;border-radius:var(--r-tab);background:color-mix(in srgb,var(--surface) 88%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid var(--line);display:flex;z-index:20;box-shadow:0 8px 24px rgba(0,0,0,.08)}
+.tabs.hide{display:none}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:10.5px;color:var(--ink-3);font-family:Cinzel,serif;letter-spacing:.06em}
+.tab svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7}
+.tab.on{color:var(--chapel)}
+.tab .badge{position:absolute;margin-left:22px;margin-top:-20px;width:7px;height:7px;border-radius:50%;background:var(--gilt)}
+
+/* horizontal pager */
+.pager{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:12px;padding:0 var(--gut);scrollbar-width:none}
+.pager::-webkit-scrollbar{display:none}
+.pager>*{scroll-snap-align:center;flex:none;width:calc(390px - 56px)}
+.dots{display:flex;gap:6px;justify-content:center;padding:12px 0}
+.dots i{width:6px;height:6px;border-radius:50%;background:var(--line)}
+.dots i.on{background:var(--ink-2)}
+
+/* child card */
+.child{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card);padding:20px;display:flex;flex-direction:column;gap:12px;min-height:280px}
+.ring{width:84px;height:84px;position:relative}
+.ring svg{width:84px;height:84px;transform:rotate(-90deg)}
+.ring b{position:absolute;inset:0;display:grid;place-items:center;font-size:15px;font-weight:600}
+.child.add{align-items:center;justify-content:center;border-style:dashed;color:var(--ink-2);text-align:center}
+
+/* session pages */
+.sess{position:absolute;inset:50px 0 0 0;display:none;flex-direction:column;background:var(--paper);z-index:25}
+.sess.on{display:flex}
+.sess .top{display:flex;align-items:center;justify-content:space-between;padding:6px var(--gut) 10px}
+.spages{flex:1;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
+.spages::-webkit-scrollbar{display:none}
+.spage{flex:none;width:100%;scroll-snap-align:start;padding:16px 28px;display:flex;flex-direction:column;justify-content:center;gap:16px}
+.spage .big{font-family:Marcellus,serif;font-size:26px;line-height:1.35}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{height:36px;padding:0 14px;border-radius:999px;background:var(--fill);font-size:14.5px;display:flex;align-items:center}
+.sess .foot{padding:12px var(--gut) 34px}
+
+/* Lord's Day feed */
+.feed{position:absolute;inset:50px 0 0 0;overflow-y:auto;scroll-snap-type:y mandatory;scrollbar-width:none;display:none}
+.feed::-webkit-scrollbar{display:none}
+.feed.on{display:block}
+.fcard{height:calc(844px - 50px);scroll-snap-align:start;position:relative;padding:76px 32px 130px;display:flex;flex-direction:column;justify-content:center}
+.fcard .frame{position:absolute;inset:66px 18px 112px;border:1px solid;border-radius:6px;opacity:.55;pointer-events:none}
+.fcard .lab{font-family:Cinzel,serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase;margin-bottom:22px}
+.fcard .txt{font-family:Marcellus,serif;font-size:27px;line-height:1.38}
+.fcard .att{margin-top:22px;font-family:Cinzel,serif;font-size:11px;letter-spacing:.12em;text-transform:uppercase}
+.fcard .acts{position:absolute;left:32px;right:32px;bottom:128px;display:flex;gap:8px}
+.fcard .acts button{height:38px;padding:0 14px;border-radius:999px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px;background:rgba(127,127,127,.16)}
+.fcard .acts button.sh{background:currentColor}
+.fcard .acts button.sh span{filter:invert(1);mix-blend-mode:difference}
+.fcard .acts svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2}
+.ftop{position:absolute;top:50px;left:0;right:0;z-index:22;display:none;align-items:center;justify-content:space-between;padding:8px var(--gut)}
+.ftop.on{display:flex}
+.ftop .iconbtn{background:rgba(127,127,127,.22);backdrop-filter:blur(10px)}
+.rail{position:absolute;right:8px;top:50%;transform:translateY(-50%);z-index:22;display:none;flex-direction:column;gap:7px}
+.rail.on{display:flex}
+.rail i{width:5px;height:5px;border-radius:50%;background:rgba(127,127,127,.45)}
+.rail i.on{height:16px;border-radius:3px;background:var(--gilt)}
+
+/* sheets */
+.scrim{position:absolute;inset:0;background:rgba(0,0,0,.35);z-index:40;display:none}
+.scrim.on{display:block}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--surface);border-radius:var(--r-sheet) var(--r-sheet) 0 0;z-index:41;transform:translateY(100%);transition:transform .28s ease;max-height:88%;overflow-y:auto;padding:10px 0 36px}
+.sheet.on{transform:none}
+.grab{width:38px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 14px}
+.sheet .stitle{font-family:Cinzel,serif;font-weight:600;font-size:22px;padding:0 var(--gut) 6px}
+.sheet .list{background:var(--paper)}
+
+.toast{position:absolute;left:50%;bottom:104px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:999px;font-size:14px;opacity:0;transition:.25s;z-index:60;white-space:nowrap;pointer-events:none}
+.toast.on{opacity:1;transform:translateX(-50%)}
+input.field{height:50px;border-radius:var(--r-ctl);background:var(--fill);border:0;padding:0 14px;font-size:17px;width:100%;color:var(--ink);font-family:var(--sys)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 var(--gut)}
+.tile{aspect-ratio:1;border-radius:var(--r-card);padding:14px;display:flex;flex-direction:column;justify-content:flex-end;text-align:left}
+.tile b{font-family:Cinzel,serif;font-size:12px;letter-spacing:.06em}
+.tile small{font-size:11.5px;opacity:.75;margin-top:2px}
+</style>
+</head>
+<body>
+
+<div class="bar" id="bar">
+  <div class="grp"><b>State</b><button data-k="state" data-v="empty">Empty</button><button data-k="state" data-v="loading">Loading</button><button data-k="state" data-v="error">Error</button><button data-k="state" data-v="full">Full</button></div>
+  <div class="grp"><b>Day</b><button data-k="day" data-v="thu">Thursday</button><button data-k="day" data-v="sat">Saturday</button><button data-k="day" data-v="sun">Sunday</button></div>
+  <div class="grp"><b>Account</b><button data-k="signed" data-v="0">On this iPhone</button><button data-k="signed" data-v="1">Signed in</button></div>
+  <div class="grp"><b>Theme</b><button data-k="theme" data-v="light">Light</button><button data-k="theme" data-v="dark">Dark</button></div>
+</div>
+<p class="note">Three tabs, one job each: <b>Today</b> (the one thing to do now), <b>Catechism</b> (pillar 1), <b>The Lord's Day</b> (pillar 2). Sharing isn't a tab: it's the first action on every card, and Today surfaces this week's line to share. Settings sits behind the avatar. The confessions are a lookup sheet opened from a question or a verse, not a destination. Swipe the child cards, the session pages and the week's feed.</p>
+
+<div class="phone" id="phone">
+  <div class="status"><span>9:41</span><span>●●● ▮</span></div>
+
+  <!-- TODAY -->
+  <section class="screen" id="s-today"></section>
+  <!-- CATECHISM -->
+  <section class="screen" id="s-cat"></section>
+  <!-- LORD'S DAY (non-feed states + archive) -->
+  <section class="screen" id="s-ld"></section>
+  <section class="screen" id="s-archive"></section>
+  <div class="feed" id="feed"></div>
+  <div class="ftop" id="ftop">
+    <button class="iconbtn" onclick="go('archive')" aria-label="Archive"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v10h14V9M10 13h4"/></svg></button>
+    <span class="caps" id="ftopLabel" style="color:inherit">This Lord's Day</span>
+    <button class="iconbtn" onclick="toast('Opens the camera (TKL-860)')" aria-label="New Sunday"><svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
+  </div>
+  <div class="rail" id="rail"></div>
+  <div id="fnote" style="position:absolute;top:104px;left:0;right:0;z-index:23"></div>
+
+  <!-- SESSION -->
+  <div class="sess" id="sess"></div>
+
+  <nav class="tabs" id="tabs">
+    <button class="tab" data-tab="today"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>Today</button>
+    <button class="tab" data-tab="cat"><svg viewBox="0 0 24 24"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5zM20 5.5c0-.8-.7-1.5-1.5-1.5H13v16h5.5c.8 0 1.5-.7 1.5-1.5z"/></svg>Catechism</button>
+    <button class="tab" data-tab="ld"><svg viewBox="0 0 24 24"><path d="M12 3v6M9 6h6M6 21V12l6-3 6 3v9M10 21v-4h4v4"/></svg>Lord's Day</button>
+  </nav>
+
+  <div class="scrim" id="scrim" onclick="closeSheets()"></div>
+  <div class="sheet" id="sh-settings"></div>
+  <div class="sheet" id="sh-lookup"></div>
+  <div class="sheet" id="sh-share"></div>
+  <div class="sheet" id="sh-addchild"></div>
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+/* ---------- fake local data ---------- */
+const PAL={
+  vellum:{f:'#F3EAD8',i:'#2A2119',a:'#7B2323',m:'#7C6A55',fr:'#B9A27F'},
+  psalter:{f:'#1C2333',i:'#ECE3CF',a:'#C9A45C',m:'#9AA3B5',fr:'#4A5570'},
+  cloister:{f:'#E5E8DF',i:'#253029',a:'#4B6B50',m:'#66756A',fr:'#A5B2A2'},
+  vespers:{f:'#3B1619',i:'#F2E7D6',a:'#D8B46A',m:'#C9A9A0',fr:'#6E3A3C'},
+  hymnal:{f:'#1D3529',i:'#ECE4CF',a:'#C8A65A',m:'#A3B2A6',fr:'#3F5A4B'},
+  ironstone:{f:'#F5F3EE',i:'#1B2640',a:'#2C4A80',m:'#6A7286',fr:'#C3C8D4'},
+};
+const WSC={
+  4:{q:'What is God?',a:'God is a Spirit, infinite, eternal, and unchangeable, in his being, wisdom, power, holiness, justice, goodness, and truth.',p:['John 4:24','Job 11:7–9','Ps. 90:2','James 1:17','Ex. 3:14'],pr:'Great and holy God, you are bigger than everything you made, and you never change. When {name} feels small or the world feels shaky, remind him that you stay exactly as good as you have always been. Amen.'},
+  9:{q:'What is the work of creation?',a:'The work of creation is God’s making all things of nothing, by the word of his power, in the space of six days, and all very good.',p:['Gen. 1','Heb. 11:3'],pr:'Father, you spoke, and everything good came to be — out of nothing at all. When {name} makes things, let him remember the joy of the One who made him. Amen.'},
+};
+const S={state:'full',day:'thu',signed:'0',theme:'light',tab:'today',
+  children:[{name:'Samuel',q:9,done:false},{name:'Thomas',q:4,done:false}],
+  captured:false, sessChild:0};
+const SERMON={title:'More than conquerors',passage:'Romans 8:28–39',preacher:'[preacher]',church:'[church]'};
+const DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const WEEK=[
+  {d:'Sun',kind:'Lord’s Day',pal:'psalter',txt:SERMON.title,att:SERMON.passage+' · '+SERMON.preacher,cover:true},
+  {d:'Mon',kind:'Key point',pal:'vellum',txt:'God does not promise that all things are good, but that he works all things together for good.',att:'From my notes'},
+  {d:'Tue',kind:'Verse',pal:'cloister',txt:'And we know that for those who love God all things work together for good, for those who are called according to his purpose.',att:'Romans 8:28',verse:true},
+  {d:'Wed',kind:'Quote',pal:'vespers',txt:'“The chain of verse 30 has no weak link. Not one whom he called is missing at the end.”',att:SERMON.preacher},
+  {d:'Thu',kind:'Key point',pal:'ironstone',txt:'“Who shall separate us?” is a question Paul asks so that you will answer it out loud: nothing.',att:'From my notes'},
+  {d:'Fri',kind:'Verse',pal:'hymnal',txt:'No, in all these things we are more than conquerors through him who loved us.',att:'Romans 8:37',verse:true},
+  {d:'Sat',kind:'For tomorrow',pal:'vellum',txt:'Pray for tomorrow’s service: for the preacher, for those who will hear, and for your own heart to be ready.',att:'Next text: [unknown]',sat:true},
+];
+const todayIdx=()=>({thu:4,sat:6,sun:0})[S.day];
+const dayName=()=>({thu:'Thursday',sat:'Saturday',sun:'Sunday'})[S.day];
+
+/* ---------- helpers ---------- */
+const $=id=>document.getElementById(id);
+const ico={
+  share:'<svg viewBox="0 0 24 24"><path d="M12 3v12M7 8l5-5 5 5M5 13v7h14v-7"/></svg>',
+  book:'<svg viewBox="0 0 24 24"><path d="M4 5h6a2 2 0 0 1 2 2v13a2 2 0 0 0-2-2H4zM20 5h-6a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h6z"/></svg>',
+  cam:'<svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+  bell:'<svg viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 20h4"/></svg>',
+  search:'<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg>',
+  x:'<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  back:'<svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>',
+  sun:'<svg viewBox="0 0 24 24"><path d="M12 3v6M9 6h6M6 21V12l6-3 6 3v9"/></svg>',
+};
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('on'),1900)}
+function initials(){return S.signed==='1'?'MK':'•'}
+function avatar(){return `<button class="avatar" onclick="openSheet('settings')" aria-label="Settings">${S.signed==='1'?'MK<span class="dot"></span>':'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="9" r="3.5"/><path d="M5 20c1.5-3.5 4-5 7-5s5.5 1.5 7 5"/></svg>'}</button>`}
+function errNote(){return S.state==='error'?`<div class="inote"><span>Couldn’t sync. Showing what’s on this iPhone.</span><button onclick="retry()">Retry</button></div>`:''}
+function retry(){S.state='full';render();toast('Synced')}
+function syncLine(){return S.signed==='1'?'<span class="synced"><i></i>Synced</span>':'<span class="synced">On this iPhone</span>'}
+function fullish(){return S.state==='full'||S.state==='error'}
+
+/* ---------- Today ---------- */
+function nextChild(){return S.children.findIndex(c=>!c.done)}
+function renderToday(){
+  const el=$('s-today');
+  const hdr=`<div class="hdr"><div><div class="caps">${dayName()} · 21 November</div><div class="title" style="margin-top:4px">Today</div></div>${avatar()}</div>`;
+  if(S.state==='loading'){
+    el.innerHTML=hdr+`<div class="sk" style="height:250px;margin:0 20px"></div><div class="sec"><div class="sk" style="height:12px;width:90px;border-radius:4px"></div></div><div class="sk" style="height:128px;margin:0 20px"></div><div class="sk" style="height:96px;margin:16px 20px 0"></div>`;return;
+  }
+  if(S.state==='empty'){
+    el.innerHTML=hdr+`<div style="padding:0 20px 16px" class="read">Two ways to begin. Do either; the other will wait.</div>
+    <button class="pillar" onclick="go('cat');openSheet('addchild')"><div class="caps">Catechism</div><div class="h2">Catechize a child</div><div class="read" style="color:var(--ink-2);font-size:15.5px">One question a day from the Westminster Shorter Catechism: the question, the answer, the proof texts, a prayer.</div><div class="go">Add your first child →</div></button>
+    <button class="pillar" onclick="go('ld')"><div class="caps">The Lord’s Day</div><div class="h2">Keep Sunday’s sermon</div><div class="read" style="color:var(--ink-2);font-size:15.5px">Photograph your notes after church. The app turns them into a card for each day of the week.</div><div class="go">Photograph Sunday’s notes →</div></button>
+    <div style="padding:8px 20px">${syncLine()}</div>`;return;
+  }
+  // full / error
+  const ci=nextChild();let hero='';
+  if(S.day==='sun'&&!S.captured){
+    hero=`<div class="hero"><div class="caps">The Lord’s Day</div><div class="q">After church, photograph your sermon notes. Your week builds from them.</div><div class="sub">Last Sunday: ${SERMON.title} · ${SERMON.passage}</div><button class="btn primary" onclick="toast('Opens the camera (TKL-860)')">${ico.cam.replace('<svg','<svg width=18 height=18 fill=none stroke=currentColor stroke-width=1.8')} Photograph notes</button></div>`;
+  } else if(ci>=0){
+    const c=S.children[ci],w=WSC[c.q];
+    hero=`<div class="hero"><div class="caps">${c.name} · Shorter Catechism · Q. ${c.q}</div><div class="q">${w.q}</div><div class="prog"><i style="width:${c.q/107*100}%"></i></div><div class="sub">${c.q-1} of 107 learned</div><button class="btn primary" onclick="startSession(${ci})">Begin Q. ${c.q} with ${c.name}</button></div>`;
+  } else {
+    const t=WEEK[todayIdx()];
+    hero=`<div class="hero"><div class="caps">${dayName()} · from Sunday’s sermon</div><div class="q">${t.txt}</div><div class="sub">${t.att}</div><button class="btn primary" onclick="openFeed()">Open today’s card</button></div>`;
+  }
+  // also today
+  let rows='';
+  S.children.forEach((c,i)=>{ if(S.day!=='sun'&&i===ci) return;
+    rows+= c.done?`<div class="row done"><div class="lead">${c.name[0]}</div><div class="txt">${c.name}<small>Q. ${c.q-1} done today</small></div><span class="tick">✓</span></div>`
+      :`<button class="row" onclick="startSession(${i})"><div class="lead">${c.name[0]}</div><div class="txt">${c.name}<small>Q. ${c.q} · ${WSC[c.q].q}</small></div><span class="chev">›</span></button>`;});
+  if(!(ci<0&&S.day!=='sun')){
+    const t=WEEK[todayIdx()];
+    if(S.day==='sun') rows+=`<button class="row" onclick="openFeed()"><div class="lead">${ico.sun}</div><div class="txt">Last week, in review<small>${SERMON.title} · 7 cards</small></div><span class="chev">›</span></button>`;
+    else rows+=`<button class="row" onclick="openFeed()"><div class="lead">${ico.sun}</div><div class="txt">${t.sat?'For tomorrow':dayName()+'’s card'}<small>${t.kind} · ${t.txt}</small></div><span class="chev">›</span></button>`;
+  }
+  const q=WEEK[3];
+  const share=`<div class="sec"><div class="caps">Share this week’s line</div></div>
+   <div class="sharecard"><div class="mini" style="background:${PAL[q.pal].f};color:${PAL[q.pal].i}"><p>${q.txt.slice(0,64)}…”</p><span style="color:${PAL[q.pal].a}">${SERMON.passage}</span></div>
+   <div class="body"><div style="font-size:15.5px;font-weight:600">From Wednesday’s card</div><div class="meta">A quote from Sunday, set as an image with its attribution.</div><button class="pill" onclick="openShare(3)">${ico.share} Share</button></div></div>`;
+  el.innerHTML=hdr+errNote()+hero+`<div class="sec"><div class="caps">Also today</div></div><div class="list">${rows}</div>`+share+`<div style="padding:16px 20px">${syncLine()}</div>`;
+}
+
+/* ---------- Catechism ---------- */
+function ringSvg(p){const r=36,c=2*Math.PI*r;return `<svg viewBox="0 0 84 84"><circle cx="42" cy="42" r="${r}" fill="none" stroke="var(--fill)" stroke-width="6"/><circle cx="42" cy="42" r="${r}" fill="none" stroke="var(--gilt)" stroke-width="6" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${c*(1-p)}"/></svg>`}
+function renderCat(){
+  const el=$('s-cat');
+  const hdr=`<div class="hdr"><div><div class="caps">Westminster Shorter Catechism</div><div class="title" style="margin-top:4px">Catechism</div></div><button class="iconbtn" onclick="openSheet('lookup')" aria-label="Look up">${ico.search}</button></div>`;
+  if(S.state==='loading'){el.innerHTML=hdr+`<div class="sk" style="height:300px;margin:0 28px"></div><div class="sk" style="height:110px;margin:24px 20px 0"></div>`;return}
+  if(S.state==='empty'||S.children.length===0){
+    el.innerHTML=hdr+`<div style="padding:24px 28px;text-align:center"><div class="h2" style="margin-bottom:10px">Who are you catechizing?</div><div class="read" style="color:var(--ink-2)">Add a child to start at Q. 1. Each child keeps their own place.</div></div><div style="padding:0 20px"><button class="btn primary" onclick="openSheet('addchild')">Add a child</button></div>`;return;
+  }
+  const cards=S.children.map((c,i)=>{const w=WSC[c.q]||{q:'What is the chief end of man?'};return `<div class="child"><div style="display:flex;justify-content:space-between;align-items:center"><div><div class="h2">${c.name}</div><div class="meta">${c.done?'Practised today':'Last practised yesterday'}</div></div><div class="ring">${ringSvg(c.q/107)}<b>${c.q-1}</b></div></div>
+    <div class="caps">Next · Q. ${c.q} of 107</div><div class="read" style="font-size:19px">${w.q}</div>
+    <div style="flex:1"></div>${c.done?'<button class="btn quiet" onclick="startSession('+i+')">Review Q. '+(c.q-1)+'</button>':'<button class="btn primary" onclick="startSession('+i+')">Continue at Q. '+c.q+'</button>'}</div>`}).join('')
+    +`<button class="child add" onclick="openSheet('addchild')"><div style="font-size:28px">+</div><div style="font-weight:600">Add a child</div></button>`;
+  el.innerHTML=hdr+errNote()+`<div class="pager" id="cpager">${cards}</div><div class="dots" id="cdots">${S.children.map((_,i)=>`<i class="${i?'':'on'}"></i>`).join('')}<i></i></div>
+  <div class="list" style="margin-top:8px">
+   <button class="row" onclick="openSheet('lookup')"><div class="lead">${ico.search}</div><div class="txt">Jump to a question<small>Any of the 107, with its proof texts</small></div><span class="chev">›</span></button>
+   <button class="row" onclick="openSheet('settings')"><div class="lead">${ico.bell}</div><div class="txt">Practice reminder<small>Every day at 7:30 pm</small></div><span class="chev">›</span></button>
+  </div>`;
+  const p=$('cpager');p.onscroll=()=>{const i=Math.round(p.scrollLeft/(p.firstElementChild.offsetWidth+12));[...$('cdots').children].forEach((d,j)=>d.classList.toggle('on',j===i))};
+}
+
+/* ---------- Session (pushed, hides tabs) ---------- */
+function startSession(i){
+  const c=S.children[i],w=WSC[c.q];S.sessChild=i;
+  if(!w){toast('Session for Q. '+c.q);return}
+  const pages=[
+    `<div class="caps">Question ${c.q}</div><div class="big">${w.q}</div><div class="meta">Ask ${c.name}. Swipe for the answer.</div>`,
+    `<div class="caps">Answer</div><div class="big" style="font-size:22px">${w.a}</div>`,
+    `<div class="caps">Proof texts</div><div class="read">Tap a text to read it in the verse reader.</div><div class="chips">${w.p.map(p=>`<button class="chip" onclick="toast('Opens the verse reader at ${p} (TKL-878)')">${p}</button>`).join('')}</div><button class="btn quiet" style="margin-top:8px" onclick="openSheet('lookup')">What the confessions say</button>`,
+    `<div class="caps">Pray together</div><div class="big" style="font-size:21px">${w.pr.replaceAll('{name}',c.name)}</div>`,
+    `<div style="text-align:center;display:flex;flex-direction:column;gap:14px;align-items:center"><div class="ring">${ringSvg(c.q/107)}<b>${c.q}</b></div><div class="h2">Q. ${c.q} done</div><div class="read" style="color:var(--ink-2)">${c.name} has learned ${c.q} of 107.</div><button class="pill" onclick="openShareQA(${i})">${ico.share} Share this answer</button></div>`,
+  ];
+  $('sess').innerHTML=`<div class="top"><button class="iconbtn" onclick="closeSession()" aria-label="Close">${ico.x}</button><span class="caps">${c.name} · Q. ${c.q}</span><span style="width:38px"></span></div>
+   <div class="spages" id="spages">${pages.map(p=>`<div class="spage">${p}</div>`).join('')}</div>
+   <div class="dots" id="sdots">${pages.map((_,j)=>`<i class="${j?'':'on'}"></i>`).join('')}</div>
+   <div class="foot"><button class="btn primary" id="snext" onclick="sessNext()">Show the answer</button></div>`;
+  $('sess').classList.add('on');$('tabs').classList.add('hide');
+  const sp=$('spages');sp.onscroll=()=>{const j=Math.round(sp.scrollLeft/sp.offsetWidth);[...$('sdots').children].forEach((d,k)=>d.classList.toggle('on',k===j));$('snext').textContent=['Show the answer','Proof texts','Pray','Mark done','Done'][j]};
+}
+function sessNext(){const sp=$('spages'),j=Math.round(sp.scrollLeft/sp.offsetWidth);
+  if(j===3){const c=S.children[S.sessChild];c.done=true;c.q+=1;} // optimistic: saved locally at once
+  if(j>=4){closeSession();return}
+  sp.scrollTo({left:(j+1)*sp.offsetWidth,behavior:'smooth'})}
+function closeSession(){$('sess').classList.remove('on');$('tabs').classList.remove('hide');render()}
+
+/* ---------- Lord's Day ---------- */
+function openFeed(){S.tab='ld';S.state=S.state==='empty'?'full':S.state;render()}
+function renderLD(){
+  const el=$('s-ld'),feed=$('feed');
+  const showFeed=fullish()&&S.tab==='ld';
+  feed.classList.toggle('on',showFeed);if(!showFeed)$('fnote').innerHTML='';$('ftop').classList.toggle('on',showFeed);$('rail').classList.toggle('on',showFeed);
+  if(showFeed){
+    $('fnote').innerHTML=errNote();
+    feed.innerHTML=WEEK.map((c,i)=>{const p=PAL[c.pal];return `<div class="fcard" style="background:${p.f};color:${p.i}"><div class="frame" style="border-color:${p.fr}"></div>
+      <div class="lab" style="color:${p.a}">${DAYS[i]}${i===todayIdx()?' · Today':''} · ${c.kind}</div>
+      <div class="txt" style="${c.cover?'font-family:Cinzel,serif;font-weight:600;font-size:32px':''}">${c.txt}</div>
+      <div class="att" style="color:${p.m}">${c.att}</div>
+      <div class="acts"><button onclick="openShare(${i})" style="background:${p.i};color:${p.f}">${ico.share} Share</button>${c.verse||c.cover?`<button onclick="toast('Opens the verse reader (TKL-879)')">${ico.book} Read</button><button onclick="openSheet('lookup')">Confessions</button>`:''}</div></div>`}).join('');
+    $('rail').innerHTML=WEEK.map((_,i)=>`<i class="${i===todayIdx()?'on':''}"></i>`).join('');
+    requestAnimationFrame(()=>{feed.scrollTop=todayIdx()*(844-50)});
+    feed.onscroll=()=>{const i=Math.round(feed.scrollTop/(844-50));[...$('rail').children].forEach((d,j)=>d.classList.toggle('on',j===i));const p=PAL[WEEK[i]?.pal||'vellum'];$('ftop').style.color=p.i;$('rail').style.color=p.i};
+    const p=PAL[WEEK[todayIdx()].pal];$('ftop').style.color=p.i;
+    el.innerHTML='';return;
+  }
+  const hdr=`<div class="hdr"><div><div class="caps">Pillar two</div><div class="title" style="margin-top:4px">The Lord’s Day</div></div><button class="iconbtn" onclick="go('archive')" aria-label="Archive"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v10h14V9M10 13h4"/></svg></button></div>`;
+  if(S.state==='loading'){
+    el.innerHTML=hdr+`<div style="padding:0 20px 14px"><div class="caps" style="color:var(--gilt)">Building your week · 3 of 7</div><div class="meta" style="margin-top:4px">You can leave this screen; the cards keep coming.</div></div>
+    ${['Key point','Verse','Quote'].map(k=>`<div class="list" style="margin-bottom:10px;padding:16px"><div class="caps">${k}</div><div class="read" style="margin-top:6px">${WEEK.find(w=>w.kind===k).txt.slice(0,70)}…</div></div>`).join('')}
+    <div class="sk" style="height:84px;margin:0 20px 10px"></div><div class="sk" style="height:84px;margin:0 20px"></div>`;return;
+  }
+  // empty: first Sunday not yet captured. Feed behind uses bundled confessions (spec D2)
+  const p=PAL.cloister;
+  el.innerHTML=hdr+`<div style="padding:0 20px 16px"><div class="read">Photograph your notes after church. Each day of the week gets a card from them: a key point, a quote, a verse.</div></div>
+   <div style="padding:0 20px"><button class="btn primary" onclick="toast('Opens the camera (TKL-860)')">Photograph Sunday’s notes</button><button class="btn link" onclick="toast('Type instead (TKL-860)')">Type instead</button></div>
+   <div class="sec"><div class="caps">Until your first Sunday</div></div>
+   <div style="margin:0 20px;border-radius:var(--r-card);background:${p.f};color:${p.i};padding:28px 22px;position:relative"><div style="font-family:Cinzel,serif;font-size:10.5px;letter-spacing:.16em;color:${p.a};margin-bottom:12px">SHORTER CATECHISM · Q. 1</div><div style="font-family:Marcellus,serif;font-size:21px;line-height:1.38">Man’s chief end is to glorify God, and to enjoy him for ever.</div><button class="pill" style="margin-top:16px;background:${p.i};color:${p.f}" onclick="openShareQA(-1)">${ico.share} Share</button></div>`;
+}
+function renderArchive(){
+  const tiles=[['psalter','More than conquerors','Rom. 8:28–39 · 16 Nov'],['vespers','The vine and the branches','John 15:1–11 · 9 Nov'],['hymnal','Bread from heaven','Ex. 16 · 2 Nov'],['vellum','The good shepherd','Ps. 23 · 26 Oct'],['cloister','A living hope','1 Pet. 1:3–9 · 19 Oct'],['ironstone','Ask, seek, knock','Matt. 7:7–11 · 12 Oct']];
+  $('s-archive').innerHTML=`<div class="hdr"><button class="iconbtn" onclick="go('ld')" aria-label="Back">${ico.back}</button><div class="h2" style="align-self:center">Past Lord’s Days</div><span style="width:38px"></span></div>
+   <div style="padding:0 20px 14px"><input class="field" placeholder="Search passage, title or theme"></div>
+   <div class="grid">${tiles.map(([k,t,s])=>`<button class="tile" style="background:${PAL[k].f};color:${PAL[k].i}" onclick="go('ld')"><b>${t}</b><small>${s}</small></button>`).join('')}</div>`;
+}
+
+/* ---------- sheets ---------- */
+function openSheet(n){
+  const sh=$('sh-'+n);
+  if(n==='settings') sh.innerHTML=`<div class="grab"></div><div class="stitle">Settings</div><div style="padding:0 20px 14px">${syncLine()}</div>
+   <div class="list">${S.signed==='1'?`<div class="row"><div class="lead">MK</div><div class="txt">Signed in<small>[email]</small></div></div>`:`<button class="row" onclick="toast('Sign-in flow (TKL-833 design, TKL-826 build)')"><div class="lead">•</div><div class="txt">Sign in to sync<small>Keep progress and notes if you lose this iPhone</small></div><span class="chev">›</span></button>`}</div>
+   <div class="sec"><div class="caps">Children</div></div><div class="list">${S.children.map(c=>`<div class="row"><div class="lead">${c.name[0]}</div><div class="txt">${c.name}<small>Shorter Catechism · Q. ${c.q}</small></div><span class="chev">›</span></div>`).join('')}<button class="row" onclick="closeSheets();openSheet('addchild')"><div class="lead">+</div><div class="txt">Add a child</div></button></div>
+   <div class="sec"><div class="caps">Reminders</div></div><div class="list"><div class="row"><div class="txt">Catechism practice<small>Every day</small></div><span class="meta">7:30 pm</span></div><div class="row"><div class="txt">Today’s card from Sunday<small>Monday to Saturday</small></div><span class="meta">8:00 am</span></div><div class="row"><div class="txt">Sunday notes<small>After church</small></div><span class="meta">[time]</span></div></div>
+   ${S.signed==='1'?`<div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:10px"><button class="btn quiet" onclick="S.signed='0';closeSheets();render()">Sign out</button><button class="btn danger" onclick="toast('Delete account confirmation (TKL-849)')">Delete account</button></div>`:''}`;
+  if(n==='lookup') sh.innerHTML=`<div class="grab"></div><div class="stitle">What the confessions say</div><div class="meta" style="padding:0 20px 14px">Romans 8:28 is cited by</div>
+   <div class="list"><button class="row" onclick="toast('Opens WCF 5.7 in the library')"><div class="lead">WCF</div><div class="txt">Westminster Confession 5.7<small>“…so, after a most special manner, it taketh care of his church, and disposeth all things to the good thereof.”</small></div><span class="chev">›</span></button>
+   <button class="row" onclick="toast('Opens WSC Q. 11')"><div class="lead">WSC</div><div class="txt">Shorter Catechism Q. 11<small>God’s works of providence are his most holy, wise, and powerful preserving and governing…</small></div><span class="chev">›</span></button></div>
+   <div style="padding:16px 20px 0"><input class="field" placeholder="Search the confessions and catechisms"></div>`;
+  if(n==='addchild') sh.innerHTML=`<div class="grab"></div><div class="stitle">Add a child</div><div class="meta" style="padding:0 20px 14px">Starts at Q. 1 of the Shorter Catechism. Only a first name, kept on this iPhone${S.signed==='1'?' and your account':''}.</div>
+   <div style="padding:0 20px;display:flex;flex-direction:column;gap:12px"><input class="field" id="cname" placeholder="First name" value="Ruth"><button class="btn primary" onclick="addChild()">Add</button></div>`;
+  sh.classList.add('on');$('scrim').classList.add('on');
+}
+function addChild(){const n=$('cname').value.trim()||'Child';
+  if(S.state==='empty'){S.state='full';S.children=[]}
+  S.children.push({name:n,q:1,done:false});WSC[1]=WSC[1]||{q:'What is the chief end of man?',a:'Man’s chief end is to glorify God, and to enjoy him for ever.',p:['1 Cor. 10:31','Rom. 11:36','Ps. 73:25–26'],pr:'Father, you made {name} to know you and to be glad in you. Let everything {name} loves best become a way of loving you more, today and for ever. Amen.'};
+  closeSheets();S.tab='cat';render();toast(n+' added')}
+function openShare(i){const c=WEEK[i];shareSheet(c.txt,c.att,c.pal)}
+function openShareQA(i){const c=i>=0?S.children[i]:null;const w=c?WSC[c.q-1]||WSC[9]:null;
+  shareSheet(c?w.a:'Man’s chief end is to glorify God, and to enjoy him for ever.',c?'Shorter Catechism Q. '+(c.q-1):'Shorter Catechism Q. 1','vellum')}
+function shareSheet(txt,att,pal){const p=PAL[pal];$('sh-share').innerHTML=`<div class="grab"></div><div class="stitle">Share</div>
+   <div style="margin:8px 20px 16px;aspect-ratio:1;background:${p.f};color:${p.i};border-radius:10px;padding:34px 28px;display:flex;flex-direction:column;justify-content:center;position:relative"><div style="position:absolute;inset:12px;border:1px solid ${p.fr};border-radius:4px"></div><div style="font-family:Marcellus,serif;font-size:21px;line-height:1.38">${txt}</div><div style="margin-top:16px;font-family:Cinzel,serif;font-size:10px;letter-spacing:.14em;color:${p.a};text-transform:uppercase">${att}</div><div style="position:absolute;bottom:22px;left:28px;font-family:Cinzel,serif;font-size:8.5px;letter-spacing:.14em;color:${p.m}">CONFESSIONALCHRISTIANITY.COM</div></div>
+   <div style="padding:0 20px;display:flex;flex-direction:column;gap:6px"><button class="btn primary" onclick="closeSheets();toast('iOS share sheet')">Share image</button><button class="btn link" onclick="closeSheets();toast('Opens the share editor (TKL-840/844)')">Edit words, palette or size</button></div>`;
+  $('sh-share').classList.add('on');$('scrim').classList.add('on')}
+function closeSheets(){document.querySelectorAll('.sheet').forEach(s=>s.classList.remove('on'));$('scrim').classList.remove('on')}
+
+/* ---------- nav + render ---------- */
+function go(t){S.tab=t;closeSheets();render()}
+function render(){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  $('phone').classList.toggle('dark',S.theme==='dark');document.body.classList.toggle('dark-page',S.theme==='dark');
+  renderToday();renderCat();renderLD();renderArchive();
+  const map={today:'s-today',cat:'s-cat',ld:'s-ld',archive:'s-archive'};
+  if(!(S.tab==='ld'&&$('feed').classList.contains('on'))) $(map[S.tab]).classList.add('on');
+  if(S.tab!=='ld'){$('fnote').innerHTML='';$('feed').classList.remove('on');$('ftop').classList.remove('on');$('rail').classList.remove('on')}
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.tab===S.tab||(S.tab==='archive'&&b.dataset.tab==='ld')));
+  document.querySelectorAll('#bar button').forEach(b=>b.classList.toggle('on',String(S[b.dataset.k])===b.dataset.v));
+}
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>go(b.dataset.tab));
+document.querySelectorAll('#bar button').forEach(b=>b.onclick=()=>{S[b.dataset.k]=b.dataset.v;
+  if(b.dataset.k==='state'){S.children=[{name:'Samuel',q:9,done:false},{name:'Thomas',q:4,done:false}]}
+  closeSheets();$('sess').classList.remove('on');$('tabs').classList.remove('hide');render()});
+render();
+</script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 // App shell: three tabs, Today · Catechism · The Lord's Day (TKL-825), behind
 // a plain ZStack, kept mounted so each tab's own navigation state survives
-// switching, with the design handoff's floating pill (FloatingTabBarView)
+// switching, with the prototype's floating bar (FloatingTabBarView)
 // overlaid on top. A real TabView was tried first, but even with its system
 // tab bar hidden via .toolbar(.hidden, for: .tabBar), the hidden bar kept
 // consuming taps in its own screen-edge strip — e.g. a CTA sitting flush against the bottom (ignoresSafeArea) would register on
@@ -56,9 +56,13 @@ struct RootView: View {
                 .opacity(selected == .lordsDay ? 1 : 0)
                 .allowsHitTesting(selected == .lordsDay)
         }
-        .overlay(alignment: .bottom) {
+        .overlay {
             if isTabBarVisible {
+                // Placed from the screen's edge, as in the prototype, and left
+                // under the keyboard like a system tab bar.
                 FloatingTabBarView(selected: $selected)
+                    .frame(maxHeight: .infinity, alignment: .bottom)
+                    .ignoresSafeArea(edges: .bottom)
                     .transition(.opacity)
             }
         }
