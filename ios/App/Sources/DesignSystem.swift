@@ -379,6 +379,7 @@ struct ChapelListRow<Lead: View>: View {
                 .foregroundStyle(.ccInk)
                 .frame(width: ChapelSize.rowWell, height: ChapelSize.rowWell)
                 .background(Color.ccFill, in: RoundedRectangle(cornerRadius: ChapelRadius.well, style: .circular))
+                .accessibilityHidden(true) // the title says it
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .font(.ccUI())
