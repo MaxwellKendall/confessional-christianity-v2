@@ -69,6 +69,13 @@ public struct LordsDayFeed: Equatable, Sendable {
         }
     }
 
+    @MainActor public init?(store: LordsDayStore, today: Date, calendar: Calendar) throws {
+        guard let note = try store.currentWeek(on: today, calendar: calendar) else { return nil }
+        let cards = try store.cards(for: note)
+        guard !cards.isEmpty else { return nil }
+        self.init(note: note, cards: cards, today: today, calendar: calendar)
+    }
+
     @MainActor public init(note: LordsDayNote, cards: [NoteCard], today: Date = Date(), calendar: Calendar = .current) {
         let todayIndex = todayCardIndex(serviceDate: note.serviceDate, today: today, cardCount: cards.count, calendar: calendar)
         self.todayIndex = cards.isEmpty ? nil : (todayIndex ?? 0)

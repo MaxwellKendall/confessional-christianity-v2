@@ -19,12 +19,15 @@ struct LordsDayTabView: View {
     @State private var review: ReviewModel?
     /// Set by the capture's Done, so its cover's dismissal opens the review.
     @State private var reviewAfterCapture: UUID?
+    @State private var feedDay: Date?
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         NavigationStack(path: $path) {
             Group {
                 if let feed {
-                    LordsDayFeedView(feed: feed, allowsNetwork: isActive)
+                    LordsDayFeedView(feed: feed, allowsNetwork: isActive && scenePhase == .active)
+                        .id(feedDay)
                         .overlay(alignment: .topTrailing) {
                             HStack(spacing: 8) {
                                 if status.reviewable { reviewButton }
@@ -51,6 +54,15 @@ struct LordsDayTabView: View {
             ReviewView(model: model, onClose: { review = nil }, onFinish: { review = nil })
         }
         .onAppear(perform: refresh)
+        .onChange(of: isActive) { _, active in
+            if active { refresh() }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { refresh() }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.significantTimeChangeNotification)) { _ in
+            refresh()
+        }
     }
 
     /// Until the Sunday cover card (TKL-864) carries it, the way back to the camera.
@@ -151,13 +163,11 @@ struct LordsDayTabView: View {
     }
 
     private func refresh() {
-        status = CaptureStatus(context: context)
-        let store = LordsDayStore(context: context)
-        if let note = try? store.currentWeek(), let cards = try? store.cards(for: note), !cards.isEmpty {
-            feed = LordsDayFeed(note: note, cards: cards)
-        } else {
-            feed = nil
-        }
+        let now = Date()
+        let calendar = Calendar.current
+        status = CaptureStatus(context: context, now: now, calendar: calendar)
+        feed = try? LordsDayFeed(store: LordsDayStore(context: context), today: now, calendar: calendar)
+        feedDay = calendar.startOfDay(for: now)
     }
 }
 
@@ -170,9 +180,9 @@ private struct CaptureStatus {
 
     init() {}
 
-    @MainActor init(context: ModelContext) {
+    @MainActor init(context: ModelContext, now: Date, calendar: Calendar) {
         resumable = (try? CaptureDraft.activeNoteId()) != nil
-        guard !resumable, let note = try? LordsDayStore(context: context).currentWeek() else { return }
+        guard !resumable, let note = try? LordsDayStore(context: context).currentWeek(on: now, calendar: calendar) else { return }
         let hasCards = !((try? LordsDayStore(context: context).cards(for: note)) ?? []).isEmpty
         reviewable = ReviewModel.isPending(note, hasCards: hasCards)
         let pages = (try? CaptureDraft(noteId: note.id))?.pages.count ?? 0

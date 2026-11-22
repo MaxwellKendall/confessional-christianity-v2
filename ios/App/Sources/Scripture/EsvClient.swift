@@ -105,7 +105,14 @@ actor EsvClient {
         if let existing = cache[osis] {
             return await existing.value
         }
-        let task = Task<String?, Never> { await Self.fetch(osis: osis) }
+        let task = Task<String?, Never> {
+            let text = await Self.fetch(osis: osis)
+            guard let text, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                cache[osis] = nil
+                return nil
+            }
+            return text
+        }
         cache[osis] = task
         return await task.value
     }

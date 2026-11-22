@@ -32,7 +32,7 @@ struct LordsDayFeedView: View {
         ScrollView(.vertical, showsIndicators: false) {
             LazyVStack(spacing: 0) {
                 ForEach(feed.cards) { card in
-                    FeedCardView(card: card, palette: LordsDayFeed.palette(card.palette, dark: dark), allowsNetwork: allowsNetwork)
+                    FeedCardView(card: card, palette: LordsDayFeed.palette(card.palette, dark: dark), allowsNetwork: allowsNetwork && card.id == (current ?? feed.cards.first?.id))
                         .containerRelativeFrame([.horizontal, .vertical])
                         .id(card.id)
                 }
@@ -75,6 +75,12 @@ private struct FeedCardView: View {
     let palette: QuoteCardPalette
     let allowsNetwork: Bool
     @State private var verseText: String?
+    @State private var showsPassage = false
+
+    private struct VerseRequest: Equatable {
+        let reference: String?
+        let isActive: Bool
+    }
 
     init(card: LordsDayFeedCard, palette: QuoteCardPalette, allowsNetwork: Bool) {
         self.card = card
@@ -121,9 +127,34 @@ private struct FeedCardView: View {
                 .padding(.bottom, 124)
         }
         .foregroundStyle(ink)
-        .task(id: allowsNetwork) {
+        .task(id: VerseRequest(reference: card.verseOsis, isActive: allowsNetwork)) {
             guard allowsNetwork, verseText == nil, let osis = card.verseOsis else { return }
-            verseText = Self.nonEmpty(await EsvClient.shared.text(for: osis))
+            let text = Self.nonEmpty(await EsvClient.shared.text(for: osis))
+            guard !Task.isCancelled else { return }
+            verseText = text
+        }
+        .onChange(of: card.verseOsis) { _, reference in
+            verseText = reference.flatMap(bundledEsvText).flatMap(Self.nonEmpty)
+        }
+        .sheet(isPresented: $showsPassage) {
+            if let verseText {
+                NavigationStack {
+                    ScrollView {
+                        Text(verseText)
+                            .font(.ccBody(22))
+                            .lineSpacing(6)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(24)
+                    }
+                    .navigationTitle(card.reference ?? "Passage")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Done") { showsPassage = false }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -158,7 +189,7 @@ private struct FeedCardView: View {
                 (Text(parts.lead.isEmpty ? "" : parts.lead + " ").font(.ccDisplay(27)).foregroundColor(accent)
                     + Text(parts.rest).font(.ccBody(27)))
                     .lineSpacing(27 * 0.38 - 8)
-                    .lineLimit(14)
+                    .lineLimit(9)
                     .minimumScaleFactor(0.5)
             } else {
                 // No text yet (offline, or a reference that doesn't parse): the reference carries the card.
@@ -174,7 +205,7 @@ private struct FeedCardView: View {
                     .tracking(12 * 0.18)
                     .textCase(.uppercase)
                     .foregroundStyle(accent)
-                    .padding(.top, 24)
+                    .padding(.top, 12)
             }
         }
     }
@@ -199,7 +230,7 @@ private struct FeedCardView: View {
     /// Share comes first on every card. Until TKL-844's share flow lands, it
     /// hands the card's words and reference to the system share sheet.
     private var actions: some View {
-        VStack(spacing: 14) {
+        HStack(spacing: 16) {
             ShareLink(item: card.shareText(verseText: verseText)) {
                 VStack(spacing: 3) {
                     Image(systemName: "square.and.arrow.up")
@@ -214,6 +245,12 @@ private struct FeedCardView: View {
                 .frame(width: 44)
             }
             .accessibilityLabel("Share this card")
+            if card.kind == .verse, verseText != nil {
+                Button("Read full passage") { showsPassage = true }
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(ink)
+                    .frame(minHeight: 44)
+            }
         }
     }
 
@@ -227,21 +264,42 @@ private struct FeedCardView: View {
 /// Screenshot hook: `-LordsDayFeedFixture key_point|quote|verse|verse_offline`
 /// shows a sample week from an in-memory store whose card for today is that
 /// kind. `verse_offline` is a verse whose text isn't bundled (pair it with
-/// `-EsvOffline YES`).
+/// `-EsvOffline YES`). Add `-SaveLordsDayFeedFixture YES` to seed a
+/// separate disk store, then launch with `-LordsDayFeedFixture saved` to reopen it.
 struct LordsDayFeedFixture: View {
     let scene: String
     @State private var feed: LordsDayFeed?
+    @State private var path = NavigationPath()
 
     var body: some View {
         ZStack {
-            if let feed { LordsDayFeedView(feed: feed) }
+            if scene == "saved" {
+                LordsDayTabView(path: $path)
+                    .modelContainer(Self.savedContainer)
+            } else if let feed {
+                LordsDayFeedView(feed: feed)
+            }
         }
         .overlay { FloatingTabBarView(selected: .constant(.lordsDay)) }
-        .task { feed = Self.makeFeed(scene) }
+        .task {
+            guard scene != "saved" else { return }
+            if UserDefaults.standard.bool(forKey: "SaveLordsDayFeedFixture") {
+                let store = LordsDayStore(context: Self.savedContainer.mainContext)
+                feed = (try? LordsDayFeed(store: store, today: Date(), calendar: .current))
+                    ?? Self.makeFeed(scene, container: Self.savedContainer)
+            } else {
+                feed = Self.makeFeed(scene)
+            }
+        }
     }
 
-    @MainActor static func makeFeed(_ scene: String, today: Date = Date()) -> LordsDayFeed {
-        let container = try! ModelContainer(for: progressSchema, configurations: [ModelConfiguration(schema: progressSchema, isStoredInMemoryOnly: true)])
+    private static let savedContainer = try! ModelContainer(
+        for: progressSchema,
+        configurations: [ModelConfiguration("LordsDayFeedFixture", schema: progressSchema, cloudKitDatabase: .none)]
+    )
+
+    @MainActor static func makeFeed(_ scene: String, today: Date = Date(), container: ModelContainer? = nil) -> LordsDayFeed {
+        let container = container ?? (try! ModelContainer(for: progressSchema, configurations: [ModelConfiguration(schema: progressSchema, isStoredInMemoryOnly: true)]))
         let store = LordsDayStore(context: ModelContext(container))
         let calendar = Calendar.current
         let weekday = calendar.component(.weekday, from: today) // 1 = Sunday
@@ -261,6 +319,7 @@ struct LordsDayFeedFixture: View {
         week[todayIndex] = switch scene {
         case "quote": .quote("Your worst day is not outside his purpose. It is inside it, and he is not finished.")
         case "verse": .verse("John 3:16")
+        case "verse_long": .verse("Psalm 145")
         case "verse_offline": .verse("Romans 8:28")
         default: .point("God's purpose, not my circumstances, decides what is good.")
         }

@@ -33,6 +33,30 @@ import XCTest
         return (note, try store.cards(for: note))
     }
 
+    func testReloadingSavedWeekUsesTheNewCalendarDay() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let config = ModelConfiguration(schema: progressSchema, url: directory.appendingPathComponent("week.store"))
+        func openStore() throws -> LordsDayStore {
+            let container = try ModelContainer(for: progressSchema, configurations: [config])
+            return LordsDayStore(context: ModelContext(container))
+        }
+        do {
+            let store = try openStore()
+            _ = try week(store, kinds: [.keyPoint, .quote, .verse, .keyPoint, .quote, .verse])
+        }
+
+        let store = try openStore()
+        let tuesday = try XCTUnwrap(LordsDayFeed(store: store, today: day(2026, 11, 17), calendar: calendar))
+        let wednesday = try XCTUnwrap(LordsDayFeed(store: store, today: day(2026, 11, 18), calendar: calendar))
+        XCTAssertEqual(tuesday.todayIndex, 1)
+        XCTAssertEqual(wednesday.todayIndex, 2)
+        XCTAssertEqual(wednesday.cards[2].dayLabel, "Today · Wednesday")
+        XCTAssertEqual(wednesday.cards[2].verseOsis, "Rom.8.30")
+        XCTAssertNil(try LordsDayFeed(store: store, today: day(2026, 11, 22), calendar: calendar))
+    }
+
     func testOpensAtTodaysCardWithDayLabels() throws {
         let store = try makeStore()
         let (note, cards) = try week(store, kinds: [.verse, .keyPoint, .quote, .verse, .quote, .keyPoint])
