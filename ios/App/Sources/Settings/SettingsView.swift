@@ -29,7 +29,7 @@ struct SettingsView: View {
                             Text(user.email ?? "Signed in")
                                 .foregroundStyle(.ccInk)
                                 .accessibilityIdentifier("settings.accountEmail")
-                            Button("Sign out") { Task { await auth.signOut() } }
+                            Button("Sign out", action: signOut)
                                 .foregroundStyle(.ccDanger)
                                 .accessibilityIdentifier("settings.signOut")
                         } else if auth.phase == .restoring {
@@ -83,8 +83,21 @@ struct SettingsView: View {
         .sheet(isPresented: $showsSignIn) { SignInSheet() }
         #if DEBUG
         // Screenshot hook: `-OpenSignIn YES` opens the sheet with Settings.
-        .onAppear { if UserDefaults.standard.bool(forKey: "OpenSignIn") && !auth.phase.isSignedIn { showsSignIn = true } }
+        .onChange(of: auth.phase, initial: true) { _, phase in
+            guard auth.isConfigured else { return }
+            let defaults = UserDefaults.standard
+            if phase == .guest && defaults.bool(forKey: "OpenSignIn") {
+                showsSignIn = true
+            }
+            if phase.isSignedIn && defaults.bool(forKey: "SettingsAutoSignOut") {
+                signOut()
+            }
+        }
         #endif
+    }
+
+    private func signOut() {
+        Task { await auth.signOut() }
     }
 }
 
