@@ -50,6 +50,25 @@ public func entryPageLabel(_ entry: ConfessionEntry, contentById: ContentById? =
     return head
 }
 
+/// The chapter title an entry sits under, without its "Chapter N:" head:
+/// the parent chapter's for WCF and Canons articles ("Of God, and of the Holy
+/// Trinity"), the entry's own for chapter entries (Belgic, 39 Articles).
+/// Nil for questions, theses, and parents with no titled head (Lord's Days).
+public func entryHeading(_ entry: ConfessionEntry, contentById: ContentById? = nil) -> String? {
+    if questionPrefixMatch(entry.title) != nil { return nil }
+    if let own = titleAfterHead(entry.title) { return own }
+    let strippedParentId = entry.parent.replacingOccurrences(
+        of: "-(articles|rejections)$", with: "", options: .regularExpression
+    )
+    return titleAfterHead(contentById?[strippedParentId]?.title)
+}
+
+private func titleAfterHead(_ title: String?) -> String? {
+    guard let title, let colon = title.firstIndex(of: ":") else { return nil }
+    let rest = title[title.index(after: colon)...].trimmingCharacters(in: .whitespacesAndNewlines)
+    return rest.isEmpty ? nil : rest
+}
+
 /// The entry's reading text. Q&A entries render as question + answer lines;
 /// footnote markers are stripped for display (proof texts render separately).
 public func entryQuoteLines(_ entry: ConfessionEntry) -> [String] {

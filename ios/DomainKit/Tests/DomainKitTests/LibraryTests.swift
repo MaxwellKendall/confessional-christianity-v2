@@ -29,6 +29,41 @@ import Testing
         #expect(page?.nextEntry == AdjacentEntry(entryId: "WCoF-1-3", title: "Article 3"))
     }
 
+    // TKL-952: a WCF article page showed "Article 1" and no chapter title.
+    @Test func entryPageCarriesTheChapterLabelAndTitle() {
+        let page = getEntryPage("westminster-confession-of-faith", entryId: "WCoF-2-1")
+        #expect(page?.label == "Chapter 2 · Article 1")
+        #expect(page?.heading == "Of God, and of the Holy Trinity")
+    }
+
+    @Test func entryPageHeadingComesFromTheCanonsChapter() {
+        let page = getEntryPage("canons-of-dort", entryId: "CoD-1-articles-1")
+        #expect(page?.label == "Chapter 1 · Article 1")
+        #expect(page?.heading == "Of Divine Predestination")
+    }
+
+    @Test func entryPageHeadingComesFromAChapterEntrysOwnTitle() {
+        let page = getEntryPage("the-belgic-confession-of-faith", entryId: "TBCoF-1")
+        #expect(page?.label == "Chapter 1")
+        #expect(page?.heading == "That there is One Only God.")
+    }
+
+    @Test func entryPageHasNoHeadingForQuestionsOrTheses() {
+        #expect(getEntryPage("westminster-shorter-catechism", entryId: "WSC-1")?.heading == nil)
+        #expect(getEntryPage("westminster-shorter-catechism", entryId: "WSC-1")?.label == "Q. 1")
+        #expect(getEntryPage("martin-luthers-95-theses", entryId: "ML9t-1")?.heading == nil)
+    }
+
+    @Test func everyWestminsterConfessionArticleHasAChapterHeading() {
+        let leaves = getOrderedLeafEntries("westminster-confession-of-faith")
+        #expect(leaves.count > 100)
+        for leaf in leaves {
+            let page = getEntryPage("westminster-confession-of-faith", entryId: leaf.id)
+            #expect(page?.heading?.isEmpty == false, "no heading for \(leaf.id)")
+            #expect(page?.label.hasPrefix("Chapter ") == true, "label for \(leaf.id): \(page?.label ?? "nil")")
+        }
+    }
+
     @Test func entryPageReturnsNilForUnknownIds() {
         #expect(getEntryPage("westminster-confession-of-faith", entryId: "WCoF-999") == nil)
     }

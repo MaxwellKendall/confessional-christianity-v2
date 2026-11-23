@@ -121,6 +121,11 @@ public struct EntryPage: Sendable {
     public let item: ConfessionEntry
     public let documentTitle: String
     public let slug: String
+    /// Small-caps label above the text: "Chapter 2 · Article 1", "Q. 1".
+    public let label: String
+    /// The chapter's own title ("Of God, and of the Holy Trinity"), shown
+    /// under the label; nil for questions and theses, whose text says it.
+    public let heading: String?
     public let prevEntry: AdjacentEntry?
     public let nextEntry: AdjacentEntry?
 }
@@ -150,6 +155,8 @@ public func getEntryPage(_ slug: String, entryId: String) -> EntryPage? {
 
     return EntryPage(
         item: item, documentTitle: doc.name, slug: slug,
+        label: entryPageLabel(item, contentById: content.contentById),
+        heading: entryHeading(item, contentById: content.contentById),
         prevEntry: adjacent(index > 0 ? leaves[index - 1] : nil),
         nextEntry: adjacent(index + 1 < leaves.count ? leaves[index + 1] : nil)
     )

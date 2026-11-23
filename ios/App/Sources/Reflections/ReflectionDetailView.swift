@@ -126,7 +126,7 @@ struct ReflectionDetailView: View {
     @ViewBuilder
     private func quoteCard(_ page: EntryPage) -> some View {
         VStack(spacing: 10) {
-            Text("\(page.documentTitle) \u{00B7} \(entryPageLabel(page.item))")
+            Text("\(page.documentTitle) \u{00B7} \(page.label)")
                 .labelCaps(size: 9.5, tracking: 0.1)
             VStack(spacing: 4) {
                 ForEach(Array(entryQuoteLines(page.item).enumerated()), id: \.offset) { _, line in

@@ -47,8 +47,19 @@ struct LibraryEntryView: View {
                         breadcrumb(page)
 
                         VStack(spacing: 10) {
-                            Text(entryPageLabel(page.item))
+                            Text(page.label)
                                 .labelCaps(size: 9.5, tracking: 0.1)
+                            // TKL-952: the chapter's title ("Of God, and of
+                            // the Holy Trinity"), absent before.
+                            if let heading = page.heading {
+                                Text(heading)
+                                    .font(.ccH2)
+                                    .foregroundStyle(.ccInk)
+                                    .multilineTextAlignment(.center)
+                                    .frame(maxWidth: .infinity)
+                                    .accessibilityAddTraits(.isHeader)
+                                    .padding(.bottom, 6)
+                            }
                             VStack(alignment: .leading, spacing: 4) {
                                 ForEach(Array(entryQuoteSegments(page.item).enumerated()), id: \.offset) { _, line in
                                     FlowText(prefix: "", segments: line, activeMarker: activeMarker) { marker in
@@ -238,3 +249,18 @@ struct LibraryEntryView: View {
         }
     }
 }
+
+#if DEBUG
+/// `-LibraryEntry <slug>:<entryId>` opens one entry page for screenshots.
+struct LibraryEntryFixture: View {
+    let slug: String
+    let entryId: String
+    @State private var path = NavigationPath()
+
+    var body: some View {
+        NavigationStack(path: $path) {
+            LibraryEntryView(slug: slug, entryId: entryId, path: $path)
+        }
+    }
+}
+#endif
