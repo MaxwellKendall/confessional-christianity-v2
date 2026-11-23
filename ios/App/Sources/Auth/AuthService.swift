@@ -15,6 +15,7 @@
 // on launch. A missing or invalid amplify_outputs file (prod until TKL-893)
 // leaves the app a guest with no sign-in entry point (`isConfigured`).
 @preconcurrency import Amplify
+import enum Amplify.AuthError
 import AWSCognitoAuthPlugin
 import AWSPluginsCore
 import Foundation
@@ -68,7 +69,7 @@ final class AuthService {
             )
             machine.handle(.signUpCodeSent)
             return
-        } catch let error as Amplify.AuthError where Self.cognitoError(error) == .usernameExists {
+        } catch let error as AuthError where Self.cognitoError(error) == .usernameExists {
             // Existing account: sign in below.
         } catch {
             machine.handle(.sendFailed(Self.message(for: error)))
@@ -89,7 +90,7 @@ final class AuthService {
             default:
                 machine.handle(.sendFailed("Unexpected sign-in step: \(result.nextStep)"))
             }
-        } catch let error as Amplify.AuthError where Self.cognitoError(error) == .userNotConfirmed {
+        } catch let error as AuthError where Self.cognitoError(error) == .userNotConfirmed {
             do {
                 _ = try await Amplify.Auth.resendSignUpCode(for: normalized)
                 machine.handle(.signUpCodeSent)
@@ -224,13 +225,13 @@ final class AuthService {
         return ok
     }
 
-    private static func cognitoError(_ error: Amplify.AuthError) -> AWSCognitoAuthError? {
+    private static func cognitoError(_ error: AuthError) -> AWSCognitoAuthError? {
         if case .service(_, _, let underlying) = error { return underlying as? AWSCognitoAuthError }
         return nil
     }
 
     private static func message(for error: Error) -> String {
-        if let error = error as? Amplify.AuthError {
+        if let error = error as? AuthError {
             switch cognitoError(error) {
             case .codeMismatch: return "That code isn't right. Check the email and try again."
             case .codeExpired: return "That code has expired. Send a new one."
