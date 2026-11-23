@@ -56,6 +56,15 @@ public enum AuthPhase: Equatable, Sendable {
     }
 
     public var isSignedIn: Bool { user != nil }
+
+    /// The address a code is being sent to, or was sent to and is being
+    /// entered or verified for. Show and verify this, not an editable field.
+    public var pendingEmail: String? {
+        switch self {
+        case .sendingCode(let email), .awaitingCode(let email), .verifying(let email, _): email
+        default: nil
+        }
+    }
 }
 
 public enum AuthError: Equatable, Sendable {

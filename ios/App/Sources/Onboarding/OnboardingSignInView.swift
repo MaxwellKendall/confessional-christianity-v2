@@ -22,6 +22,7 @@ struct OnboardingSignInView: View {
                                 .keyboardType(.emailAddress)
                                 .textInputAutocapitalization(.never)
                                 .autocorrectionDisabled()
+                                .disabled(isSending)
                             Button(isSending ? "Sending…" : "Send code") {
                                 Task { await auth.sendCode(email: email) }
                             }
@@ -49,11 +50,11 @@ struct OnboardingSignInView: View {
 
     private var codeFields: some View {
         Group {
-            Text("Enter the code sent to \(email).")
+            Text("Enter the code sent to \(auth.phase.pendingEmail ?? email).")
             TextField("6-digit code", text: $code)
                 .textContentType(.oneTimeCode)
                 .keyboardType(.numberPad)
-            Button("Verify code") { Task { await auth.verify(email: email, code: code) } }
+            Button("Verify code") { Task { await auth.verifyCode(code) } }
                 .disabled(code.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             Button("Use a different email") {
                 code = ""

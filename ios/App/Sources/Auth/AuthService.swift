@@ -87,6 +87,13 @@ final class AuthService {
         }
     }
 
+    /// Verifies `code` for the address the code was sent to (the phase's
+    /// address), so an edited email field can't retarget it.
+    func verifyCode(_ code: String) async {
+        guard case .awaitingCode(let email) = machine.phase else { return }
+        await verify(email: email, code: code)
+    }
+
     /// Back from "enter code" to guest without signing in.
     func cancelCode() {
         machine.handle(.cancel)
