@@ -23,11 +23,13 @@ public struct TodayChild: Equatable, Sendable, Identifiable {
     public let learned: Int
     public let practisedToday: Bool
     public let finished: Bool
+    /// When a question was last introduced to this child, if ever.
+    public let lastPractisedAt: Date?
 
     public init(
         id: UUID, name: String, programSlug: String, programShortTitle: String,
         questionNumber: Int, totalQuestions: Int, question: String?, learned: Int,
-        practisedToday: Bool, finished: Bool
+        practisedToday: Bool, finished: Bool, lastPractisedAt: Date? = nil
     ) {
         self.id = id
         self.name = name
@@ -39,6 +41,7 @@ public struct TodayChild: Equatable, Sendable, Identifiable {
         self.learned = learned
         self.practisedToday = practisedToday
         self.finished = finished
+        self.lastPractisedAt = lastPractisedAt
     }
 
     /// Still something to do with this child today.
@@ -90,12 +93,38 @@ public enum TodayPlan: Equatable, Sendable {
     case plan(primary: TodayItem, also: [TodayItem])
 }
 
-public func planToday(_ input: TodayInput) -> TodayPlan {
-    // Active child first, the rest in their given order.
-    var children = input.children
-    if let activeId = input.activeChildId, let i = children.firstIndex(where: { $0.id == activeId }) {
+/// Active child first, the rest in their given order.
+func activeChildFirst(_ children: [TodayChild], activeChildId: UUID?) -> [TodayChild] {
+    var children = children
+    if let activeId = activeChildId, let i = children.firstIndex(where: { $0.id == activeId }) {
         children.insert(children.remove(at: i), at: 0)
     }
+    return children
+}
+
+/// The Catechism tab's cards (TKL-939): Today's order (active child first),
+/// then every child still due today ahead of those already practised or
+/// finished, so finishing a session moves the next child to the front.
+public func orderCatechismCards(_ children: [TodayChild], activeChildId: UUID?) -> [TodayChild] {
+    let ordered = activeChildFirst(children, activeChildId: activeChildId)
+    return ordered.filter(\.isDue) + ordered.filter { !$0.isDue }
+}
+
+/// The line under a child's name on their card.
+public func catechismPracticeLine(lastPractisedAt: Date?, now: Date = Date(), calendar: Calendar = .current) -> String {
+    guard let last = lastPractisedAt else { return "Not started yet" }
+    let days = calendar.dateComponents(
+        [.day], from: calendar.startOfDay(for: last), to: calendar.startOfDay(for: now)
+    ).day ?? 0
+    switch days {
+    case ...0: return "Practised today"
+    case 1: return "Last practised yesterday"
+    default: return "Last practised \(days) days ago"
+    }
+}
+
+public func planToday(_ input: TodayInput) -> TodayPlan {
+    let children = activeChildFirst(input.children, activeChildId: input.activeChildId)
 
     if input.sundayCaptureDue {
         return .plan(primary: .captureSunday, also: children.map(TodayItem.catechism))
@@ -132,9 +161,8 @@ extension LocalProgressStore {
             let total = program.totalQuestions
             let current = track?.currentQuestion ?? 1
             let number = min(max(current, 1), total)
-            let practised = track?.milestones.values.contains {
-                calendar.isDate($0.introducedAt, inSameDayAs: now)
-            } ?? false
+            let lastPractised = track?.milestones.values.map(\.introducedAt).max()
+            let practised = lastPractised.map { calendar.isDate($0, inSameDayAs: now) } ?? false
             return TodayChild(
                 id: child.id,
                 name: child.name,
@@ -145,7 +173,8 @@ extension LocalProgressStore {
                 question: getQuestion(program, number)?.question,
                 learned: min(max(current - 1, 0), total),
                 practisedToday: practised,
-                finished: current > total
+                finished: current > total,
+                lastPractisedAt: lastPractised
             )
         }
     }

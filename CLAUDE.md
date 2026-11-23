@@ -46,7 +46,7 @@ Linear project: **confessional christianity** (team TKL): https://linear.app/sof
 |---|---|---|
 | web unit | `npm test` (vitest, 250 tests, incl. `scripts/**/*.test.mjs`) | ~1 s |
 | web build | `npm run build` (needs `.env.local`; ESLint enforced) | ~15 s |
-| DomainKit | `cd ios/DomainKit && swift test` (218 tests: 178 Swift Testing + 40 XCTest) | ~15 s |
+| DomainKit | `cd ios/DomainKit && swift test` (225 tests: 185 Swift Testing + 40 XCTest) | ~15 s |
 | iOS build | `cd ios/App && xcodegen generate && xcodebuild -scheme ConfessionalChristianity -destination 'platform=iOS Simulator,name=CC iPhone 17 Pro' -derivedDataPath ../../build/dd build` | ~1 min cold |
 | infra | `cd infra && npm ci && npm test` (vitest CDK assertions, 20 tests) | ~6 s |
 
