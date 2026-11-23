@@ -274,7 +274,7 @@ struct LordsDayFeedFixture: View {
     var body: some View {
         ZStack {
             if scene == "saved" {
-                LordsDayTabView(path: $path)
+                LordsDayTabView(path: $path, startsCapture: .constant(false))
                     .modelContainer(Self.savedContainer)
             } else if let feed {
                 LordsDayFeedView(feed: feed)

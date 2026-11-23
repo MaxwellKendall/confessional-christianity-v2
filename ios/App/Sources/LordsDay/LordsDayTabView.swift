@@ -12,6 +12,7 @@ struct LordsDayTabView: View {
     @Binding var path: NavigationPath
     /// Every tab stays mounted from launch; only an on-screen feed may fetch verse text.
     var isActive = true
+    @Binding var startsCapture: Bool
     @Environment(\.modelContext) private var context
     @State private var capture: CaptureModel?
     @State private var status = CaptureStatus()
@@ -54,6 +55,11 @@ struct LordsDayTabView: View {
             ReviewView(model: model, onClose: { review = nil }, onFinish: { review = nil })
         }
         .onAppear(perform: refresh)
+        .onChange(of: startsCapture, initial: true) { _, requested in
+            guard requested else { return }
+            capture = CaptureModel(context: context)
+            startsCapture = false
+        }
         .onChange(of: isActive) { _, active in
             if active { refresh() }
         }

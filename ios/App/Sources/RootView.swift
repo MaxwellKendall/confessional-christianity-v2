@@ -16,6 +16,13 @@ import SwiftData
 import DomainKit
 
 struct RootView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Environment(AuthService.self) private var auth
+    @Query private var children: [LocalChild]
+    @Query private var sermons: [LordsDayNote]
+    @AppStorage("didCompleteOnboarding") private var didCompleteOnboarding = false
+    @State private var showsSignIn = false
+    @State private var startsCapture = false
     @State private var selected: RootTab = RootView.initialTab
     @State private var todayPath = NavigationPath()
     @State private var catechismPath = NavigationPath()
@@ -29,10 +36,6 @@ struct RootView: View {
     @State private var catechismHidesBar = false
     @State private var lordsDayHidesBar = false
 
-    #if DEBUG
-    @Environment(\.modelContext) private var modelContext
-    #endif
-
     private var isTabBarVisible: Bool {
         switch selected {
         case .today: return !todayHidesBar
@@ -42,6 +45,65 @@ struct RootView: View {
     }
 
     var body: some View {
+        Group {
+            if shouldShowOnboarding {
+                OnboardingView(
+                    existingNames: children.map(\.name),
+                    onBegin: beginCatechism,
+                    onSermon: beginSermon,
+                    onSignIn: { showsSignIn = true }
+                )
+            } else {
+                tabs
+            }
+        }
+        .sheet(isPresented: $showsSignIn, onDismiss: auth.cancelCode) {
+            OnboardingSignInView()
+        }
+        .onChange(of: hasLocalHistory, initial: true) { _, hasHistory in
+            if hasHistory { didCompleteOnboarding = true }
+        }
+        .onChange(of: auth.phase.isSignedIn, initial: true) { _, signedIn in
+            if signedIn {
+                didCompleteOnboarding = true
+                showsSignIn = false
+            }
+        }
+    }
+
+    private var shouldShowOnboarding: Bool {
+        #if DEBUG
+        let args = UserDefaults.standard
+        if args.string(forKey: "OnboardingPage") != nil { return !didCompleteOnboarding }
+        if ["StartTab", "OpenSheet", "SeedChildren", "AuthDebug"].contains(where: { args.object(forKey: $0) != nil }) {
+            return false
+        }
+        #endif
+        return !didCompleteOnboarding && !hasLocalHistory && !auth.phase.isSignedIn
+    }
+
+    private var hasLocalHistory: Bool { !children.isEmpty || !sermons.isEmpty }
+
+    private func beginCatechism(name: String) -> Bool {
+        guard !didCompleteOnboarding else { return true }
+        do {
+            try LocalProgressStore(context: modelContext).addChild(name: name)
+            todayPath.append(LibraryRoute.session(programSlug: PROGRAMS[0].slug, questionNumber: 1))
+            selected = .today
+            didCompleteOnboarding = true
+            return true
+        } catch {
+            return false
+        }
+    }
+
+    private func beginSermon() {
+        selected = .lordsDay
+        startsCapture = true
+        didCompleteOnboarding = true
+    }
+
+    private var tabs: some View {
         ZStack {
             TodayView(path: $todayPath) { selected = $0 }
                 .onHidesFloatingTabBarChange { todayHidesBar = $0 }
@@ -51,7 +113,9 @@ struct RootView: View {
                 .onHidesFloatingTabBarChange { catechismHidesBar = $0 }
                 .opacity(selected == .catechism ? 1 : 0)
                 .allowsHitTesting(selected == .catechism)
-            LordsDayTabView(path: $lordsDayPath, isActive: selected == .lordsDay)
+            LordsDayTabView(
+                path: $lordsDayPath, isActive: selected == .lordsDay, startsCapture: $startsCapture
+            )
                 .onHidesFloatingTabBarChange { lordsDayHidesBar = $0 }
                 .opacity(selected == .lordsDay ? 1 : 0)
                 .allowsHitTesting(selected == .lordsDay)
