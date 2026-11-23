@@ -32,7 +32,7 @@ Linear project: **confessional christianity** (team TKL): https://linear.app/sof
   with the proof-text reader pushed) plus `-ProofTextReaderCard verse|end`, `-LordsDayFeedFixture key_point|quote|verse|verse_offline` (the week's card feed from an in-memory sample week, opened
   at today's card of that kind; `verse_offline` is a verse with no bundled text), `-LordsDayReviewFixture filling|complete` (reviewing drafted cards, TKL-863: sample drafts replayed into a throwaway
   folder; `filling` stays mid-fill) plus `-LordsDayReviewCard p0-1|drafting` (open at that card), `-LordsDayCaptureFixture camera|strip|type`
-  (the notes camera with a sample page), `-StartTab today|catechism|lordsDay` (open on that tab), `-SeedChildren "Samuel:9,Thomas:4"`
+  (the notes camera with a sample page), `-StartTab today|catechism|lordsDay` (open on that tab), `-OpenSheet settings|addChild` (open that sheet on Today) plus `-AddChildName <name>` (Add a child pre-filled, as if Add was tapped: a seeded name shows the duplicate error), `-SeedChildren "Samuel:9,Thomas:4"`
   (those children at those questions, only when there are none yet: a fresh install is the empty state), `-EsvOffline YES` (reader,
   verse cards and the cards generator act offline), and
   `-SkipNotificationOffer YES` (always pass it: an unanswered notification prompt survives reinstalls until the simulator reboots).
@@ -46,7 +46,7 @@ Linear project: **confessional christianity** (team TKL): https://linear.app/sof
 |---|---|---|
 | web unit | `npm test` (vitest, 250 tests, incl. `scripts/**/*.test.mjs`) | ~1 s |
 | web build | `npm run build` (needs `.env.local`; ESLint enforced) | ~15 s |
-| DomainKit | `cd ios/DomainKit && swift test` (225 tests: 185 Swift Testing + 40 XCTest) | ~15 s |
+| DomainKit | `cd ios/DomainKit && swift test` (229 tests: 189 Swift Testing + 40 XCTest) | ~15 s |
 | iOS build | `cd ios/App && xcodegen generate && xcodebuild -scheme ConfessionalChristianity -destination 'platform=iOS Simulator,name=CC iPhone 17 Pro' -derivedDataPath ../../build/dd build` | ~1 min cold |
 | infra | `cd infra && npm ci && npm test` (vitest CDK assertions, 20 tests) | ~6 s |
 

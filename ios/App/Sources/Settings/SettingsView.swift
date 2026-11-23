@@ -30,7 +30,7 @@ struct SettingsView: View {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(child.name).foregroundStyle(.ccInk)
                                     Text("\(child.programShortTitle) · \(child.learned) of \(child.totalQuestions) learned")
-                                        .font(.system(size: 13))
+                                        .font(.ccUI(13))
                                         .foregroundStyle(.ccInk2)
                                 }
                                 Spacer()
@@ -63,45 +63,85 @@ struct SettingsView: View {
     }
 }
 
+/// The Add a child sheet, as in TKL-885's prototype (TKL-941): Chapel title,
+/// one filled field, one chapel button and errors inline under the field.
+/// Adding is a local write, so there is nothing to wait on and no spinner.
 struct AddChildView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Query private var children: [LocalChild]
     @State private var name = ""
+    @State private var submitted = false
     @FocusState private var focused: Bool
 
-    private var trimmed: String { name.trimmingCharacters(in: .whitespacesAndNewlines) }
+    private var check: ChildName.Check {
+        ChildName.validate(name, existing: children.map(\.name))
+    }
+
+    private var error: String? {
+        if submitted, check == .empty { return "Type a first name." }
+        return check.message
+    }
 
     var body: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    TextField("Name", text: $name)
-                        .textContentType(.givenName)
-                        .submitLabel(.done)
-                        .focused($focused)
-                        .onSubmit(add)
-                } footer: {
-                    Text("Each child keeps their own place, starting at Q. 1 of the Shorter Catechism.")
+        VStack(alignment: .leading, spacing: 0) {
+            Text("Add a child")
+                .font(.ccDisplay(22, semibold: true))
+                .foregroundStyle(.ccInk)
+                .padding(.bottom, 6)
+            Text("Starts at Q. 1 of the Shorter Catechism. Only a first name, kept on this iPhone.")
+                .font(.ccUI(13))
+                .foregroundStyle(.ccInk2)
+                .padding(.bottom, 14)
+            VStack(alignment: .leading, spacing: ChapelSpace.m) {
+                TextField("First name", text: $name)
+                    .font(.ccUI(17))
+                    .foregroundStyle(.ccInk)
+                    .textContentType(.givenName)
+                    .submitLabel(.done)
+                    .focused($focused)
+                    .onSubmit(add)
+                    .padding(.horizontal, 14)
+                    .frame(height: ChapelSize.buttonHeight)
+                    .background(.ccFill, in: RoundedRectangle(cornerRadius: ChapelRadius.control))
+                    .overlay {
+                        if error != nil {
+                            RoundedRectangle(cornerRadius: ChapelRadius.control)
+                                .strokeBorder(.ccDanger, lineWidth: 1)
+                        }
+                    }
+                    .accessibilityHint(error ?? "")
+                if let error {
+                    Text(error)
+                        .font(.ccUI(13))
+                        .foregroundStyle(.ccDanger)
+                        .accessibilityAddTraits(.updatesFrequently)
                 }
+                Button("Add", action: add)
+                    .buttonStyle(ChapelPrimaryButtonStyle())
             }
-            .navigationTitle("Add a child")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Add", action: add).disabled(trimmed.isEmpty)
-                }
-            }
-            .onAppear { focused = true }
+            Spacer(minLength: 0)
         }
-        .tint(.ccInk)
-        .presentationDetents([.medium])
+        .padding(.horizontal, ChapelSpace.gutter)
+        .padding(.top, ChapelSpace.xl)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .onAppear {
+            #if DEBUG
+            // Screenshot hook: `-AddChildName Ruth` pre-fills the field and
+            // shows any error as if Add had been tapped.
+            if let preset = UserDefaults.standard.string(forKey: "AddChildName") { name = preset; submitted = true }
+            #endif
+            focused = true
+        }
+        .presentationDetents([.height(300)])
+        .presentationDragIndicator(.visible)
+        .presentationCornerRadius(ChapelRadius.sheet)
+        .presentationBackground(.ccSurface)
     }
 
     private func add() {
-        guard !trimmed.isEmpty else { return }
+        submitted = true
+        guard case .valid(let trimmed) = check else { return }
         let store = LocalProgressStore(context: modelContext)
         guard let child = try? store.addChild(name: trimmed) else { return }
         // The newest child becomes the one Today and the Catechism tab show.

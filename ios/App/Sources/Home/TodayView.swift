@@ -70,6 +70,16 @@ struct TodayView: View {
         .tint(.ccInk)
         .sheet(isPresented: $showsSettings) { SettingsView() }
         .sheet(isPresented: $showsAddChild) { AddChildView() }
+        #if DEBUG
+        // Screenshot hook: `-OpenSheet settings|addChild` opens that sheet on Today.
+        .onAppear {
+            switch UserDefaults.standard.string(forKey: "OpenSheet") {
+            case "settings": showsSettings = true
+            case "addChild": showsAddChild = true
+            default: break
+            }
+        }
+        #endif
         .alert("Couldn’t start practice", isPresented: $showsSessionError) {
             Button("OK", role: .cancel) {}
         } message: {
