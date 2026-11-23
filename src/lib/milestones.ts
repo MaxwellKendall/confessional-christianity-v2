@@ -1,7 +1,10 @@
-// Age-labeled checkpoints (mockup 9a, turn 9): the replacement for the old
-// pacing/session-plan wizard. There's no schedule — a milestone's progress
-// is derived purely from how far a track's position has advanced, so it
-// needs no DB read beyond what the caller already has.
+// Topical checkpoints (turn 18, replacing the age-labeled version from
+// mockup 9a): age-banded, overlapping ranges ("Half the Catechism" at
+// 9–10, "The Ten Commandments" at 7–8) didn't correspond to anything in
+// the catechism itself, so nobody used them. A milestone now names one of
+// the catechism's own doctrinal divisions, in the order the catechism
+// teaches them — there's no schedule here either; progress is still
+// derived purely from how far a track's position has advanced.
 export interface MilestoneDefinition {
   id: string;
   title: string;
@@ -15,18 +18,27 @@ export interface MilestoneDefinition {
 // Authored per program slug, same pattern as prayers (content/programs/<slug>).
 // Only WSC has real milestones so far; other programs render the honest
 // "not yet mapped" empty state until someone authors theirs.
+//
+// Ranges follow the catechism's own doctrinal structure, not an external
+// pacing scheme: Scripture (1–3), God (4–8), Creation & Providence (9–11),
+// the Fall (12–20), the Person of Christ (21–28), salvation applied —
+// effectual calling through justification, adoption, and sanctification
+// (29–38), the Ten Commandments (39–84, which also carries the preface to
+// the law and sin's demerit), faith & repentance (85–87), the means of
+// grace — Word and sacraments (88–97), and prayer (98–107). Every question
+// falls in exactly one range, in catechism order.
 const MILESTONES: Record<string, MilestoneDefinition[]> = {
   'catechizing-shorter-catechism': [
-    { id: 'first-ten', title: 'First Ten Questions', range: [1, 10] },
-    {
-      id: 'ten-commandments', title: 'The Ten Commandments', range: [42, 81], typicalAge: [7, 8],
-    },
-    {
-      id: 'halfway', title: 'Half the Catechism', range: [1, 54], typicalAge: [9, 10],
-    },
-    {
-      id: 'complete', title: 'The Whole Catechism', range: [1, 107], typicalAge: [11, 12],
-    },
+    { id: 'scripture', title: 'Scripture', range: [1, 3] },
+    { id: 'god', title: 'God', range: [4, 8] },
+    { id: 'creation-providence', title: 'Creation & Providence', range: [9, 11] },
+    { id: 'the-fall', title: 'The Fall', range: [12, 20] },
+    { id: 'person-of-christ', title: 'The Person of Christ', range: [21, 28] },
+    { id: 'salvation-applied', title: 'Salvation Applied', range: [29, 38] },
+    { id: 'ten-commandments', title: 'The Ten Commandments', range: [39, 84] },
+    { id: 'faith-repentance', title: 'Faith & Repentance', range: [85, 87] },
+    { id: 'means-of-grace', title: 'The Means of Grace', range: [88, 97] },
+    { id: 'prayer', title: 'Prayer', range: [98, 107] },
   ],
 };
 
