@@ -69,6 +69,9 @@ Never commit in the main checkout: it often holds Maxwell's uncommitted work on 
 
 ## Deploy
 - **Web:** Vercel serves https://confessionalchristianity.com (`server: Vercel`). Whether a push to `main` deploys by itself is unverified; check the Vercel project before relying on it. Post-deploy: `/`, `/library`, `/search` return 200.
+- **Maxwell's iPhone 17 Pro:** install only with `npm run device-install -- --device 00008150-001035213A44C01C`.
+  Run it from a clean checkout of landed code. It builds Release and records each successful install in the
+  shared git directory. Add `--dry-run` to print the plan without building or installing.
 - **iOS:** `npm run ios:release` (`scripts/ios/release.mjs`, TKL-814) from a worktree of `origin/main`. It reads every build
   ever uploaded from App Store Connect, sets `CURRENT_PROJECT_VERSION` in `ios/App/project.yml` to one above the highest (local
   or uploaded), runs `xcodegen generate`, `xcodebuild archive`, `-exportArchive -allowProvisioningUpdates` to a local `.ipa`,
