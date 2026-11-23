@@ -35,7 +35,7 @@ final class AuthService {
     private(set) var machine = AuthMachine()
 
     var phase: AuthPhase { machine.phase }
-    var user: AuthUser? { machine.phase.user }
+    var user: DomainKit.AuthUser? { machine.phase.user }
     var lastError: DomainKit.AuthError? { machine.lastError }
     /// False when the bundle lacks a valid amplify_outputs file: the app stays
     /// a guest and Settings shows no sign-in row.
@@ -196,11 +196,11 @@ final class AuthService {
         }
     }
 
-    private static func currentUser() async -> AuthUser? {
+    private static func currentUser() async -> DomainKit.AuthUser? {
         guard let user = try? await Amplify.Auth.getCurrentUser() else { return nil }
         let attributes = (try? await Amplify.Auth.fetchUserAttributes()) ?? []
         let email = attributes.first { $0.key == .email }?.value
-        return AuthUser(id: user.userId, email: email)
+        return DomainKit.AuthUser(id: user.userId, email: email)
     }
 
     /// Amplify can be configured once per process.
