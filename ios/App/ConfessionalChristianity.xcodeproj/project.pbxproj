@@ -28,6 +28,7 @@
 		6A97BA0F07B755DABF4297B5 /* ReaderConfessionsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 421AEA827B9B261BB8EB27EE /* ReaderConfessionsSheet.swift */; };
 		735B92C856F999EE4F7294F6 /* CatechismTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99285AF1E154635D23996AA9 /* CatechismTabView.swift */; };
 		744A53A6115745E063B78CE1 /* MilestonesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA5673ACB1419E8AFFF76F5A /* MilestonesView.swift */; };
+		75451952A5462840218DB17A /* AWSCognitoAuthPlugin in Frameworks */ = {isa = PBXBuildFile; productRef = 690790ABE14D2235F9428300 /* AWSCognitoAuthPlugin */; };
 		771DFCA83B8D42C191A78FB7 /* AppDestinations.swift in Sources */ = {isa = PBXBuildFile; fileRef = B311EBE166E5671F929E97A1 /* AppDestinations.swift */; };
 		78B5CAD5AED7EEBC4EEBAB97 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 7E69BB26BAE59E9A1DD9E9FB /* PrivacyInfo.xcprivacy */; };
 		792F3E7354EBF8639091C677 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ED45E06DF435369D44194FD /* TodayView.swift */; };
@@ -37,19 +38,21 @@
 		8B6C145E341F77C8E643D573 /* CameraController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B457BF311BED9BFB4321BC0F /* CameraController.swift */; };
 		8B7CCA1620D28C8EE82E0212 /* CatechismWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C4BE3D3CA7C31C59ACB5286 /* CatechismWidget.swift */; };
 		8E1F53502D81DEB3DC3AACD0 /* ReflectionsRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0696F7777BB06E349FC8B348 /* ReflectionsRoute.swift */; };
-		92AB57C3C4070DC03CD83935 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = A17AE7748AFFEDE11B57938B /* Supabase */; };
+		92AB57C3C4070DC03CD83935 /* Amplify in Frameworks */ = {isa = PBXBuildFile; productRef = 57854D64558DE7D947F2FFBA /* Amplify */; };
 		93373EFF4BEEBB9305D97C2A /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82F6656D056CA75FE62409F4 /* AboutView.swift */; };
 		9346E28CF529C63C3765514B /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18C002AEB0FB5E9D3623E1D3 /* OnboardingView.swift */; };
 		93D0DAB535D7FDAF4CD85114 /* LoopEventsUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 488B97E15ED8C9433237A75B /* LoopEventsUITests.swift */; };
 		94F2A0DB1351CCA796EA6567 /* Cinzel-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E38A936D51B1960620B4EA13 /* Cinzel-SemiBold.ttf */; };
 		9508C7F34BAE8BD034467A77 /* DocumentTocView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CEC5FBB76D7BE63305F7369 /* DocumentTocView.swift */; };
 		958E1E27094E04B8F5121E51 /* ConfessionalChristianityWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = CFC6793E7895E7D3636BA94F /* ConfessionalChristianityWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		96666B68ECEA01AD41BDD953 /* SignInSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB7F70EE071B78E71DA8082E /* SignInSheet.swift */; };
 		9724BDE7A6364650FE852BE2 /* WebLinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AC1A22AE440A42245983156 /* WebLinks.swift */; };
 		975E7B40260BACEB03F8649A /* LibraryIndexView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3408CF58E549F6A7311C1707 /* LibraryIndexView.swift */; };
 		999D61DC39AB1C28CB92457F /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 96AC6B242BD5EEB00B86DCB9 /* PrivacyInfo.xcprivacy */; };
 		9B0DF1151700DED8D5E7B074 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0622E7353216946347CF3DD1 /* DesignSystem.swift */; };
 		A33BEF33F6012F5244225E37 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0622E7353216946347CF3DD1 /* DesignSystem.swift */; };
 		A37246ABCD770C1EB341917E /* RootTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98A25657E65FD99C28C300E6 /* RootTab.swift */; };
+		A56C84960C4D791864614828 /* amplify_outputs.dev.json in Resources */ = {isa = PBXBuildFile; fileRef = E5B9751431F844A576E40DBE /* amplify_outputs.dev.json */; };
 		A5FB9081D12F27A77BBA509D /* Marcellus-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 8E695AE85593396B01EA0946 /* Marcellus-Regular.ttf */; };
 		A8520A15B4644D91821657B7 /* MarkdownText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CA73F64DC39A88E251E81D2 /* MarkdownText.swift */; };
 		AB70875985CBC8610B6CC09C /* LoopCounter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD4AB7A9E7C2AD7577016708 /* LoopCounter.swift */; };
@@ -64,8 +67,6 @@
 		C801FA2EAE0401DFF8830CAE /* LordsDayTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9026BA4701C493912921EF2 /* LordsDayTabView.swift */; };
 		CA89F33BD75237A05A952DD6 /* ReviewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C643620A0907843D1122CAB4 /* ReviewModel.swift */; };
 		CCA59BAED520814729154AF4 /* HidesFloatingTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7CC21628E6787C6FD581730 /* HidesFloatingTabBar.swift */; };
-		CE1920ACD9DF2D32D7ADB5B3 /* SupabaseConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9C2D0D042691001D8C45CFD /* SupabaseConfig.swift */; };
-		D03240D8CA0391013DF1C22C /* AuthDebugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8AFA065463DB3F035B0045 /* AuthDebugView.swift */; };
 		D0AEC860FC03BD3CCA1EC43C /* CaptureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00C25ED916B66A447B8C411 /* CaptureView.swift */; };
 		D5A5B50AC7558D9BF4B4A6E7 /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D65ACD5AC11EFE015FD5B666 /* SearchView.swift */; };
 		D7FD205440856F87ABC90190 /* ClauseLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58912A495665984DB2EDA36E /* ClauseLabel.swift */; };
@@ -163,7 +164,7 @@
 		A3BCFC7770E05C3C772E8A0D /* ConfessionalChristianity.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = ConfessionalChristianity.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A968AF70AD49E41C42492E83 /* DomainKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = DomainKit; path = ../DomainKit; sourceTree = SOURCE_ROOT; };
 		AA107B8B544A9F504E2D6E4F /* SiteHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiteHeaderView.swift; sourceTree = "<group>"; };
-		AA8AFA065463DB3F035B0045 /* AuthDebugView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthDebugView.swift; sourceTree = "<group>"; };
+		AB7F70EE071B78E71DA8082E /* SignInSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignInSheet.swift; sourceTree = "<group>"; };
 		AFC0F6EBEA55CD22AC8831B1 /* FloatingTabBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingTabBarView.swift; sourceTree = "<group>"; };
 		B1E2539D38EE0CFDBF173259 /* VerseReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerseReaderView.swift; sourceTree = "<group>"; };
 		B311EBE166E5671F929E97A1 /* AppDestinations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDestinations.swift; sourceTree = "<group>"; };
@@ -185,7 +186,7 @@
 		DFB100594401DF03A33600E0 /* CaptureModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureModel.swift; sourceTree = "<group>"; };
 		E00C25ED916B66A447B8C411 /* CaptureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureView.swift; sourceTree = "<group>"; };
 		E38A936D51B1960620B4EA13 /* Cinzel-SemiBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Cinzel-SemiBold.ttf"; sourceTree = "<group>"; };
-		E9C2D0D042691001D8C45CFD /* SupabaseConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseConfig.swift; sourceTree = "<group>"; };
+		E5B9751431F844A576E40DBE /* amplify_outputs.dev.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = amplify_outputs.dev.json; sourceTree = "<group>"; };
 		EF90EFD2FCB8FC6A14A57EEA /* VersePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VersePickerView.swift; sourceTree = "<group>"; };
 		F1C91F026BE4FEE54E8BB42E /* LordsDayFeedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LordsDayFeedView.swift; sourceTree = "<group>"; };
 		F9026BA4701C493912921EF2 /* LordsDayTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LordsDayTabView.swift; sourceTree = "<group>"; };
@@ -209,7 +210,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				078ADB6E19374EF694819591 /* DomainKit in Frameworks */,
-				92AB57C3C4070DC03CD83935 /* Supabase in Frameworks */,
+				92AB57C3C4070DC03CD83935 /* Amplify in Frameworks */,
+				75451952A5462840218DB17A /* AWSCognitoAuthPlugin in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -229,6 +231,7 @@
 			isa = PBXGroup;
 			children = (
 				DB2DFAF2900515D7DE6DFB02 /* Packages */,
+				E4AA443E5E1002D7372831CC /* Resources */,
 				3B45A31B522B3C69805EA03E /* Sources */,
 				381C2E5B8BD926422E6D33D4 /* Sources */,
 				6EEB81C947584A4448D9787B /* UITests */,
@@ -372,6 +375,7 @@
 			isa = PBXGroup;
 			children = (
 				323DE6E62344832D8ECF9AD4 /* SettingsView.swift */,
+				AB7F70EE071B78E71DA8082E /* SignInSheet.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -427,6 +431,14 @@
 			name = Packages;
 			sourceTree = "<group>";
 		};
+		E4AA443E5E1002D7372831CC /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				E5B9751431F844A576E40DBE /* amplify_outputs.dev.json */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
 		EF10E8C45A2C693A65115E72 /* Onboarding */ = {
 			isa = PBXGroup;
 			children = (
@@ -450,9 +462,7 @@
 		FF68B6B0110CD04B315652C9 /* Auth */ = {
 			isa = PBXGroup;
 			children = (
-				AA8AFA065463DB3F035B0045 /* AuthDebugView.swift */,
 				786FDD2AB314C8BC32806E54 /* AuthService.swift */,
-				E9C2D0D042691001D8C45CFD /* SupabaseConfig.swift */,
 			);
 			path = Auth;
 			sourceTree = "<group>";
@@ -497,7 +507,8 @@
 			name = ConfessionalChristianity;
 			packageProductDependencies = (
 				17B689653BB9AF85B87373ED /* DomainKit */,
-				A17AE7748AFFEDE11B57938B /* Supabase */,
+				57854D64558DE7D947F2FFBA /* Amplify */,
+				690790ABE14D2235F9428300 /* AWSCognitoAuthPlugin */,
 			);
 			productName = ConfessionalChristianity;
 			productReference = A3BCFC7770E05C3C772E8A0D /* ConfessionalChristianity.app */;
@@ -555,7 +566,7 @@
 			mainGroup = 0546B90503556F6180741F49;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				A14A49564D124C962F4C7FA5 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+				6D0781A6B94CAF5FBC526CF1 /* XCRemoteSwiftPackageReference "amplify-swift" */,
 				F720802E5B67E1BF149913B9 /* XCLocalSwiftPackageReference "../DomainKit" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -591,6 +602,7 @@
 				94F2A0DB1351CCA796EA6567 /* Cinzel-SemiBold.ttf in Resources */,
 				ABC676EECAD6EB2A5DDE8916 /* Marcellus-Regular.ttf in Resources */,
 				78B5CAD5AED7EEBC4EEBAB97 /* PrivacyInfo.xcprivacy in Resources */,
+				A56C84960C4D791864614828 /* amplify_outputs.dev.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -624,7 +636,6 @@
 				93373EFF4BEEBB9305D97C2A /* AboutView.swift in Sources */,
 				071133A6E8575DC8F1628D43 /* AlgoliaClient.swift in Sources */,
 				771DFCA83B8D42C191A78FB7 /* AppDestinations.swift in Sources */,
-				D03240D8CA0391013DF1C22C /* AuthDebugView.swift in Sources */,
 				DDA8BECCFA53AFFDA838939E /* AuthService.swift in Sources */,
 				8B6C145E341F77C8E643D573 /* CameraController.swift in Sources */,
 				E05748719EA05C3738219BC2 /* CaptureModel.swift in Sources */,
@@ -669,8 +680,8 @@
 				D5A5B50AC7558D9BF4B4A6E7 /* SearchView.swift in Sources */,
 				7C611E39E3B058BE6D93D933 /* SessionView.swift in Sources */,
 				201B7050D78A373293882C3A /* SettingsView.swift in Sources */,
+				96666B68ECEA01AD41BDD953 /* SignInSheet.swift in Sources */,
 				4BF1AA038DAF23E878D34262 /* SiteHeaderView.swift in Sources */,
-				CE1920ACD9DF2D32D7ADB5B3 /* SupabaseConfig.swift in Sources */,
 				B3F5CF1C182FCFD4301934FC /* TabIcons.swift in Sources */,
 				792F3E7354EBF8639091C677 /* TodayView.swift in Sources */,
 				AEE99A080D3E2A0466FC17D6 /* VersePickerView.swift in Sources */,
@@ -760,6 +771,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = 7GZKY29XJH;
+				EXCLUDED_SOURCE_FILE_NAMES = amplify_outputs.prod.json;
 				INFOPLIST_FILE = Sources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -770,8 +782,6 @@
 				POSTHOG_KEY = phc_dF6Jl6RuY7mAZpIA2zAp84Ji1L9oikmKdPUQJBaBsJq;
 				PRODUCT_BUNDLE_IDENTIFIER = com.confessionalchristianity.app;
 				SDKROOT = iphoneos;
-				SUPABASE_PUBLISHABLE_KEY = sb_publishable_QDtg2bLu0MSTGaA_5hN7xw_QFSwo3UM;
-				SUPABASE_URL = "https://vzxoypketuxmomsbyspy.supabase.co";
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
@@ -911,6 +921,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = 7GZKY29XJH;
+				EXCLUDED_SOURCE_FILE_NAMES = amplify_outputs.dev.json;
 				INFOPLIST_FILE = Sources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -921,8 +932,6 @@
 				POSTHOG_KEY = phc_dF6Jl6RuY7mAZpIA2zAp84Ji1L9oikmKdPUQJBaBsJq;
 				PRODUCT_BUNDLE_IDENTIFIER = com.confessionalchristianity.app;
 				SDKROOT = iphoneos;
-				SUPABASE_PUBLISHABLE_KEY = sb_publishable_QDtg2bLu0MSTGaA_5hN7xw_QFSwo3UM;
-				SUPABASE_URL = "https://vzxoypketuxmomsbyspy.supabase.co";
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
@@ -999,12 +1008,12 @@
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		A14A49564D124C962F4C7FA5 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+		6D0781A6B94CAF5FBC526CF1 /* XCRemoteSwiftPackageReference "amplify-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/supabase/supabase-swift";
+			repositoryURL = "https://github.com/aws-amplify/amplify-swift";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.55.0;
+				kind = exactVersion;
+				version = 2.62.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -1014,14 +1023,19 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = DomainKit;
 		};
+		57854D64558DE7D947F2FFBA /* Amplify */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6D0781A6B94CAF5FBC526CF1 /* XCRemoteSwiftPackageReference "amplify-swift" */;
+			productName = Amplify;
+		};
+		690790ABE14D2235F9428300 /* AWSCognitoAuthPlugin */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6D0781A6B94CAF5FBC526CF1 /* XCRemoteSwiftPackageReference "amplify-swift" */;
+			productName = AWSCognitoAuthPlugin;
+		};
 		98614B02AD068537C9D58C51 /* DomainKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = DomainKit;
-		};
-		A17AE7748AFFEDE11B57938B /* Supabase */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = A14A49564D124C962F4C7FA5 /* XCRemoteSwiftPackageReference "supabase-swift" */;
-			productName = Supabase;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

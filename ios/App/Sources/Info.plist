@@ -30,10 +30,6 @@
 	<string>$(POSTHOG_HOST)</string>
 	<key>PostHogKey</key>
 	<string>$(POSTHOG_KEY)</string>
-	<key>SupabasePublishableKey</key>
-	<string>$(SUPABASE_PUBLISHABLE_KEY)</string>
-	<key>SupabaseURL</key>
-	<string>$(SUPABASE_URL)</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Cinzel-Regular.ttf</string>

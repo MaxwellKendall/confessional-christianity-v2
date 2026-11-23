@@ -6,21 +6,27 @@ options:
 packages:
   DomainKit:
     path: ../DomainKit
-  # Accounts (TKL-812): auth now, PostgREST sync later. Talks to the website's
-  # Supabase project directly under RLS.
-  Supabase:
-    url: https://github.com/supabase/supabase-swift
-    from: "2.55.0"
+  # Accounts (TKL-928): Cognito email-code sign-in (infra/). Pinned to
+  # barbrabell's version: 2.63.1 doesn't build here (TKL-768). The resolved
+  # versions are tracked in the .xcodeproj's xcshareddata/swiftpm/Package.resolved.
+  Amplify:
+    url: https://github.com/aws-amplify/amplify-swift
+    exactVersion: 2.62.0
 targets:
   ConfessionalChristianity:
     type: application
     platform: iOS
     sources:
       - path: Sources
+      # amplify_outputs.{dev,prod}.json (see `configs` below).
+      - path: Resources
+        buildPhase: resources
     dependencies:
       - package: DomainKit
-      - package: Supabase
-        product: Supabase
+      - package: Amplify
+        product: Amplify
+      - package: Amplify
+        product: AWSCognitoAuthPlugin
       - target: ConfessionalChristianityWidgetExtension
         embed: true
     info:
@@ -39,11 +45,6 @@ targets:
         # Lord's Day capture (TKL-860): photographing sermon notes.
         NSCameraUsageDescription: Photograph your handwritten sermon notes so the app can turn them into cards for the week. Photos are kept on your iPhone, sent only to draft the cards, and not stored online.
         NSPhotoLibraryUsageDescription: Choose a photo of your sermon notes you already took, to turn it into cards for the week.
-        # Read by SupabaseConfig.swift. Values are the website's
-        # NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-        # (public by design; the service role key never ships in the app).
-        SupabaseURL: $(SUPABASE_URL)
-        SupabasePublishableKey: $(SUPABASE_PUBLISHABLE_KEY)
         # Lord's Day loop counts (TKL-947), read by LoopAnalytics. PostHog's
         # project capture key is write-only and public by design (the same key
         # the website's NEXT_PUBLIC_POSTHOG_KEY holds); it can't read anything.
@@ -61,8 +62,6 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.confessionalchristianity.app
-        SUPABASE_URL: https://vzxoypketuxmomsbyspy.supabase.co
-        SUPABASE_PUBLISHABLE_KEY: sb_publishable_QDtg2bLu0MSTGaA_5hN7xw_QFSwo3UM
         POSTHOG_KEY: phc_dF6Jl6RuY7mAZpIA2zAp84Ji1L9oikmKdPUQJBaBsJq
         POSTHOG_HOST: https://us.i.posthog.com
         MARKETING_VERSION: "1.1"
@@ -72,6 +71,13 @@ targets:
         CODE_SIGN_ENTITLEMENTS: Sources/ConfessionalChristianity.entitlements
         DEVELOPMENT_TEAM: 7GZKY29XJH
         CODE_SIGN_STYLE: Automatic
+      configs:
+        # Each build bundles only its own user pool (infra/, `npm run outputs`), as in
+        # remix. Without the file (prod until TKL-893) the app runs as a guest.
+        Debug:
+          EXCLUDED_SOURCE_FILE_NAMES: amplify_outputs.prod.json
+        Release:
+          EXCLUDED_SOURCE_FILE_NAMES: amplify_outputs.dev.json
     schemes:
       ConfessionalChristianity:
         build:

@@ -14,10 +14,6 @@ struct ConfessionalChristianityApp: App {
     // Account session (guest by default); restored from the Keychain at launch.
     @State private var auth = AuthService()
 
-    #if DEBUG
-    @State private var showsAuthDebug = UserDefaults.standard.bool(forKey: "AuthDebug")
-    #endif
-
     var body: some Scene {
         WindowGroup {
             #if DEBUG
@@ -58,11 +54,6 @@ struct ConfessionalChristianityApp: App {
         RootView()
             .modifier(LaunchOpening(showing: showsOpening))
             .environment(auth)
-            #if DEBUG
-            .sheet(isPresented: $showsAuthDebug) {
-                AuthDebugView().environment(auth)
-            }
-            #endif
     }
 }
 

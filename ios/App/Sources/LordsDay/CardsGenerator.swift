@@ -22,9 +22,8 @@ protocol CardsGenerator: Sendable {
 struct LiveCardsGenerator: CardsGenerator {
     static let endpoint = URL(string: "\(WebLinks.base)/api/lords-day/cards")!
 
-    /// The account's Cognito access token. The app's sign-in still talks to
-    /// Supabase, whose tokens this endpoint rejects, so until the Cognito
-    /// client lands (TKL-812) this returns nil and drafting says it needs an account.
+    /// The account's Cognito access token. Not wired to AuthService yet
+    /// (TKL-940), so this returns nil and drafting says it needs an account.
     var accessToken: @Sendable () async -> String? = { nil }
     var session: URLSession = .shared
 

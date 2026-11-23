@@ -1,6 +1,6 @@
-// Settings, opened from Today's avatar (TKL-825): the children (pick who is
-// being catechized, add another) and About & Credits. Sign-in and the
-// practice reminder join it in their own tickets (TKL-826).
+// Settings, opened from Today's avatar (TKL-825): the account (sign in with
+// an emailed code, TKL-928), the children (pick who is being catechized, add
+// another) and About & Credits. The practice reminder joins it in its own ticket.
 import SwiftUI
 import SwiftData
 import DomainKit
@@ -8,10 +8,12 @@ import DomainKit
 struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(AuthService.self) private var auth
     @Query private var observedChildren: [LocalChild]
     @Query private var observedTracks: [ChildCatechismTrack]
     @Query private var observedSettings: [ProgressSettings]
     @State private var showsAddChild = false
+    @State private var showsSignIn = false
 
     private var store: LocalProgressStore { LocalProgressStore(context: modelContext) }
 
@@ -21,6 +23,24 @@ struct SettingsView: View {
         let activeId = observedSettings.first?.activeChildId
         NavigationStack {
             List {
+                if auth.isConfigured {
+                    Section("Account") {
+                        if let user = auth.user {
+                            Text(user.email ?? "Signed in")
+                                .foregroundStyle(.ccInk)
+                                .accessibilityIdentifier("settings.accountEmail")
+                            Button("Sign out") { Task { await auth.signOut() } }
+                                .foregroundStyle(.ccDanger)
+                                .accessibilityIdentifier("settings.signOut")
+                        } else if auth.phase == .restoring {
+                            Text("Checking…").foregroundStyle(.ccInk2)
+                        } else {
+                            Button("Sign in") { showsSignIn = true }
+                                .foregroundStyle(.ccChapel)
+                                .accessibilityIdentifier("settings.signIn")
+                        }
+                    }
+                }
                 Section("Children") {
                     ForEach(store.todayChildren()) { child in
                         Button {
@@ -60,6 +80,11 @@ struct SettingsView: View {
         }
         .tint(.ccInk)
         .sheet(isPresented: $showsAddChild) { AddChildView() }
+        .sheet(isPresented: $showsSignIn) { SignInSheet() }
+        #if DEBUG
+        // Screenshot hook: `-OpenSignIn YES` opens the sheet with Settings.
+        .onAppear { if UserDefaults.standard.bool(forKey: "OpenSignIn") && !auth.phase.isSignedIn { showsSignIn = true } }
+        #endif
     }
 }
 

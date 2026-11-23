@@ -27,13 +27,17 @@ import Testing
         (" 123 456 ", "123456"),
         ("123-456", "123456"),
         ("012345", "012345"),
+        // Cognito EMAIL_OTP sign-in codes are 8 digits; sign-up codes are 6.
+        ("12345678", "12345678"),
+        ("1234 5678", "12345678"),
+        ("0123-4567", "01234567"),
     ])
-    func normalizesSixDigitCodes(raw: String, expected: String) {
+    func normalizesSixOrEightDigitCodes(raw: String, expected: String) {
         #expect(OTPCode.normalized(raw) == expected)
     }
 
-    @Test(arguments: ["", "12345", "1234567", "12345a", "abcdef", "１２３４５６"])
-    func rejectsAnythingButSixAsciiDigits(raw: String) {
+    @Test(arguments: ["", "12345", "1234567", "123456789", "12345a", "abcdef", "１２３４５６", "1234567a"])
+    func rejectsAnythingButSixOrEightAsciiDigits(raw: String) {
         #expect(OTPCode.normalized(raw) == nil)
     }
 }
@@ -176,6 +180,63 @@ import Testing
             do { let accepted = m.handle(.sessionUpdated(user)); #expect(accepted) }
             #expect(m.phase == .signedIn(user))
         }
+    }
+
+    @Test func signUpCodeThenAutoSignIn() {
+        // A first-time email: Cognito sends a 6-digit sign-up code; once it is
+        // confirmed the app signs in automatically.
+        var m = AuthMachine(phase: .guest)
+        m.handle(.requestCode("new@example.com"))
+        do { let accepted = m.handle(.signUpCodeSent); #expect(accepted) }
+        #expect(m.phase == .awaitingCode(email: "new@example.com", purpose: .signUp))
+        do { let accepted = m.handle(.submitCode("123456")); #expect(accepted) }
+        #expect(m.phase == .verifying(email: "new@example.com", code: "123456", purpose: .signUp))
+        do { let accepted = m.handle(.signUpConfirmed); #expect(accepted) }
+        #expect(m.phase == .signingIn(email: "new@example.com"))
+        #expect(!m.phase.isSignedIn)
+        do { let accepted = m.handle(.verified(user)); #expect(accepted) }
+        #expect(m.phase == .signedIn(user))
+        #expect(m.lastError == nil)
+    }
+
+    @Test func returningEmailGetsSignInCode() {
+        var m = AuthMachine(phase: .guest)
+        m.handle(.requestCode("parent@example.com"))
+        m.handle(.codeSent)
+        #expect(m.phase == .awaitingCode(email: "parent@example.com", purpose: .signIn))
+        do { let accepted = m.handle(.submitCode("1234 5678")); #expect(accepted) }
+        #expect(m.phase == .verifying(email: "parent@example.com", code: "12345678", purpose: .signIn))
+    }
+
+    @Test func wrongSignUpCodeKeepsPurpose() {
+        var m = AuthMachine(phase: .awaitingCode(email: "new@example.com", purpose: .signUp))
+        m.handle(.submitCode("000000"))
+        do { let accepted = m.handle(.verifyFailed("Invalid code")); #expect(accepted) }
+        #expect(m.phase == .awaitingCode(email: "new@example.com", purpose: .signUp))
+        #expect(m.lastError == .verifyFailed("Invalid code"))
+    }
+
+    @Test func autoSignInFailureAfterSignUpIsGuestWithError() {
+        // The account exists now; asking for a new code takes the sign-in path.
+        var m = AuthMachine(phase: .signingIn(email: "new@example.com"))
+        do { let accepted = m.handle(.verifyFailed("Auto sign-in failed")); #expect(accepted) }
+        #expect(m.phase == .guest)
+        #expect(m.lastError == .verifyFailed("Auto sign-in failed"))
+    }
+
+    @Test func signUpConfirmedOnlyWhileVerifyingASignUp() {
+        var signIn = AuthMachine(phase: .verifying(email: "parent@example.com", code: "12345678", purpose: .signIn))
+        do { let accepted = signIn.handle(.signUpConfirmed); #expect(!accepted) }
+        var guest = AuthMachine(phase: .guest)
+        do { let accepted = guest.handle(.signUpConfirmed); #expect(!accepted) }
+        do { let accepted = guest.handle(.signUpCodeSent); #expect(!accepted) }
+        #expect(guest.phase == .guest)
+    }
+
+    @Test func cancelFromSignUpCodeIsGuest() {
+        var m = AuthMachine(phase: .awaitingCode(email: "new@example.com", purpose: .signUp))
+        do { let accepted = m.handle(.cancel); #expect(accepted) }
+        #expect(m.phase == .guest)
     }
 }
 

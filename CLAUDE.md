@@ -37,7 +37,11 @@ Linear project: **confessional christianity** (team TKL): https://linear.app/sof
   (those children at those questions, only when there are none yet: a fresh install is the empty state), `-SeedSermonWeek YES` (the sample sermon
   week saved to the app's store, only when it has no notes: Today then shows today's sermon card), `-EsvOffline YES` (reader,
   verse cards and the cards generator act offline), and
-  `-SkipNotificationOffer YES` (always pass it: an unanswered notification prompt survives reinstalls until the simulator reboots).
+  `-SkipNotificationOffer YES` (always pass it: an unanswered notification prompt survives reinstalls until the simulator reboots),
+  `-OpenSettings YES` (Settings open over Today) plus `-OpenSignIn YES` (the sign-in sheet on top), and for signing in without
+  taps (TKL-928, dev pool only): `-SignInEmail otp-test@cc-dev-mail.barbrabell.com -SignInAutoSend YES -SignInCodeFile /tmp/code.txt`
+  sends the code through the sheet, then types and submits each new code written to that host file (2 s later, for a screenshot);
+  fill the file from `infra/scripts/inbox-code.sh`.
   The app follows the system light/dark setting (there is no launch arg): `xcrun simctl ui <dev> appearance light|dark`.
 - Design: colours, type, shapes and shared components are Chapel, in `ios/App/Sources/DesignSystem.swift`; no hex in screens.
   Pair a screen with the approved home and navigation prototype (TKL-885):
@@ -48,8 +52,8 @@ Linear project: **confessional christianity** (team TKL): https://linear.app/sof
 |---|---|---|
 | web unit | `npm test` (vitest, 291 tests, incl. `scripts/**/*.test.mjs`; 60 s timeouts for the loaded build Mac) | ~1 s |
 | web build | `npm run build` (needs `.env.local`; ESLint enforced) | ~15 s |
-| DomainKit | `cd ios/DomainKit && swift test` (265 tests: 216 Swift Testing + 49 XCTest) | ~15 s |
-| iOS build | `cd ios/App && xcodegen generate && xcodebuild -scheme ConfessionalChristianity -destination 'platform=iOS Simulator,name=CC iPhone 17 Pro' -derivedDataPath ../../build/dd build` | ~1 min cold |
+| DomainKit | `cd ios/DomainKit && swift test` (271 tests: 222 Swift Testing + 49 XCTest) | ~15 s |
+| iOS build | `cd ios/App && xcodegen generate && xcodebuild -scheme ConfessionalChristianity -destination 'platform=iOS Simulator,name=CC iPhone 17 Pro' -derivedDataPath ../../build/dd build` | 15+ min cold (AWS SDK), ~1 min warm |
 | infra | `cd infra && npm ci && npm test` (vitest CDK assertions, 20 tests) | ~6 s |
 | iOS UI (loop events) | `cd ios/App && xcodegen generate && xcodebuild test -scheme ConfessionalChristianity -destination 'platform=iOS Simulator,name=CC iPhone 17 Pro' -derivedDataPath ../../build/dd -only-testing:ConfessionalChristianityUITests` (not a Verify check; sends real events) | ~3 min |
 
@@ -131,6 +135,11 @@ iOS client). Stage from `-c stage=…` (default dev). Nothing is created in the 
 - Prod: sends from `confessionalchristianity.com`, whose DNS is on Vercel (not reachable by agents). Its DKIM records are the
   `DkimRecords` output of `ConfessionalChristianityMail-prod`; the prod pool can't deploy until they verify.
 - Account sync uses DynamoDB behind Cognito-authorized AppSync (TKL-891).
+- **The app (TKL-928):** amplify-swift `exactVersion: 2.62.0` (Amplify + AWSCognitoAuthPlugin); `AuthService` signs up first
+  (passwordless, 6-digit code, then auto sign-in) and falls back to sign-in (8-digit `EMAIL_OTP` code) on `usernameExists`,
+  because the pool hides unknown users from sign-in but not from sign-up. Debug bundles `amplify_outputs.dev.json`, Release
+  `amplify_outputs.prod.json`; without a valid file the app is a guest and Settings has no Account section. A cold iOS
+  build compiles the AWS SDK and takes well over 10 minutes.
 
 ## Gotchas
 - The cut prayer list's people table must not come back (TKL-869): `npm run check:removed-refs` (`scripts/checks/removed-refs.mjs`,

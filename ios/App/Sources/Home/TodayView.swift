@@ -28,7 +28,8 @@ struct TodayView: View {
     /// Bumped when the day may have changed, so the sermon card follows the calendar.
     @State private var clockTick = 0
 
-    @State private var showsSettings = false
+    // DEBUG screenshot hook: `-OpenSettings YES` opens Settings at launch.
+    @State private var showsSettings = UserDefaults.standard.bool(forKey: "OpenSettings") && isDebugBuild
     @State private var showsAddChild = false
     @State private var showsSessionError = false
 
@@ -310,3 +311,9 @@ private struct TodayList<Row: View>: View {
         .chapelCard()
     }
 }
+
+#if DEBUG
+private let isDebugBuild = true
+#else
+private let isDebugBuild = false
+#endif

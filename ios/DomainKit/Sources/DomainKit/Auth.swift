@@ -1,14 +1,18 @@
-// Pure sign-in logic for the app's Supabase account: email validation, the
-// 6-digit code format, and the state machine the app's AuthService drives.
-// No networking here — AuthService (app target) performs the Supabase calls
-// and feeds their outcomes back in as events, so every transition is
-// unit-testable on the host Mac.
+// Pure sign-in logic for the app's Cognito account (infra/, TKL-850): email
+// validation, the emailed code format, and the state machine the app's
+// AuthService drives. No networking here — AuthService (app target) performs
+// the Amplify calls and feeds their outcomes back in as events, so every
+// transition is unit-testable on the host Mac.
+//
+// A returning email gets an 8-digit sign-in code (Cognito's fixed EMAIL_OTP
+// length); a first-time email gets a 6-digit sign-up confirmation code, and
+// once it is confirmed the app signs in automatically (`.signingIn`).
 import Foundation
 
 public enum EmailAddress {
     /// Trimmed, lowercased address if it looks deliverable, else nil.
     /// Deliberately modest: one "@", a non-empty local part without spaces,
-    /// and a dotted domain with no empty labels. Supabase does the real check.
+    /// and a dotted domain with no empty labels. Cognito does the real check.
     public static func normalized(_ raw: String) -> String? {
         let email = raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         guard !email.contains(where: { $0.isWhitespace }) else { return nil }
@@ -21,14 +25,23 @@ public enum EmailAddress {
 }
 
 public enum OTPCode {
-    public static let length = 6
+    /// Sign-up confirmation codes are 6 digits, EMAIL_OTP sign-in codes 8.
+    public static let lengths: Set<Int> = [6, 8]
 
-    /// The code with spaces and dashes removed, if it is exactly six ASCII digits.
+    /// The code with spaces and dashes removed, if it is six or eight ASCII digits.
     public static func normalized(_ raw: String) -> String? {
         let code = raw.filter { !$0.isWhitespace && $0 != "-" }
-        guard code.count == length, code.allSatisfy({ $0.isASCII && $0.isNumber }) else { return nil }
+        guard lengths.contains(code.count), code.allSatisfy({ $0.isASCII && $0.isNumber }) else { return nil }
         return code
     }
+}
+
+/// What the emailed code is for, which decides the call that checks it.
+public enum CodePurpose: Equatable, Sendable {
+    /// An existing account: `confirmSignIn` with the 8-digit code.
+    case signIn
+    /// A first-time email: `confirmSignUp` with the 6-digit code, then auto sign-in.
+    case signUp
 }
 
 public struct AuthUser: Equatable, Hashable, Sendable {
@@ -46,8 +59,10 @@ public enum AuthPhase: Equatable, Sendable {
     case restoring
     case guest
     case sendingCode(email: String)
-    case awaitingCode(email: String)
-    case verifying(email: String, code: String)
+    case awaitingCode(email: String, purpose: CodePurpose = .signIn)
+    case verifying(email: String, code: String, purpose: CodePurpose = .signIn)
+    /// Sign-up confirmed; the automatic sign-in that follows is in flight.
+    case signingIn(email: String)
     case signedIn(AuthUser)
 
     public var user: AuthUser? {
@@ -61,7 +76,7 @@ public enum AuthPhase: Equatable, Sendable {
     /// entered or verified for. Show and verify this, not an editable field.
     public var pendingEmail: String? {
         switch self {
-        case .sendingCode(let email), .awaitingCode(let email), .verifying(let email, _): email
+        case .sendingCode(let email), .awaitingCode(let email, _), .verifying(let email, _, _), .signingIn(let email): email
         default: nil
         }
     }
@@ -78,11 +93,16 @@ public enum AuthEvent: Equatable, Sendable {
     /// Result of reading the persisted session at launch.
     case restored(AuthUser?)
     case requestCode(String)
+    /// A sign-in code went out (the account exists).
     case codeSent
+    /// A sign-up code went out (first time this email is used).
+    case signUpCodeSent
     /// Enter a code for `email` without sending one (e.g. after a relaunch).
     case enterCodeFor(String)
     case sendFailed(String)
     case submitCode(String)
+    /// The sign-up code was accepted; auto sign-in follows.
+    case signUpConfirmed
     case verified(AuthUser)
     case verifyFailed(String)
     case cancel
@@ -126,27 +146,38 @@ public struct AuthMachine: Equatable, Sendable {
             phase = .awaitingCode(email: email)
 
         case (.sendingCode(let email), .codeSent):
-            phase = .awaitingCode(email: email)
+            phase = .awaitingCode(email: email, purpose: .signIn)
+
+        case (.sendingCode(let email), .signUpCodeSent):
+            phase = .awaitingCode(email: email, purpose: .signUp)
 
         case (.sendingCode, .sendFailed(let message)):
             lastError = .sendFailed(message)
             phase = .guest
 
-        case (.awaitingCode(let email), .submitCode(let raw)):
+        case (.awaitingCode(let email, let purpose), .submitCode(let raw)):
             guard let code = OTPCode.normalized(raw) else {
                 lastError = .invalidCode
                 return false
             }
             lastError = nil
-            phase = .verifying(email: email, code: code)
+            phase = .verifying(email: email, code: code, purpose: purpose)
 
-        case (.verifying, .verified(let user)):
+        case (.verifying(let email, _, .signUp), .signUpConfirmed):
+            phase = .signingIn(email: email)
+
+        case (.verifying, .verified(let user)), (.signingIn, .verified(let user)):
             lastError = nil
             phase = .signedIn(user)
 
-        case (.verifying(let email, _), .verifyFailed(let message)):
+        case (.verifying(let email, _, let purpose), .verifyFailed(let message)):
             lastError = .verifyFailed(message)
-            phase = .awaitingCode(email: email)
+            phase = .awaitingCode(email: email, purpose: purpose)
+
+        case (.signingIn, .verifyFailed(let message)):
+            // The account exists now; a new code request takes the sign-in path.
+            lastError = .verifyFailed(message)
+            phase = .guest
 
         case (.awaitingCode, .cancel):
             lastError = nil
