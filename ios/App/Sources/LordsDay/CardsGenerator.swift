@@ -20,7 +20,7 @@ protocol CardsGenerator: Sendable {
 }
 
 struct LiveCardsGenerator: CardsGenerator {
-    static let endpoint = URL(string: "https://confessional-christianity-v2.vercel.app/api/lords-day/cards")!
+    static let endpoint = URL(string: "\(WebLinks.base)/api/lords-day/cards")!
 
     /// The account's Cognito access token. The app's sign-in still talks to
     /// Supabase, whose tokens this endpoint rejects, so until the Cognito
