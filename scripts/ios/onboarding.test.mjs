@@ -18,4 +18,13 @@ describe('final onboarding prototype', () => {
     expect(root).toContain('todayPath.append(LibraryRoute.session(');
     expect(source('LordsDay/LordsDayTabView.swift')).toContain('.onChange(of: startsCapture, initial: true)');
   });
+
+  it('binds the sign-in code prompt and Verify to the address the code was sent to', () => {
+    const sheet = source('Onboarding/OnboardingSignInView.swift');
+    expect(sheet).toContain('auth.phase.pendingEmail');
+    expect(sheet).toContain('auth.verifyCode(code)');
+    expect(sheet).not.toContain('auth.verify(email: email');
+    expect(sheet).not.toContain('sent to \\(email)');
+    expect(sheet).toMatch(/TextField\("Email", text: \$email\)[\s\S]*?\.disabled\(isSending\)/);
+  });
 });

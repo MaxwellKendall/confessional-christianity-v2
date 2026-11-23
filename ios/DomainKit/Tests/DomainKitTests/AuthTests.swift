@@ -178,3 +178,24 @@ import Testing
         }
     }
 }
+
+/// TKL-950 review: the code is sent to the address captured when Send was
+/// tapped, so the prompt and Verify must use that address, not the text field.
+@Suite struct AuthPendingEmailTests {
+    @Test func carriesTheAddressTheCodeWasSentTo() {
+        var machine = AuthMachine(phase: .guest)
+        #expect(machine.phase.pendingEmail == nil)
+        machine.handle(.requestCode("First@Example.com"))
+        #expect(machine.phase.pendingEmail == "first@example.com")
+        // A slow send: an edited field can't retarget the pending code.
+        #expect(machine.handle(.enterCodeFor("second@example.com")) == false)
+        #expect(machine.handle(.requestCode("second@example.com")) == false)
+        machine.handle(.codeSent)
+        #expect(machine.phase.pendingEmail == "first@example.com")
+        machine.handle(.submitCode("123456"))
+        #expect(machine.phase == .verifying(email: "first@example.com", code: "123456"))
+        #expect(machine.phase.pendingEmail == "first@example.com")
+        machine.handle(.verified(AuthUser(id: "u", email: "first@example.com")))
+        #expect(machine.phase.pendingEmail == nil)
+    }
+}
