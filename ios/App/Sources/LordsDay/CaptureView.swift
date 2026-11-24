@@ -15,6 +15,14 @@ private let camPaper = Color(hex: 0xfbf8ef)
 // The camera is always dark, so its light button can't be the adaptive on-chapel (dark text's colour there).
 private let camButton = Color(hex: 0xf2f4ef)
 
+/// The system's light/dark setting. The camera forces dark on its whole
+/// presentation, so a sheet it opens would inherit dark from it; the window
+/// scene still carries the system's own choice (TKL-949).
+@MainActor func systemColorScheme() -> ColorScheme {
+    let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
+    return scene?.traitCollection.userInterfaceStyle == .dark ? .dark : .light
+}
+
 struct CaptureView: View {
     @State var model: CaptureModel
     var onClose: () -> Void
@@ -63,10 +71,10 @@ struct CaptureView: View {
             Task { await addPicked(items) }
         }
         .sheet(isPresented: $showsTyping) {
-            TypeNotesView(model: model)
+            TypeNotesView(model: model).preferredColorScheme(systemColorScheme())
         }
         .sheet(isPresented: $showsDetails) {
-            NoteDetailsView(model: model)
+            NoteDetailsView(model: model).preferredColorScheme(systemColorScheme())
         }
         .confirmationDialog(selectedPage.flatMap { page in model.pages.firstIndex(of: page).map { "Page \($0 + 1)" } } ?? "Page",
                             isPresented: Binding(get: { selectedPage != nil }, set: { if !$0 { selectedPage = nil } }),
@@ -364,7 +372,6 @@ struct TypeNotesView: View {
             .navigationTitle("Type instead")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(Color.ccCard, for: .navigationBar)
-            .toolbarColorScheme(.light, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     SavedIndicator(state: model.saveState, color: .ccGilt)
@@ -375,7 +382,6 @@ struct TypeNotesView: View {
             }
             .onAppear { focused = true }
         }
-        .preferredColorScheme(.light)
     }
 }
 
@@ -395,7 +401,9 @@ struct NoteDetailsView: View {
                 } footer: {
                     Text("All optional. A photo of your notes is enough.")
                 }
+                .listRowBackground(Color.ccFill)
             }
+            .scrollContentBackground(.hidden)
             .navigationTitle("Details")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -404,25 +412,27 @@ struct NoteDetailsView: View {
             }
         }
         .presentationDetents([.medium, .large])
-        .preferredColorScheme(.light)
+        .presentationBackground(Color.ccCard)
         .tint(.ccInk)
     }
 }
 
 #if DEBUG
-/// Screenshot hook: `-LordsDayCaptureFixture camera|strip|type`. Uses a
+/// Screenshot hook: `-LordsDayCaptureFixture camera|strip|type|details`. Uses a
 /// throwaway folder and an in-memory store, so it never touches real notes.
 struct CaptureFixture: View {
     let scene: String
     @State private var model: CaptureModel?
     @State private var showsTyping = false
+    @State private var showsDetails = false
 
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
             if let model {
                 CaptureView(model: model, onClose: {}, simulatedViewfinder: Self.samplePage())
-                    .sheet(isPresented: $showsTyping) { TypeNotesView(model: model) }
+                    .sheet(isPresented: $showsTyping) { TypeNotesView(model: model).preferredColorScheme(systemColorScheme()) }
+                    .sheet(isPresented: $showsDetails) { NoteDetailsView(model: model).preferredColorScheme(systemColorScheme()) }
             }
         }
         .task {
@@ -438,6 +448,7 @@ struct CaptureFixture: View {
             }
             self.model = model
             if scene == "type" { showsTyping = true }
+            if scene == "details" { model.passage = "Romans 8:28–30"; showsDetails = true }
         }
     }
 

@@ -31,7 +31,7 @@ Linear project: **confessional christianity** (team TKL): https://linear.app/sof
   `-ReaderChapterReference Rom.8.28`, `-ProofTextSession catechizing-shorter-catechism:32[:Rom.8.30]` (session at Q. 32, optionally
   with the proof-text reader pushed) plus `-ProofTextReaderCard verse|end`, `-LordsDayFeedFixture key_point|quote|verse|verse_offline` (the week's card feed from an in-memory sample week, opened
   at today's card of that kind; `verse_offline` is a verse with no bundled text), `-LordsDayReviewFixture filling|complete` (reviewing drafted cards, TKL-863: sample drafts replayed into a throwaway
-  folder; `filling` stays mid-fill) plus `-LordsDayReviewCard p0-1|drafting` (open at that card), `-LordsDayCaptureFixture camera|strip|type`
+  folder; `filling` stays mid-fill) plus `-LordsDayReviewCard p0-1|drafting` (open at that card), `-LordsDayCaptureFixture camera|strip|type|details`
   (the notes camera with a sample page), `-LibraryEntry westminster-confession-of-faith:WCoF-2-1` (one library entry page), `-StartTab today|catechism|lordsDay` (open on that tab), `-OpenSheet settings|addChild` (open that sheet on Today) plus `-AddChildName <name>` (Add a child pre-filled, as if Add was tapped: a seeded name shows the duplicate error), `-SeedChildren "Samuel:9,Thomas:4"`
   (those children at those questions, only when there are none yet: a fresh install is the empty state), `-EsvOffline YES` (reader,
   verse cards and the cards generator act offline), and
