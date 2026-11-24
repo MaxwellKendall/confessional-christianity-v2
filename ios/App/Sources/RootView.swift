@@ -75,7 +75,7 @@ struct RootView: View {
         #if DEBUG
         let args = UserDefaults.standard
         if args.string(forKey: "OnboardingPage") != nil { return !didCompleteOnboarding }
-        if ["StartTab", "OpenSheet", "SeedChildren", "AuthDebug"].contains(where: { args.object(forKey: $0) != nil }) {
+        if ["StartTab", "OpenSheet", "SeedChildren", "SeedSermonWeek", "AuthDebug"].contains(where: { args.object(forKey: $0) != nil }) {
             return false
         }
         #endif
@@ -105,7 +105,7 @@ struct RootView: View {
 
     private var tabs: some View {
         ZStack {
-            TodayView(path: $todayPath) { selected = $0 }
+            TodayView(path: $todayPath, openTab: { selected = $0 }, startCapture: beginSermon)
                 .onHidesFloatingTabBarChange { todayHidesBar = $0 }
                 .opacity(selected == .today ? 1 : 0)
                 .allowsHitTesting(selected == .today)
@@ -128,7 +128,10 @@ struct RootView: View {
         }
         .animation(.easeInOut(duration: 0.2), value: isTabBarVisible)
         #if DEBUG
-        .task { seedChildrenForScreenshots() }
+        .task {
+            seedChildrenForScreenshots()
+            seedSermonWeekForScreenshots()
+        }
         #endif
     }
 
@@ -154,6 +157,13 @@ struct RootView: View {
             guard let name = bits.first, let child = try? store.addChild(name: name) else { continue }
             store.startTrack(childId: child.id, catechismId: "WSC", startingQuestion: Int(bits.dropFirst().first ?? "1") ?? 1)
         }
+    }
+
+    /// Screenshot hook: `-SeedSermonWeek YES` saves the sample week (Sunday's
+    /// notes, a card a day) to the app's own store, only when it has no notes.
+    private func seedSermonWeekForScreenshots() {
+        guard UserDefaults.standard.bool(forKey: "SeedSermonWeek"), sermons.isEmpty else { return }
+        _ = LordsDayFeedFixture.makeFeed("key_point", container: modelContext.container)
     }
     #endif
 }

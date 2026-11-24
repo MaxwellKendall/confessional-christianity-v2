@@ -48,8 +48,8 @@ public struct TodayChild: Equatable, Sendable, Identifiable {
     public var isDue: Bool { !practisedToday && !finished }
 }
 
-/// Today's card of the current sermon week. The Lord's Day store (TKL-859)
-/// supplies it; until then the app passes nil.
+/// Today's card of the current sermon week, from the Lord's Day store
+/// (`LordsDayStore.todaySermon`).
 public struct TodaySermonDay: Equatable, Sendable {
     public let dayLabel: String
     public let kind: String
@@ -177,5 +177,29 @@ extension LocalProgressStore {
                 lastPractisedAt: lastPractised
             )
         }
+    }
+}
+
+extension LordsDayStore {
+    /// What Today needs from the Lord's Day store: today's card of the current
+    /// sermon week, if it has cards, and whether it's a Sunday whose notes
+    /// aren't saved yet. A note saved but not yet drafted counts as captured
+    /// (the Lord's Day tab offers its review).
+    public func todaySermon(on date: Date = Date(), calendar: Calendar = .current) -> (day: TodaySermonDay?, sundayCaptureDue: Bool) {
+        let week = try? currentWeek(on: date, calendar: calendar)
+        let capturedToday = week.map { calendar.isDate($0.serviceDate, inSameDayAs: date) } ?? false
+        let sundayCaptureDue = calendar.component(.weekday, from: date) == 1 && !capturedToday
+
+        guard let feed = try? LordsDayFeed(store: self, today: date, calendar: calendar),
+              let index = feed.todayIndex, feed.cards.indices.contains(index)
+        else { return (nil, sundayCaptureDue) }
+        let card = feed.cards[index]
+        let day = TodaySermonDay(
+            dayLabel: LordsDayFeed.weekdays[calendar.component(.weekday, from: date) - 1],
+            kind: card.kind.label,
+            text: card.kind == .verse ? (card.reference ?? "") : card.body,
+            attribution: card.attributionLine ?? card.passage.map { "From your notes on \($0)" } ?? "From your notes"
+        )
+        return (day, sundayCaptureDue)
     }
 }

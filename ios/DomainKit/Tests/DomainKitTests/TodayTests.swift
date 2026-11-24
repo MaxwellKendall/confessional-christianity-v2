@@ -240,3 +240,122 @@ extension TodayChildrenTests {
         #expect(track.currentQuestion == 4)
     }
 }
+
+// What Today reads from the Lord's Day store: today's card of the current
+// sermon week, and whether this Sunday's notes are still to photograph.
+@Suite("Today's sermon from the Lord's Day store")
+@MainActor struct TodaySermonTests {
+    private let calendar: Calendar = {
+        var c = Calendar(identifier: .gregorian)
+        c.timeZone = TimeZone(identifier: "America/New_York")!
+        return c
+    }()
+
+    private func day(_ d: Int, hour: Int = 9) -> Date {
+        calendar.date(from: DateComponents(year: 2026, month: 11, day: d, hour: hour))!
+    }
+
+    private func makeStore() throws -> LordsDayStore {
+        let container = try ModelContainer(
+            for: progressSchema,
+            configurations: [ModelConfiguration(schema: progressSchema, isStoredInMemoryOnly: true)]
+        )
+        return LordsDayStore(context: ModelContext(container))
+    }
+
+    /// 15 Nov 2026 is a Sunday. Cards: Monday a key point, Tuesday a verse, Wednesday a quote.
+    private func seedWeek(_ store: LordsDayStore, sunday: Int = 15) throws -> LordsDayNote {
+        let note = LordsDayNote(serviceDate: day(sunday), passageRef: "Romans 8:28–30", preacher: "Rev. Smith")
+        try store.save(note)
+        try store.appendCard(to: note, kind: .keyPoint, body: "God's purpose decides what is good.")
+        try store.appendCard(to: note, kind: .verse, body: "", verseRef: "Romans 8:28")
+        try store.appendCard(to: note, kind: .quote, body: "He is not finished.")
+        return note
+    }
+
+    @Test("no notes at all: nothing on a weekday, the capture card on Sunday")
+    func emptyStore() throws {
+        let store = try makeStore()
+        let weekday = store.todaySermon(on: day(18), calendar: calendar)
+        #expect(weekday.day == nil)
+        #expect(weekday.sundayCaptureDue == false)
+        let sunday = store.todaySermon(on: day(22), calendar: calendar)
+        #expect(sunday.day == nil)
+        #expect(sunday.sundayCaptureDue == true)
+    }
+
+    @Test("a weekday of the current week gives that day's card")
+    func weekdayCard() throws {
+        let store = try makeStore()
+        _ = try seedWeek(store)
+        let monday = store.todaySermon(on: day(16), calendar: calendar)
+        #expect(monday.sundayCaptureDue == false)
+        #expect(monday.day == TodaySermonDay(
+            dayLabel: "Monday", kind: "Key point",
+            text: "God's purpose decides what is good.",
+            attribution: "From your notes on Romans 8:28–30"
+        ))
+        let wednesday = store.todaySermon(on: day(18), calendar: calendar)
+        #expect(wednesday.day == TodaySermonDay(
+            dayLabel: "Wednesday", kind: "Quote", text: "He is not finished.",
+            attribution: "Rev. Smith · Romans 8:28–30"
+        ))
+    }
+
+    @Test("a verse card shows its reference, since its text is fetched later")
+    func verseCard() throws {
+        let store = try makeStore()
+        _ = try seedWeek(store)
+        let tuesday = try #require(store.todaySermon(on: day(17), calendar: calendar).day)
+        #expect(tuesday.kind == "Verse")
+        #expect(tuesday.text == "Romans 8:28")
+        #expect(tuesday.attribution == "From your notes on Romans 8:28–30")
+    }
+
+    @Test("days past the last card stay on the last card")
+    func clampsToLastCard() throws {
+        let store = try makeStore()
+        _ = try seedWeek(store)
+        let saturday = try #require(store.todaySermon(on: day(21), calendar: calendar).day)
+        #expect(saturday.dayLabel == "Saturday")
+        #expect(saturday.text == "He is not finished.")
+    }
+
+    @Test("the next Sunday asks for new notes; last week's cards are over")
+    func nextSundayAsksForNotes() throws {
+        let store = try makeStore()
+        _ = try seedWeek(store)
+        let sunday = store.todaySermon(on: day(22), calendar: calendar)
+        #expect(sunday.sundayCaptureDue == true)
+        #expect(sunday.day == nil)
+    }
+
+    @Test("Sunday after photographing: no capture card, and the week's first card shows")
+    func sundayAfterCapture() throws {
+        let store = try makeStore()
+        _ = try seedWeek(store, sunday: 22)
+        let sunday = store.todaySermon(on: day(22, hour: 14), calendar: calendar)
+        #expect(sunday.sundayCaptureDue == false)
+        #expect(sunday.day?.dayLabel == "Sunday")
+        #expect(sunday.day?.text == "God's purpose decides what is good.")
+    }
+
+    @Test("Sunday notes saved but not drafted yet: no capture card and no day card")
+    func sundayCapturedNoCards() throws {
+        let store = try makeStore()
+        try store.save(LordsDayNote(serviceDate: day(22)))
+        let sunday = store.todaySermon(on: day(22, hour: 14), calendar: calendar)
+        #expect(sunday.sundayCaptureDue == false)
+        #expect(sunday.day == nil)
+    }
+
+    @Test("a deleted Sunday note doesn't count as captured")
+    func deletedNoteNotCaptured() throws {
+        let store = try makeStore()
+        let note = try seedWeek(store, sunday: 22)
+        note.deletedAt = Date()
+        let sunday = store.todaySermon(on: day(22, hour: 14), calendar: calendar)
+        #expect(sunday.sundayCaptureDue == true)
+        #expect(sunday.day == nil)
+    }
+}

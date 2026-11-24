@@ -33,7 +33,8 @@ Linear project: **confessional christianity** (team TKL): https://linear.app/sof
   at today's card of that kind; `verse_offline` is a verse with no bundled text), `-LordsDayReviewFixture filling|complete` (reviewing drafted cards, TKL-863: sample drafts replayed into a throwaway
   folder; `filling` stays mid-fill) plus `-LordsDayReviewCard p0-1|drafting` (open at that card), `-LordsDayCaptureFixture camera|strip|type|details`
   (the notes camera with a sample page), `-LibraryEntry westminster-confession-of-faith:WCoF-2-1` (one library entry page), `-StartTab today|catechism|lordsDay` (open on that tab), `-OpenSheet settings|addChild` (open that sheet on Today) plus `-AddChildName <name>` (Add a child pre-filled, as if Add was tapped: a seeded name shows the duplicate error), `-SeedChildren "Samuel:9,Thomas:4"`
-  (those children at those questions, only when there are none yet: a fresh install is the empty state), `-EsvOffline YES` (reader,
+  (those children at those questions, only when there are none yet: a fresh install is the empty state), `-SeedSermonWeek YES` (the sample sermon
+  week saved to the app's store, only when it has no notes: Today then shows today's sermon card), `-EsvOffline YES` (reader,
   verse cards and the cards generator act offline), and
   `-SkipNotificationOffer YES` (always pass it: an unanswered notification prompt survives reinstalls until the simulator reboots).
   The app follows the system light/dark setting (there is no launch arg): `xcrun simctl ui <dev> appearance light|dark`.

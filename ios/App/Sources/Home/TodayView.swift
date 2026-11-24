@@ -3,9 +3,10 @@
 // avatar opening Settings. A new guest gets only the two pillars. Its look is
 // the prototype's (TKL-938); check changes with ios/scripts/prototype-shots.
 //
-// The Lord's Day store doesn't exist yet (TKL-859), so the planner gets no
-// sermon day and no Sunday capture; its cards appear here once it does. The
-// prototype's "Share this week's line" strip waits on the same store.
+// The sermon side comes from the Lord's Day store (TKL-859): today's card of
+// the current week, or on a Sunday with no notes yet, "photograph your notes",
+// which opens the camera (TKL-860) on the Lord's Day tab. The prototype's
+// "Share this week's line" strip is not built yet.
 import SwiftUI
 import SwiftData
 import DomainKit
@@ -13,12 +14,19 @@ import DomainKit
 struct TodayView: View {
     @Binding var path: NavigationPath
     let openTab: (RootTab) -> Void
+    /// Opens the Lord's Day tab with the notes camera up.
+    let startCapture: () -> Void
 
     @Environment(\.modelContext) private var modelContext
     // Observed only so Today re-renders when children or progress change.
     @Query private var observedChildren: [LocalChild]
     @Query private var observedTracks: [ChildCatechismTrack]
     @Query private var observedSettings: [ProgressSettings]
+    @Query private var observedNotes: [LordsDayNote]
+    @Query private var observedCards: [NoteCard]
+    @Environment(\.scenePhase) private var scenePhase
+    /// Bumped when the day may have changed, so the sermon card follows the calendar.
+    @State private var clockTick = 0
 
     @State private var showsSettings = false
     @State private var showsAddChild = false
@@ -27,13 +35,20 @@ struct TodayView: View {
     private var store: LocalProgressStore { LocalProgressStore(context: modelContext) }
 
     private var plan: TodayPlan {
-        planToday(TodayInput(children: store.todayChildren(), activeChildId: store.activeChildId))
+        let sermon = LordsDayStore(context: modelContext).todaySermon()
+        return planToday(TodayInput(
+            children: store.todayChildren(), activeChildId: store.activeChildId,
+            sermonDay: sermon.day, sundayCaptureDue: sermon.sundayCaptureDue
+        ))
     }
 
     var body: some View {
         let _ = observedChildren.map(\.updatedAt)
         let _ = observedTracks.map(\.updatedAt)
         let _ = observedSettings.first?.activeChildId
+        let _ = observedNotes.map(\.updatedAt)
+        let _ = observedCards.map(\.updatedAt)
+        let _ = clockTick
         NavigationStack(path: $path) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
@@ -70,6 +85,12 @@ struct TodayView: View {
         .tint(.ccInk)
         .sheet(isPresented: $showsSettings) { SettingsView() }
         .sheet(isPresented: $showsAddChild) { AddChildView() }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { clockTick += 1 }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.significantTimeChangeNotification)) { _ in
+            clockTick += 1
+        }
         #if DEBUG
         // Screenshot hook: `-OpenSheet settings|addChild` opens that sheet on Today.
         .onAppear {
@@ -147,7 +168,7 @@ struct TodayView: View {
                 title: "Keep Sunday’s sermon",
                 text: "Photograph your notes after church. The app turns them into a card for each day of the week.",
                 action: "Photograph Sunday’s notes →"
-            ) { openTab(.lordsDay) }
+            ) { startCapture() }
         }
     }
 
@@ -185,7 +206,7 @@ struct TodayView: View {
                 progress: nil,
                 detail: nil,
                 button: "Photograph notes"
-            ) { openTab(.lordsDay) }
+            ) { startCapture() }
         }
     }
 
@@ -215,7 +236,7 @@ struct TodayView: View {
             }
             .buttonStyle(.plain)
         case .captureSunday:
-            Button { openTab(.lordsDay) } label: {
+            Button { startCapture() } label: {
                 ChapelListRow(title: "Photograph Sunday’s notes", detail: "Your week builds from them", done: false) {
                     sermonIcon
                 }
