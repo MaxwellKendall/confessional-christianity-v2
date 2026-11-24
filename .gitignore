@@ -23,6 +23,8 @@
 # misc
 .DS_Store
 *.pem
+# test-only signing keys, committed on purpose (test/support/keys/README.md)
+!test/support/keys/*.test-only.pem
 
 # debug
 npm-debug.log*
