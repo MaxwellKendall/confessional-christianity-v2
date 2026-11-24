@@ -92,13 +92,13 @@ struct ReaderChapterView: View {
         .toolbar(.hidden, for: .navigationBar, .tabBar)
         .environment(\.colorScheme, dark ? .dark : .light)
         .sheet(item: $citation) { selection in
-            VStack(spacing: 12) {
-                Text("Cited in the Confessions").font(.ccDisplay(19, semibold: true))
-                Text(parseOsisBibleReference(selection.osis)).font(.ccBody(18))
-                Button("Done") { citation = nil }
-            }
-            .presentationDetents([.medium])
-            .presentationDragIndicator(.visible)
+            ReaderConfessionsSheet(
+                verseText: verseText(selection.osis), reference: parseOsisBibleReference(selection.osis),
+                entries: citingEntries(forVerse: selection.osis),
+                paper: Color(hex: dark ? 0x121513 : 0xf5f5f1), ink: ink, gilt: gilt,
+                chapel: Color(hex: dark ? 0xa8c6b6 : 0x2e4a3e), onChapel: Color(hex: dark ? 0x102019 : 0xf2f4ef)
+            )
+            .environment(\.colorScheme, dark ? .dark : .light)
         }
         .task(id: attempt) {
             isLoading = true
@@ -107,6 +107,12 @@ struct ReaderChapterView: View {
             chapter = result
             isLoading = false
         }
+    }
+
+    /// The tapped verse's words from the loaded chapter, for the sheet's "You came from" line.
+    private func verseText(_ osis: String) -> String {
+        guard let chapter, let verse = chapter.verses.first(where: { $0.osis == osis }) else { return "" }
+        return (chapter.text as NSString).substring(with: verse.range).trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     private struct Citation: Identifiable {
