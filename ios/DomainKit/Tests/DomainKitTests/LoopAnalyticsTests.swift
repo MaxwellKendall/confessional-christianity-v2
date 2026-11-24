@@ -115,6 +115,58 @@ import Testing
         #expect(sent.all.count == 2)
     }
 
+    /// Holds the first send until `open()` (later ones go straight through), and counts sends started.
+    private actor Gate {
+        private var waiting: [CheckedContinuation<Void, Never>] = []
+        private var isOpen = false
+        private(set) var started = 0
+        func pass() async {
+            started += 1
+            if isOpen || started > 1 { return }
+            await withCheckedContinuation { waiting.append($0) }
+        }
+        func open() { isOpen = true; waiting.forEach { $0.resume() }; waiting = [] }
+    }
+
+    private func waitUntil(_ gate: Gate, started n: Int) async {
+        while await gate.started < n { await Task.yield() }
+    }
+
+    @Test func overlappingDayOpenedCallsSendOnce() async throws {
+        let sent = Sent()
+        let gate = Gate()
+        let analytics = LoopAnalytics(config: config, defaults: defaults()) { r in
+            await gate.pass(); sent.add(r); return 200
+        }
+        // The first call is still waiting on the network when the feed appears again.
+        let first = Task { await analytics.recordDayOpened(now: at, calendar: .current) }
+        await waitUntil(gate, started: 1)
+        let second = await analytics.recordDayOpened(now: at, calendar: .current)
+        await gate.open()
+        #expect(await first.value == 200)
+        #expect(second == nil)
+        #expect(sent.all.count == 1)
+        #expect(await gate.started == 1)
+    }
+
+    @Test func aFailedOverlappingDayOpenedReleasesTheDay() async {
+        struct Offline: Error {}
+        let gate = Gate()
+        let fails = Sent()
+        let analytics = LoopAnalytics(config: config, defaults: defaults()) { r in
+            await gate.pass()
+            if fails.all.isEmpty { fails.add(r); throw Offline() }
+            return 200
+        }
+        let first = Task { await analytics.recordDayOpened(now: at, calendar: .current) }
+        await waitUntil(gate, started: 1)
+        #expect(await analytics.recordDayOpened(now: at, calendar: .current) == nil)
+        await gate.open()
+        #expect(await first.value == nil)
+        // The failed send gave the day back, so the next opening counts it.
+        #expect(await analytics.recordDayOpened(now: at, calendar: .current) == 200)
+    }
+
     @Test func aFailedDayOpenedIsTriedAgainThatDay() async {
         struct Offline: Error {}
         let store = defaults()

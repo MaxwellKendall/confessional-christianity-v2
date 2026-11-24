@@ -61,6 +61,9 @@ public actor LoopAnalytics {
     private let config: LoopAnalyticsConfig?
     private let defaults: UserDefaults
     private let transport: Transport
+    /// The day whose `dayOpened` send is in flight. The actor can take another call while a
+    /// send awaits the network, so the day is reserved before the await, not saved after it.
+    private var dayOpenedInFlight: String?
 
     public init(config: LoopAnalyticsConfig?, defaults: UserDefaults = .standard, transport: @escaping Transport = LoopAnalytics.urlSession) {
         self.config = config
@@ -88,7 +91,10 @@ public actor LoopAnalytics {
     public func recordDayOpened(now: Date = Date(), calendar: Calendar = .current) async -> Int? {
         let c = calendar.dateComponents([.year, .month, .day], from: now)
         let day = String(format: "%04d-%02d-%02d", c.year ?? 0, c.month ?? 0, c.day ?? 0)
-        guard config != nil, defaults.string(forKey: Self.lastDayOpenedKey) != day else { return nil }
+        guard config != nil, dayOpenedInFlight != day,
+              defaults.string(forKey: Self.lastDayOpenedKey) != day else { return nil }
+        dayOpenedInFlight = day
+        defer { dayOpenedInFlight = nil }
         guard let status = await record(.dayOpened, at: now), (200..<300).contains(status) else { return nil }
         defaults.set(day, forKey: Self.lastDayOpenedKey)
         return status
