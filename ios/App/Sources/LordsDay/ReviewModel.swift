@@ -121,7 +121,9 @@ final class ReviewModel {
 
     /// Keeps the kept cards, in order, as this note's week. The photos stay on the device.
     func finish() throws {
-        try LordsDayStore(context: context).keepCards(review.keptCards(), for: note)
+        let kept = review.keptCards()
+        try LordsDayStore(context: context).keepCards(kept, for: note)
+        LoopCounter.record(.sermonKept(cardCount: kept.count))
         task?.cancel()
         try? LordsDayReview.delete(noteId: noteId, root: root)
         Self.sessions[noteId] = nil

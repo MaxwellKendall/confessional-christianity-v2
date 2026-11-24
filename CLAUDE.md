@@ -44,11 +44,24 @@ Linear project: **confessional christianity** (team TKL): https://linear.app/sof
 ## Test (from the repo root)
 | Suite | Command | Runtime |
 |---|---|---|
-| web unit | `npm test` (vitest, 274 tests, incl. `scripts/**/*.test.mjs`; 60 s timeouts for the loaded build Mac) | ~1 s |
+| web unit | `npm test` (vitest, 280 tests, incl. `scripts/**/*.test.mjs`; 60 s timeouts for the loaded build Mac) | ~1 s |
 | web build | `npm run build` (needs `.env.local`; ESLint enforced) | ~15 s |
-| DomainKit | `cd ios/DomainKit && swift test` (235 tests: 194 Swift Testing + 41 XCTest) | ~15 s |
+| DomainKit | `cd ios/DomainKit && swift test` (245 tests: 204 Swift Testing + 41 XCTest) | ~15 s |
 | iOS build | `cd ios/App && xcodegen generate && xcodebuild -scheme ConfessionalChristianity -destination 'platform=iOS Simulator,name=CC iPhone 17 Pro' -derivedDataPath ../../build/dd build` | ~1 min cold |
 | infra | `cd infra && npm ci && npm test` (vitest CDK assertions, 20 tests) | ~6 s |
+| iOS UI (loop events) | `cd ios/App && xcodegen generate && xcodebuild test -scheme ConfessionalChristianity -destination 'platform=iOS Simulator,name=CC iPhone 17 Pro' -derivedDataPath ../../build/dd -only-testing:ConfessionalChristianityUITests` (not a Verify check; sends real events) | ~3 min |
+
+### Lord's Day loop analytics (TKL-947)
+Three events go to PostHog (`https://us.i.posthog.com`, the project whose capture key is `NEXT_PUBLIC_POSTHOG_KEY` on the
+old `confessional-christianity-node` Vercel project; the v2 project's copies are empty): `lords_day_sermon_kept`
+(`card_count`), `lords_day_day_opened` (once per local day), `lords_day_card_shared` (`kind`). DomainKit's
+`LoopAnalytics.captureRequest` is the only place a body is built; `LoopAnalyticsTests` asserts each body byte for byte.
+The key (write-only, public by design) is `POSTHOG_KEY` in `ios/App/project.yml`. Every event has `env` = `debug` or
+`release`; filter `properties.env = 'release'` for real use. The app logs each send's status (category `analytics`):
+`xcrun simctl spawn "CC iPhone 17 Pro" log show --last 10m --predicate 'category == "analytics"'`. PostHog's capture
+endpoint answers 200 even to an unknown key; `POST /flags/?v=2` with the key returns 401 when the key is wrong.
+Changing what is sent means updating `PrivacyInfo.xcprivacy`, `/privacy` and the App Store privacy answers together
+(`test/loopAnalyticsDisclosure.test.ts` checks the first two).
 
 ### Lord's Day cards eval (paid, never in `npm test`)
 `POST /api/lords-day/cards` (src/lib/lordsDay/handler.ts has the contract) drafts cards from sermon-note photos with

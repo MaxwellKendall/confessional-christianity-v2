@@ -47,6 +47,10 @@ struct LordsDayFeedView: View {
                 .padding(.trailing, 7)
         }
         .background(Color(hex: currentPalette.field).ignoresSafeArea())
+        // On screen and in the foreground: count the day (once per local day, TKL-947).
+        .onChange(of: allowsNetwork, initial: true) { _, onScreen in
+            if onScreen { LoopCounter.dayOpened() }
+        }
     }
 }
 
@@ -245,6 +249,7 @@ private struct FeedCardView: View {
                 .frame(width: 44)
             }
             .accessibilityLabel("Share this card")
+            .simultaneousGesture(TapGesture().onEnded { LoopCounter.record(.cardShared(kind: card.kind)) })
             if card.kind == .verse, verseText != nil {
                 Button("Read full passage") { showsPassage = true }
                     .font(.system(size: 14, weight: .semibold))

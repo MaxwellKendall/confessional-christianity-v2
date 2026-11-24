@@ -41,6 +41,11 @@ targets:
         # (public by design; the service role key never ships in the app).
         SupabaseURL: $(SUPABASE_URL)
         SupabasePublishableKey: $(SUPABASE_PUBLISHABLE_KEY)
+        # Lord's Day loop counts (TKL-947), read by LoopAnalytics. PostHog's
+        # project capture key is write-only and public by design (the same key
+        # the website's NEXT_PUBLIC_POSTHOG_KEY holds); it can't read anything.
+        PostHogKey: $(POSTHOG_KEY)
+        PostHogHost: $(POSTHOG_HOST)
         UIAppFonts:
           - Cinzel-Regular.ttf
           - Cinzel-SemiBold.ttf
@@ -55,6 +60,8 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.confessionalchristianity.app
         SUPABASE_URL: https://vzxoypketuxmomsbyspy.supabase.co
         SUPABASE_PUBLISHABLE_KEY: sb_publishable_QDtg2bLu0MSTGaA_5hN7xw_QFSwo3UM
+        POSTHOG_KEY: phc_dF6Jl6RuY7mAZpIA2zAp84Ji1L9oikmKdPUQJBaBsJq
+        POSTHOG_HOST: https://us.i.posthog.com
         MARKETING_VERSION: "1.1"
         CURRENT_PROJECT_VERSION: "3"
         TARGETED_DEVICE_FAMILY: "1"
@@ -72,6 +79,26 @@ targets:
           config: Debug
         test:
           config: Debug
+          targets:
+            - ConfessionalChristianityUITests
+
+  # TKL-947: taps the real Lord's Day screens so the loop's events go out from
+  # a simulator. Not part of `build`; run with `xcodebuild test` (see CLAUDE.md).
+  ConfessionalChristianityUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: UITests
+    dependencies:
+      - target: ConfessionalChristianity
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.confessionalchristianity.app.uitests
+        GENERATE_INFOPLIST_FILE: "YES"
+        TARGETED_DEVICE_FAMILY: "1"
+        SWIFT_VERSION: "6.0"
+        DEVELOPMENT_TEAM: 7GZKY29XJH
+        CODE_SIGN_STYLE: Automatic
 
   # A Home Screen widget previewing the visitor's active catechism session
   # (current question, progress) — reads the same App Group-backed SwiftData

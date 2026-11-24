@@ -4,19 +4,21 @@ import { Markdown } from '@/components/Markdown';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy',
-  description: 'How Confessional Christianity handles data — in short, it doesn\'t collect any.',
+  description: 'How Confessional Christianity handles data: no tracking, no personal information, and a few anonymous counts.',
   alternates: { canonical: '/privacy' },
 };
 
 const body = `
 Confessional Christianity — on the web and in the iOS app — does not require
-an account and does not collect personal information.
+an account, does not track you, and does not collect personal information.
+The iOS app counts a few anonymous events, described below.
 
 ## What we don't collect
 
-There are no user accounts, no names, no email addresses, and no analytics
-or tracking of any kind. We don't use cookies to identify or follow you
-across visits.
+There are no user accounts, no names and no email addresses. Nothing is
+used to track you across other companies' apps or websites, and nothing is
+shared with data brokers or advertisers. We don't use cookies to identify or
+follow you across visits.
 
 ## Where your progress is stored
 
@@ -44,6 +46,26 @@ receives anything that identifies you:
   search queries. No account or personal data is attached to these
   requests.
 
+## Anonymous usage counts (iOS)
+
+To learn whether the Lord's Day cards help people through the week, the iOS
+app sends three anonymous counts to PostHog, an analytics service:
+
+- **A sermon kept:** when you add a sermon's cards to your week, with the
+  number of cards.
+- **A day opened:** at most once a day, when the week's cards are on screen.
+- **A card shared:** when you open the share sheet on a card, with the card's
+  kind (key point, quote or verse).
+
+Each count carries a random number made when the app was installed, so
+counts from the same install can be told apart. It isn't linked to your
+name, an account or your device's advertising identifier, and deleting the
+app discards it. **Your notes, your cards' words, your photos, Bible
+references, the preacher, your church and your email are never sent.**
+PostHog's person profiles and location lookup are turned off for these
+counts. Like any web request, the connection itself reveals your IP address
+to PostHog; we don't use it.
+
 ## Notifications (iOS)
 
 If you turn on daily practice reminders in the iOS app, the reminder is
@@ -53,7 +75,8 @@ reminder data is sent anywhere.
 ## Children's privacy
 
 This app is designed for families to use together to catechize children,
-and by design collects no information from anyone, child or adult.
+and by design collects no personal information from anyone, child or
+adult. The anonymous counts above say nothing about who is using the app.
 
 ## Changes to this policy
 

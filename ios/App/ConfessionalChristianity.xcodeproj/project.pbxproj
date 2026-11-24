@@ -38,6 +38,7 @@
 		92AB57C3C4070DC03CD83935 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = A17AE7748AFFEDE11B57938B /* Supabase */; };
 		93373EFF4BEEBB9305D97C2A /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82F6656D056CA75FE62409F4 /* AboutView.swift */; };
 		9346E28CF529C63C3765514B /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18C002AEB0FB5E9D3623E1D3 /* OnboardingView.swift */; };
+		93D0DAB535D7FDAF4CD85114 /* LoopEventsUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 488B97E15ED8C9433237A75B /* LoopEventsUITests.swift */; };
 		94F2A0DB1351CCA796EA6567 /* Cinzel-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E38A936D51B1960620B4EA13 /* Cinzel-SemiBold.ttf */; };
 		9508C7F34BAE8BD034467A77 /* DocumentTocView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CEC5FBB76D7BE63305F7369 /* DocumentTocView.swift */; };
 		958E1E27094E04B8F5121E51 /* ConfessionalChristianityWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = CFC6793E7895E7D3636BA94F /* ConfessionalChristianityWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -49,6 +50,7 @@
 		A37246ABCD770C1EB341917E /* RootTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98A25657E65FD99C28C300E6 /* RootTab.swift */; };
 		A5FB9081D12F27A77BBA509D /* Marcellus-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 8E695AE85593396B01EA0946 /* Marcellus-Regular.ttf */; };
 		A8520A15B4644D91821657B7 /* MarkdownText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CA73F64DC39A88E251E81D2 /* MarkdownText.swift */; };
+		AB70875985CBC8610B6CC09C /* LoopCounter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD4AB7A9E7C2AD7577016708 /* LoopCounter.swift */; };
 		ABC676EECAD6EB2A5DDE8916 /* Marcellus-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 8E695AE85593396B01EA0946 /* Marcellus-Regular.ttf */; };
 		AEE99A080D3E2A0466FC17D6 /* VersePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF90EFD2FCB8FC6A14A57EEA /* VersePickerView.swift */; };
 		B3F5CF1C182FCFD4301934FC /* TabIcons.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81D5508EB376718085AA71A6 /* TabIcons.swift */; };
@@ -80,6 +82,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		5AA51E137560BB700DA85EB8 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 140EC52DC16D6628D3AE86DC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6E2872A9D525C0FEF00C927E;
+			remoteInfo = ConfessionalChristianity;
+		};
 		AB2995817C3D23E670755CDA /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 140EC52DC16D6628D3AE86DC /* Project object */;
@@ -121,6 +130,7 @@
 		32FF271F04742E0BB93E44AE /* OnboardingSignInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingSignInView.swift; sourceTree = "<group>"; };
 		3408CF58E549F6A7311C1707 /* LibraryIndexView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryIndexView.swift; sourceTree = "<group>"; };
 		3DE21E2EC93C342F162E7EB8 /* ScriptureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptureView.swift; sourceTree = "<group>"; };
+		488B97E15ED8C9433237A75B /* LoopEventsUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopEventsUITests.swift; sourceTree = "<group>"; };
 		4ED45E06DF435369D44194FD /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
 		52EFEC9F374B7B3FE8384E73 /* CardsGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardsGenerator.swift; sourceTree = "<group>"; };
 		58912A495665984DB2EDA36E /* ClauseLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClauseLabel.swift; sourceTree = "<group>"; };
@@ -151,6 +161,7 @@
 		B1E2539D38EE0CFDBF173259 /* VerseReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerseReaderView.swift; sourceTree = "<group>"; };
 		B311EBE166E5671F929E97A1 /* AppDestinations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDestinations.swift; sourceTree = "<group>"; };
 		B457BF311BED9BFB4321BC0F /* CameraController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraController.swift; sourceTree = "<group>"; };
+		BD4AB7A9E7C2AD7577016708 /* LoopCounter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopCounter.swift; sourceTree = "<group>"; };
 		BE787EFA6523867E8B169F3C /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		C23F51243C50FFC327642E50 /* FlowLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowLayout.swift; sourceTree = "<group>"; };
 		C45EC54D0EE5907B79FC4071 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
@@ -159,6 +170,7 @@
 		CA5673ACB1419E8AFFF76F5A /* MilestonesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MilestonesView.swift; sourceTree = "<group>"; };
 		CFC6793E7895E7D3636BA94F /* ConfessionalChristianityWidgetExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = ConfessionalChristianityWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		D210C306DA02A872ECFE942F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		D31C411D717AA4D14DAA4648 /* ConfessionalChristianityUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = ConfessionalChristianityUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D65ACD5AC11EFE015FD5B666 /* SearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchView.swift; sourceTree = "<group>"; };
 		D721D4D4D91E53FCEF7C32EB /* ConfessionalChristianityApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfessionalChristianityApp.swift; sourceTree = "<group>"; };
 		D892E4739FA3AAD34062EB53 /* QuestionCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionCardView.swift; sourceTree = "<group>"; };
@@ -211,6 +223,7 @@
 				DB2DFAF2900515D7DE6DFB02 /* Packages */,
 				3B45A31B522B3C69805EA03E /* Sources */,
 				381C2E5B8BD926422E6D33D4 /* Sources */,
+				6EEB81C947584A4448D9787B /* UITests */,
 				7311746DCA348ED1EC41B2C3 /* Frameworks */,
 				67DFFB2641D6FB64A8B93F0C /* Products */,
 			);
@@ -304,9 +317,18 @@
 			isa = PBXGroup;
 			children = (
 				A3BCFC7770E05C3C772E8A0D /* ConfessionalChristianity.app */,
+				D31C411D717AA4D14DAA4648 /* ConfessionalChristianityUITests.xctest */,
 				CFC6793E7895E7D3636BA94F /* ConfessionalChristianityWidgetExtension.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		6EEB81C947584A4448D9787B /* UITests */ = {
+			isa = PBXGroup;
+			children = (
+				488B97E15ED8C9433237A75B /* LoopEventsUITests.swift */,
+			);
+			path = UITests;
 			sourceTree = "<group>";
 		};
 		7311746DCA348ED1EC41B2C3 /* Frameworks */ = {
@@ -325,6 +347,7 @@
 				DFB100594401DF03A33600E0 /* CaptureModel.swift */,
 				E00C25ED916B66A447B8C411 /* CaptureView.swift */,
 				52EFEC9F374B7B3FE8384E73 /* CardsGenerator.swift */,
+				BD4AB7A9E7C2AD7577016708 /* LoopCounter.swift */,
 				F1C91F026BE4FEE54E8BB42E /* LordsDayFeedView.swift */,
 				F9026BA4701C493912921EF2 /* LordsDayTabView.swift */,
 				C643620A0907843D1122CAB4 /* ReviewModel.swift */,
@@ -468,6 +491,24 @@
 			productReference = A3BCFC7770E05C3C772E8A0D /* ConfessionalChristianity.app */;
 			productType = "com.apple.product-type.application";
 		};
+		DF1BD48CFA1742C18738C220 /* ConfessionalChristianityUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2FF8C3D36927F362C566FA9C /* Build configuration list for PBXNativeTarget "ConfessionalChristianityUITests" */;
+			buildPhases = (
+				746B77FABEB0AC02FC19ECBD /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				304EE3117B2E81B73ED67975 /* PBXTargetDependency */,
+			);
+			name = ConfessionalChristianityUITests;
+			packageProductDependencies = (
+			);
+			productName = ConfessionalChristianityUITests;
+			productReference = D31C411D717AA4D14DAA4648 /* ConfessionalChristianityUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -484,6 +525,11 @@
 					6E2872A9D525C0FEF00C927E = {
 						DevelopmentTeam = 7GZKY29XJH;
 						ProvisioningStyle = Automatic;
+					};
+					DF1BD48CFA1742C18738C220 = {
+						DevelopmentTeam = 7GZKY29XJH;
+						ProvisioningStyle = Automatic;
+						TestTargetID = 6E2872A9D525C0FEF00C927E;
 					};
 				};
 			};
@@ -506,6 +552,7 @@
 			projectRoot = "";
 			targets = (
 				6E2872A9D525C0FEF00C927E /* ConfessionalChristianity */,
+				DF1BD48CFA1742C18738C220 /* ConfessionalChristianityUITests */,
 				509AC7FB8455E7E32B916226 /* ConfessionalChristianityWidgetExtension */,
 			);
 		};
@@ -538,6 +585,14 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		746B77FABEB0AC02FC19ECBD /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				93D0DAB535D7FDAF4CD85114 /* LoopEventsUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		9D8E6BDB55C7AB474D11E770 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -574,6 +629,7 @@
 				C1E4EAF8F6E8528DE63DA7EB /* LibraryEntryView.swift in Sources */,
 				975E7B40260BACEB03F8649A /* LibraryIndexView.swift in Sources */,
 				322478282EA26DE9CAF459C3 /* LibraryRoute.swift in Sources */,
+				AB70875985CBC8610B6CC09C /* LoopCounter.swift in Sources */,
 				7F658028A04AEB6639B58A82 /* LordsDayFeedView.swift in Sources */,
 				C801FA2EAE0401DFF8830CAE /* LordsDayTabView.swift in Sources */,
 				A8520A15B4644D91821657B7 /* MarkdownText.swift in Sources */,
@@ -614,6 +670,11 @@
 			isa = PBXTargetDependency;
 			target = 509AC7FB8455E7E32B916226 /* ConfessionalChristianityWidgetExtension */;
 			targetProxy = AB2995817C3D23E670755CDA /* PBXContainerItemProxy */;
+		};
+		304EE3117B2E81B73ED67975 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6E2872A9D525C0FEF00C927E /* ConfessionalChristianity */;
+			targetProxy = 5AA51E137560BB700DA85EB8 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -689,6 +750,8 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.1;
+				POSTHOG_HOST = "https://us.i.posthog.com";
+				POSTHOG_KEY = phc_dF6Jl6RuY7mAZpIA2zAp84Ji1L9oikmKdPUQJBaBsJq;
 				PRODUCT_BUNDLE_IDENTIFIER = com.confessionalchristianity.app;
 				SDKROOT = iphoneos;
 				SUPABASE_PUBLISHABLE_KEY = sb_publishable_QDtg2bLu0MSTGaA_5hN7xw_QFSwo3UM;
@@ -783,6 +846,46 @@
 			};
 			name = Debug;
 		};
+		6CBCD93C99C9E28B92155E2A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 7GZKY29XJH;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.confessionalchristianity.app.uitests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_TARGET_NAME = ConfessionalChristianity;
+			};
+			name = Debug;
+		};
+		99326F179D09A81DB58EBCFB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 7GZKY29XJH;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.confessionalchristianity.app.uitests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_TARGET_NAME = ConfessionalChristianity;
+			};
+			name = Release;
+		};
 		A40940A404BBE5FD4BEBB53E /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -798,6 +901,8 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.1;
+				POSTHOG_HOST = "https://us.i.posthog.com";
+				POSTHOG_KEY = phc_dF6Jl6RuY7mAZpIA2zAp84Ji1L9oikmKdPUQJBaBsJq;
 				PRODUCT_BUNDLE_IDENTIFIER = com.confessionalchristianity.app;
 				SDKROOT = iphoneos;
 				SUPABASE_PUBLISHABLE_KEY = sb_publishable_QDtg2bLu0MSTGaA_5hN7xw_QFSwo3UM;
@@ -832,6 +937,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		2FF8C3D36927F362C566FA9C /* Build configuration list for PBXNativeTarget "ConfessionalChristianityUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6CBCD93C99C9E28B92155E2A /* Debug */,
+				99326F179D09A81DB58EBCFB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		C712F714AD66351B451EB195 /* Build configuration list for PBXNativeTarget "ConfessionalChristianityWidgetExtension" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

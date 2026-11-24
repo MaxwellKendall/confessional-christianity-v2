@@ -26,6 +26,10 @@
 	<string>Photograph your handwritten sermon notes so the app can turn them into cards for the week. Photos are kept on your iPhone, sent only to draft the cards, and not stored online.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Choose a photo of your sermon notes you already took, to turn it into cards for the week.</string>
+	<key>PostHogHost</key>
+	<string>$(POSTHOG_HOST)</string>
+	<key>PostHogKey</key>
+	<string>$(POSTHOG_KEY)</string>
 	<key>SupabasePublishableKey</key>
 	<string>$(SUPABASE_PUBLISHABLE_KEY)</string>
 	<key>SupabaseURL</key>
