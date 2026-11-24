@@ -28,9 +28,12 @@ struct ConfessionalChristianityApp: App {
             } else if let session = UserDefaults.standard.string(forKey: "ProofTextSession") {
                 ProofTextSessionFixture(spec: session)
             } else if let scene = UserDefaults.standard.string(forKey: "VerseReaderFixture") {
+                let appearances: [String: ColorScheme] = ["light": .light, "dark": .dark]
+                let appearance = UserDefaults.standard.string(forKey: "VerseReaderFixtureAppearance") ?? ""
                 NavigationStack {
                     VerseReaderView.fixture(scene)
                 }
+                .preferredColorScheme(appearances[appearance])
             } else if let scene = UserDefaults.standard.string(forKey: "LordsDayCaptureFixture") {
                 CaptureFixture(scene: scene)
             } else if let scene = UserDefaults.standard.string(forKey: "LordsDayReviewFixture") {
