@@ -366,6 +366,10 @@ public final class SyncScheduler {
     public private(set) var lastError: (any Error)?
     public private(set) var consecutiveFailures = 0
     public private(set) var lastSuccessAt: Date?
+    /// Called once each run ends (after any reruns it absorbed and after a
+    /// retry is scheduled), with whether its last sync succeeded. Lets the UI
+    /// and tests react to the end of a run instead of polling.
+    public var runDidFinish: ((_ succeeded: Bool) -> Void)?
 
     private var rerunRequested = false
     private var debounceTask: Task<Void, Never>?
@@ -446,6 +450,7 @@ public final class SyncScheduler {
         if !succeeded {
             scheduleRetry()
         }
+        runDidFinish?(succeeded)
         return succeeded
     }
 

@@ -412,19 +412,90 @@ final class BrokenTable: SyncTableAdapter {
 }
 
 // MARK: - Scheduler
+//
+// TKL-901: these tests never poll against a wall-clock deadline. The fakes
+// record each scheduler event (sync started or held, sleep requested, run
+// finished) in order, and each test awaits the exact sequence it expects, so a
+// busy machine only makes them slower, never wrong. The suite's time limit
+// stops a real hang.
+
+enum SchedulerEvent: Equatable, CustomStringConvertible {
+    case syncStarted(Int)
+    case syncHeld
+    case sleepRequested(Duration)
+    case runFinished(succeeded: Bool)
+
+    var description: String {
+        switch self {
+        case .syncStarted(let n): "syncStarted(\(n))"
+        case .syncHeld: "syncHeld"
+        case .sleepRequested(let d): "sleepRequested(\(d))"
+        case .runFinished(let ok): "runFinished(\(ok))"
+        }
+    }
+}
+
+/// An ordered event log the test can await one event at a time.
+@MainActor
+final class SchedulerEvents {
+    private(set) var log: [SchedulerEvent] = []
+    private var cursor = 0
+    private var waiter: CheckedContinuation<SchedulerEvent, Never>?
+
+    func record(_ event: SchedulerEvent) {
+        log.append(event)
+        if let waiter {
+            self.waiter = nil
+            cursor += 1
+            waiter.resume(returning: event)
+        }
+    }
+
+    func next() async -> SchedulerEvent {
+        if cursor < log.count {
+            defer { cursor += 1 }
+            return log[cursor]
+        }
+        return await withCheckedContinuation { waiter = $0 }
+    }
+
+    /// The next `count` events, in the order they happened.
+    func next(_ count: Int) async -> [SchedulerEvent] {
+        var events: [SchedulerEvent] = []
+        for _ in 0..<count { events.append(await next()) }
+        return events
+    }
+
+    /// Wires the scheduler's own end-of-run event into the log.
+    func observe(_ scheduler: SyncScheduler) {
+        scheduler.runDidFinish = { [unowned self] ok in self.record(.runFinished(succeeded: ok)) }
+    }
+}
 
 @MainActor
 final class FakeSyncer: SyncRunning {
+    let events: SchedulerEvents
     var calls = 0
     var failuresLeft = 0
     var gate: CheckedContinuation<Void, Never>?
     var holdNext = false
+    private var running = 0
+    private(set) var maxConcurrent = 0
+
+    init(events: SchedulerEvents) { self.events = events }
 
     func sync() async throws {
         calls += 1
+        running += 1
+        maxConcurrent = max(maxConcurrent, running)
+        defer { running -= 1 }
+        events.record(.syncStarted(calls))
         if holdNext {
             holdNext = false
-            await withCheckedContinuation { gate = $0 }
+            await withCheckedContinuation {
+                gate = $0
+                events.record(.syncHeld)
+            }
         }
         if failuresLeft > 0 {
             failuresLeft -= 1
@@ -433,18 +504,48 @@ final class FakeSyncer: SyncRunning {
     }
 }
 
-final class WaitLog: @unchecked Sendable {
-    private let lock = NSLock()
-    private var stored: [Duration] = []
-    var values: [Duration] { lock.withLock { stored } }
-    func append(_ d: Duration) { lock.withLock { stored.append(d) } }
-}
-
+/// Stands in for `Task.sleep`: records each request, then either returns at
+/// once (`autoWake`) or waits until the test calls `wakeAll()`. A cancelled
+/// sleeper throws, like `Task.sleep`.
 @MainActor
-private func waitUntil(_ condition: () -> Bool, timeout: Duration = .seconds(2)) async {
-    let deadline = ContinuousClock.now + timeout
-    while !condition(), ContinuousClock.now < deadline {
-        try? await Task.sleep(for: .milliseconds(5))
+final class FakeSleeper {
+    let events: SchedulerEvents
+    let autoWake: Bool
+    private var pending: [Int: CheckedContinuation<Void, any Error>] = [:]
+    private var nextId = 0
+
+    init(events: SchedulerEvents, autoWake: Bool = false) {
+        self.events = events
+        self.autoWake = autoWake
+    }
+
+    var sleep: SyncScheduler.Sleep {
+        { [self] duration in try await self.sleep(for: duration) }
+    }
+
+    var pendingCount: Int { pending.count }
+
+    func wakeAll() {
+        let sleepers = pending.values
+        pending.removeAll()
+        for sleeper in sleepers { sleeper.resume() }
+    }
+
+    private func sleep(for duration: Duration) async throws {
+        events.record(.sleepRequested(duration))
+        if autoWake { return }
+        try Task.checkCancellation()
+        let id = nextId
+        nextId += 1
+        try await withTaskCancellationHandler {
+            try await withCheckedThrowingContinuation { pending[id] = $0 }
+        } onCancel: {
+            Task { @MainActor in self.cancel(id) }
+        }
+    }
+
+    private func cancel(_ id: Int) {
+        pending.removeValue(forKey: id)?.resume(throwing: CancellationError())
     }
 }
 
@@ -462,84 +563,123 @@ struct SyncBackoffTests {
 }
 
 @MainActor
-@Suite("SyncScheduler")
+@Suite("SyncScheduler", .timeLimit(.minutes(1)))
 struct SyncSchedulerTests {
+    let events = SchedulerEvents()
+
     @Test("many local writes in quick succession trigger one debounced sync")
     func debouncesLocalWrites() async {
-        let syncer = FakeSyncer()
-        let scheduler = SyncScheduler(syncer: syncer, debounce: .milliseconds(60))
+        let syncer = FakeSyncer(events: events)
+        let sleeper = FakeSleeper(events: events)
+        let scheduler = SyncScheduler(syncer: syncer, debounce: .milliseconds(60), sleep: sleeper.sleep)
+        events.observe(scheduler)
         for _ in 0..<5 { scheduler.localWriteOccurred() }
         #expect(syncer.calls == 0)
-        await waitUntil { syncer.calls >= 1 }
-        try? await Task.sleep(for: .milliseconds(150))
+        // Every write asks for the debounce delay; the first four are cancelled.
+        #expect(await events.next(5) == Array(repeating: .sleepRequested(.milliseconds(60)), count: 5))
+        #expect(syncer.calls == 0)
+        sleeper.wakeAll()
+        #expect(await events.next(2) == [.syncStarted(1), .runFinished(succeeded: true)])
         #expect(syncer.calls == 1)
+        #expect(sleeper.pendingCount == 0)
     }
 
     @Test("foreground syncs right away")
     func foregroundSyncsNow() async {
-        let syncer = FakeSyncer()
-        let scheduler = SyncScheduler(syncer: syncer, debounce: .seconds(30))
+        let syncer = FakeSyncer(events: events)
+        let sleeper = FakeSleeper(events: events)
+        let scheduler = SyncScheduler(syncer: syncer, debounce: .seconds(30), sleep: sleeper.sleep)
+        events.observe(scheduler)
         scheduler.appDidBecomeActive()
-        await waitUntil { syncer.calls == 1 }
+        #expect(await events.next(2) == [.syncStarted(1), .runFinished(succeeded: true)])
         #expect(syncer.calls == 1)
+        #expect(sleeper.pendingCount == 0)
     }
 
     @Test("manual refresh runs a sync and reports the outcome")
     func manualRefresh() async {
-        let syncer = FakeSyncer()
-        let scheduler = SyncScheduler(syncer: syncer)
+        let syncer = FakeSyncer(events: events)
+        let sleeper = FakeSleeper(events: events)
+        let scheduler = SyncScheduler(syncer: syncer, sleep: sleeper.sleep)
+        events.observe(scheduler)
         #expect(await scheduler.refresh() == true)
         syncer.failuresLeft = 1
         #expect(await scheduler.refresh() == false)
         #expect(scheduler.lastError != nil)
+        #expect(await events.next(5) == [
+            .syncStarted(1), .runFinished(succeeded: true),
+            .syncStarted(2), .runFinished(succeeded: false), .sleepRequested(.seconds(2)),
+        ])
+        // Let the scheduled retry run, so nothing is left waiting.
+        sleeper.wakeAll()
+        #expect(await events.next(2) == [.syncStarted(3), .runFinished(succeeded: true)])
+        #expect(scheduler.lastError == nil)
     }
 
     @Test("failures retry with growing backoff, then reset on success")
     func backsOffThenResets() async {
-        let syncer = FakeSyncer()
+        let syncer = FakeSyncer(events: events)
         syncer.failuresLeft = 3
-        let waits = WaitLog()
+        let sleeper = FakeSleeper(events: events, autoWake: true)
         let scheduler = SyncScheduler(
             syncer: syncer,
             backoff: SyncBackoff(base: .seconds(2), max: .seconds(60)),
-            sleep: { duration in
-                waits.append(duration)
-            }
+            sleep: sleeper.sleep
         )
+        events.observe(scheduler)
         scheduler.appDidBecomeActive()
-        await waitUntil { syncer.calls == 4 }
+        let expected: [SchedulerEvent] = [
+            .syncStarted(1), .runFinished(succeeded: false), .sleepRequested(.seconds(2)),
+            .syncStarted(2), .runFinished(succeeded: false), .sleepRequested(.seconds(4)),
+            .syncStarted(3), .runFinished(succeeded: false), .sleepRequested(.seconds(8)),
+            .syncStarted(4), .runFinished(succeeded: true),
+        ]
+        #expect(await events.next(expected.count) == expected)
         #expect(syncer.calls == 4)
-        #expect(waits.values == [.seconds(2), .seconds(4), .seconds(8)])
-        await waitUntil { scheduler.consecutiveFailures == 0 }
         #expect(scheduler.consecutiveFailures == 0)
         #expect(scheduler.lastError == nil)
+        #expect(!scheduler.isSyncing)
     }
 
     @Test("a trigger during an in-flight sync runs one more sync afterwards, never two at once")
     func coalescesWhileRunning() async {
-        let syncer = FakeSyncer()
+        let syncer = FakeSyncer(events: events)
         syncer.holdNext = true
-        let scheduler = SyncScheduler(syncer: syncer)
+        let sleeper = FakeSleeper(events: events)
+        let scheduler = SyncScheduler(syncer: syncer, sleep: sleeper.sleep)
+        events.observe(scheduler)
         scheduler.appDidBecomeActive()
-        await waitUntil { syncer.gate != nil }
+        #expect(await events.next(2) == [.syncStarted(1), .syncHeld])
         scheduler.appDidBecomeActive()
         scheduler.appDidBecomeActive()
         #expect(syncer.calls == 1)
         #expect(scheduler.isSyncing)
         syncer.gate?.resume()
-        await waitUntil { syncer.calls == 2 && !scheduler.isSyncing }
-        try? await Task.sleep(for: .milliseconds(50))
+        // One rerun inside the same run, then the run ends: nothing else follows.
+        #expect(await events.next(2) == [.syncStarted(2), .runFinished(succeeded: true)])
         #expect(syncer.calls == 2)
+        #expect(syncer.maxConcurrent == 1)
+        #expect(!scheduler.isSyncing)
+        #expect(sleeper.pendingCount == 0)
     }
 
     @Test("triggers return immediately (they never wait on the network)")
     func triggersDoNotBlock() async {
-        let syncer = FakeSyncer()
+        let syncer = FakeSyncer(events: events)
         syncer.holdNext = true
-        let scheduler = SyncScheduler(syncer: syncer)
+        let sleeper = FakeSleeper(events: events)
+        let scheduler = SyncScheduler(syncer: syncer, sleep: sleeper.sleep)
+        events.observe(scheduler)
         scheduler.appDidBecomeActive() // would hang here if it awaited the sync
         scheduler.localWriteOccurred()
-        await waitUntil { syncer.gate != nil }
+        #expect(syncer.calls == 0) // both calls returned before any sync ran
+        let started = await events.next(3)
+        // The run and the debounce are separate tasks, so only their own order is fixed.
+        #expect(started.filter { $0 != .sleepRequested(.seconds(2)) } == [.syncStarted(1), .syncHeld])
+        #expect(started.contains(.sleepRequested(.seconds(2))))
         syncer.gate?.resume()
+        #expect(await events.next() == .runFinished(succeeded: true))
+        sleeper.wakeAll()
+        #expect(await events.next(2) == [.syncStarted(2), .runFinished(succeeded: true)])
     }
 }
