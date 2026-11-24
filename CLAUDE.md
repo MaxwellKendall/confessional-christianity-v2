@@ -44,7 +44,7 @@ Linear project: **confessional christianity** (team TKL): https://linear.app/sof
 ## Test (from the repo root)
 | Suite | Command | Runtime |
 |---|---|---|
-| web unit | `npm test` (vitest, 269 tests, incl. `scripts/**/*.test.mjs`; 60 s timeouts for the loaded build Mac) | ~1 s |
+| web unit | `npm test` (vitest, 274 tests, incl. `scripts/**/*.test.mjs`; 60 s timeouts for the loaded build Mac) | ~1 s |
 | web build | `npm run build` (needs `.env.local`; ESLint enforced) | ~15 s |
 | DomainKit | `cd ios/DomainKit && swift test` (235 tests: 194 Swift Testing + 41 XCTest) | ~15 s |
 | iOS build | `cd ios/App && xcodegen generate && xcodebuild -scheme ConfessionalChristianity -destination 'platform=iOS Simulator,name=CC iPhone 17 Pro' -derivedDataPath ../../build/dd build` | ~1 min cold |
@@ -118,4 +118,7 @@ iOS client). Stage from `-c stage=…` (default dev). Nothing is created in the 
 - Account sync uses DynamoDB behind Cognito-authorized AppSync (TKL-891).
 
 ## Gotchas
+- The cut prayer list's people table must not come back (TKL-869): `npm run check:removed-refs` (`scripts/checks/removed-refs.mjs`,
+  also run by `npm test`) lists every tracked reference to it except the allowed files (the check itself, plus the old migration pair
+  and removal test, gone since TKL-904) and exits 1 if there is one. Use it instead of a bare `rg -i` for the table name.
 - The Algolia Admin key is for `scripts/` only; the browser gets the search-only key.

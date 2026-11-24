@@ -16,7 +16,8 @@
     "ios:sync-esv-text": "node scripts/ios/sync-esv-text.mjs",
     "ios:release": "node scripts/ios/release.mjs",
     "eval:cards": "vitest run --config evals/vitest.config.ts",
-    "device-install": "node scripts/ios/device-install.mjs"
+    "device-install": "node scripts/ios/device-install.mjs",
+    "check:removed-refs": "node scripts/checks/removed-refs.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",
