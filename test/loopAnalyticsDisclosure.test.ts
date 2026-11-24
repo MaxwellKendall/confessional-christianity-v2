@@ -31,7 +31,9 @@ describe('privacy policy', () => {
 });
 
 describe('iOS privacy manifest', () => {
-  const entries = [...manifest.matchAll(/<dict>\s*<key>NSPrivacyCollectedDataType<\/key>([\s\S]*?)<\/dict>/g)].map((m) => m[0]);
+  const entries = [...manifest.matchAll(/<dict>\s*<key>NSPrivacyCollectedDataType<\/key>([\s\S]*?)<\/dict>/g)].map((m) => m[0])
+    // TKL-992 adds account and drafting types (linked, app functionality); those are checked in accountDraftingDisclosure.test.ts
+    .filter((e) => e.includes('NSPrivacyCollectedDataTypePurposeAnalytics'));
 
   test('declares product interaction and a device-level id, unlinked, untracked, for analytics only', () => {
     const types = entries.map((e) => e.match(/<string>(NSPrivacyCollectedDataType[A-Za-z]+)<\/string>/)?.[1]);

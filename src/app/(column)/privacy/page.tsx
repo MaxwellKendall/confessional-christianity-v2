@@ -4,37 +4,72 @@ import { Markdown } from '@/components/Markdown';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy',
-  description: 'How Confessional Christianity handles data: no tracking, no personal information, and a few anonymous counts.',
+  description: 'How Confessional Christianity handles data: no tracking, optional email sign-in, sermon-note drafting, and a few anonymous counts.',
   alternates: { canonical: '/privacy' },
 };
 
 const body = `
-Confessional Christianity — on the web and in the iOS app — does not require
-an account, does not track you, and does not collect personal information.
-The iOS app counts a few anonymous events, described below.
+Confessional Christianity — on the web and in the iOS app — does not track
+you and does not sell or share your information. You can use it without an
+account. If you choose to sign in, the iOS app keeps your email address and
+what you've saved with your account, as described below. The iOS app also
+counts a few anonymous events.
 
-## What we don't collect
+## What we don't do
 
-There are no user accounts, no names and no email addresses. Nothing is
-used to track you across other companies' apps or websites, and nothing is
-shared with data brokers or advertisers. We don't use cookies to identify or
-follow you across visits.
+Nothing is used to track you across other companies' apps or websites, and
+nothing is shared with data brokers or advertisers. We don't use cookies to
+identify or follow you across visits.
 
 ## Where your progress is stored
 
-Your place in a catechism — which question you're on, which milestones
-you've reached — is saved only on your own device:
+Without an account, your place in a catechism — which question you're on,
+which milestones you've reached — is saved only on your own device:
 
 - On the web, in your browser's local storage.
 - In the iOS app, in a local, on-device store, shared only with the app's
   own Home Screen widget so it can show your current question.
 
-This data never leaves your device and we have no access to it. Clearing
+This data doesn't leave your device and we have no access to it. Clearing
 your browser data, or deleting the app, deletes it permanently.
+
+## Accounts (iOS, optional)
+
+Signing in is optional; it lets your family's data follow you to another
+iPhone and be restored if you reinstall the app.
+
+- **Your email address.** You sign in with your email address. There is no
+  password: each time, we email you a one-time sign-in code, and the code
+  only lets you into the account it was sent for. Your email address is
+  used only to sign you in and to send those codes.
+- **What syncs.** While you're signed in, the app saves with your account
+  the children you add (your children's names and ages), their catechism
+  progress (the catechism, the current question and milestones), and your
+  Lord's Day sermon notes and cards (the text drafted from your notes, the
+  cards you keep, and the sermon's passage, title and preacher if you enter
+  them).
+- **Where it's kept.** Account data is stored with Amazon Web Services, our
+  hosting provider, and is used only to run the app for you. It isn't used
+  for advertising or shared with anyone else.
+
+Signing out stops syncing; what's already on your iPhone stays there. To
+have your account and everything saved with it deleted, email us at the
+address below.
+
+## Drafting cards from sermon-note photos (iOS)
+
+When you photograph your sermon notes (or type them) and ask the app to
+draft the week's cards, the photos or text are sent to our server and on to
+Google Gemini, Google's AI service, only to draft the cards. Your photos are
+not stored online: our server doesn't keep them, and the originals stay on
+your iPhone. The drafted text and cards are stored with your account when
+you're signed in, and only on your iPhone otherwise. We use Google's paid
+API service, whose terms don't allow Google to use these requests to train
+its models.
 
 ## Third-party services we use
 
-A couple of features call external services to do their job — neither
+Two other features call external services to do their job — neither
 receives anything that identifies you:
 
 - **Scripture text.** Bible passages are fetched from the ESV API
@@ -74,9 +109,11 @@ reminder data is sent anywhere.
 
 ## Children's privacy
 
-This app is designed for families to use together to catechize children,
-and by design collects no personal information from anyone, child or
-adult. The anonymous counts above say nothing about who is using the app.
+This app is designed for parents to use with their children. Accounts are
+for adults: only the signed-in parent's email address is collected, and a
+child's name and age are saved only if the parent adds them, so the app can
+keep that child's place in the catechism. The anonymous counts above say
+nothing about who is using the app.
 
 ## Changes to this policy
 
