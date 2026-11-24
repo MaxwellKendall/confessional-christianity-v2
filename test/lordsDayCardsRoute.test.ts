@@ -1,4 +1,3 @@
-import { generateKeyPairSync } from 'crypto';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { createCognitoVerifier } from '@/lib/lordsDay/auth';
@@ -6,7 +5,7 @@ import { handleCardsRequest, type CardsDeps } from '@/lib/lordsDay/handler';
 import { createRateLimiter } from '@/lib/lordsDay/rateLimit';
 import { POST } from '@/app/api/lords-day/cards/route';
 
-import { createTestPool, TEST_CLIENT_ID, TEST_POOL_ID, type TestPool } from './support/cognitoJwt';
+import { createTestPool, otherSigningKey, TEST_CLIENT_ID, TEST_POOL_ID, type TestPool } from './support/cognitoJwt';
 
 const GEMINI_HOST = 'generativelanguage.googleapis.com';
 
@@ -169,8 +168,7 @@ describe('authentication', () => {
   });
 
   test('a token signed by a different key → 401', async () => {
-    const { privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
-    await expectUnauthorized(await handleCardsRequest(request(twoPages, pool.sign({}, privateKey)), deps()));
+    await expectUnauthorized(await handleCardsRequest(request(twoPages, pool.sign({}, otherSigningKey())), deps()));
   });
 });
 

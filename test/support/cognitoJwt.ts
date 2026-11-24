@@ -1,4 +1,6 @@
-import { createSign, generateKeyPairSync, type KeyObject } from 'crypto';
+import { createPrivateKey, createPublicKey, createSign, type KeyObject } from 'crypto';
+import { readFileSync } from 'fs';
+import path from 'path';
 
 // A local stand-in for a Cognito user pool: an RSA key whose public half is
 // handed to the verifier as its cached JWKS, so tokens verify fully offline.
@@ -16,10 +18,20 @@ export interface TestPool {
   sign: (claims?: Record<string, unknown>, privateKey?: KeyObject) => string;
 }
 
+// Fixed test-only keys (test/support/keys/README.md): generating RSA keys per
+// test took over 10 s under load and broke vitest's timeouts (TKL-981).
+const loadKey = (name: string) =>
+  createPrivateKey(readFileSync(path.join(__dirname, 'keys', `${name}.test-only.pem`)));
+const poolPrivateKey = loadKey('pool');
+const poolPublicKey = createPublicKey(poolPrivateKey);
+const foreignPrivateKey = loadKey('other');
+
+/** A private key the pool's JWKS does not contain, for "signed by a different key" cases. */
+export const otherSigningKey = (): KeyObject => foreignPrivateKey;
+
 export const createTestPool = (): TestPool => {
-  const { publicKey, privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
-  const jwk = { ...publicKey.export({ format: 'jwk' }), kid: KID, alg: 'RS256', use: 'sig' };
-  const sign = (claims: Record<string, unknown> = {}, key: KeyObject = privateKey) => {
+  const jwk = { ...poolPublicKey.export({ format: 'jwk' }), kid: KID, alg: 'RS256', use: 'sig' };
+  const sign = (claims: Record<string, unknown> = {}, key: KeyObject = poolPrivateKey) => {
     const now = Math.floor(Date.now() / 1000);
     const payload = {
       sub: 'user-sub-1',
