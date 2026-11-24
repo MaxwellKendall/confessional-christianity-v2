@@ -33,10 +33,18 @@ which milestones you've reached — is saved only on your own device:
 This data doesn't leave your device and we have no access to it. Clearing
 your browser data, or deleting the app, deletes it permanently.
 
+## Accounts and photo drafting (iOS): coming in an update
+
+Signing in and drafting cards from sermon-note photos are new. They arrive
+in an app update and may not be in the version on your iPhone yet. Until
+your copy of the app offers them, the two sections below don't apply to
+you: nothing is sent to an account or to Google, and everything stays on
+your device as described above.
+
 ## Accounts (iOS, optional)
 
-Signing in is optional; it lets your family's data follow you to another
-iPhone and be restored if you reinstall the app.
+Once the app offers it, signing in is optional; it lets your family's data
+follow you to another iPhone and be restored if you reinstall the app.
 
 - **Your email address.** You sign in with your email address. There is no
   password: each time, we email you a one-time sign-in code, and the code
@@ -60,12 +68,16 @@ address below.
 
 When you photograph your sermon notes (or type them) and ask the app to
 draft the week's cards, the photos or text are sent to our server and on to
-Google Gemini, Google's AI service, only to draft the cards. Your photos are
-not stored online: our server doesn't keep them, and the originals stay on
-your iPhone. The drafted text and cards are stored with your account when
-you're signed in, and only on your iPhone otherwise. We use Google's paid
-API service, whose terms don't allow Google to use these requests to train
-its models.
+Google Gemini, Google's AI service. We send them only to draft the cards.
+We don't store your photos online: our server doesn't keep them, they
+aren't saved with your account, and the originals stay on your iPhone. The
+drafted text and cards are stored with your account when you're signed in,
+and only on your iPhone otherwise.
+
+We use Google's paid API service. Under its terms Google doesn't use these
+requests to improve its products or train its models, but it may keep them
+for a limited time to detect abuse and misuse of its service and to meet
+legal obligations.
 
 ## Third-party services we use
 

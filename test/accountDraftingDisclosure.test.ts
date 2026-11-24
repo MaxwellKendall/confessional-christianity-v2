@@ -27,13 +27,30 @@ describe('privacy policy: accounts', () => {
     }
     expect(policy).toMatch(/optional/i);
   });
+
+  // [verify] TKL-992 #2: accounts and drafting aren't in the App Store build yet,
+  // so the policy must not read as if they already are.
+  test('says accounts and drafting arrive in an app update and nothing leaves the device until then', () => {
+    expect(policy).toMatch(/arrive in an app update/i);
+    expect(policy).toMatch(/until your copy of the app offers (them|sign-in)/i);
+  });
 });
 
 describe('privacy policy: drafting cards from photos', () => {
   test('names Google Gemini and says photos are used only to draft cards and not stored online', () => {
     expect(policy).toContain('Google Gemini');
     expect(policy).toMatch(/only to draft (the )?cards/i);
-    expect(policy).toMatch(/photos are not stored online/i);
+    expect(policy).toMatch(/we don't store your photos online/i);
+  });
+
+  // [verify] TKL-992 #1: the no-storage promise is ours; Google may keep the
+  // request for a limited time for abuse monitoring and legal obligations.
+  test("scopes the no-storage promise to us and discloses Google's limited retention", () => {
+    expect(policy).not.toMatch(/photos are not stored online/i);
+    expect(policy).toMatch(/our server doesn't keep them/i);
+    expect(policy).toMatch(/limited time/i);
+    expect(policy).toMatch(/abuse/i);
+    expect(policy).toMatch(/legal/i);
   });
 
   test('says the drafted text and cards are stored with the account when signed in', () => {
