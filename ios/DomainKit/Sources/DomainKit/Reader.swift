@@ -210,3 +210,9 @@ public func readerCatechismName(for slug: String) -> String {
         ?? PROGRAMS.first { $0.slug == slug }?.title
         ?? "Catechism"
 }
+
+/// The notes card's text in quotes, once: a note that already opens with a quote mark stays as written.
+public func readerQuoted(_ note: String) -> String {
+    guard let first = note.first, !"“\"'‘«".contains(first) else { return note }
+    return "“\(note)”"
+}

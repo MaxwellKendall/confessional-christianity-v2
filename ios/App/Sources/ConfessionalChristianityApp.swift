@@ -70,7 +70,7 @@ struct ConfessionalChristianityApp: App {
 /// Screenshot hook (TKL-878): `-ProofTextSession catechizing-shorter-catechism:32[:Rom.8.30]`
 /// opens the session at that question and, with an osis, pushes the proof-text
 /// reader on top, so a back tap returns to the same session.
-/// `-ProofTextReaderCard verse|end` starts the reader at that card.
+/// `-ProofTextReaderCard verse|notes|end` starts the reader at that card.
 private struct ProofTextSessionFixture: View {
     let spec: String
     @State private var path = NavigationPath()

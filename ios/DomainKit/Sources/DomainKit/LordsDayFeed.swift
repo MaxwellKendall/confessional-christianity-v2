@@ -54,6 +54,11 @@ public struct LordsDayFeed: Equatable, Sendable {
     public let cards: [LordsDayFeedCard]
     /// The card the feed opens at; nil when there are no cards.
     public let todayIndex: Int?
+    /// The sermon's passage as OSIS, or nil when it's missing or doesn't parse.
+    public let passageOsis: String?
+    /// What the reader's intro and notes cards show (TKL-879).
+    private let readerDay: (weekday: String, index: Int)
+    private let keyPoint: String?
 
     /// The six house palettes the feed rotates through, in the approved prototype's order.
     public static let rotation: [QuoteCardPalette] = [.psalter, .vellum, .hymnal, .ironstone, .vespers, .cloister]
@@ -80,6 +85,12 @@ public struct LordsDayFeed: Equatable, Sendable {
         let todayIndex = todayCardIndex(serviceDate: note.serviceDate, today: today, cardCount: cards.count, calendar: calendar)
         self.todayIndex = cards.isEmpty ? nil : (todayIndex ?? 0)
         let passage = normalizedNoteField(note.passageRef)
+        self.passageOsis = passage.flatMap(Self.osis(for:))
+        // Day dots count Monday through Saturday whatever the card count; Sunday is day 1.
+        let readingDays = Self.readerDaysInWeek
+        let dayIndex = (readingDayIndex(note.serviceDate, today, readingDays, calendar) ?? 0) + 1
+        self.readerDay = (Self.weekdays[calendar.component(.weekday, from: today) - 1], dayIndex)
+        self.keyPoint = cards.lazy.filter { $0.kind == .keyPoint }.compactMap { normalizedNoteField($0.body) }.first
         let preacher = normalizedNoteField(note.preacher)
         let todayStart = calendar.startOfDay(for: today)
         self.cards = cards.enumerated().map { index, card in
@@ -117,6 +128,32 @@ public struct LordsDayFeed: Equatable, Sendable {
         }
     }
 
+    /// The reader's day dots: one per day from Monday to Saturday (the TKL-838 design).
+    static let readerDaysInWeek = 6
+
+    /// The week's sermon text in the verse-by-verse reader ("Re-read the sermon text").
+    public var sermonTextSource: ReaderSource? {
+        passageOsis.map(readerSource(osis:))
+    }
+
+    /// A verse card opens the reader on that card's own reference; other cards open nothing.
+    public func readerSource(for card: LordsDayFeedCard) -> ReaderSource? {
+        guard card.kind == .verse else { return nil }
+        return card.verseOsis.map(readerSource(osis:))
+    }
+
+    private func readerSource(osis: String) -> ReaderSource {
+        .sermonText(
+            passageOsis: osis, weekday: readerDay.weekday, dayIndex: readerDay.index,
+            daysInWeek: Self.readerDaysInWeek, notesKeyPoint: keyPoint
+        )
+    }
+
+    public static func == (a: Self, b: Self) -> Bool {
+        a.cards == b.cards && a.todayIndex == b.todayIndex && a.passageOsis == b.passageOsis
+            && a.readerDay == b.readerDay && a.keyPoint == b.keyPoint
+    }
+
     /// The app is English-only; the labels don't follow the calendar's locale.
     static let weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
@@ -128,6 +165,11 @@ public struct LordsDayFeed: Equatable, Sendable {
         }
         return citationToOsis(reference)
     }
+}
+
+/// The today-card function, reachable from `LordsDayFeed`'s init where a local shadows its name.
+private func readingDayIndex(_ serviceDate: Date, _ today: Date, _ count: Int, _ calendar: Calendar) -> Int? {
+    todayCardIndex(serviceDate: serviceDate, today: today, cardCount: count, calendar: calendar)
 }
 
 private extension String {

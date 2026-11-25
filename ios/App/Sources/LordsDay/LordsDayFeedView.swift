@@ -3,6 +3,7 @@
 // card. Everything comes from the local store (DomainKit's LordsDayFeed), so
 // nothing waits on the network; a verse card's text is looked up by reference
 // as it appears, bundled text first, and the card reads fine without it.
+// A verse card opens the verse-by-verse reader on its reference (TKL-879).
 // The Sunday cover, Saturday card, archive and empty state are TKL-864/865/868.
 import SwiftUI
 import SwiftData
@@ -32,7 +33,7 @@ struct LordsDayFeedView: View {
         ScrollView(.vertical, showsIndicators: false) {
             LazyVStack(spacing: 0) {
                 ForEach(feed.cards) { card in
-                    FeedCardView(card: card, palette: LordsDayFeed.palette(card.palette, dark: dark), allowsNetwork: allowsNetwork && card.id == (current ?? feed.cards.first?.id))
+                    FeedCardView(card: card, palette: LordsDayFeed.palette(card.palette, dark: dark), allowsNetwork: allowsNetwork && card.id == (current ?? feed.cards.first?.id), readerSource: feed.readerSource(for: card))
                         .containerRelativeFrame([.horizontal, .vertical])
                         .id(card.id)
                 }
@@ -78,18 +79,20 @@ private struct FeedCardView: View {
     let card: LordsDayFeedCard
     let palette: QuoteCardPalette
     let allowsNetwork: Bool
+    /// Where the verse card's reader opens; nil for other cards and unparsed references.
+    let readerSource: ReaderSource?
     @State private var verseText: String?
-    @State private var showsPassage = false
 
     private struct VerseRequest: Equatable {
         let reference: String?
         let isActive: Bool
     }
 
-    init(card: LordsDayFeedCard, palette: QuoteCardPalette, allowsNetwork: Bool) {
+    init(card: LordsDayFeedCard, palette: QuoteCardPalette, allowsNetwork: Bool, readerSource: ReaderSource?) {
         self.card = card
         self.palette = palette
         self.allowsNetwork = allowsNetwork
+        self.readerSource = readerSource
         _verseText = State(initialValue: card.verseOsis.flatMap(bundledEsvText).flatMap(Self.nonEmpty))
     }
 
@@ -139,26 +142,6 @@ private struct FeedCardView: View {
         }
         .onChange(of: card.verseOsis) { _, reference in
             verseText = reference.flatMap(bundledEsvText).flatMap(Self.nonEmpty)
-        }
-        .sheet(isPresented: $showsPassage) {
-            if let verseText {
-                NavigationStack {
-                    ScrollView {
-                        Text(verseText)
-                            .font(.ccBody(22))
-                            .lineSpacing(6)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(24)
-                    }
-                    .navigationTitle(card.reference ?? "Passage")
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItem(placement: .confirmationAction) {
-                            Button("Done") { showsPassage = false }
-                        }
-                    }
-                }
-            }
         }
     }
 
@@ -250,11 +233,13 @@ private struct FeedCardView: View {
             }
             .accessibilityLabel("Share this card")
             .simultaneousGesture(TapGesture().onEnded { LoopCounter.record(.cardShared(kind: card.kind)) })
-            if card.kind == .verse, verseText != nil {
-                Button("Read full passage") { showsPassage = true }
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(ink)
-                    .frame(minHeight: 44)
+            if let readerSource {
+                NavigationLink(value: ScriptureRoute.reader(readerSource)) {
+                    Text("Read full passage")
+                }
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(ink)
+                .frame(minHeight: 44)
             }
         }
     }
@@ -269,12 +254,15 @@ private struct FeedCardView: View {
 /// Screenshot hook: `-LordsDayFeedFixture key_point|quote|verse|verse_offline`
 /// shows a sample week from an in-memory store whose card for today is that
 /// kind. `verse_offline` is a verse whose text isn't bundled (pair it with
-/// `-EsvOffline YES`). Add `-SaveLordsDayFeedFixture YES` to seed a
+/// `-EsvOffline YES`); `sermon` is a verse card on the sermon text, Romans 8:28–30
+/// (add `-LordsDayFeedOpensReader YES` to open the reader on it, TKL-879). Add `-SaveLordsDayFeedFixture YES` to seed a
 /// separate disk store, then launch with `-LordsDayFeedFixture saved` to reopen it.
 struct LordsDayFeedFixture: View {
     let scene: String
     @State private var feed: LordsDayFeed?
     @State private var path = NavigationPath()
+    /// Pushed screens such as the reader hide the bar, as in RootView.
+    @State private var hidesBar = false
 
     var body: some View {
         ZStack {
@@ -282,10 +270,22 @@ struct LordsDayFeedFixture: View {
                 LordsDayTabView(path: $path, startsCapture: .constant(false))
                     .modelContainer(Self.savedContainer)
             } else if let feed {
-                LordsDayFeedView(feed: feed)
+                NavigationStack(path: $path) {
+                    LordsDayFeedView(feed: feed)
+                        .toolbar(.hidden, for: .navigationBar)
+                        .appDestinations(path: $path)
+                }
+                .onHidesFloatingTabBarChange { hidesBar = $0 }
+                .task {
+                    // `-LordsDayFeedFixture sermon -LordsDayFeedOpensReader YES`: push the reader for today's card.
+                    if UserDefaults.standard.bool(forKey: "LordsDayFeedOpensReader"),
+                       let index = feed.todayIndex, let source = feed.readerSource(for: feed.cards[index]) {
+                        path.append(ScriptureRoute.reader(source))
+                    }
+                }
             }
         }
-        .overlay { FloatingTabBarView(selected: .constant(.lordsDay)) }
+        .overlay { if !hidesBar { FloatingTabBarView(selected: .constant(.lordsDay)) } }
         .task {
             guard scene != "saved" else { return }
             if UserDefaults.standard.bool(forKey: "SaveLordsDayFeedFixture") {
@@ -326,6 +326,7 @@ struct LordsDayFeedFixture: View {
         case "verse": .verse("John 3:16")
         case "verse_long": .verse("Psalm 145")
         case "verse_offline": .verse("Romans 8:28")
+        case "sermon": .verse("Romans 8:28–30")
         default: .point("God's purpose, not my circumstances, decides what is good.")
         }
         for sample in week {

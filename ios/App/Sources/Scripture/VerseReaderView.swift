@@ -128,7 +128,7 @@ struct VerseReaderView: View {
         let pages = Array(readerCards(for: source, verses: verses).enumerated())
         #if DEBUG
         if fixtureStart == nil, let card = UserDefaults.standard.string(forKey: "ProofTextReaderCard") {
-            let start = ["verse": 1, "end": pages.count - 1][card] ?? 0
+            let start = ["verse": 1, "notes": max(0, pages.count - 2), "end": pages.count - 1][card] ?? 0
             return Array(pages.dropFirst(start))
         }
         return Array(pages.dropFirst(fixtureStart ?? 0))
@@ -198,7 +198,7 @@ struct VerseReaderView: View {
             screen(palette, top, bottom) {
                 VStack(spacing: 16) {
                     kicker("From your notes · Sunday", palette: palette)
-                    Text("“\(note)”").font(.ccBody(26))
+                    Text(readerQuoted(note)).font(.ccBody(26))
                 }
             } footer: {
                 ShareLink(item: note) { actionLabel("Share", icon: "square.and.arrow.up") }

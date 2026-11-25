@@ -29,8 +29,9 @@ Linear project: **confessional christianity** (team TKL): https://linear.app/sof
 - Screenshots without taps (DEBUG launch args, `xcrun simctl launch <dev> com.confessionalchristianity.app -Key value`; the simulator
   runs headless, so there is no window to click): `-VerseReaderFixture verse|notes|end|loading|error`,
   `-ReaderChapterReference Rom.8.28`, `-ProofTextSession catechizing-shorter-catechism:32[:Rom.8.30]` (session at Q. 32, optionally
-  with the proof-text reader pushed) plus `-ProofTextReaderCard verse|end`, `-LordsDayFeedFixture key_point|quote|verse|verse_offline` (the week's card feed from an in-memory sample week, opened
-  at today's card of that kind; `verse_offline` is a verse with no bundled text), `-LordsDayReviewFixture filling|complete` (reviewing drafted cards, TKL-863: sample drafts replayed into a throwaway
+  with the proof-text reader pushed) plus `-ProofTextReaderCard verse|notes|end`, `-LordsDayFeedFixture key_point|quote|verse|verse_offline|sermon` (the week's card feed from an in-memory sample week, opened
+  at today's card of that kind; `verse_offline` is a verse with no bundled text; `sermon` is a verse card on Romans 8:28–30, and
+  `-LordsDayFeedOpensReader YES` pushes the sermon-text reader on it, TKL-879), `-LordsDayReviewFixture filling|complete` (reviewing drafted cards, TKL-863: sample drafts replayed into a throwaway
   folder; `filling` stays mid-fill) plus `-LordsDayReviewCard p0-1|drafting` (open at that card), `-LordsDayCaptureFixture camera|strip|type|details`
   (the notes camera with a sample page), `-LibraryEntry westminster-confession-of-faith:WCoF-2-1` (one library entry page), `-StartTab today|catechism|lordsDay` (open on that tab), `-OpenSheet settings|addChild` (open that sheet on Today) plus `-AddChildName <name>` (Add a child pre-filled, as if Add was tapped: a seeded name shows the duplicate error), `-SeedChildren "Samuel:9,Thomas:4"`
   (those children at those questions, only when there are none yet: a fresh install is the empty state), `-SeedSermonWeek YES` (the sample sermon
@@ -45,9 +46,9 @@ Linear project: **confessional christianity** (team TKL): https://linear.app/sof
 ## Test (from the repo root)
 | Suite | Command | Runtime |
 |---|---|---|
-| web unit | `npm test` (vitest, 288 tests, incl. `scripts/**/*.test.mjs`; 60 s timeouts for the loaded build Mac) | ~1 s |
+| web unit | `npm test` (vitest, 291 tests, incl. `scripts/**/*.test.mjs`; 60 s timeouts for the loaded build Mac) | ~1 s |
 | web build | `npm run build` (needs `.env.local`; ESLint enforced) | ~15 s |
-| DomainKit | `cd ios/DomainKit && swift test` (247 tests: 206 Swift Testing + 41 XCTest) | ~15 s |
+| DomainKit | `cd ios/DomainKit && swift test` (265 tests: 216 Swift Testing + 49 XCTest) | ~15 s |
 | iOS build | `cd ios/App && xcodegen generate && xcodebuild -scheme ConfessionalChristianity -destination 'platform=iOS Simulator,name=CC iPhone 17 Pro' -derivedDataPath ../../build/dd build` | ~1 min cold |
 | infra | `cd infra && npm ci && npm test` (vitest CDK assertions, 20 tests) | ~6 s |
 | iOS UI (loop events) | `cd ios/App && xcodegen generate && xcodebuild test -scheme ConfessionalChristianity -destination 'platform=iOS Simulator,name=CC iPhone 17 Pro' -derivedDataPath ../../build/dd -only-testing:ConfessionalChristianityUITests` (not a Verify check; sends real events) | ~3 min |
