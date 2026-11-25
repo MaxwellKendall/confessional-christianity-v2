@@ -19,9 +19,18 @@ Membership is stored on the child access item as a map of stable membership UUID
 
 ## Push and pull
 
-`pushSync(changes: [SyncChangeInput!]!): [ID!]!` accepts up to 20 changes per request, in outbox order. Each change carries the outbox UUID `id`, `table`, stable `row_id`, `child_id`, `updated_at`, optional `deleted_at` and `payload`. Use UTC ISO 8601 instants with at most millisecond precision. Omit payload for a tombstone.
+`pushSync(changes: [SyncChangeInput!]!): [SyncPushResult!]!` accepts up to 20 changes per request, in outbox order. Each change carries the outbox UUID `id`, `table`, stable `row_id`, `child_id`, `updated_at`, optional `deleted_at` and `payload`. Use UTC ISO 8601 instants with at most millisecond precision. Omit payload for a tombstone.
 
-The response echoes acknowledged outbox UUIDs, including authorized changes that match or precede the stored `updated_at`. An equal timestamp keeps the first accepted write. After a partial failure, resend the batch with its original timestamps and IDs. Each accepted change commits independently, and already accepted changes replay as no-ops.
+The response returns one `SyncPushResult` (`id`, `status`, `reason`) per input change, in the same order:
+
+- `ACCEPTED` (`reason: null`): the write committed, or the caller is authorized and the stored row's `updated_at` is already equal to or newer than the pushed `updated_at` (an equal timestamp keeps the first accepted write). Remove the entry from the outbox.
+- `REJECTED` (permanent; do not retry): the server rejected this change and continued processing later changes in the batch. Remove the entry from the outbox so a stale or invalid change cannot block later writes. `reason` is one of:
+  - `UNAUTHORIZED`: the caller is not the owner or a current guardian for `child_id`, the child is retired, a co-guardian tried to tombstone a `children` profile, or `row_id` belongs to a different child.
+  - `INVALID_INPUT`: unknown table, invalid row/child UUID, child `row_id` ≠ `child_id`, invalid timestamp syntax, disallowed or oversized payload, or a tombstone with a payload.
+  - `CLOCK_SKEW`: `updated_at` (or `deleted_at`) is more than 24 hours past server time. Rejecting future-dated writes prevents a skewed device clock from locking a row out of last-write-wins updates.
+- `RETRY` (`reason: CONTENTION`): write contention exhausted the server's optimistic-concurrency retries. To preserve outbox ordering (for example, child creation before its progress rows), the server stops applying further changes in the batch and returns `RETRY` (`CONTENTION`) for the contended change and every remaining entry after it. Keep `RETRY` entries in the outbox and resend them with their original timestamps and IDs after backoff.
+
+Request-level failures (unauthenticated caller, account marked `disabled` for deletion, more than 20 changes, a non-UUID outbox `id`, or an unexpected backend error) still throw a top-level GraphQL error. Each accepted change commits independently, and already accepted changes replay as `ACCEPTED` no-ops.
 
 `pullSync(table: String!, after: String = "0", limit: Int = 50): [SyncRecord!]!` returns up to 100 rows per page. Each row includes `table`, `id` (the stored row UUID), `child_id`, `updated_at`, `deleted_at`, `payload` and `change_id`. Decode the decimal cursor string as a Swift `Int64` and store it per signed-in subject and table. Start with `"0"`, and request subsequent pages strictly after the last applied `change_id` until fewer than the requested count are returned. Apply a non-null `deleted_at` as a local delete.
 

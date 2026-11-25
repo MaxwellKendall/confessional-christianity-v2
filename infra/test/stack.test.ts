@@ -248,6 +248,12 @@ describe("account sync", () => {
       });
       accounts.hasResourceProperties("AWS::AppSync::Resolver", { TypeName: "Mutation", FieldName: "pushSync" });
       accounts.hasResourceProperties("AWS::AppSync::Resolver", { TypeName: "Query", FieldName: "pullSync" });
+      const schemas = Object.values(accounts.findResources("AWS::AppSync::GraphQLSchema"));
+      expect(schemas).toHaveLength(1);
+      const definition = (schemas[0] as { Properties: { Definition: string } }).Properties.Definition;
+      expect(definition).toContain("pushSync(changes: [SyncChangeInput!]!): [SyncPushResult!]!");
+      expect(definition).toContain("enum SyncPushStatus");
+      expect(definition).toContain("enum SyncPushReason");
     }
     prod.accounts.hasResource("AWS::DynamoDB::Table", { DeletionPolicy: "Retain" });
   });

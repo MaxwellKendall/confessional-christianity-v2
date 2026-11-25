@@ -18,10 +18,29 @@ type SyncRecord {
   change_id: String!
 }
 
+enum SyncPushStatus {
+  ACCEPTED
+  REJECTED
+  RETRY
+}
+
+enum SyncPushReason {
+  UNAUTHORIZED
+  INVALID_INPUT
+  CLOCK_SKEW
+  CONTENTION
+}
+
+type SyncPushResult {
+  id: ID!
+  status: SyncPushStatus!
+  reason: SyncPushReason
+}
+
 type Query {
   pullSync(table: String!, after: String = "0", limit: Int = 50): [SyncRecord!]!
 }
 
 type Mutation {
-  pushSync(changes: [SyncChangeInput!]!): [ID!]!
+  pushSync(changes: [SyncChangeInput!]!): [SyncPushResult!]!
 }
