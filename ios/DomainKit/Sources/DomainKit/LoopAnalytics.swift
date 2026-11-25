@@ -61,9 +61,10 @@ public actor LoopAnalytics {
     private let config: LoopAnalyticsConfig?
     private let defaults: UserDefaults
     private let transport: Transport
-    /// The day whose `dayOpened` send is in flight. The actor can take another call while a
-    /// send awaits the network, so the day is reserved before the await, not saved after it.
-    private var dayOpenedInFlight: String?
+    /// Days whose `dayOpened` send is in flight. The actor can take another call while a send
+    /// awaits the network, so a day is reserved before the await, not saved after it. Sends either
+    /// side of midnight can overlap, so each day keeps its own reservation (TKL-995).
+    private var dayOpenedInFlight: Set<String> = []
 
     public init(config: LoopAnalyticsConfig?, defaults: UserDefaults = .standard, transport: @escaping Transport = LoopAnalytics.urlSession) {
         self.config = config
@@ -86,17 +87,23 @@ public actor LoopAnalytics {
         return try? await transport(request)
     }
 
-    /// `dayOpened`, at most once per local calendar day; a failed send is tried again the next time.
+    /// `dayOpened`, at most once per local calendar day and never for a day before the last one
+    /// counted; a failed send is tried again the next time.
     @discardableResult
     public func recordDayOpened(now: Date = Date(), calendar: Calendar = .current) async -> Int? {
         let c = calendar.dateComponents([.year, .month, .day], from: now)
         let day = String(format: "%04d-%02d-%02d", c.year ?? 0, c.month ?? 0, c.day ?? 0)
-        guard config != nil, dayOpenedInFlight != day,
-              defaults.string(forKey: Self.lastDayOpenedKey) != day else { return nil }
-        dayOpenedInFlight = day
-        defer { dayOpenedInFlight = nil }
+        // Days are "yyyy-MM-dd", so string order is date order: a day on or before the last one
+        // counted has been counted already.
+        guard config != nil, !dayOpenedInFlight.contains(day),
+              (defaults.string(forKey: Self.lastDayOpenedKey) ?? "") < day else { return nil }
+        dayOpenedInFlight.insert(day)
+        defer { dayOpenedInFlight.remove(day) }
         guard let status = await record(.dayOpened, at: now), (200..<300).contains(status) else { return nil }
-        defaults.set(day, forKey: Self.lastDayOpenedKey)
+        // An older day's send finishing late must not replace a newer day already counted.
+        if (defaults.string(forKey: Self.lastDayOpenedKey) ?? "") < day {
+            defaults.set(day, forKey: Self.lastDayOpenedKey)
+        }
         return status
     }
 

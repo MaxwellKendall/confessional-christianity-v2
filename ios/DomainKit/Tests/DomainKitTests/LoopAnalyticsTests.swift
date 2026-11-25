@@ -167,6 +167,99 @@ import Testing
         #expect(await analytics.recordDayOpened(now: at, calendar: .current) == 200)
     }
 
+    /// Holds each of the first `held` sends until `release(n)` (n counts sends from 0); later ones go
+    /// straight through. Lets a test finish overlapping sends in any order.
+    private actor Gates {
+        private let held: Int
+        private var waiting: [Int: CheckedContinuation<Void, Never>] = [:]
+        private var released: Set<Int> = []
+        private(set) var started = 0
+        init(held: Int) { self.held = held }
+        func pass() async {
+            let n = started
+            started += 1
+            if n >= held || released.contains(n) { return }
+            await withCheckedContinuation { waiting[n] = $0 }
+        }
+        func release(_ n: Int) { released.insert(n); waiting.removeValue(forKey: n)?.resume() }
+    }
+
+    private func waitUntil(_ gates: Gates, started n: Int) async {
+        while await gates.started < n { await Task.yield() }
+    }
+
+    /// One minute before and one minute after local midnight on 16/17 November 2026.
+    private func aroundMidnight() -> (calendar: Calendar, before: Date, after: Date) {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "America/New_York")!
+        let midnight = calendar.date(from: DateComponents(year: 2026, month: 11, day: 17))!
+        return (calendar, midnight.addingTimeInterval(-60), midnight.addingTimeInterval(60))
+    }
+
+    @Test func aNewerDaySucceedingFirstAcrossMidnightIsNotCountedAgain() async {
+        let (calendar, before, after) = aroundMidnight()
+        let gates = Gates(held: 2)
+        let analytics = LoopAnalytics(config: config, defaults: defaults()) { _ in await gates.pass(); return 200 }
+        let older = Task { await analytics.recordDayOpened(now: before, calendar: calendar) }
+        await waitUntil(gates, started: 1)
+        let newer = Task { await analytics.recordDayOpened(now: after, calendar: calendar) }
+        await waitUntil(gates, started: 2)
+        // The newer send finishes first, then the older one.
+        await gates.release(1)
+        #expect(await newer.value == 200)
+        await gates.release(0)
+        #expect(await older.value == 200)
+        // Opening the feed again on the newer date sends nothing.
+        #expect(await analytics.recordDayOpened(now: after.addingTimeInterval(3600), calendar: calendar) == nil)
+        #expect(await gates.started == 2)
+    }
+
+    @Test func aPendingNewerDayIsStillReservedAfterTheOlderSendFinishes() async {
+        let (calendar, before, after) = aroundMidnight()
+        let gates = Gates(held: 2)
+        let analytics = LoopAnalytics(config: config, defaults: defaults()) { _ in await gates.pass(); return 200 }
+        let older = Task { await analytics.recordDayOpened(now: before, calendar: calendar) }
+        await waitUntil(gates, started: 1)
+        let newer = Task { await analytics.recordDayOpened(now: after, calendar: calendar) }
+        await waitUntil(gates, started: 2)
+        // The older send finishes while the newer one is still pending.
+        await gates.release(0)
+        #expect(await older.value == 200)
+        #expect(await analytics.recordDayOpened(now: after.addingTimeInterval(60), calendar: calendar) == nil)
+        await gates.release(1)
+        #expect(await newer.value == 200)
+        // Exactly one capture per date.
+        #expect(await analytics.recordDayOpened(now: after.addingTimeInterval(3600), calendar: calendar) == nil)
+        #expect(await analytics.recordDayOpened(now: before, calendar: calendar) == nil)
+        #expect(await gates.started == 2)
+    }
+
+    @Test func aFailedNewerDayAcrossMidnightIsTriedAgainThatDay() async {
+        struct Offline: Error {}
+        let (calendar, before, after) = aroundMidnight()
+        let gates = Gates(held: 2)
+        let analytics = LoopAnalytics(config: config, defaults: defaults()) { r in
+            await gates.pass()
+            // Only the newer day's first send (00:01 local = 05:01Z) fails.
+            if r.httpBody.map({ String(decoding: $0, as: UTF8.self) })?.contains("T05:01:00Z") == true {
+                throw Offline()
+            }
+            return 200
+        }
+        let older = Task { await analytics.recordDayOpened(now: before, calendar: calendar) }
+        await waitUntil(gates, started: 1)
+        let newer = Task { await analytics.recordDayOpened(now: after, calendar: calendar) }
+        await waitUntil(gates, started: 2)
+        await gates.release(1)
+        #expect(await newer.value == nil)
+        await gates.release(0)
+        #expect(await older.value == 200)
+        // The newer day's send failed, so the next opening that day sends again.
+        #expect(await analytics.recordDayOpened(now: after.addingTimeInterval(60), calendar: calendar) == 200)
+        #expect(await analytics.recordDayOpened(now: after.addingTimeInterval(120), calendar: calendar) == nil)
+        #expect(await gates.started == 3)
+    }
+
     @Test func aFailedDayOpenedIsTriedAgainThatDay() async {
         struct Offline: Error {}
         let store = defaults()
