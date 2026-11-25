@@ -10,10 +10,14 @@ export const metadata: Metadata = {
 
 const body = `
 Confessional Christianity — on the web and in the iOS app — does not track
-you and does not sell or share your information. You can use it without an
-account. If you choose to sign in, the iOS app keeps your email address and
-what you've saved with your account, as described below. The iOS app also
-counts a few anonymous events.
+you, and we never sell your information. You can use it without an account.
+To run some features we rely on a few service providers, described below:
+Amazon Web Services hosts accounts, Google Gemini drafts cards from your
+sermon notes, the ESV API supplies Bible text, Algolia runs library search
+and PostHog receives a few anonymous counts from the iOS app. Each receives
+only what its feature needs. If you choose to sign in, the iOS app keeps
+your email address and what you've saved with your account, as described
+below.
 
 ## What we don't do
 
@@ -38,8 +42,10 @@ your browser data, or deleting the app, deletes it permanently.
 Signing in and drafting cards from sermon-note photos are new. They arrive
 in an app update and may not be in the version on your iPhone yet. Until
 your copy of the app offers them, the two sections below don't apply to
-you: nothing is sent to an account or to Google, and everything stays on
-your device as described above.
+you: your email address isn't collected, and your children, their
+catechism progress, your sermon notes and cards, and your note photos stay
+on your device as described above. Nothing is sent to an account or to
+Google. The other sections of this policy still apply.
 
 ## Accounts (iOS, optional)
 

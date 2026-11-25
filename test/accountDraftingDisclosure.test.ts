@@ -81,3 +81,26 @@ describe('iOS privacy manifest: accounts and drafting', () => {
     expect(new Set(types).size).toBe(types.length);
   });
 });
+
+// TKL-994: the summary statements must not contradict the sections that
+// describe Gemini, AWS, the ESV API, Algolia and PostHog.
+describe('privacy policy: summaries match the detailed sections', () => {
+  const opening = policy.split('const body = `')[1].split('##')[0];
+  const preUpdate = policy.split('## Accounts and photo drafting (iOS): coming in an update')[1].split('##')[0];
+
+  test('the opening keeps no-sale and no-tracking and acknowledges service providers', () => {
+    expect(opening).toMatch(/does not track you/i);
+    expect(opening).toMatch(/never sell/i);
+    expect(opening).not.toMatch(/(sell or )?share your information/i);
+    expect(opening).toMatch(/service providers/i);
+    expect(opening).toMatch(/described below/i);
+  });
+
+  test('the pre-update statement is scoped to account and drafting data', () => {
+    expect(preUpdate).not.toMatch(/everything stays on your device/i);
+    expect(preUpdate).toMatch(/children/i);
+    expect(preUpdate).toMatch(/sermon notes/i);
+    expect(preUpdate).toMatch(/photos/i);
+    expect(preUpdate).toMatch(/other sections .*still apply/i);
+  });
+});
