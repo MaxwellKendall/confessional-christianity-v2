@@ -51,7 +51,7 @@ struct RootView: View {
                     existingNames: children.map(\.name),
                     onBegin: beginCatechism,
                     onSermon: beginSermon,
-                    onSignIn: { showsSignIn = true }
+                    onSignIn: auth.isConfigured ? { showsSignIn = true } : nil
                 )
             } else {
                 tabs
@@ -75,7 +75,7 @@ struct RootView: View {
         #if DEBUG
         let args = UserDefaults.standard
         if args.string(forKey: "OnboardingPage") != nil { return !didCompleteOnboarding }
-        if ["StartTab", "OpenSheet", "SeedChildren", "SeedSermonWeek", "AuthDebug"].contains(where: { args.object(forKey: $0) != nil }) {
+        if ["StartTab", "OpenSheet", "SeedChildren", "SeedSermonWeek"].contains(where: { args.object(forKey: $0) != nil }) {
             return false
         }
         #endif

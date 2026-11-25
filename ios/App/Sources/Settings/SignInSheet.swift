@@ -26,7 +26,7 @@ struct SignInSheet: View {
                         .submitLabel(.send)
                         .focused($focus, equals: .email)
                         .onSubmit(send)
-                        .disabled(codeEmail != nil)
+                        .disabled(isSending || codeEmail != nil)
                         .accessibilityIdentifier("signIn.email")
                     if codeEmail == nil {
                         Button(isSending ? "Sending…" : "Send code", action: send)

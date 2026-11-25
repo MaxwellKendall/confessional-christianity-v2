@@ -14,7 +14,7 @@ struct OnboardingSignInView: View {
                     Section {
                         if case .awaitingCode = auth.phase {
                             codeFields
-                        } else if case .verifying = auth.phase {
+                        } else if isConfirming {
                             codeFields.disabled(true)
                         } else {
                             TextField("Email", text: $email)
@@ -51,7 +51,7 @@ struct OnboardingSignInView: View {
     private var codeFields: some View {
         Group {
             Text("Enter the code sent to \(auth.phase.pendingEmail ?? email).")
-            TextField("6-digit code", text: $code)
+            TextField(codePlaceholder, text: $code)
                 .textContentType(.oneTimeCode)
                 .keyboardType(.numberPad)
             Button("Verify code") { Task { await auth.verifyCode(code) } }
@@ -63,9 +63,21 @@ struct OnboardingSignInView: View {
         }
     }
 
+    private var codePlaceholder: String {
+        if case .awaitingCode(_, .signUp) = auth.phase { return "6-digit code" }
+        if case .verifying(_, _, .signUp) = auth.phase { return "6-digit code" }
+        return "8-digit code"
+    }
+
+    private var isConfirming: Bool {
+        switch auth.phase {
+        case .verifying, .signingIn: true
+        default: false
+        }
+    }
+
     private var isWorking: Bool {
-        if case .verifying = auth.phase { return true }
-        return isSending
+        isConfirming || isSending
     }
 
     private var isSending: Bool {
@@ -76,7 +88,7 @@ struct OnboardingSignInView: View {
     private func message(for error: DomainKit.AuthError) -> String {
         switch error {
         case .invalidEmail: "Enter a valid email address."
-        case .invalidCode: "Enter the six digits from your email."
+        case .invalidCode: "Enter the 6- or 8-digit code from your email."
         case .sendFailed: "The code couldn’t be sent. Please try again."
         case .verifyFailed: "The code couldn’t be verified. Check the code and try again."
         }

@@ -259,4 +259,19 @@ import Testing
         machine.handle(.verified(AuthUser(id: "u", email: "first@example.com")))
         #expect(machine.phase.pendingEmail == nil)
     }
+
+    @Test func carriesPendingEmailThroughSignUpAutoSignIn() {
+        var machine = AuthMachine(phase: .guest)
+        machine.handle(.requestCode("New@Example.com"))
+        #expect(machine.phase.pendingEmail == "new@example.com")
+        machine.handle(.signUpCodeSent)
+        #expect(machine.phase.pendingEmail == "new@example.com")
+        machine.handle(.submitCode("123456"))
+        #expect(machine.phase.pendingEmail == "new@example.com")
+        machine.handle(.signUpConfirmed)
+        #expect(machine.phase == .signingIn(email: "new@example.com"))
+        #expect(machine.phase.pendingEmail == "new@example.com")
+        machine.handle(.verified(AuthUser(id: "u", email: "new@example.com")))
+        #expect(machine.phase.pendingEmail == nil)
+    }
 }

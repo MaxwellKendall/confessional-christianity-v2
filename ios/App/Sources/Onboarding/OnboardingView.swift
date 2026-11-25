@@ -9,7 +9,7 @@ struct OnboardingView: View {
     let existingNames: [String]
     var onBegin: (String) -> Bool
     var onSermon: () -> Void
-    var onSignIn: () -> Void
+    var onSignIn: (() -> Void)?
 
     @State private var page = OnboardingPage.title
     @State private var name = ""
@@ -176,7 +176,9 @@ struct OnboardingView: View {
             }
             VStack(alignment: .leading, spacing: 10) {
                 actionLink("No children at home yet? Start with Sunday’s sermon", action: onSermon)
-                actionLink("Used the app on another iPhone? Sign in", action: onSignIn)
+                if let onSignIn {
+                    actionLink("Used the app on another iPhone? Sign in", action: onSignIn)
+                }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
