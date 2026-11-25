@@ -88,9 +88,14 @@ Never commit in the main checkout: it often holds Maxwell's uncommitted work on 
 
 ## Deploy
 - **Web:** Vercel serves https://confessionalchristianity.com (`server: Vercel`). Whether a push to `main` deploys by itself is unverified; check the Vercel project before relying on it. Post-deploy: `/`, `/library`, `/search` return 200.
-- **Maxwell's iPhone 17 Pro:** install **only when he asks** (never after every landing; routine builds reach him on TestFlight), and only with `npm run device-install -- --device 00008150-001035213A44C01C`.
-  Run it from a clean checkout of landed code. It builds Release and records each successful install in the
-  shared git directory. Add `--dry-run` to print the plan without building or installing.
+- **Maxwell's iPhone 17 Pro:** agents never install by hand; the dispatcher's phone gate does (TKL-968,
+  `dispatcher.syncBeforeBuild` in `~/dev/factory/factory.config.json`): before each new build it runs
+  `npm run device-install -- --device 00008150-001035213A44C01C` until the phone holds main's Release build.
+  The one exception is Maxwell asking in the issue or a comment; then use the same command (TKL-1013).
+  It runs from a clean checkout of landed code, runs `xcodegen generate` in `ios/App`, builds (Release by default;
+  `--configuration Debug` for the dev Cognito pool, which the gate then replaces with Release), installs, records
+  each successful install with its configuration in the shared git directory, and puts back anything the build
+  changed (warning that main's committed project lags `project.yml`). Add `--dry-run` to print the plan only.
 - **iOS:** `npm run ios:release` (`scripts/ios/release.mjs`, TKL-814) from a worktree of `origin/main`. It reads every build
   ever uploaded from App Store Connect, sets `CURRENT_PROJECT_VERSION` in `ios/App/project.yml` to one above the highest (local
   or uploaded), runs `xcodegen generate`, `xcodebuild archive`, `-exportArchive -allowProvisioningUpdates` to a local `.ipa`,
