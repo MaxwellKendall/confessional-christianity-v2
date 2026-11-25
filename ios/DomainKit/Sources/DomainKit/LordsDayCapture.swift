@@ -80,6 +80,14 @@ public final class CaptureDraft {
         try FileManager.default.removeItem(at: folder)
     }
 
+    /// Read-only count of saved pages for `noteId`, without creating any directory on disk.
+    public static func savedPageCount(noteId: UUID, root: URL = CaptureDraft.defaultRoot) -> Int {
+        let manifest = root.appendingPathComponent(noteId.uuidString, isDirectory: true).appendingPathComponent("pages.json")
+        guard let data = try? Data(contentsOf: manifest),
+              let pages = try? JSONDecoder().decode([CapturePage].self, from: data) else { return 0 }
+        return pages.count
+    }
+
     // MARK: The capture in progress, so a relaunch resumes it.
 
     public static func activeNoteId(root: URL = CaptureDraft.defaultRoot) throws -> UUID? {

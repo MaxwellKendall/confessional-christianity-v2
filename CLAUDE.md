@@ -36,7 +36,7 @@ Linear project: **confessional christianity** (team TKL): https://linear.app/sof
   (the notes camera with a sample page), `-LibraryEntry westminster-confession-of-faith:WCoF-2-1` (one library entry page), `-StartTab today|catechism|lordsDay` (open on that tab), `-OpenSheet settings|addChild` (open that sheet on Today) plus `-AddChildName <name>` (Add a child pre-filled, as if Add was tapped: a seeded name shows the duplicate error), `-SeedChildren "Samuel:9,Thomas:4"`
   (those children at those questions, only when there are none yet: a fresh install is the empty state), `-SeedSermonWeek YES` (the sample sermon
   week saved to the app's store, only when it has no notes: Today then shows today's sermon card), `-EsvOffline YES` (reader,
-  verse cards and the cards generator act offline), and
+  verse cards and the cards generator act offline), `-LordsDayCardsEndpoint <url>` (DEBUG-only override for `LiveCardsGenerator`, e.g. a local dev server; Release always hits the hosted endpoint), and
   `-SkipNotificationOffer YES` (always pass it: an unanswered notification prompt survives reinstalls until the simulator reboots),
   `-OpenSignIn YES` (with `-OpenSheet settings`, opens the sign-in sheet on top), `-SettingsAutoSignOut YES` (signs out once restored),
   and for signing in without taps (TKL-928, dev pool only): `-SignInEmail otp-test@cc-dev-mail.barbrabell.com -SignInAutoSend YES -SignInCodeFile /tmp/code.txt`
@@ -50,9 +50,9 @@ Linear project: **confessional christianity** (team TKL): https://linear.app/sof
 ## Test (from the repo root)
 | Suite | Command | Runtime |
 |---|---|---|
-| web unit | `npm test` (vitest, 291 tests, incl. `scripts/**/*.test.mjs`; 60 s timeouts for the loaded build Mac) | ~1 s |
+| web unit | `npm test` (vitest, 293 tests, incl. `scripts/**/*.test.mjs`; 60 s timeouts for the loaded build Mac) | ~1 s |
 | web build | `npm run build` (needs `.env.local`; ESLint enforced) | ~15 s |
-| DomainKit | `cd ios/DomainKit && swift test` (279 tests: 230 Swift Testing + 49 XCTest) | ~15 s |
+| DomainKit | `cd ios/DomainKit && swift test` (284 tests: 230 Swift Testing + 54 XCTest) | ~15 s |
 | iOS build | `cd ios/App && xcodegen generate && xcodebuild -scheme ConfessionalChristianity -destination 'platform=iOS Simulator,name=CC iPhone 17 Pro' -derivedDataPath ../../build/dd build` | 15+ min cold (AWS SDK), ~1 min warm |
 | infra | `cd infra && npm ci && npm test` (vitest CDK assertions, 20 tests) | ~6 s |
 | iOS UI (loop events) | `cd ios/App && xcodegen generate && xcodebuild test -scheme ConfessionalChristianity -destination 'platform=iOS Simulator,name=CC iPhone 17 Pro' -derivedDataPath ../../build/dd -only-testing:ConfessionalChristianityUITests` (not a Verify check; sends real events) | ~3 min |

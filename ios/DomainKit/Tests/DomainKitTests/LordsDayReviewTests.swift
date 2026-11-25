@@ -6,7 +6,8 @@ import XCTest
 final class LordsDayCardsEventTests: XCTestCase {
     func testParsesEveryStreamEvent() throws {
         XCTAssertEqual(try LordsDayCardsEvent.parse(line: #"{"type":"started","pages":2,"model":"gemini-3.8-flash"}"#), .started(pages: 2))
-        XCTAssertEqual(try LordsDayCardsEvent.parse(line: #"{"type":"page","page":1,"extractedText":"notes","rejected":2}"#), .page(1))
+        XCTAssertEqual(try LordsDayCardsEvent.parse(line: #"{"type":"page","page":1,"extractedText":"notes","rejected":2}"#), .page(1, cardCount: nil))
+        XCTAssertEqual(try LordsDayCardsEvent.parse(line: #"{"type":"page","page":1,"extractedText":"notes","rejected":2,"cardCount":3}"#), .page(1, cardCount: 3))
         XCTAssertEqual(try LordsDayCardsEvent.parse(line: #"{"type":"error","page":0,"code":"unreadable","message":"x"}"#), .pageFailed(0))
         XCTAssertEqual(try LordsDayCardsEvent.parse(line: #"{"type":"done","cards":[],"rejected":0,"failedPages":[1],"costUsd":0.01}"#), .done(failedPages: [1]))
         let card = try LordsDayCardsEvent.parse(line: #"{"type":"card","card":{"id":"p0-1","kind":"quote","page":0,"order":1,"text":"He is not finished.","attribution":"Rev. Smith"}}"#)
@@ -28,16 +29,20 @@ final class LordsDayReviewTests: XCTestCase {
     }
 
     /// A two-page review whose drafting finished with a key point, a quote and a verse.
-    private func readyReview() -> LordsDayReview {
+    /// Cards start undecided; pass `keepAll: true` for tests exercising post-decision behavior.
+    private func readyReview(keepAll: Bool = false) -> LordsDayReview {
         var review = LordsDayReview(noteId: noteId, pageCount: 2)
         _ = review.begin()
         review.apply(.started(pages: 2))
-        review.apply(.page(1))
+        review.apply(.page(1, cardCount: 1))
         review.apply(card("verse", page: 1, order: 0, osis: "Rom.8.28", reference: "Romans 8:28"))
-        review.apply(.page(0))
+        review.apply(.page(0, cardCount: 2))
         review.apply(card("quote", page: 0, order: 1, text: "He is not finished.", attribution: "Rev. Smith"))
         review.apply(card("key_point", page: 0, order: 0, text: "God's purpose decides what is good."))
         review.apply(.done(failedPages: []))
+        if keepAll {
+            for card in review.cards { review.keep(card.id) }
+        }
         return review
     }
 
@@ -47,18 +52,43 @@ final class LordsDayReviewTests: XCTestCase {
         XCTAssertEqual(review.begin(), [0, 1])
         XCTAssertTrue(review.isDrafting)
         XCTAssertEqual(review.progress, 0)
-        review.apply(.page(1))
+        review.apply(.page(1, cardCount: 1))
+        XCTAssertEqual(review.progress, 0, "a page header alone does not mark the page read before its cards arrive")
         review.apply(card("verse", page: 1, order: 0, osis: "Rom.8.28", reference: "Romans 8:28"))
         XCTAssertEqual(review.cards.count, 1)
         XCTAssertEqual(review.progress, 0.5)
         XCTAssertFalse(review.canFinish, "no finishing while cards are still arriving")
-        review.apply(.page(0))
+        review.apply(.page(0, cardCount: 1))
         review.apply(card("key_point", page: 0, order: 0, text: "Point"))
         XCTAssertEqual(review.cards.map(\.kind), [.keyPoint, .verse])
         review.apply(.done(failedPages: []))
         XCTAssertEqual(review.phase, .ready)
         XCTAssertFalse(review.isDrafting)
+        XCTAssertFalse(review.canFinish, "cards start undecided until the user keeps or removes each one")
+        for card in review.cards { review.keep(card.id) }
         XCTAssertTrue(review.canFinish)
+    }
+
+    func testEachDraftStartsUndecidedAndAnUntouchedQuoteCannotBeFinished() {
+        var review = readyReview(keepAll: false)
+        XCTAssertEqual(review.cards.map(\.decision), [.undecided, .undecided, .undecided])
+        XCTAssertEqual(review.undecidedCount, 3)
+        XCTAssertEqual(review.keptCount, 0)
+        XCTAssertTrue(review.keptCards().isEmpty)
+        XCTAssertFalse(review.canFinish)
+
+        // Keep the key point and verse, leaving the quote untouched.
+        review.keep(review.cards[0].id)
+        review.keep(review.cards[2].id)
+        XCTAssertEqual(review.undecidedCount, 1)
+        XCTAssertFalse(review.canFinish, "an untouched quote blocks finishing")
+        XCTAssertFalse(review.keptCards().contains { $0.kind == .quote }, "an untouched quote is never in keptCards")
+
+        // Once the quote is explicitly removed (or kept), finishing unlocks.
+        review.remove(review.cards[1].id)
+        XCTAssertEqual(review.undecidedCount, 0)
+        XCTAssertTrue(review.canFinish)
+        XCTAssertEqual(review.keptCards().map(\.kind), [.keyPoint, .verse])
     }
 
     func testDraftedVerseKeepsOnlyItsReference() {
@@ -87,7 +117,7 @@ final class LordsDayReviewTests: XCTestCase {
     }
 
     func testSwitchingToVerseNeedsAPickedReference() throws {
-        var review = readyReview()
+        var review = readyReview(keepAll: true)
         let point = review.cards[0]
         XCTAssertThrowsError(try review.setKind(point.id, to: .verse))
         try review.chooseVerse(point.id, osis: "John.3.16")
@@ -104,7 +134,7 @@ final class LordsDayReviewTests: XCTestCase {
     }
 
     func testEditingMarksTheCardEditedButKeepingDoesNot() throws {
-        var review = readyReview()
+        var review = readyReview(keepAll: true)
         let quote = review.cards[1]
         review.remove(quote.id)
         review.keep(quote.id)
@@ -118,7 +148,7 @@ final class LordsDayReviewTests: XCTestCase {
     }
 
     func testQuoteAttributionCanBeChangedAndCleared() throws {
-        var review = readyReview()
+        var review = readyReview(keepAll: true)
         let quote = review.cards[1]
         XCTAssertEqual(quote.attribution, "Rev. Smith")
         try review.editAttribution(quote.id, to: "Rev. Jones")
@@ -131,7 +161,7 @@ final class LordsDayReviewTests: XCTestCase {
     }
 
     func testKeptCardsComeOutInOrderWithoutRemovedOnes() throws {
-        var review = readyReview()
+        var review = readyReview(keepAll: true)
         review.remove(review.cards[0].id)
         let kept = review.keptCards()
         XCTAssertEqual(kept.map(\.kind), [.quote, .verse])
@@ -143,7 +173,7 @@ final class LordsDayReviewTests: XCTestCase {
     }
 
     func testAKeptCardWithNoWordsBlocksFinishing() throws {
-        var review = readyReview()
+        var review = readyReview(keepAll: true)
         let verse = review.cards[2]
         try review.setKind(verse.id, to: .quote)
         XCTAssertEqual(review.blockingCardIndex, 2)
@@ -156,19 +186,20 @@ final class LordsDayReviewTests: XCTestCase {
     func testFailedPagesAreRetriedAloneAndMappedBack() {
         var review = LordsDayReview(noteId: noteId, pageCount: 3)
         _ = review.begin()
-        review.apply(.page(0))
+        review.apply(.page(0, cardCount: 1))
         review.apply(card("key_point", page: 0, order: 0, text: "One"))
         review.apply(.pageFailed(1))
-        review.apply(.page(2))
+        review.apply(.page(2, cardCount: 1))
         review.apply(card("key_point", page: 2, order: 0, text: "Three"))
         review.apply(.done(failedPages: [1]))
         XCTAssertEqual(review.phase, .ready)
         XCTAssertEqual(review.failedPages, [1])
         XCTAssertTrue(review.canRetry)
-        XCTAssertTrue(review.canFinish, "the cards that did arrive can be kept")
+        for card in review.cards { review.keep(card.id) }
+        XCTAssertTrue(review.canFinish, "the cards that did arrive can be kept once decided")
         // The retry sends only page 1; the server numbers it 0.
         XCTAssertEqual(review.begin(), [1])
-        review.apply(.page(0))
+        review.apply(.page(0, cardCount: 1))
         review.apply(card("quote", page: 0, order: 0, text: "Two words here"))
         review.apply(.done(failedPages: []))
         XCTAssertEqual(review.cards.map(\.text), ["One", "Two words here", "Three"])
@@ -179,24 +210,82 @@ final class LordsDayReviewTests: XCTestCase {
     func testAStreamThatStopsEarlyIsInterruptedAndResumable() {
         var review = LordsDayReview(noteId: noteId, pageCount: 2)
         _ = review.begin()
-        review.apply(.page(0))
+        review.apply(.page(0, cardCount: 1))
         review.apply(card("key_point", page: 0, order: 0, text: "One"))
         review.interrupt()
         XCTAssertEqual(review.phase, .interrupted)
         XCTAssertTrue(review.canRetry)
+        review.keep(review.cards[0].id)
         XCTAssertTrue(review.canFinish)
         XCTAssertEqual(review.begin(), [1])
+    }
+
+    func testDropBetweenPageHeaderAndLastCardReplaysWithoutLosingEditsOrDuplicating() throws {
+        var review = LordsDayReview(noteId: noteId, pageCount: 2)
+        XCTAssertEqual(review.begin(), [0, 1])
+        // Page 0 completes fully.
+        review.apply(.page(0, cardCount: 1))
+        review.apply(card("key_point", page: 0, order: 0, text: "Page zero"))
+        XCTAssertEqual(review.readPages, [0])
+        // Page 1 header announces 2 cards, but the stream drops after only the first card.
+        review.apply(.page(1, cardCount: 2))
+        review.apply(card("quote", page: 1, order: 0, text: "Original words", attribution: "Rev. Smith"))
+        review.interrupt()
+
+        XCTAssertEqual(review.readPages, [0], "page 1 is not read until all its cards arrive")
+        XCTAssertEqual(review.unreadPages, [1])
+        XCTAssertTrue(review.canRetry)
+
+        // User edits and keeps the card that already arrived on page 1.
+        try review.editText("p1-0", to: "Edited words")
+        review.keep("p1-0")
+
+        // Retry sends only page 1 (numbered 0 in the retry request).
+        XCTAssertEqual(review.begin(), [1])
+        review.apply(.page(0, cardCount: 2))
+        review.apply(card("quote", page: 0, order: 0, text: "Original words", attribution: "Rev. Smith"))
+        review.apply(card("key_point", page: 0, order: 1, text: "Second card from page 1"))
+        review.apply(.done(failedPages: []))
+
+        XCTAssertEqual(review.readPages, [0, 1])
+        XCTAssertEqual(review.unreadPages, [])
+        XCTAssertFalse(review.canRetry)
+        XCTAssertEqual(review.cards.map(\.id), ["p0-0", "p1-0", "p1-1"])
+        XCTAssertEqual(review.card("p1-0")?.text, "Edited words", "edit on partial page survived retry")
+        XCTAssertEqual(review.card("p1-0")?.editedByUser, true)
+        XCTAssertEqual(review.card("p1-0")?.decision, .keep)
+        XCTAssertEqual(review.card("p1-1")?.text, "Second card from page 1")
+        XCTAssertEqual(review.card("p1-1")?.decision, .undecided)
+    }
+
+    func testDropAfterPageHeaderWithNoCardCountReplaysPage() throws {
+        var review = LordsDayReview(noteId: noteId, pageCount: 1)
+        _ = review.begin()
+        review.apply(.page(0, cardCount: nil))
+        review.apply(card("key_point", page: 0, order: 0, text: "First"))
+        review.interrupt()
+        XCTAssertEqual(review.unreadPages, [0], "without cardCount, a page is not read until done arrives")
+        XCTAssertTrue(review.canRetry)
+
+        try review.editText("p0-0", to: "Edited")
+        XCTAssertEqual(review.begin(), [0])
+        review.apply(.page(0, cardCount: nil))
+        review.apply(card("key_point", page: 0, order: 0, text: "First"))
+        review.apply(card("key_point", page: 0, order: 1, text: "Second"))
+        review.apply(.done(failedPages: []))
+        XCTAssertEqual(review.readPages, [0])
+        XCTAssertEqual(review.cards.map(\.text), ["Edited", "Second"])
     }
 
     func testEditsSurviveARetry() throws {
         var review = LordsDayReview(noteId: noteId, pageCount: 2)
         _ = review.begin()
-        review.apply(.page(0))
+        review.apply(.page(0, cardCount: 1))
         review.apply(card("key_point", page: 0, order: 0, text: "One"))
         review.interrupt()
         try review.editText(review.cards[0].id, to: "Mine")
         _ = review.begin()
-        review.apply(.page(0))
+        review.apply(.page(0, cardCount: 1))
         review.apply(card("key_point", page: 0, order: 0, text: "Two"))
         review.apply(.done(failedPages: []))
         XCTAssertEqual(review.cards.map(\.text), ["Mine", "Two"])
@@ -208,11 +297,13 @@ final class LordsDayReviewTests: XCTestCase {
         XCTAssertNil(try LordsDayReview.load(noteId: noteId, root: root))
         var review = LordsDayReview(noteId: noteId, pageCount: 2)
         _ = review.begin()
-        review.apply(.page(0))
+        review.apply(.page(0, cardCount: 1))
         review.apply(card("quote", page: 0, order: 0, text: "Saved words", attribution: "Rev. Smith"))
+        review.keep("p0-0")
         try review.save(root: root)
         let reopened = try XCTUnwrap(LordsDayReview.load(noteId: noteId, root: root))
         XCTAssertEqual(reopened.cards, review.cards)
+        XCTAssertEqual(reopened.card("p0-0")?.decision, .keep)
         XCTAssertEqual(reopened.phase, .interrupted, "a run the app didn't finish can't still be drafting after a relaunch")
         try LordsDayReview.delete(noteId: noteId, root: root)
         XCTAssertNil(try LordsDayReview.load(noteId: noteId, root: root))
@@ -253,5 +344,41 @@ final class LordsDayReviewTests: XCTestCase {
         ], for: note)
         let feed = LordsDayFeed(note: note, cards: try store.cards(for: note), today: date)
         XCTAssertEqual(feed.cards.map(\.attributionLine), ["Romans 8:28-30", "Rev. Smith · Romans 8:28-30", "Rev. Jones · Romans 8:28-30"])
+    }
+
+    func testPendingReviewIsReachableForNoteDatedEightDaysAgo() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("pending-old-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let container = try ModelContainer(for: progressSchema, configurations: [ModelConfiguration(schema: progressSchema, isStoredInMemoryOnly: true)])
+        let store = LordsDayStore(context: ModelContext(container))
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let today = calendar.date(from: DateComponents(year: 2026, month: 11, day: 25))!
+        let eightDaysAgo = calendar.date(byAdding: .day, value: -8, to: today)!
+
+        let oldNote = LordsDayNote(serviceDate: eightDaysAgo, passageRef: "Psalm 98", extractedText: "Sing a new song")
+        try store.save(oldNote)
+        var review = LordsDayReview(noteId: oldNote.id, pageCount: 1)
+        _ = review.begin()
+        review.apply(.page(0, cardCount: 1))
+        review.apply(.card(DraftCardPayload(kind: "key_point", page: 0, order: 0, text: "Sing to the Lord.")))
+        review.apply(.done(failedPages: []))
+        try review.save(root: root)
+
+        // Outside the current week window, yet still reachable by its saved note id.
+        XCTAssertNil(try store.currentWeek(on: today, calendar: calendar))
+        XCTAssertEqual(try store.pendingReviewNotes(root: root).map(\.id), [oldNote.id])
+        XCTAssertEqual(try store.note(id: oldNote.id)?.id, oldNote.id)
+
+        // While it is an active in-progress capture, it is not a pending review.
+        try CaptureDraft.setActive(oldNote.id, root: root)
+        XCTAssertEqual(try store.pendingReviewNotes(root: root).map(\.id), [])
+        try CaptureDraft.setActive(nil, root: root)
+
+        // After finishing, it leaves pending reviews.
+        review.keep("p0-0")
+        try store.keepCards(review.keptCards(), for: oldNote)
+        try LordsDayReview.delete(noteId: oldNote.id, root: root)
+        XCTAssertEqual(try store.pendingReviewNotes(root: root).map(\.id), [])
     }
 }

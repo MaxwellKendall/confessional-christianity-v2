@@ -1,10 +1,12 @@
-// The call that drafts cards from Sunday's notes (TKL-863): `POST
-// /api/lords-day/cards` on the website (contract in src/lib/lordsDay/handler.ts),
-// read as an NDJSON stream so cards appear as each page is read. The model key
-// lives on the server; the app sends the photos (or typed notes) and an
-// account token, and gets drafts back. Nothing here stores anything: the
-// review (DomainKit's LordsDayReview) decides what is kept.
+// The call that drafts cards from Sunday's notes (TKL-863, wired to Cognito in
+// TKL-940): `POST /api/lords-day/cards` on the website (contract in
+// src/lib/lordsDay/handler.ts), read as an NDJSON stream so cards appear as each
+// page is read. The model key lives on the server; the app sends the photos (or
+// typed notes) and a refreshed Cognito access token, and gets drafts back.
+// Nothing here stores anything: the review (DomainKit's LordsDayReview) decides
+// what is kept.
 import Foundation
+import OSLog
 import DomainKit
 
 enum CardsGeneratorError: Error, Equatable {
@@ -20,11 +22,22 @@ protocol CardsGenerator: Sendable {
 }
 
 struct LiveCardsGenerator: CardsGenerator {
-    static let endpoint = URL(string: "\(WebLinks.base)/api/lords-day/cards")!
+    private static let logger = Logger(subsystem: "com.confessionalchristianity.app", category: "lords-day")
 
-    /// The account's Cognito access token. Not wired to AuthService yet
-    /// (TKL-940), so this returns nil and drafting says it needs an account.
-    var accessToken: @Sendable () async -> String? = { nil }
+    /// Release always hits the hosted endpoint; DEBUG allows `-LordsDayCardsEndpoint <url>`
+    /// to point the simulator at a local dev server configured for the dev Cognito pool.
+    static var endpoint: URL {
+        #if DEBUG
+        if let raw = UserDefaults.standard.string(forKey: "LordsDayCardsEndpoint")?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !raw.isEmpty, let url = URL(string: raw) {
+            return url
+        }
+        #endif
+        return URL(string: "\(WebLinks.base)/api/lords-day/cards")!
+    }
+
+    /// Provides the signed-in session's Cognito access token (`forceRefresh` requests a fresh token after a 401).
+    var accessToken: @Sendable (_ forceRefresh: Bool) async -> String? = { _ in nil }
     var session: URLSession = .shared
 
     func draft(_ request: LordsDayCardsRequest) -> AsyncThrowingStream<LordsDayCardsEvent, Error> {
@@ -34,25 +47,38 @@ struct LiveCardsGenerator: CardsGenerator {
                     #if DEBUG
                     if UserDefaults.standard.bool(forKey: "EsvOffline") { throw CardsGeneratorError.offline }
                     #endif
-                    guard let token = await accessToken() else { throw CardsGeneratorError.accountNeeded }
-                    var http = URLRequest(url: Self.endpoint, timeoutInterval: 120)
-                    http.httpMethod = "POST"
-                    http.setValue("application/json", forHTTPHeaderField: "Content-Type")
-                    http.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-                    http.httpBody = try request.body()
-                    let (bytes, response) = try await session.bytes(for: http)
-                    let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+                    guard let initialToken = await accessToken(false) else { throw CardsGeneratorError.accountNeeded }
+                    let body = try request.body()
+                    let startedAt = ContinuousClock.now
+                    var (bytes, status) = try await post(body: body, token: initialToken)
+                    if status == 401, let refreshed = await accessToken(true) {
+                        (bytes, status) = try await post(body: body, token: refreshed)
+                    }
                     switch status {
                     case 200: break
                     case 401: throw CardsGeneratorError.accountNeeded
                     case 429: throw CardsGeneratorError.rateLimited
                     default: throw CardsGeneratorError.failed
                     }
+                    var firstCardSeconds: Double?
+                    var cardCount = 0
                     for try await line in bytes.lines {
-                        if let event = try? LordsDayCardsEvent.parse(line: line) { continuation.yield(event) }
+                        guard let event = try? LordsDayCardsEvent.parse(line: line) else { continue }
+                        if case .card = event {
+                            cardCount += 1
+                            if firstCardSeconds == nil {
+                                firstCardSeconds = Self.seconds(since: startedAt)
+                            }
+                        }
+                        if case .done(let failedPages) = event {
+                            let doneSeconds = Self.seconds(since: startedAt)
+                            let cost = Self.parseCostUsd(from: line)
+                            Self.logger.notice("draft done cards=\(cardCount) failedPages=\(failedPages.count) firstCardSec=\(firstCardSeconds ?? -1, format: .fixed(precision: 2)) doneSec=\(doneSeconds, format: .fixed(precision: 2)) costUsd=\(cost ?? -1, format: .fixed(precision: 5))")
+                        }
+                        continuation.yield(event)
                     }
                     continuation.finish()
-                } catch let error as URLError where [.notConnectedToInternet, .networkConnectionLost, .timedOut, .cannotFindHost].contains(error.code) {
+                } catch let error as URLError where [.notConnectedToInternet, .networkConnectionLost, .timedOut, .cannotFindHost, .cannotConnectToHost].contains(error.code) {
                     continuation.finish(throwing: CardsGeneratorError.offline)
                 } catch {
                     continuation.finish(throwing: error)
@@ -60,6 +86,27 @@ struct LiveCardsGenerator: CardsGenerator {
             }
             continuation.onTermination = { _ in task.cancel() }
         }
+    }
+
+    private func post(body: Data, token: String) async throws -> (URLSession.AsyncBytes, Int) {
+        var http = URLRequest(url: Self.endpoint, timeoutInterval: 120)
+        http.httpMethod = "POST"
+        http.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        http.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        http.httpBody = body
+        let (bytes, response) = try await session.bytes(for: http)
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        return (bytes, status)
+    }
+
+    private static func seconds(since start: ContinuousClock.Instant) -> Double {
+        let d = start.duration(to: ContinuousClock.now)
+        return Double(d.components.seconds) + Double(d.components.attoseconds) / 1e18
+    }
+
+    private static func parseCostUsd(from line: String) -> Double? {
+        struct DoneCost: Decodable { let costUsd: Double? }
+        return (try? JSONDecoder().decode(DoneCost.self, from: Data(line.utf8)))?.costUsd
     }
 }
 
@@ -99,7 +146,7 @@ struct FixtureCardsGenerator: CardsGenerator {
                         try? await Task.sleep(for: .seconds(3600))
                         return
                     }
-                    continuation.yield(.page(index))
+                    continuation.yield(.page(index, cardCount: cards.count))
                     for card in cards { continuation.yield(.card(card)) }
                 }
                 continuation.yield(.done(failedPages: []))

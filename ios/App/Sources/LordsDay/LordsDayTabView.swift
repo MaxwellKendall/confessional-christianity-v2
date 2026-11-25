@@ -14,6 +14,7 @@ struct LordsDayTabView: View {
     var isActive = true
     @Binding var startsCapture: Bool
     @Environment(\.modelContext) private var context
+    @Environment(AuthService.self) private var auth
     @State private var capture: CaptureModel?
     @State private var status = CaptureStatus()
     @State private var feed: LordsDayFeed?
@@ -80,6 +81,7 @@ struct LordsDayTabView: View {
                 .background(.ultraThinMaterial, in: Circle())
         }
         .accessibilityLabel(status.resumable ? "Continue Sunday's notes" : "Photograph Sunday's notes")
+        .accessibilityIdentifier("lordsDay.capture")
     }
 
     private var reviewButton: some View {
@@ -90,6 +92,7 @@ struct LordsDayTabView: View {
                 .frame(height: 40)
                 .background(.ultraThinMaterial, in: Capsule())
         }
+        .accessibilityIdentifier("lordsDay.review")
     }
 
     private var emptyState: some View {
@@ -123,6 +126,7 @@ struct LordsDayTabView: View {
                                     .background(Color.ccChapel, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                                     .foregroundStyle(Color.ccOnChapel)
                             }
+                            .accessibilityIdentifier("lordsDay.review")
                             .padding(.top, 16)
                         }
                         Button { capture = CaptureModel(context: context) } label: {
@@ -133,6 +137,7 @@ struct LordsDayTabView: View {
                                 .background(Color.ccChapel, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                                 .foregroundStyle(Color.ccOnChapel)
                         }
+                        .accessibilityIdentifier("lordsDay.capture")
                         .padding(.top, 16)
                         if let saved = status.savedLine {
                             Text(saved)
@@ -154,18 +159,25 @@ struct LordsDayTabView: View {
             .background(Color.ccCard)
     }
 
+    private func makeGenerator() -> LiveCardsGenerator {
+        LiveCardsGenerator(accessToken: { [auth] forceRefresh in
+            await auth.accessToken(forceRefresh: forceRefresh)
+        })
+    }
+
     private func afterCapture() {
         refresh()
         guard let id = reviewAfterCapture else { return }
         reviewAfterCapture = nil
-        if let note = try? context.fetch(FetchDescriptor<LordsDayNote>(predicate: #Predicate { $0.id == id })).first {
-            review = ReviewModel.session(for: note, context: context)
+        if let note = try? LordsDayStore(context: context).note(id: id) {
+            review = ReviewModel.session(for: note, context: context, generator: makeGenerator())
         }
     }
 
     private func openReview() {
-        guard let note = try? LordsDayStore(context: context).currentWeek() else { return }
-        review = ReviewModel.session(for: note, context: context)
+        guard let id = status.pendingReviewNoteId,
+              let note = try? LordsDayStore(context: context).note(id: id) else { return }
+        review = ReviewModel.session(for: note, context: context, generator: makeGenerator())
     }
 
     private func refresh() {
@@ -177,21 +189,23 @@ struct LordsDayTabView: View {
     }
 }
 
-/// What the tab says about this week's notes until the feed (TKL-862) shows them.
+/// What the tab says about notes waiting to be finished or reviewed.
 private struct CaptureStatus {
     var resumable = false
-    /// This week's notes have drafts waiting for review, or were never drafted.
-    var reviewable = false
+    /// Saved note id of the newest pending review (independent of service date / current week).
+    var pendingReviewNoteId: UUID?
+    var reviewable: Bool { pendingReviewNoteId != nil }
     var savedLine: String?
 
     init() {}
 
     @MainActor init(context: ModelContext, now: Date, calendar: Calendar) {
         resumable = (try? CaptureDraft.activeNoteId()) != nil
-        guard !resumable, let note = try? LordsDayStore(context: context).currentWeek(on: now, calendar: calendar) else { return }
-        let hasCards = !((try? LordsDayStore(context: context).cards(for: note)) ?? []).isEmpty
-        reviewable = ReviewModel.isPending(note, hasCards: hasCards)
-        let pages = (try? CaptureDraft(noteId: note.id))?.pages.count ?? 0
+        let store = LordsDayStore(context: context)
+        let pending = (try? store.pendingReviewNotes(activeSessionIds: ReviewModel.activeSessionIds))?.first
+        pendingReviewNoteId = pending?.id
+        guard let note = pending ?? (try? store.currentWeek(on: now, calendar: calendar)) else { return }
+        let pages = CaptureDraft.savedPageCount(noteId: note.id)
         let what = pages > 0 ? "\(pages) page\(pages == 1 ? "" : "s")" : "typed notes"
         savedLine = "Saved: \(note.serviceDate.formatted(.dateTime.weekday(.wide).day().month())) · \(what)."
     }

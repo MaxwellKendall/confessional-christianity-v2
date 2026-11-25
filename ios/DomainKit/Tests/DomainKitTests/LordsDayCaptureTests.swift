@@ -132,4 +132,11 @@ final class LordsDayCaptureTests: XCTestCase {
         let big = Data(repeating: 7, count: 3_100_000) // base64 grows it past 4 MB
         XCTAssertThrowsError(try LordsDayCardsRequest(pages: [big], typedText: nil, passage: nil, title: nil, preacher: nil).body())
     }
+
+    func testSixPagesOfRealisticSizeFitUnderLimit() throws {
+        // Six 400 KB JPEGs base64-encode to ~3.2 MB, safely under the 4 MB endpoint limit.
+        let sixPages = (0..<6).map { Data(repeating: UInt8($0), count: 400_000) }
+        let body = try LordsDayCardsRequest(pages: sixPages, typedText: nil, passage: "Psalm 98", title: nil, preacher: nil).body()
+        XCTAssertLessThanOrEqual(body.count, LordsDayCardsRequest.maxBodyBytes)
+    }
 }

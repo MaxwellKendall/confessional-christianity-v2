@@ -32,10 +32,20 @@ final class LoopEventsUITests: XCTestCase {
     /// "Add N cards to my week" keeps the sermon (lords_day_sermon_kept).
     @MainActor func testKeepingASermon() throws {
         let app = launch(["-LordsDayReviewFixture", "complete"])
-        let add = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Add ' AND label ENDSWITH 'to my week'")).firstMatch
+        let add = app.buttons["review.finish"]
         XCTAssertTrue(add.waitForExistence(timeout: 20))
+        // Wait for drafting to finish (5 sample cards), then explicitly keep each undecided card.
+        let hint = app.buttons["review.undecidedHint"]
+        XCTAssertTrue(hint.waitForExistence(timeout: 20))
+        XCTAssertFalse(add.isEnabled, "nothing unseen may be finished before deciding")
+        let keep = app.buttons["review.keep"]
+        for _ in 0..<10 {
+            if add.isEnabled { break }
+            if hint.exists { hint.tap() }
+            if keep.waitForExistence(timeout: 5) { keep.tap() }
+        }
         let enabled = expectation(for: NSPredicate(format: "isEnabled == true"), evaluatedWith: add)
-        wait(for: [enabled], timeout: 20)
+        wait(for: [enabled], timeout: 10)
         add.tap()
         sleep(3)
     }

@@ -17,34 +17,38 @@ struct ConfessionalChristianityApp: App {
     var body: some Scene {
         WindowGroup {
             #if DEBUG
-            if let passage = UserDefaults.standard.string(forKey: "ReaderChapterReference"),
-               let chapter = ReaderChapter.chapterOSIS(for: passage) {
-                NavigationStack {
-                    ReaderChapterView(chapterOSIS: chapter, passageOSIS: passage, settings: .load())
+            Group {
+                if let passage = UserDefaults.standard.string(forKey: "ReaderChapterReference"),
+                   let chapter = ReaderChapter.chapterOSIS(for: passage) {
+                    NavigationStack {
+                        ReaderChapterView(chapterOSIS: chapter, passageOSIS: passage, settings: .load())
+                    }
+                } else if let session = UserDefaults.standard.string(forKey: "ProofTextSession") {
+                    ProofTextSessionFixture(spec: session)
+                } else if let scene = UserDefaults.standard.string(forKey: "VerseReaderFixture") {
+                    let appearances: [String: ColorScheme] = ["light": .light, "dark": .dark]
+                    let appearance = UserDefaults.standard.string(forKey: "VerseReaderFixtureAppearance") ?? ""
+                    NavigationStack {
+                        VerseReaderView.fixture(scene)
+                    }
+                    .preferredColorScheme(appearances[appearance])
+                } else if let scene = UserDefaults.standard.string(forKey: "LordsDayCaptureFixture") {
+                    CaptureFixture(scene: scene)
+                } else if let scene = UserDefaults.standard.string(forKey: "LordsDayReviewFixture") {
+                    LordsDayReviewFixture(scene: scene)
+                } else if let scene = UserDefaults.standard.string(forKey: "LordsDayFeedFixture") {
+                    LordsDayFeedFixture(scene: scene)
+                } else if let spec = UserDefaults.standard.string(forKey: "LibraryEntry"),
+                          let colon = spec.firstIndex(of: ":") {
+                    LibraryEntryFixture(slug: String(spec[..<colon]), entryId: String(spec[spec.index(after: colon)...]))
+                } else {
+                    root
                 }
-            } else if let session = UserDefaults.standard.string(forKey: "ProofTextSession") {
-                ProofTextSessionFixture(spec: session)
-            } else if let scene = UserDefaults.standard.string(forKey: "VerseReaderFixture") {
-                let appearances: [String: ColorScheme] = ["light": .light, "dark": .dark]
-                let appearance = UserDefaults.standard.string(forKey: "VerseReaderFixtureAppearance") ?? ""
-                NavigationStack {
-                    VerseReaderView.fixture(scene)
-                }
-                .preferredColorScheme(appearances[appearance])
-            } else if let scene = UserDefaults.standard.string(forKey: "LordsDayCaptureFixture") {
-                CaptureFixture(scene: scene)
-            } else if let scene = UserDefaults.standard.string(forKey: "LordsDayReviewFixture") {
-                LordsDayReviewFixture(scene: scene)
-            } else if let scene = UserDefaults.standard.string(forKey: "LordsDayFeedFixture") {
-                LordsDayFeedFixture(scene: scene)
-            } else if let spec = UserDefaults.standard.string(forKey: "LibraryEntry"),
-                      let colon = spec.firstIndex(of: ":") {
-                LibraryEntryFixture(slug: String(spec[..<colon]), entryId: String(spec[spec.index(after: colon)...]))
-            } else {
-                root
             }
+            .environment(auth)
             #else
             root
+                .environment(auth)
             #endif
         }
         .modelContainer(container)
@@ -53,7 +57,6 @@ struct ConfessionalChristianityApp: App {
     private var root: some View {
         RootView()
             .modifier(LaunchOpening(showing: showsOpening))
-            .environment(auth)
     }
 }
 

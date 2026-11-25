@@ -17,7 +17,7 @@ import type { RateLimiter } from './rateLimit';
 // Otherwise a 200 NDJSON stream, one event per line, so the app fills cards in
 // as each page finishes instead of waiting on a spinner:
 //   { type: "started", pages, model }
-//   { type: "page", page, extractedText, rejected }  then  { type: "card", card } per card
+//   { type: "page", page, extractedText, rejected, cardCount }  then  { type: "card", card } per card
 //   { type: "error", page, code, message }            (that page failed; others continue)
 //   { type: "done", cards: [...ordered by page, order], rejected, failedPages, costUsd }
 
@@ -142,7 +142,7 @@ export const handleCardsRequest = async (request: Request, deps: CardsDeps): Pro
             });
             rejected += pageRejected.length;
             all.push(...cards);
-            send({ type: 'page', page, extractedText: result.extractedText, rejected: pageRejected.length });
+            send({ type: 'page', page, extractedText: result.extractedText, rejected: pageRejected.length, cardCount: cards.length });
             for (const card of cards) send({ type: 'card', card });
           } catch (error) {
             failedPages.push(page);

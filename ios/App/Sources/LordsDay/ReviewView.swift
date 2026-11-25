@@ -20,9 +20,11 @@ struct ReviewView: View {
     #endif
 
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(AuthService.self) private var auth
     @State private var current: String?
     @State private var editing: ReviewCard?
     @State private var pickingVerseFor: ReviewCard?
+    @State private var showsSignIn = false
     @State private var finishFailed = false
 
     private var review: LordsDayReview { model.review }
@@ -56,10 +58,23 @@ struct ReviewView: View {
         .foregroundStyle(ink)
         .background(paper.ignoresSafeArea())
         .onAppear {
-            model.startIfNeeded()
+            if auth.phase.isSignedIn && model.failure == .accountNeeded {
+                model.retry()
+            } else {
+                model.startIfNeeded()
+            }
             #if DEBUG
             if let startAt { DispatchQueue.main.asyncAfter(deadline: .now() + 2) { current = startAt } }
             #endif
+        }
+        .onChange(of: auth.phase.isSignedIn) { _, signedIn in
+            if signedIn && model.failure == .accountNeeded {
+                showsSignIn = false
+                model.retry()
+            }
+        }
+        .sheet(isPresented: $showsSignIn, onDismiss: { auth.cancelCode() }) {
+            SignInSheet()
         }
         .sheet(item: $editing) { card in
             EditCardSheet(card: card, preacher: model.preacher) { words, attribution in
@@ -81,6 +96,7 @@ struct ReviewView: View {
                 Button("Close", action: onClose)
                     .font(.system(size: 16))
                     .foregroundStyle(chapel)
+                    .accessibilityIdentifier("review.close")
                 Spacer()
                 if let passage = model.passage {
                     Text(passage).font(.system(size: 13)).foregroundStyle(ink2)
@@ -130,6 +146,7 @@ struct ReviewView: View {
                     ReviewCardView(card: card, palette: palette(for: card), preacher: model.preacher)
                         .containerRelativeFrame(.horizontal)
                         .id(card.id)
+                        .accessibilityIdentifier("review.card.\(card.id)")
                         .transition(.opacity.combined(with: .offset(y: 10)))
                 }
                 if review.isDrafting {
@@ -208,17 +225,21 @@ struct ReviewView: View {
                     Label("Keep", systemImage: card.kept ? "checkmark.circle.fill" : "circle")
                 }
                 .foregroundStyle(card.kept ? chapel : ink2)
+                .accessibilityIdentifier("review.keep")
                 if card.kind == .verse {
                     Button { pickingVerseFor = card } label: { Label("Change verse", systemImage: "book") }
                         .foregroundStyle(chapel)
+                        .accessibilityIdentifier("review.edit")
                 } else {
                     Button { editing = card } label: { Label("Edit", systemImage: "pencil") }
                         .foregroundStyle(chapel)
+                        .accessibilityIdentifier("review.edit")
                 }
                 Button { model.remove(card.id) } label: {
-                    Label("Remove", systemImage: card.kept ? "xmark" : "xmark.circle.fill")
+                    Label("Remove", systemImage: card.isRemoved ? "xmark.circle.fill" : "xmark")
                 }
-                .foregroundStyle(danger)
+                .foregroundStyle(card.isRemoved ? danger : ink2)
+                .accessibilityIdentifier("review.remove")
             }
             .font(.system(size: 14.5))
             .buttonStyle(.borderless)
@@ -233,16 +254,30 @@ struct ReviewView: View {
 
     @ViewBuilder private var notices: some View {
         VStack(spacing: 8) {
-            if let message = failureMessage {
-                note(message, retry: review.canRetry || review.phase == .notStarted)
+            if model.failure == .accountNeeded {
+                if auth.isConfigured {
+                    note("Sign in to draft cards from your notes. Your notes are saved.", actionTitle: "Sign in", actionId: "review.signIn") {
+                        showsSignIn = true
+                    }
+                } else {
+                    note("Drafting cards needs an account. Your notes are saved.", actionTitle: nil) {}
+                }
+            } else if let message = failureMessage {
+                note(message, actionTitle: (review.canRetry || review.phase == .notStarted) ? "Try again" : nil, actionId: "review.retry") {
+                    model.retry()
+                }
             } else if !review.isDrafting, !review.failedPages.isEmpty {
                 let pages = review.failedPages.sorted().map { "\($0 + 1)" }.joined(separator: ", ")
-                note("Page \(pages) couldn't be read. Try again, or keep these and retake it later.", retry: true)
+                note("Page \(pages) couldn't be read. Try again, or keep these and retake it later.", actionTitle: "Try again", actionId: "review.retry") {
+                    model.retry()
+                }
             } else if review.phase == .interrupted {
-                note("Some of your notes haven't been read yet.", retry: true)
+                note("Some of your notes haven't been read yet.", actionTitle: "Try again", actionId: "review.retry") {
+                    model.retry()
+                }
             }
             if model.saveFailed || finishFailed {
-                note("Couldn't save on this iPhone. Your changes are still on screen; try again.", retry: false)
+                note("Couldn't save on this iPhone. Your changes are still on screen; try again.", actionTitle: nil) {}
             }
         }
         .padding(.horizontal, 20)
@@ -250,7 +285,7 @@ struct ReviewView: View {
 
     private var failureMessage: String? {
         switch model.failure {
-        case .accountNeeded: "Drafting cards needs an account, which is coming in an update. Your notes are saved."
+        case .accountNeeded: nil
         case .offline: "You're offline. Your notes are saved; try again when you're back online."
         case .rateLimited: "Too many notes at once. Try again in a few minutes."
         case .failed: "Something went wrong reading your notes. They're saved; try again."
@@ -258,13 +293,14 @@ struct ReviewView: View {
         }
     }
 
-    private func note(_ text: String, retry: Bool) -> some View {
+    private func note(_ text: String, actionTitle: String?, actionId: String? = nil, action: @escaping () -> Void) -> some View {
         HStack(alignment: .center, spacing: 10) {
             Text(text).font(.system(size: 14)).fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
-            if retry {
-                Button("Try again") { model.retry() }
+            if let actionTitle {
+                Button(actionTitle, action: action)
                     .font(.system(size: 14, weight: .semibold))
+                    .accessibilityIdentifier(actionId ?? actionTitle)
             }
         }
         .foregroundStyle(danger)
@@ -276,9 +312,24 @@ struct ReviewView: View {
     private var footer: some View {
         VStack(spacing: 6) {
             if let index = review.blockingCardIndex {
-                Text("Card \(index + 1) has no words. Edit it or remove it.")
-                    .font(.system(size: 13))
-                    .foregroundStyle(danger)
+                Button {
+                    current = review.cards[index].id
+                } label: {
+                    Text("Card \(index + 1) has no words. Edit it or remove it.")
+                        .font(.system(size: 13))
+                        .foregroundStyle(danger)
+                }
+                .buttonStyle(.plain)
+            } else if !review.isDrafting, review.undecidedCount > 0, let nextIndex = review.firstUndecidedIndex {
+                Button {
+                    withAnimation(.easeOut(duration: 0.25)) { current = review.cards[nextIndex].id }
+                } label: {
+                    Text("Keep or remove \(review.undecidedCount) remaining card\(review.undecidedCount == 1 ? "" : "s") to continue.")
+                        .font(.system(size: 13))
+                        .foregroundStyle(ink2)
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("review.undecidedHint")
             }
             Button {
                 do {
@@ -297,6 +348,7 @@ struct ReviewView: View {
             }
             .disabled(!review.canFinish)
             .opacity(review.canFinish ? 1 : 0.4)
+            .accessibilityIdentifier("review.finish")
         }
         .padding(.horizontal, 20)
         .padding(.top, 10)
@@ -346,8 +398,8 @@ private struct ReviewCardView: View {
                 .padding(.bottom, 20)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
 
-            if !card.kept || card.editedByUser {
-                Text(card.kept ? "Edited" : "Removed")
+            if let badge = statusBadge {
+                Text(badge)
                     .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(muted)
                     .padding(16)
@@ -356,9 +408,9 @@ private struct ReviewCardView: View {
         }
         .foregroundStyle(Color(hex: palette.ink))
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .opacity(card.kept ? 1 : 0.35)
-        .scaleEffect(card.kept ? 1 : 0.96)
-        .animation(.easeOut(duration: 0.2), value: card.kept)
+        .opacity(card.isRemoved ? 0.35 : 1)
+        .scaleEffect(card.isRemoved ? 0.96 : 1)
+        .animation(.easeOut(duration: 0.2), value: card.decision)
         .accessibilityElement(children: .combine)
         .task(id: card.verseRef) {
             verseText = nil
@@ -404,6 +456,14 @@ private struct ReviewCardView: View {
             guard let attribution = card.attribution else { return preacher ?? "No attribution" }
             return attribution.isEmpty ? "No attribution" : attribution
         case .verse: return card.editedByUser ? "Picked in the Bible" : "Read from your photo"
+        }
+    }
+
+    private var statusBadge: String? {
+        switch card.decision {
+        case .remove: "Removed"
+        case .keep: card.editedByUser ? "Kept · Edited" : "Kept"
+        case .undecided: card.editedByUser ? "Edited" : nil
         }
     }
 

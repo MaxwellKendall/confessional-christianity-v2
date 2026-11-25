@@ -230,6 +230,7 @@ struct CaptureView: View {
         HStack {
             sideButton(icon: "photo.on.rectangle", label: "Choose from\nPhotos") { showsPicker = true }
                 .disabled(!model.canAddPage)
+                .accessibilityIdentifier("capture.photos")
             Spacer()
             Button(action: shoot) {
                 Circle().strokeBorder(.white, lineWidth: 4).frame(width: 74, height: 74)
@@ -240,6 +241,7 @@ struct CaptureView: View {
             .accessibilityLabel(model.retakeTarget == nil ? "Take photo" : "Retake photo")
             Spacer()
             sideButton(icon: "pencil.line", label: "Type\ninstead") { showsTyping = true }
+                .accessibilityIdentifier("capture.type")
         }
         .padding(.horizontal, 22)
         .padding(.vertical, 14)
@@ -274,6 +276,7 @@ struct CaptureView: View {
         }
         .disabled(!model.canFinish)
         .opacity(model.canFinish ? 1 : 0.35)
+        .accessibilityIdentifier("capture.done")
         .padding(.horizontal, 20)
         .padding(.bottom, 12)
     }

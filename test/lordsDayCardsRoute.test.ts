@@ -98,6 +98,9 @@ const readEvents = async (response: Response) => {
 };
 
 beforeEach(() => {
+  delete process.env.GEMINI_API_KEY;
+  delete process.env.COGNITO_USER_POOL_ID;
+  delete process.env.COGNITO_CLIENT_ID;
   pool = createTestPool();
   geminiCalls = [];
 });
@@ -238,7 +241,20 @@ describe('the stream', () => {
     expect(events[0]).toEqual({ type: 'started', pages: 2, model: 'gemini-3.8-flash' });
     expect(events.map((e) => e.type)).toEqual(['started', 'page', 'card', 'page', 'card', 'card', 'card', 'done']);
     // page 1 (the fast one) arrives first
-    expect(events[1]).toEqual({ type: 'page', page: 1, extractedText: 'Page two. Strife does not come from the gospel.', rejected: 2 });
+    expect(events[1]).toEqual({
+      type: 'page',
+      page: 1,
+      extractedText: 'Page two. Strife does not come from the gospel.',
+      rejected: 2,
+      cardCount: 1,
+    });
+    expect(events[3]).toEqual({
+      type: 'page',
+      page: 0,
+      extractedText: 'Page one. "God is ready to forgive." Ps 86:5',
+      rejected: 0,
+      cardCount: 3,
+    });
 
     const done = events.at(-1);
     expect(done.cards.map((c: { id: string }) => c.id)).toEqual(['p0-0', 'p0-1', 'p0-2', 'p1-0']);

@@ -26,6 +26,8 @@ final class ReviewModel {
     /// The reviews of this launch, by note: what keeps a stream alive while its screen is closed.
     private static var sessions: [UUID: ReviewModel] = [:]
 
+    static var activeSessionIds: Set<UUID> { Set(sessions.keys) }
+
     static func session(for note: LordsDayNote, context: ModelContext, generator: CardsGenerator = LiveCardsGenerator(),
                         root: URL = CaptureDraft.defaultRoot) -> ReviewModel {
         if let existing = sessions[note.id] { return existing }
@@ -121,6 +123,8 @@ final class ReviewModel {
 
     /// Keeps the kept cards, in order, as this note's week. The photos stay on the device.
     func finish() throws {
+        guard review.undecidedCount == 0 else { throw LordsDayReviewError.unreviewedCards }
+        guard review.canFinish else { throw LordsDayReviewError.nothingToKeep }
         let kept = review.keptCards()
         try LordsDayStore(context: context).keepCards(kept, for: note)
         LoopCounter.record(.sermonKept(cardCount: kept.count))

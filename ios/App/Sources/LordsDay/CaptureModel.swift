@@ -151,9 +151,15 @@ final class CaptureModel {
 
     // MARK: Images
 
-    /// ~1600 px on the long side, as the endpoint asks, so six pages fit its 4 MB limit.
-    static func jpegForUpload(_ image: UIImage, longSide: CGFloat = 1600) -> Data? {
-        resized(image, longSide: longSide).jpegData(compressionQuality: 0.72)
+    /// ~1600 px on the long side, as the endpoint asks, capped under 450 KB per page
+    /// so even six dense pages stay under the endpoint's 4 MB base64 JSON body limit.
+    static func jpegForUpload(_ image: UIImage, longSide: CGFloat = 1600, maxBytes: Int = 450_000) -> Data? {
+        let scaled = resized(image, longSide: longSide)
+        for quality in [0.72, 0.6, 0.5, 0.4] {
+            guard let data = scaled.jpegData(compressionQuality: quality) else { return nil }
+            if data.count <= maxBytes || quality == 0.4 { return data }
+        }
+        return scaled.jpegData(compressionQuality: 0.4)
     }
 
     static func thumbnail(_ image: UIImage) -> UIImage { resized(image, longSide: 180) }

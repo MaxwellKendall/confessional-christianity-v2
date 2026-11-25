@@ -104,8 +104,38 @@ public func todayCardIndex(serviceDate: Date, today: Date, cardCount: Int, calen
         try context.save()
     }
     public func removeCard(_ card: NoteCard) throws { card.deletedAt = Date(); card.updatedAt = Date(); try context.save() }
+    public func note(id: UUID) throws -> LordsDayNote? {
+        try context.fetch(FetchDescriptor<LordsDayNote>()).first { $0.id == id && $0.deletedAt == nil }
+    }
+    /// Notes with a saved review, an active in-memory review session, or saved capture
+    /// input not yet turned into cards — independent of service date or current week (TKL-940).
+    public func pendingReviewNotes(root: URL = CaptureDraft.defaultRoot, activeSessionIds: Set<UUID> = []) throws -> [LordsDayNote] {
+        let activeCaptureId = try? CaptureDraft.activeNoteId(root: root)
+        let notes = try context.fetch(FetchDescriptor<LordsDayNote>())
+            .filter { $0.deletedAt == nil && $0.id != activeCaptureId }
+            .sorted { $0.updatedAt > $1.updatedAt }
+        return try notes.filter { note in
+            if activeSessionIds.contains(note.id) { return true }
+            if LordsDayReview.exists(noteId: note.id, root: root) { return true }
+            guard try cards(for: note).isEmpty else { return false }
+            return CaptureDraft.savedPageCount(noteId: note.id, root: root) > 0 || normalizedNoteField(note.extractedText) != nil
+        }
+    }
     public func currentWeek(on date: Date = Date(), calendar: Calendar = .current) throws -> LordsDayNote? {
-        try context.fetch(FetchDescriptor<LordsDayNote>()).filter { $0.deletedAt == nil && todayCardIndex(serviceDate: $0.serviceDate, today: date, cardCount: 1, calendar: calendar) != nil }.max { $0.serviceDate < $1.serviceDate }
+        try context.fetch(FetchDescriptor<LordsDayNote>())
+            .filter { $0.deletedAt == nil && todayCardIndex(serviceDate: $0.serviceDate, today: date, cardCount: 1, calendar: calendar) != nil }
+            .max { ($0.serviceDate, $0.updatedAt) < ($1.serviceDate, $1.updatedAt) }
+    }
+    /// Newest note in the current week that already has kept cards.
+    public func currentWeekWithCards(on date: Date = Date(), calendar: Calendar = .current) throws -> (note: LordsDayNote, cards: [NoteCard])? {
+        let candidates = try context.fetch(FetchDescriptor<LordsDayNote>())
+            .filter { $0.deletedAt == nil && todayCardIndex(serviceDate: $0.serviceDate, today: date, cardCount: 1, calendar: calendar) != nil }
+            .sorted { ($0.serviceDate, $0.updatedAt) > ($1.serviceDate, $1.updatedAt) }
+        for note in candidates {
+            let noteCards = try cards(for: note)
+            if !noteCards.isEmpty { return (note, noteCards) }
+        }
+        return nil
     }
     public func archive(before date: Date = Date(), calendar: Calendar = .current) throws -> [LordsDayNote] {
         let today = calendar.startOfDay(for: date)

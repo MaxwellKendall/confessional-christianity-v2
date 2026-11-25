@@ -43,6 +43,7 @@ final class AuthService {
     let isConfigured: Bool
 
     @ObservationIgnored private var hubToken: UnsubscribeToken?
+    @ObservationIgnored private var restoreTask: Task<Void, Never>?
     #if DEBUG
     /// Offline UI-test hook: `-SignInStubVerifyDelay <seconds>` stubs send/verify
     /// with a real delay so tests can verify controls stay locked during slow
@@ -70,7 +71,7 @@ final class AuthService {
             return
         }
         listen()
-        Task { await restore() }
+        restoreTask = Task { await restore() }
     }
 
     /// Emails a code to `email`: a sign-up code the first time the address is
@@ -206,10 +207,11 @@ final class AuthService {
     }
 
     /// A valid access token (refreshed if needed), or nil when signed out or
-    /// the session can't be refreshed.
-    func accessToken() async -> String? {
+    /// the session can't be refreshed. Waits for initial session restoration first.
+    func accessToken(forceRefresh: Bool = false) async -> String? {
+        await restoreTask?.value
         guard isConfigured, machine.phase.isSignedIn else { return nil }
-        guard let session = try? await Amplify.Auth.fetchAuthSession(),
+        guard let session = try? await Amplify.Auth.fetchAuthSession(options: .init(forceRefresh: forceRefresh)),
               let tokens = session as? AuthCognitoTokensProvider else { return nil }
         return try? tokens.getCognitoTokens().get().accessToken
     }
