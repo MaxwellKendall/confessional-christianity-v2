@@ -30,6 +30,10 @@ struct LordsDayFeedView: View {
     }
 
     var body: some View {
+        // `.scrollPosition(id:)` ignores its initial value on first layout of a
+        // paging LazyVStack inside a NavigationStack, so the feed opened on
+        // Monday's card with the rail on today's (TKL-1020). Scroll there explicitly.
+        ScrollViewReader { proxy in
         ScrollView(.vertical, showsIndicators: false) {
             LazyVStack(spacing: 0) {
                 ForEach(feed.cards) { card in
@@ -42,6 +46,15 @@ struct LordsDayFeedView: View {
         }
         .scrollTargetBehavior(.paging)
         .scrollPosition(id: $current)
+        .onAppear {
+            guard let today = feed.todayIndex.map({ feed.cards[$0].id }) else { return }
+            // After the first layout pass: scrolling during it is dropped too.
+            DispatchQueue.main.async {
+                proxy.scrollTo(today, anchor: .top)
+                current = today
+            }
+        }
+        }
         .ignoresSafeArea()
         .overlay(alignment: .trailing) {
             DotRail(ids: feed.cards.map(\.id), current: current ?? feed.cards.first?.id, ink: Color(hex: currentPalette.ink))

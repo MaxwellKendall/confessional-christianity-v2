@@ -77,6 +77,7 @@
 		E05748719EA05C3738219BC2 /* CaptureModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFB100594401DF03A33600E0 /* CaptureModel.swift */; };
 		E7543DC35B02A71F5F4D81BE /* QuestionCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D892E4739FA3AAD34062EB53 /* QuestionCardView.swift */; };
 		E8964C2CFE0D60D51CB36BB9 /* DomainKit in Frameworks */ = {isa = PBXBuildFile; productRef = 98614B02AD068537C9D58C51 /* DomainKit */; };
+		EBC4FD448149B292FC40EE5A /* FeedOpensAtTodayUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 186C722AE6BB4430FEB87466 /* FeedOpensAtTodayUITests.swift */; };
 		EF6180A42307C70469D1AAF6 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE787EFA6523867E8B169F3C /* RootView.swift */; };
 		EFA34C338B6953619F1527DD /* CatechismWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0314FB2410D204F15CCB2B2B /* CatechismWidgetBundle.swift */; };
 		F6B941A744D11BA50D05F8DE /* Cinzel-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0DEE3A1FB42239248ABA0E9F /* Cinzel-Regular.ttf */; };
@@ -124,6 +125,7 @@
 		09DC9BA05478BE3F8C6ABE62 /* LibraryEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryEntryView.swift; sourceTree = "<group>"; };
 		0DEE3A1FB42239248ABA0E9F /* Cinzel-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Cinzel-Regular.ttf"; sourceTree = "<group>"; };
 		1355BBE9BF8900B5FE2A2F86 /* SearchRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchRoute.swift; sourceTree = "<group>"; };
+		186C722AE6BB4430FEB87466 /* FeedOpensAtTodayUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedOpensAtTodayUITests.swift; sourceTree = "<group>"; };
 		18C002AEB0FB5E9D3623E1D3 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		245AE89B18EF74ECA2A2C5B1 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		27A1DF330C4DA1EC70E025A1 /* SessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionView.swift; sourceTree = "<group>"; };
@@ -334,6 +336,7 @@
 			isa = PBXGroup;
 			children = (
 				044DF99E6706887F5BA10009 /* ConfessionsReaderTests.swift */,
+				186C722AE6BB4430FEB87466 /* FeedOpensAtTodayUITests.swift */,
 				488B97E15ED8C9433237A75B /* LoopEventsUITests.swift */,
 			);
 			path = UITests;
@@ -599,6 +602,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DC86ECECFC442185EF1FC948 /* ConfessionsReaderTests.swift in Sources */,
+				EBC4FD448149B292FC40EE5A /* FeedOpensAtTodayUITests.swift in Sources */,
 				93D0DAB535D7FDAF4CD85114 /* LoopEventsUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
