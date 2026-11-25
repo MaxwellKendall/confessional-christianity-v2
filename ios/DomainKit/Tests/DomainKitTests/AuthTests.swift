@@ -238,6 +238,97 @@ import Testing
         do { let accepted = m.handle(.cancel); #expect(accepted) }
         #expect(m.phase == .guest)
     }
+
+    @Test func inFlightPhasesLockDismissalAndCancel() {
+        let user = self.user
+        let expectations: [(AuthPhase, Bool, Bool, Bool)] = [
+            // (phase, isInFlight, canDismissSignIn, canCancelCode)
+            (.restoring, false, true, false),
+            (.guest, false, true, false),
+            (.sendingCode(email: "parent@example.com"), true, false, false),
+            (.awaitingCode(email: "parent@example.com", purpose: .signIn), false, true, true),
+            (.awaitingCode(email: "new@example.com", purpose: .signUp), false, true, true),
+            (.verifying(email: "parent@example.com", code: "12345678", purpose: .signIn), true, false, false),
+            (.verifying(email: "new@example.com", code: "123456", purpose: .signUp), true, false, false),
+            (.signingIn(email: "new@example.com"), true, false, false),
+            (.signedIn(user), false, true, false),
+        ]
+        for (phase, isInFlight, canDismiss, canCancel) in expectations {
+            #expect(phase.isInFlight == isInFlight)
+            #expect(phase.canDismissSignIn == canDismiss)
+            #expect(phase.canCancelCode == canCancel)
+        }
+    }
+
+    @Test func delayedVerificationRejectsCancelAndCompletesSignIn() {
+        // Regression for TKL-928 review: while verification is in flight on a
+        // slow connection, cancel is rejected and controls stay locked until
+        // delayed verification finishes.
+        var m = AuthMachine(phase: .guest)
+        do { let accepted = m.handle(.requestCode("parent@example.com")); #expect(accepted) }
+        #expect(!m.phase.canDismissSignIn)
+        do { let accepted = m.handle(.cancel); #expect(!accepted) }
+
+        do { let accepted = m.handle(.codeSent); #expect(accepted) }
+        #expect(m.phase.canDismissSignIn)
+        #expect(m.phase.canCancelCode)
+
+        do { let accepted = m.handle(.submitCode("12345678")); #expect(accepted) }
+        #expect(m.phase == .verifying(email: "parent@example.com", code: "12345678", purpose: .signIn))
+        #expect(!m.phase.canDismissSignIn)
+        #expect(!m.phase.canCancelCode)
+
+        // Attempted cancel while checking must not dismiss or alter state.
+        do { let accepted = m.handle(.cancel); #expect(!accepted) }
+        #expect(m.phase == .verifying(email: "parent@example.com", code: "12345678", purpose: .signIn))
+        #expect(!m.phase.canDismissSignIn)
+
+        // Delayed completion arrives and finishes cleanly.
+        do { let accepted = m.handle(.verified(user)); #expect(accepted) }
+        #expect(m.phase == .signedIn(user))
+        #expect(m.phase.canDismissSignIn)
+        #expect(!m.phase.canCancelCode)
+    }
+
+    @Test func delayedSignUpAutoSignInLocksControlsUntilFinished() {
+        var m = AuthMachine(phase: .awaitingCode(email: "new@example.com", purpose: .signUp))
+        do { let accepted = m.handle(.submitCode("123456")); #expect(accepted) }
+        #expect(!m.phase.canDismissSignIn)
+        #expect(!m.phase.canCancelCode)
+        do { let accepted = m.handle(.cancel); #expect(!accepted) }
+
+        // Sign-up confirmed; auto sign-in is still in flight so cancel/dismiss remain locked.
+        do { let accepted = m.handle(.signUpConfirmed); #expect(accepted) }
+        #expect(m.phase == .signingIn(email: "new@example.com"))
+        #expect(!m.phase.canDismissSignIn)
+        #expect(!m.phase.canCancelCode)
+        do { let accepted = m.handle(.cancel); #expect(!accepted) }
+
+        do { let accepted = m.handle(.verified(user)); #expect(accepted) }
+        #expect(m.phase == .signedIn(user))
+        #expect(m.phase.canDismissSignIn)
+    }
+
+    @Test func delayedVerificationFailureReEnablesCancelAndDismiss() {
+        var m = AuthMachine(phase: .awaitingCode(email: "parent@example.com", purpose: .signIn))
+        do { let accepted = m.handle(.submitCode("00000000")); #expect(accepted) }
+        #expect(!m.phase.canDismissSignIn)
+        do { let accepted = m.handle(.cancel); #expect(!accepted) }
+
+        do { let accepted = m.handle(.verifyFailed("That code isn't right.")); #expect(accepted) }
+        #expect(m.phase == .awaitingCode(email: "parent@example.com", purpose: .signIn))
+        #expect(m.phase.canDismissSignIn)
+        #expect(m.phase.canCancelCode)
+        do { let accepted = m.handle(.cancel); #expect(accepted) }
+        #expect(m.phase == .guest)
+
+        var signUp = AuthMachine(phase: .signingIn(email: "new@example.com"))
+        #expect(!signUp.phase.canDismissSignIn)
+        do { let accepted = signUp.handle(.cancel); #expect(!accepted) }
+        do { let accepted = signUp.handle(.verifyFailed("Auto sign-in failed")); #expect(accepted) }
+        #expect(signUp.phase == .guest)
+        #expect(signUp.phase.canDismissSignIn)
+    }
 }
 
 /// TKL-950 review: the code is sent to the address captured when Send was

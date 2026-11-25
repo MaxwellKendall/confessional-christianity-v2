@@ -1,7 +1,9 @@
 // Sign in with an emailed code (TKL-928 skeleton; the approved look comes in
 // TKL-930). Email → "Send code" → code → signed in, then the sheet closes.
-// Never a blocking spinner: fields stay editable while a call is in flight
-// and the button says what is happening.
+// Never a blocking spinner: the button says what is happening inline while a
+// call is in flight, and dismissal/account-switch controls lock until send or
+// verification finishes so a late completion can't sign in behind a dismissed
+// sheet.
 import SwiftUI
 import DomainKit
 
@@ -47,17 +49,20 @@ struct SignInSheet: View {
                             .keyboardType(.numberPad)
                             .focused($focus, equals: .code)
                             .onSubmit(verify)
+                            .disabled(isVerifying)
                             .accessibilityIdentifier("signIn.code")
                         Button(isVerifying ? "Checking…" : "Sign in", action: verify)
                             .disabled(isVerifying)
                             .foregroundStyle(.ccChapel)
                             .accessibilityIdentifier("signIn.verify")
                         Button("Use a different email") {
-                            auth.cancelCode()
+                            guard auth.cancelCode() else { return }
                             code = ""
                             focus = .email
                         }
+                        .disabled(!auth.phase.canCancelCode)
                         .foregroundStyle(.ccInk2)
+                        .accessibilityIdentifier("signIn.differentEmail")
                     } footer: {
                         Text("Sent to \(codeEmail).")
                     }
@@ -76,9 +81,12 @@ struct SignInSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
+                        guard auth.phase.canDismissSignIn else { return }
                         auth.cancelCode()
                         dismiss()
                     }
+                    .disabled(!auth.phase.canDismissSignIn)
+                    .accessibilityIdentifier("signIn.cancel")
                 }
             }
             .onAppear {
@@ -96,6 +104,7 @@ struct SignInSheet: View {
             }
         }
         .tint(.ccInk)
+        .interactiveDismissDisabled(!auth.phase.canDismissSignIn)
     }
 
     /// The address a code was sent to, once one is on its way or being checked.

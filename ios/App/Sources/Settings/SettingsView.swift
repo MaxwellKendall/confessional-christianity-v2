@@ -80,7 +80,7 @@ struct SettingsView: View {
         }
         .tint(.ccInk)
         .sheet(isPresented: $showsAddChild) { AddChildView() }
-        .sheet(isPresented: $showsSignIn) { SignInSheet() }
+        .sheet(isPresented: $showsSignIn, onDismiss: { auth.cancelCode() }) { SignInSheet() }
         #if DEBUG
         // Screenshot hook: `-OpenSignIn YES` opens the sheet with Settings.
         .onChange(of: auth.phase, initial: true) { _, phase in

@@ -40,12 +40,17 @@ struct OnboardingSignInView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }.disabled(isWorking)
+                    Button("Cancel") {
+                        guard auth.phase.canDismissSignIn else { return }
+                        auth.cancelCode()
+                        dismiss()
+                    }
+                    .disabled(!auth.phase.canDismissSignIn)
                 }
             }
         }
         .tint(.ccChapel)
-        .interactiveDismissDisabled(isWorking)
+        .interactiveDismissDisabled(!auth.phase.canDismissSignIn)
     }
 
     private var codeFields: some View {
@@ -57,9 +62,10 @@ struct OnboardingSignInView: View {
             Button("Verify code") { Task { await auth.verifyCode(code) } }
                 .disabled(code.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             Button("Use a different email") {
+                guard auth.cancelCode() else { return }
                 code = ""
-                auth.cancelCode()
             }
+            .disabled(!auth.phase.canCancelCode)
         }
     }
 
@@ -74,10 +80,6 @@ struct OnboardingSignInView: View {
         case .verifying, .signingIn: true
         default: false
         }
-    }
-
-    private var isWorking: Bool {
-        isConfirming || isSending
     }
 
     private var isSending: Bool {

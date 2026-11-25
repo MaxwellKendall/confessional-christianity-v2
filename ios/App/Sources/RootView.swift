@@ -57,7 +57,7 @@ struct RootView: View {
                 tabs
             }
         }
-        .sheet(isPresented: $showsSignIn, onDismiss: auth.cancelCode) {
+        .sheet(isPresented: $showsSignIn, onDismiss: { auth.cancelCode() }) {
             OnboardingSignInView()
         }
         .onChange(of: hasLocalHistory, initial: true) { _, hasHistory in

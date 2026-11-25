@@ -22,6 +22,7 @@
 		30DF48B35840FA30269AA83C /* FloatingTabBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFC0F6EBEA55CD22AC8831B1 /* FloatingTabBarView.swift */; };
 		322478282EA26DE9CAF459C3 /* LibraryRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F0B1A13CFCB4351B4180520 /* LibraryRoute.swift */; };
 		3739A33AC30DEAF56A3F62A9 /* ScriptureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DE21E2EC93C342F162E7EB8 /* ScriptureView.swift */; };
+		3E6D00B4CA23EBC3805923A5 /* SignInSheetUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1092716DFCAAFBFA67FC835E /* SignInSheetUITests.swift */; };
 		4BF1AA038DAF23E878D34262 /* SiteHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA107B8B544A9F504E2D6E4F /* SiteHeaderView.swift */; };
 		4C9F8EC58B6134846888E049 /* ReaderChapterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78ABC84F127EEF53401B4B8F /* ReaderChapterView.swift */; };
 		58641ED3BB13D794A63BE99F /* ConfessionalChristianityApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D721D4D4D91E53FCEF7C32EB /* ConfessionalChristianityApp.swift */; };
@@ -125,6 +126,7 @@
 		0696F7777BB06E349FC8B348 /* ReflectionsRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReflectionsRoute.swift; sourceTree = "<group>"; };
 		09DC9BA05478BE3F8C6ABE62 /* LibraryEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryEntryView.swift; sourceTree = "<group>"; };
 		0DEE3A1FB42239248ABA0E9F /* Cinzel-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Cinzel-Regular.ttf"; sourceTree = "<group>"; };
+		1092716DFCAAFBFA67FC835E /* SignInSheetUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignInSheetUITests.swift; sourceTree = "<group>"; };
 		1355BBE9BF8900B5FE2A2F86 /* SearchRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchRoute.swift; sourceTree = "<group>"; };
 		186C722AE6BB4430FEB87466 /* FeedOpensAtTodayUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedOpensAtTodayUITests.swift; sourceTree = "<group>"; };
 		18C002AEB0FB5E9D3623E1D3 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
@@ -341,6 +343,7 @@
 				044DF99E6706887F5BA10009 /* ConfessionsReaderTests.swift */,
 				186C722AE6BB4430FEB87466 /* FeedOpensAtTodayUITests.swift */,
 				488B97E15ED8C9433237A75B /* LoopEventsUITests.swift */,
+				1092716DFCAAFBFA67FC835E /* SignInSheetUITests.swift */,
 			);
 			path = UITests;
 			sourceTree = "<group>";
@@ -616,6 +619,7 @@
 				DC86ECECFC442185EF1FC948 /* ConfessionsReaderTests.swift in Sources */,
 				EBC4FD448149B292FC40EE5A /* FeedOpensAtTodayUITests.swift in Sources */,
 				93D0DAB535D7FDAF4CD85114 /* LoopEventsUITests.swift in Sources */,
+				3E6D00B4CA23EBC3805923A5 /* SignInSheetUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

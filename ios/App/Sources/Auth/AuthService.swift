@@ -43,8 +43,27 @@ final class AuthService {
     let isConfigured: Bool
 
     @ObservationIgnored private var hubToken: UnsubscribeToken?
+    #if DEBUG
+    /// Offline UI-test hook: `-SignInStubVerifyDelay <seconds>` stubs send/verify
+    /// with a real delay so tests can verify controls stay locked during slow
+    /// verification without hitting Cognito or sending emails.
+    @ObservationIgnored private let stubVerifyDelaySeconds: Double?
+    @ObservationIgnored private let stubPurpose: CodePurpose
+    #endif
 
     init(bundle: Bundle = .main) {
+        #if DEBUG
+        let defaults = UserDefaults.standard
+        if defaults.object(forKey: "SignInStubVerifyDelay") != nil {
+            stubVerifyDelaySeconds = max(0, defaults.double(forKey: "SignInStubVerifyDelay"))
+            stubPurpose = defaults.string(forKey: "SignInStubPurpose") == "signUp" ? .signUp : .signIn
+            isConfigured = true
+            machine.handle(.restored(nil))
+            return
+        }
+        stubVerifyDelaySeconds = nil
+        stubPurpose = .signIn
+        #endif
         isConfigured = Self.configureAmplify(bundle: bundle)
         guard isConfigured else {
             machine.handle(.restored(nil))
@@ -59,6 +78,12 @@ final class AuthService {
     func sendCode(email: String) async {
         guard isConfigured else { return }
         guard machine.handle(.requestCode(email)), case .sendingCode(let normalized) = machine.phase else { return }
+        #if DEBUG
+        if stubVerifyDelaySeconds != nil {
+            machine.handle(stubPurpose == .signUp ? .signUpCodeSent : .codeSent)
+            return
+        }
+        #endif
         // A half-finished sign-in from an earlier attempt blocks a new one.
         _ = await Amplify.Auth.signOut()
         do {
@@ -108,6 +133,21 @@ final class AuthService {
         guard case .awaitingCode(let current, _) = machine.phase, current == EmailAddress.normalized(email) else { return }
         guard machine.handle(.submitCode(code)),
               case .verifying(let normalized, let token, let purpose) = machine.phase else { return }
+        #if DEBUG
+        if let delay = stubVerifyDelaySeconds {
+            try? await Task.sleep(for: .seconds(delay))
+            if token == "000000" || token == "00000000" {
+                machine.handle(.verifyFailed("That code isn't right. Check the email and try again."))
+                return
+            }
+            if purpose == .signUp {
+                machine.handle(.signUpConfirmed)
+                try? await Task.sleep(for: .seconds(delay))
+            }
+            machine.handle(.verified(DomainKit.AuthUser(id: "stub-user", email: normalized)))
+            return
+        }
+        #endif
         switch purpose {
         case .signIn:
             do {
@@ -144,8 +184,10 @@ final class AuthService {
         await verify(email: email, code: code)
     }
 
-    /// Back from "enter code" to guest without signing in.
-    func cancelCode() {
+    /// Back from "enter code" to guest without signing in. Returns false when
+    /// cancellation is not allowed in the current phase (e.g. while verifying).
+    @discardableResult
+    func cancelCode() -> Bool {
         machine.handle(.cancel)
     }
 
@@ -153,6 +195,12 @@ final class AuthService {
     /// the server call fails, so this works offline.
     func signOut() async {
         guard isConfigured else { return }
+        #if DEBUG
+        if stubVerifyDelaySeconds != nil {
+            machine.handle(.signedOut)
+            return
+        }
+        #endif
         _ = await Amplify.Auth.signOut()
         machine.handle(.signedOut)
     }

@@ -72,6 +72,26 @@ public enum AuthPhase: Equatable, Sendable {
 
     public var isSignedIn: Bool { user != nil }
 
+    /// True while a network auth call is in flight (sending a code, verifying a
+    /// code, or finishing post-sign-up auto sign-in).
+    public var isInFlight: Bool {
+        switch self {
+        case .sendingCode, .verifying, .signingIn: true
+        default: false
+        }
+    }
+
+    /// True when the sign-in sheet may be dismissed without stranding an
+    /// in-flight call that could finish later and persist a signed-in session.
+    public var canDismissSignIn: Bool { !isInFlight }
+
+    /// True when the user may cancel code entry and switch to another email.
+    /// Matches the exact phase where `AuthMachine.handle(.cancel)` succeeds.
+    public var canCancelCode: Bool {
+        if case .awaitingCode = self { return true }
+        return false
+    }
+
     /// The address a code is being sent to, or was sent to and is being
     /// entered or verified for. Show and verify this, not an editable field.
     public var pendingEmail: String? {
