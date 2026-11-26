@@ -190,6 +190,9 @@ export const accountReducer = (state: AccountState, event: AccountEvent): Accoun
     }
 
     case 'sessionUpdated': {
+      // Server-verified details for the account already signed in. A result that
+      // arrives after sign-out, during a new sign-in, or for another account is stale.
+      if (phase.kind !== 'signedIn' || phase.user.sub !== event.user.sub) return state;
       return { phase: { kind: 'signedIn', user: event.user }, error: null };
     }
   }

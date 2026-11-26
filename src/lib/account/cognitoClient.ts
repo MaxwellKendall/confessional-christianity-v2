@@ -420,22 +420,27 @@ export async function restoreSession(
  * Signs out this browser only: clears localStorage immediately and best-effort
  * revokes this browser's refresh token (leaving the iOS app signed in).
  */
-export async function signOutSession(
+/**
+ * Clears this browser's session synchronously, then revokes its refresh token in
+ * the background. Callers switch to guest at once; `revoked` never rejects, so a
+ * slow or offline network can't hold a signed-out page on the old account.
+ */
+export function signOutSession(
   config: PublicCognitoConfig,
   storage: CognitoStorage = window.localStorage,
   fetchImpl: typeof fetch = fetch,
-): Promise<void> {
+): { revoked: Promise<void> } {
   const existing = loadSession(config, storage);
   clearSession(config, storage);
-  if (!existing?.refreshToken) return;
-  try {
-    await cognitoCall(
-      config.region,
-      'RevokeToken',
-      { ClientId: config.clientId, Token: existing.refreshToken },
-      fetchImpl,
-    );
-  } catch {
-    // Local session is already cleared; offline sign-out still succeeds.
-  }
+  if (!existing?.refreshToken) return { revoked: Promise.resolve() };
+  const revoked = cognitoCall(
+    config.region,
+    'RevokeToken',
+    { ClientId: config.clientId, Token: existing.refreshToken },
+    fetchImpl,
+  ).then(
+    () => undefined,
+    () => undefined, // Local session is already cleared; offline sign-out still succeeds.
+  );
+  return { revoked };
 }

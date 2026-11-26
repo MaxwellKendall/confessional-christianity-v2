@@ -204,6 +204,50 @@ describe('accountReducer state machine', () => {
     });
   });
 
+  // [verify] finding 2: a late /api/account/me result must not bring an ended session back.
+  test('a late sessionUpdated after sign-out is ignored', () => {
+    const user = { sub: 'sub-1', email: 'a@b.com' };
+    let state = accountReducer(initialAccountState, { type: 'restored', user });
+    state = accountReducer(state, { type: 'signedOut' });
+    expect(state).toEqual({ phase: { kind: 'guest' }, error: null });
+    state = accountReducer(state, { type: 'sessionUpdated', user });
+    expect(state).toEqual({ phase: { kind: 'guest' }, error: null });
+  });
+
+  test('a late sessionUpdated does not overwrite a new sign-in flow', () => {
+    const user = { sub: 'sub-1', email: 'a@b.com' };
+    let state = accountReducer(initialAccountState, { type: 'restored', user });
+    state = accountReducer(state, { type: 'signedOut' });
+    state = accountReducer(state, { type: 'requestCode', email: 'c@d.com' });
+    state = accountReducer(state, { type: 'codeSent' });
+    const awaiting = state;
+    state = accountReducer(state, { type: 'sessionUpdated', user });
+    expect(state).toBe(awaiting);
+    state = accountReducer(state, { type: 'submitCode', code: '12345678' });
+    const verifying = state;
+    expect(accountReducer(state, { type: 'sessionUpdated', user })).toBe(verifying);
+  });
+
+  test('a late sessionUpdated for a different account is ignored once someone else signed in', () => {
+    const other = { sub: 'sub-2', email: 'c@d.com' };
+    const state = accountReducer(initialAccountState, { type: 'restored', user: other });
+    expect(
+      accountReducer(state, { type: 'sessionUpdated', user: { sub: 'sub-1', email: 'a@b.com' } }),
+    ).toBe(state);
+  });
+
+  test('sessionUpdated refreshes the details of the account that is signed in', () => {
+    let state = accountReducer(initialAccountState, {
+      type: 'restored',
+      user: { sub: 'sub-1', email: null },
+    });
+    state = accountReducer(state, { type: 'sessionUpdated', user: { sub: 'sub-1', email: 'a@b.com' } });
+    expect(state).toEqual({
+      phase: { kind: 'signedIn', user: { sub: 'sub-1', email: 'a@b.com' } },
+      error: null,
+    });
+  });
+
   test('cancel from awaitingCode returns to guest and clears errors', () => {
     let state = accountReducer(initialAccountState, { type: 'restored', user: null });
     state = accountReducer(state, { type: 'requestCode', email: 'a@b.com' });
@@ -365,7 +409,7 @@ describe('cognitoClient flows', () => {
     expect(refreshed?.tokens.refreshToken).toBe('ref-99');
 
     // Sign out clears storage and calls RevokeToken (never GlobalSignOut)
-    await signOutSession(TEST_CONFIG, storage, refreshFetch);
+    await signOutSession(TEST_CONFIG, storage, refreshFetch).revoked;
     expect(loadSession(TEST_CONFIG, storage)).toBeNull();
     const targets = (refreshFetch as unknown as ReturnType<typeof vi.fn>).mock.calls.map(
       (call) => (call[1].headers as Record<string, string>)['X-Amz-Target'].split('.').pop(),
@@ -375,6 +419,41 @@ describe('cognitoClient flows', () => {
     // clearSession helper
     saveSession(TEST_CONFIG, session, storage);
     clearSession(TEST_CONFIG, storage);
+    expect(loadSession(TEST_CONFIG, storage)).toBeNull();
+  });
+
+  // [verify] finding 1: sign-out must not wait on a hanging RevokeToken.
+  test('signOutSession clears the session at once, even while revocation hangs', () => {
+    const storage = makeMemoryStorage();
+    saveSession(
+      TEST_CONFIG,
+      {
+        idToken: makeJwt({ sub: 'sub-1', email: 'a@b.com' }),
+        accessToken: 'acc',
+        refreshToken: 'ref',
+        expiresAt: Date.now() + 3_600_000,
+      },
+      storage,
+    );
+    const hanging = vi.fn(() => new Promise<Response>(() => {})) as unknown as typeof fetch;
+    const result = signOutSession(TEST_CONFIG, storage, hanging);
+    expect(loadSession(TEST_CONFIG, storage)).toBeNull();
+    expect(storage.store.size).toBe(0);
+    expect(hanging).toHaveBeenCalledTimes(1);
+    expect(result.revoked).toBeInstanceOf(Promise);
+  });
+
+  test('signOutSession revocation never rejects, even when the network fails', async () => {
+    const storage = makeMemoryStorage();
+    saveSession(
+      TEST_CONFIG,
+      { idToken: makeJwt({ sub: 'sub-1' }), accessToken: 'acc', refreshToken: 'ref', expiresAt: 0 },
+      storage,
+    );
+    const failing = vi.fn(async () => {
+      throw new TypeError('Failed to fetch');
+    }) as unknown as typeof fetch;
+    await expect(signOutSession(TEST_CONFIG, storage, failing).revoked).resolves.toBeUndefined();
     expect(loadSession(TEST_CONFIG, storage)).toBeNull();
   });
 

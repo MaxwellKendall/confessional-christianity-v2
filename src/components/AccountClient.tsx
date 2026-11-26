@@ -61,6 +61,9 @@ export function AccountClient({ config }: AccountClientProps) {
   const [codeInput, setCodeInput] = useState('');
   const [serverVerified, setServerVerified] = useState(false);
   const authSessionRef = useRef<string | undefined>(undefined);
+  // Bumped whenever a session ends, so a /api/account/me reply that was in flight
+  // for the old session is dropped instead of showing its account again.
+  const sessionGenerationRef = useRef(0);
 
   useEffect(() => {
     if (!config) return;
@@ -73,8 +76,9 @@ export function AccountClient({ config }: AccountClientProps) {
         return;
       }
       dispatch({ type: 'restored', user: restored.user });
+      const generation = sessionGenerationRef.current;
       const verified = await fetchVerifiedUser(restored.tokens.idToken);
-      if (cancelled || !verified) return;
+      if (cancelled || !verified || generation !== sessionGenerationRef.current) return;
       setServerVerified(true);
       dispatch({
         type: 'sessionUpdated',
@@ -162,8 +166,9 @@ export function AccountClient({ config }: AccountClientProps) {
       setCodeInput('');
       dispatch({ type: 'verified', user: result.user });
 
+      const generation = sessionGenerationRef.current;
       const verified = await fetchVerifiedUser(result.tokens.idToken);
-      if (verified) {
+      if (verified && generation === sessionGenerationRef.current) {
         setServerVerified(true);
         dispatch({
           type: 'sessionUpdated',
@@ -185,11 +190,13 @@ export function AccountClient({ config }: AccountClientProps) {
     dispatch({ type: 'cancel' });
   };
 
-  const handleSignOut = async () => {
+  const handleSignOut = () => {
+    sessionGenerationRef.current += 1;
     authSessionRef.current = undefined;
     setServerVerified(false);
     setCodeInput('');
-    await signOutSession(config);
+    // Local tokens are gone before this returns; revocation finishes in the background.
+    void signOutSession(config).revoked;
     dispatch({ type: 'signedOut' });
   };
 
@@ -362,7 +369,7 @@ export function AccountClient({ config }: AccountClientProps) {
           <div className="mt-6">
             <button
               type="button"
-              onClick={() => void handleSignOut()}
+              onClick={handleSignOut}
               className="action-button w-full cursor-pointer bg-transparent"
             >
               Sign Out
