@@ -33,11 +33,16 @@ export interface Rejection {
     | 'text_too_long'
     | 'quote_too_short'
     | 'quote_not_in_source'
-    | 'bad_reference';
+    | 'bad_reference'
+    /** past MAX_CARDS_PER_PAGE: kept out to bound cost, but still counted */
+    | 'over_limit';
 }
 
 export const MAX_TEXT_LENGTH: Record<'key_point' | 'quote', number> = { key_point: 280, quote: 400 };
-export const MAX_CARDS_PER_PAGE = 12;
+// A bound on cost and payload only. A dense page of notes can carry well over a
+// dozen points, so this sits far above what a real page yields; the number of
+// cards is decided by the notes (see INSTRUCTIONS in gemini.ts), not by this.
+export const MAX_CARDS_PER_PAGE = 24;
 const MIN_QUOTE_WORDS = 3;
 
 // Sent to Gemini as `responseJsonSchema`, so "exactly three kinds" is a property
@@ -108,7 +113,7 @@ export const validateGeneratedCards = (
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return reject('not_object');
     const { kind, text, reference } = raw as Record<string, unknown>;
     if (typeof kind !== 'string' || !(CARD_KINDS as readonly string[]).includes(kind)) return reject('unknown_kind');
-    if (cards.length >= MAX_CARDS_PER_PAGE) return;
+    if (cards.length >= MAX_CARDS_PER_PAGE) return reject('over_limit');
     const base = { id: `p${page}-${cards.length}`, kind: kind as CardKind, page, order: cards.length };
 
     if (kind === 'verse') {

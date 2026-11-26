@@ -1,6 +1,12 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
-import { CARD_KINDS, GENERATION_SCHEMA, normalizeForMatch, validateGeneratedCards } from '@/lib/lordsDay/cards';
+import {
+  CARD_KINDS,
+  GENERATION_SCHEMA,
+  MAX_CARDS_PER_PAGE,
+  normalizeForMatch,
+  validateGeneratedCards,
+} from '@/lib/lordsDay/cards';
 import {
   CardsError,
   GEMINI_CARDS_INPUT_PER_1M,
@@ -111,9 +117,25 @@ describe('validateGeneratedCards', () => {
     ]);
   });
 
-  test('caps the cards kept per page', () => {
-    const many = Array.from({ length: 20 }, (_, i) => ({ kind: 'key_point', text: `Point ${i}` }));
-    expect(validate(many).cards).toHaveLength(12);
+  test('the per-page bound is a safety limit, well above what a real page yields', () => {
+    // A dense page of notes can carry well over a dozen points; the bound caps
+    // cost and payload, it does not shape normal output (TKL-1053).
+    expect(MAX_CARDS_PER_PAGE).toBeGreaterThanOrEqual(20);
+  });
+
+  test('cards past the bound are recorded as rejections, never dropped silently', () => {
+    const many = Array.from({ length: MAX_CARDS_PER_PAGE + 3 }, (_, i) => ({
+      kind: 'key_point',
+      text: `Point ${i}`,
+    }));
+    const { cards, rejected } = validate(many);
+
+    expect(cards).toHaveLength(MAX_CARDS_PER_PAGE);
+    expect(rejected).toEqual([
+      { index: MAX_CARDS_PER_PAGE, reason: 'over_limit' },
+      { index: MAX_CARDS_PER_PAGE + 1, reason: 'over_limit' },
+      { index: MAX_CARDS_PER_PAGE + 2, reason: 'over_limit' },
+    ]);
   });
 
   test('normalizeForMatch folds case, quotes, punctuation and whitespace', () => {

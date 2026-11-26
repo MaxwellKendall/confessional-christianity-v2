@@ -72,7 +72,7 @@ const INSTRUCTIONS = `You turn one Christian's notes on a Sunday sermon into sho
 
 Return JSON with:
 - extractedText: a faithful transcription of the notes. Keep the writer's words and abbreviations; do not fix, expand or add anything. Mark an unreadable word as [?].
-- cards: 3 to 8 cards, in the order the notes run, each one of exactly three kinds:
+- cards: one card for each distinct point, quotable line and passage the notes actually contain, in the order the notes run. Let the notes decide how many: a sparse page may give only two or three, a full page of a well-structured sermon may give a dozen or more. Never pad with filler to reach a number, and never leave out something worth keeping to stay under one. Each card is exactly one of three kinds:
   - key_point: one main point of the sermon as one clear sentence (at most 200 characters), in plain words, faithful to the notes. Never add doctrine the notes do not contain.
   - quote: a memorable line copied character for character from extractedText. Never compose, paraphrase, merge or tidy a quote. If no line is worth quoting, give no quote cards.
   - verse: a Bible passage named in the notes, as a reference only, with the full English book name ("Psalm 86:5", "1 Thessalonians 3", "Matthew 5:43-48"). Never write the words of Scripture, and never add a passage the notes do not name.
