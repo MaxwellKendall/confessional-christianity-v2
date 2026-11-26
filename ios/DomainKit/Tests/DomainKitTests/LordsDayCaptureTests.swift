@@ -139,4 +139,24 @@ final class LordsDayCaptureTests: XCTestCase {
         let body = try LordsDayCardsRequest(pages: sixPages, typedText: nil, passage: "Psalm 98", title: nil, preacher: nil).body()
         XCTAssertLessThanOrEqual(body.count, LordsDayCardsRequest.maxBodyBytes)
     }
+
+    func testReplayOnlyPagesAndExpectedGenerationIdsSerializeOnlyWhenPresent() throws {
+        let plain = try decode(LordsDayCardsRequest(pages: [jpeg(1)], typedText: nil, passage: nil, title: nil, preacher: nil).body())
+        XCTAssertNil(plain["replayOnlyPages"])
+        XCTAssertNil(plain["expectedGenerationIds"])
+
+        let replay = try decode(
+            LordsDayCardsRequest(
+                pages: [jpeg(1), jpeg(2)],
+                typedText: nil,
+                passage: nil,
+                title: nil,
+                preacher: nil,
+                replayOnlyPages: [0],
+                expectedGenerationIds: [0: "gen-abc"]
+            ).body()
+        )
+        XCTAssertEqual(replay["replayOnlyPages"] as? [Int], [0])
+        XCTAssertEqual(replay["expectedGenerationIds"] as? [String: String], ["0": "gen-abc"])
+    }
 }

@@ -72,9 +72,15 @@ final class ReviewModel {
     private func run() {
         task?.cancel()
         failure = nil
+        let pages = review.begin()
+        guard !pages.isEmpty else {
+            review.interrupt()
+            save()
+            return
+        }
         let request: LordsDayCardsRequest
         do {
-            request = try makeRequest(pages: review.begin())
+            request = try makeRequest(pages: pages)
         } catch {
             review.interrupt()
             failure = .failed
@@ -100,13 +106,22 @@ final class ReviewModel {
         }
     }
 
-    /// Only the pages still unread: a retry doesn't redraft what's already here.
+    /// Only the pages still unread: a retry doesn't redraft what's already here, and pages
+    /// that already have partial cards request replay-only so they never append fresh wording.
     private func makeRequest(pages: [Int]) throws -> LordsDayCardsRequest {
         let draft = try CaptureDraft(noteId: note.id, root: root)
         let all = try draft.pageData()
-        let photos = all.isEmpty ? [] : pages.filter(all.indices.contains).map { all[$0] }
-        return LordsDayCardsRequest(pages: photos, typedText: photos.isEmpty ? note.extractedText : nil,
-                                    passage: note.passageRef, title: note.sermonTitle, preacher: note.preacher)
+        let validPages = all.isEmpty ? (pages.isEmpty ? [] : [pages[0]]) : pages.filter(all.indices.contains)
+        let photos = all.isEmpty ? [] : validPages.map { all[$0] }
+        return LordsDayCardsRequest(
+            pages: photos,
+            typedText: photos.isEmpty ? note.extractedText : nil,
+            passage: note.passageRef,
+            title: note.sermonTitle,
+            preacher: note.preacher,
+            replayOnlyPages: review.replayOnlyRequestIndices(for: validPages),
+            expectedGenerationIds: review.expectedGenerationIds(for: validPages)
+        )
     }
 
     // MARK: Changes

@@ -34,16 +34,20 @@ public enum LordsDayCardsEvent: Equatable, Sendable {
     case started(pages: Int)
     /// That page was read; `cardCount` (when supplied by the server) tells how many card events follow,
     /// and `extractedText` is the model's transcription of it, shown while the rest is still drafting.
-    case page(Int, cardCount: Int? = nil, extractedText: String? = nil)
+    case page(Int, cardCount: Int? = nil, extractedText: String? = nil, generationId: String? = nil)
     case card(DraftCardPayload)
     /// That page failed; the others continue.
     case pageFailed(Int)
+    /// The original generated page is no longer available to replay; existing partial cards stay untouched.
+    case pageReplayUnavailable(Int)
     case done(failedPages: [Int])
 
     private struct Line: Decodable {
         let type: String
         let pages: Int?
         let page: Int?
+        let code: String?
+        let generationId: String?
         let cardCount: Int?
         let extractedText: String?
         let card: DraftCardPayload?
@@ -56,9 +60,11 @@ public enum LordsDayCardsEvent: Equatable, Sendable {
         let event = try JSONDecoder().decode(Line.self, from: Data(line.utf8))
         switch event.type {
         case "started": return .started(pages: event.pages ?? 0)
-        case "page": return event.page.map { .page($0, cardCount: event.cardCount, extractedText: event.extractedText) }
+        case "page": return event.page.map { .page($0, cardCount: event.cardCount, extractedText: event.extractedText, generationId: event.generationId) }
         case "card": return event.card.map(LordsDayCardsEvent.card)
-        case "error": return event.page.map(LordsDayCardsEvent.pageFailed)
+        case "error":
+            guard let page = event.page else { return nil }
+            return event.code == "replay_unavailable" ? .pageReplayUnavailable(page) : .pageFailed(page)
         case "done": return .done(failedPages: event.failedPages ?? [])
         default: return nil
         }
@@ -151,6 +157,17 @@ public struct ReviewCard: Codable, Equatable, Identifiable, Sendable {
             .joined(separator: " ")
         return "\(kind.rawValue):\(normalized)"
     }
+
+    /// Extracts the server generation identifier from a server-assigned `sourceKey` (`"<generationId>:<order>"`),
+    /// returning nil for legacy nil keys or prior-build content-derived keys (`"key_point:..."`, `"quote:..."`, `"verse:..."`).
+    static func serverGenerationId(from sourceKey: String?) -> String? {
+        guard let key = normalizedNoteField(sourceKey),
+              let colon = key.lastIndex(of: ":") else { return nil }
+        let prefix = String(key[..<colon])
+        let suffix = String(key[key.index(after: colon)...])
+        guard !prefix.isEmpty, CardKind(rawValue: prefix) == nil, Int(suffix) != nil else { return nil }
+        return prefix
+    }
 }
 
 /// What finishing the review hands to `LordsDayStore.keepCards`.
@@ -184,6 +201,9 @@ public struct LordsDayReview: Codable, Equatable, Sendable {
     public private(set) var cards: [ReviewCard] = []
     public private(set) var readPages: Set<Int> = []
     public private(set) var failedPages: Set<Int> = []
+    /// Unread pages whose original generated draft is no longer available to replay.
+    /// Existing partial cards stay untouched; the user chooses to keep what arrived rather than append a fresh generation.
+    public private(set) var replayUnavailablePages: Set<Int> = []
     /// Unread pages the user explicitly chose to skip so the already-read cards can be finished.
     public private(set) var skippedPages: Set<Int> = []
     /// The note page each page of the request in flight stands for (a retry sends only some).
@@ -192,6 +212,8 @@ public struct LordsDayReview: Codable, Equatable, Sendable {
     private var expectedCardCounts: [Int: Int] = [:]
     private var receivedCardCounts: [Int: Int] = [:]
     private var seenPagesWithoutCount: Set<Int> = []
+    private var pageGenerationIds: [Int: String] = [:]
+    private var rejectedGenerationPages: Set<Int> = []
     /// Each read page's transcription, in the order the pages came back. Shown while
     /// drafting instead of a placeholder (TKL-1053); not persisted.
     private struct PageTranscription: Equatable, Sendable {
@@ -201,7 +223,7 @@ public struct LordsDayReview: Codable, Equatable, Sendable {
     private var pageText: [PageTranscription] = []
 
     private enum CodingKeys: String, CodingKey {
-        case noteId, pageCount, phase, cards, readPages, failedPages, skippedPages, requestPages
+        case noteId, pageCount, phase, cards, readPages, failedPages, replayUnavailablePages, skippedPages, requestPages, pageGenerationIds
     }
 
     public init(noteId: UUID, pageCount: Int) {
@@ -217,16 +239,38 @@ public struct LordsDayReview: Codable, Equatable, Sendable {
         cards = try c.decode([ReviewCard].self, forKey: .cards)
         readPages = try c.decode(Set<Int>.self, forKey: .readPages)
         failedPages = try c.decode(Set<Int>.self, forKey: .failedPages)
+        replayUnavailablePages = try c.decodeIfPresent(Set<Int>.self, forKey: .replayUnavailablePages) ?? []
         skippedPages = try c.decodeIfPresent(Set<Int>.self, forKey: .skippedPages) ?? []
         requestPages = try c.decode([Int].self, forKey: .requestPages)
+        pageGenerationIds = try c.decodeIfPresent([Int: String].self, forKey: .pageGenerationIds) ?? [:]
     }
 
     public var isDrafting: Bool { phase == .drafting }
     public var progress: Double { Double(readPages.count + failedPages.count) / Double(pageCount) }
     public var unreadPages: [Int] { (0..<pageCount).filter { !readPages.contains($0) } }
+    /// Unread pages that can still be retried (excludes pages whose original draft is permanently unavailable).
+    public var retryablePages: [Int] { unreadPages.filter { !replayUnavailablePages.contains($0) } }
     /// Unread pages that have neither completed nor been explicitly skipped by the user.
     public var unhandledUnreadPages: [Int] { unreadPages.filter { !skippedPages.contains($0) } }
-    public var canRetry: Bool { !isDrafting && phase != .notStarted && !unreadPages.isEmpty }
+    public var canRetry: Bool { !isDrafting && phase != .notStarted && !retryablePages.isEmpty }
+    /// Whether this note page already has partial cards from an earlier interrupted stream.
+    public func hasPartialCards(on page: Int) -> Bool { cards.contains { $0.page == page } }
+    /// The server generation id already associated with partial cards on `page`, if known.
+    public func generationId(forPage page: Int) -> String? {
+        pageGenerationIds[page] ?? cards.lazy.filter { $0.page == page }.compactMap { ReviewCard.serverGenerationId(from: $0.sourceKey) }.first
+    }
+    /// Request page indices (within `sentPages`) that already have partial cards and must only replay.
+    public func replayOnlyRequestIndices(for sentPages: [Int]) -> [Int] {
+        sentPages.enumerated().compactMap { index, notePage in (hasPartialCards(on: notePage) || pageGenerationIds[notePage] != nil) ? index : nil }
+    }
+    /// Expected server generation IDs (keyed by request page index) for partial pages in `sentPages`.
+    public func expectedGenerationIds(for sentPages: [Int]) -> [Int: String] {
+        var result: [Int: String] = [:]
+        for (index, notePage) in sentPages.enumerated() {
+            if let genId = generationId(forPage: notePage) { result[index] = genId }
+        }
+        return result
+    }
     /// The first kept card that can't be kept as it is (a key point or quote with no words).
     public var blockingCardIndex: Int? { cards.firstIndex { $0.kept && !$0.isComplete } }
     /// What the model read on that page, once it has been read.
@@ -250,9 +294,9 @@ public struct LordsDayReview: Codable, Equatable, Sendable {
         skippedPages.formUnion(unreadPages)
     }
 
-    /// Starts a run for every page not yet read and returns those note pages, in order.
+    /// Starts a run for every retryable unread page and returns those note pages, in order.
     public mutating func begin() -> [Int] {
-        requestPages = unreadPages
+        requestPages = retryablePages
         failedPages.subtract(requestPages)
         skippedPages.subtract(requestPages)
         clearInFlightPageTracking()
@@ -265,8 +309,17 @@ public struct LordsDayReview: Codable, Equatable, Sendable {
         switch event {
         case .started:
             break
-        case .page(let requestPage, let cardCount, let extractedText):
-            guard let page = notePage(requestPage) else { return }
+        case .page(let requestPage, let cardCount, let extractedText, let generationId):
+            guard let page = notePage(requestPage), !rejectedGenerationPages.contains(page) else { return }
+            if let generationId {
+                if let original = self.generationId(forPage: page), original != generationId {
+                    rejectedGenerationPages.insert(page)
+                    failedPages.insert(page)
+                    replayUnavailablePages.insert(page)
+                    return
+                }
+                pageGenerationIds[page] = generationId
+            }
             if let extractedText, !extractedText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 pageText.removeAll { $0.page == page }
                 pageText.append(PageTranscription(page: page, text: extractedText))
@@ -274,6 +327,13 @@ public struct LordsDayReview: Codable, Equatable, Sendable {
             failedPages.remove(page)
             if let cardCount {
                 let expected = max(0, cardCount)
+                if expected == 0 && hasPartialCards(on: page) {
+                    // A genuine replay of a page that already produced cards cannot declare 0 cards.
+                    rejectedGenerationPages.insert(page)
+                    failedPages.insert(page)
+                    replayUnavailablePages.insert(page)
+                    return
+                }
                 expectedCardCounts[page] = expected
                 if (receivedCardCounts[page] ?? 0) >= expected {
                     readPages.insert(page)
@@ -285,8 +345,26 @@ public struct LordsDayReview: Codable, Equatable, Sendable {
             }
         case .pageFailed(let page):
             if let page = notePage(page), !readPages.contains(page) { failedPages.insert(page) }
+        case .pageReplayUnavailable(let page):
+            if let page = notePage(page), !readPages.contains(page) {
+                rejectedGenerationPages.insert(page)
+                failedPages.insert(page)
+                replayUnavailablePages.insert(page)
+            }
         case .card(let draft):
-            guard let page = notePage(draft.page) else { return }
+            guard let page = notePage(draft.page), !rejectedGenerationPages.contains(page) else { return }
+            // Defense in depth: if this page already has cards from a known server generation,
+            // never accept cards from a different generation (prevents duplicate edited cards).
+            if let existingGen = generationId(forPage: page) {
+                let incomingGen = ReviewCard.serverGenerationId(from: draft.sourceKey)
+                if incomingGen != existingGen {
+                    rejectedGenerationPages.insert(page)
+                    readPages.remove(page)
+                    failedPages.insert(page)
+                    replayUnavailablePages.insert(page)
+                    return
+                }
+            }
             receivedCardCounts[page, default: 0] += 1
             if let expected = expectedCardCounts[page], receivedCardCounts[page, default: 0] >= expected {
                 readPages.insert(page)
@@ -327,7 +405,7 @@ public struct LordsDayReview: Codable, Equatable, Sendable {
         case .done(let failed):
             let failedSet = Set(failed.compactMap(notePage))
             for page in failedSet where !readPages.contains(page) { failedPages.insert(page) }
-            for page in seenPagesWithoutCount where !failedSet.contains(page) {
+            for page in seenPagesWithoutCount where !failedSet.contains(page) && !rejectedGenerationPages.contains(page) {
                 readPages.insert(page)
                 failedPages.remove(page)
                 skippedPages.remove(page)
@@ -388,6 +466,7 @@ public struct LordsDayReview: Codable, Equatable, Sendable {
         expectedCardCounts = [:]
         receivedCardCounts = [:]
         seenPagesWithoutCount = []
+        rejectedGenerationPages = []
     }
 
     private func notePage(_ requestPage: Int) -> Int? {

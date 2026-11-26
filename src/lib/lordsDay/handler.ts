@@ -13,14 +13,16 @@ import { pageReplayKey, type CachedPage, type CachedPageCard, type PageReplayCac
 // Request (JSON, ≤ 4 MB; resize photos on the phone to ~1600 px first):
 //   { images?: [{ data: <base64>, mimeType: "image/jpeg" | ... }]  (1–6 pages)
 //     extractedText?: string  (the "Type instead" path; exactly one of the two)
-//     passage?, title?, preacher?: string }
+//     passage?, title?, preacher?: string
+//     replayOnlyPages?: number[]  (request page indices that must only replay, never regenerate)
+//     expectedGenerationIds?: Record<string, string> }
 // Header: Authorization: Bearer <Cognito access token>.
 //
 // Errors before generation are JSON with a status (400, 401, 413, 429, 503).
 // Otherwise a 200 NDJSON stream, one event per line, so the app fills cards in
 // as each page finishes instead of waiting on a spinner:
 //   { type: "started", pages, model }
-//   { type: "page", page, extractedText, rejected, cardCount }  then  { type: "card", card } per card
+//   { type: "page", page, extractedText, rejected, cardCount, generationId }  then  { type: "card", card } per card
 //   { type: "error", page, code, message }            (that page failed; others continue)
 //   { type: "done", cards: [...ordered by page, order], rejected, failedPages, costUsd }
 
@@ -52,11 +54,49 @@ interface ParsedRequest {
   passage?: string;
   title?: string;
   preacher?: string;
+  replayOnlyPages: Set<number>;
+  expectedGenerationIds: Map<number, string>;
 }
+
+const parseReplayControls = (
+  rawReplayOnly: unknown,
+  rawExpectedIds: unknown,
+  pageCount: number,
+): { replayOnlyPages: Set<number>; expectedGenerationIds: Map<number, string> } | Response => {
+  const replayOnlyPages = new Set<number>();
+  if (rawReplayOnly !== undefined && rawReplayOnly !== null) {
+    if (!Array.isArray(rawReplayOnly)) return fail(400, 'bad_replay_pages');
+    for (const item of rawReplayOnly) {
+      if (typeof item !== 'number' || !Number.isInteger(item) || item < 0 || item >= pageCount) {
+        return fail(400, 'bad_replay_pages');
+      }
+      replayOnlyPages.add(item);
+    }
+  }
+
+  const expectedGenerationIds = new Map<number, string>();
+  if (rawExpectedIds !== undefined && rawExpectedIds !== null) {
+    if (typeof rawExpectedIds !== 'object' || Array.isArray(rawExpectedIds)) return fail(400, 'bad_replay_pages');
+    for (const [k, v] of Object.entries(rawExpectedIds as Record<string, unknown>)) {
+      if (!/^\d+$/.test(k)) return fail(400, 'bad_replay_pages');
+      const idx = Number(k);
+      if (!Number.isInteger(idx) || idx < 0 || idx >= pageCount) return fail(400, 'bad_replay_pages');
+      if (typeof v !== 'string') return fail(400, 'bad_replay_pages');
+      const trimmed = v.trim();
+      if (!trimmed || trimmed.length > MAX_META_CHARS) return fail(400, 'bad_replay_pages');
+      expectedGenerationIds.set(idx, trimmed);
+    }
+  }
+
+  return { replayOnlyPages, expectedGenerationIds };
+};
 
 const parseBody = (body: unknown): ParsedRequest | Response => {
   if (!body || typeof body !== 'object' || Array.isArray(body)) return fail(400, 'invalid_json');
-  const { images, extractedText, passage, title, preacher } = body as Record<string, unknown>;
+  const { images, extractedText, passage, title, preacher, replayOnlyPages, expectedGenerationIds } = body as Record<
+    string,
+    unknown
+  >;
 
   const meta: Record<string, string | undefined> = {};
   for (const [name, value] of Object.entries({ passage, title, preacher })) {
@@ -71,7 +111,9 @@ const parseBody = (body: unknown): ParsedRequest | Response => {
 
   if (hasText) {
     if ((extractedText as string).length > MAX_TYPED_CHARS) return fail(400, 'text_too_long');
-    return { pages: [{ kind: 'text', text: extractedText as string }], ...meta };
+    const replay = parseReplayControls(replayOnlyPages, expectedGenerationIds, 1);
+    if (replay instanceof Response) return replay;
+    return { pages: [{ kind: 'text', text: extractedText as string }], ...meta, ...replay };
   }
 
   const list = images as unknown[];
@@ -83,7 +125,9 @@ const parseBody = (body: unknown): ParsedRequest | Response => {
     if (typeof data !== 'string' || !BASE64.test(data)) return fail(400, 'bad_image');
     pages.push({ kind: 'image', data, mimeType });
   }
-  return { pages, ...meta };
+  const replay = parseReplayControls(replayOnlyPages, expectedGenerationIds, pages.length);
+  if (replay instanceof Response) return replay;
+  return { pages, ...meta, ...replay };
 };
 
 export const handleCardsRequest = async (request: Request, deps: CardsDeps): Promise<Response> => {
@@ -119,7 +163,7 @@ export const handleCardsRequest = async (request: Request, deps: CardsDeps): Pro
   const parsed = parseBody(body);
   if (parsed instanceof Response) return parsed;
 
-  const { pages, passage, title, preacher } = parsed;
+  const { pages, passage, title, preacher, replayOnlyPages, expectedGenerationIds } = parsed;
   const { geminiApiKey, model, replayCache, fetchImpl, retryDelayMs } = deps;
   const encoder = new TextEncoder();
 
@@ -136,6 +180,10 @@ export const handleCardsRequest = async (request: Request, deps: CardsDeps): Pro
       await Promise.all(
         pages.map(async (input, page) => {
           try {
+            const key = pageReplayKey({ sub, model, input, passage, title, preacher });
+            const mustReplay = replayOnlyPages.has(page);
+            const expectedGenId = expectedGenerationIds.get(page);
+
             const generatePage = async (): Promise<{ page: CachedPage; costUsd: number }> => {
               // the preacher is never sent: attribution is metadata, not model output
               const result = await draftPage(input, { passage, title }, { apiKey: geminiApiKey, model, fetchImpl, retryDelayMs });
@@ -156,6 +204,7 @@ export const handleCardsRequest = async (request: Request, deps: CardsDeps): Pro
               }));
               return {
                 page: {
+                  generationId,
                   extractedText: result.extractedText,
                   rejected: pageRejected.length,
                   cards: cachedCards,
@@ -164,9 +213,25 @@ export const handleCardsRequest = async (request: Request, deps: CardsDeps): Pro
               };
             };
 
-            const resolved = replayCache
-              ? await replayCache.getOrCreate(pageReplayKey({ sub, model, input, passage, title, preacher }), generatePage)
-              : { ...(await generatePage()), hit: false };
+            let resolved: { page: CachedPage; costUsd: number; hit: boolean };
+            if (mustReplay || expectedGenId !== undefined) {
+              const cached = replayCache ? await replayCache.get(key) : null;
+              if (!cached || (expectedGenId !== undefined && cached.generationId !== expectedGenId)) {
+                failedPages.push(page);
+                send({
+                  type: 'error',
+                  page,
+                  code: 'replay_unavailable',
+                  message: 'The original draft for this page is no longer available to resume.',
+                });
+                return;
+              }
+              resolved = { page: cached, costUsd: 0, hit: true };
+            } else {
+              resolved = replayCache
+                ? await replayCache.getOrCreate(key, generatePage)
+                : { ...(await generatePage()), hit: false };
+            }
 
             costUsd += resolved.costUsd;
             rejected += resolved.page.rejected;
@@ -182,6 +247,7 @@ export const handleCardsRequest = async (request: Request, deps: CardsDeps): Pro
               extractedText: resolved.page.extractedText,
               rejected: resolved.page.rejected,
               cardCount: cards.length,
+              generationId: resolved.page.generationId,
             });
             for (const card of cards) send({ type: 'card', card });
           } catch (error) {
