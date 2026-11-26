@@ -126,8 +126,11 @@ struct ReviewView: View {
     private var subtitle: String {
         let count = review.cards.count
         if review.isDrafting {
+            // Real units: which page the model is on, and what it has found (TKL-1053).
+            let read = review.transcribedPageCount
+            let where_ = review.pageCount > 1 && read > 0 ? "Page \(min(read + 1, review.pageCount)) of \(review.pageCount)" : "Reading your notes"
             let so = count == 0 ? "" : " · \(count) card\(count == 1 ? "" : "s") so far"
-            return "Reading your notes\(so). You can close this; they keep coming."
+            return "\(where_)\(so). You can close this; they keep coming."
         }
         if count == 0 { return "No cards yet." }
         return "Swipe through. Keep, change the kind, edit the words, or remove."
@@ -150,7 +153,13 @@ struct ReviewView: View {
                         .transition(.opacity.combined(with: .offset(y: 10)))
                 }
                 if review.isDrafting {
-                    DraftingCard(fill: fill, ink2: ink2, cardsSoFar: review.cards.count)
+                    DraftingCard(
+                        fill: fill,
+                        ink2: ink2,
+                        accent: chapel,
+                        cardsSoFar: review.cards.count,
+                        transcription: review.newestTranscription
+                    )
                         .containerRelativeFrame(.horizontal)
                         .id(Self.placeholderId)
                 }
@@ -529,19 +538,39 @@ private struct ReviewCardView: View {
 private struct DraftingCard: View {
     let fill: Color
     let ink2: Color
+    let accent: Color
     let cardsSoFar: Int
+    /// The model's transcription of the page it has just read, once there is one.
+    let transcription: String?
     @State private var pulse = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         RoundedRectangle(cornerRadius: 14, style: .continuous)
             .fill(fill)
             .overlay {
                 VStack(alignment: .leading, spacing: 12) {
-                    ForEach([0.4, 0.95, 0.85, 0.6], id: \.self) { width in
-                        RoundedRectangle(cornerRadius: 5)
-                            .fill(ink2.opacity(pulse ? 0.16 : 0.08))
-                            .containerRelativeFrame(.horizontal) { length, _ in length * width * 0.75 }
-                            .frame(height: width == 0.4 ? 10 : 18)
+                    if let transcription, !transcription.isEmpty {
+                        // The writer's own words, as the model read them (TKL-1053).
+                        Text("Read from your notes")
+                            .font(.ccDisplay(10.5))
+                            .tracking(10.5 * 0.2)
+                            .textCase(.uppercase)
+                            .foregroundStyle(accent)
+                        ScrollView(.vertical, showsIndicators: false) {
+                            Text(transcription)
+                                .font(.ccBody(17))
+                                .lineSpacing(4)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        .scrollBounceBehavior(.basedOnSize)
+                    } else {
+                        ForEach([0.4, 0.95, 0.85, 0.6], id: \.self) { width in
+                            RoundedRectangle(cornerRadius: 5)
+                                .fill(ink2.opacity(pulse ? 0.16 : 0.08))
+                                .containerRelativeFrame(.horizontal) { length, _ in length * width * 0.75 }
+                                .frame(height: width == 0.4 ? 10 : 18)
+                        }
                     }
                     Text(cardsSoFar == 0 ? "Reading your notes…" : "More cards on the way…")
                         .font(.system(size: 13))
@@ -551,7 +580,9 @@ private struct DraftingCard: View {
                 .padding(26)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
+            .accessibilityElement(children: .combine)
             .onAppear {
+                guard !reduceMotion else { return }
                 withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) { pulse = true }
             }
             .accessibilityElement()

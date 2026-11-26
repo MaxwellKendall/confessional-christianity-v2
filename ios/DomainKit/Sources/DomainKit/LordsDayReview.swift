@@ -30,8 +30,9 @@ public struct DraftCardPayload: Codable, Equatable, Sendable {
 /// The events of the generator's NDJSON stream that the review uses.
 public enum LordsDayCardsEvent: Equatable, Sendable {
     case started(pages: Int)
-    /// That page was read; `cardCount` (when supplied by the server) tells how many card events follow.
-    case page(Int, cardCount: Int? = nil)
+    /// That page was read; `cardCount` (when supplied by the server) tells how many card events follow,
+    /// and `extractedText` is the model's transcription of it, shown while the rest is still drafting.
+    case page(Int, cardCount: Int? = nil, extractedText: String? = nil)
     case card(DraftCardPayload)
     /// That page failed; the others continue.
     case pageFailed(Int)
@@ -42,6 +43,7 @@ public enum LordsDayCardsEvent: Equatable, Sendable {
         let pages: Int?
         let page: Int?
         let cardCount: Int?
+        let extractedText: String?
         let card: DraftCardPayload?
         let failedPages: [Int]?
     }
@@ -52,7 +54,7 @@ public enum LordsDayCardsEvent: Equatable, Sendable {
         let event = try JSONDecoder().decode(Line.self, from: Data(line.utf8))
         switch event.type {
         case "started": return .started(pages: event.pages ?? 0)
-        case "page": return event.page.map { .page($0, cardCount: event.cardCount) }
+        case "page": return event.page.map { .page($0, cardCount: event.cardCount, extractedText: event.extractedText) }
         case "card": return event.card.map(LordsDayCardsEvent.card)
         case "error": return event.page.map(LordsDayCardsEvent.pageFailed)
         case "done": return .done(failedPages: event.failedPages ?? [])
@@ -186,6 +188,13 @@ public struct LordsDayReview: Codable, Equatable, Sendable {
     private var expectedCardCounts: [Int: Int] = [:]
     private var receivedCardCounts: [Int: Int] = [:]
     private var seenPagesWithoutCount: Set<Int> = []
+    /// Each read page's transcription, in the order the pages came back. Shown while
+    /// drafting instead of a placeholder (TKL-1053); not persisted.
+    private struct PageTranscription: Equatable, Sendable {
+        let page: Int
+        let text: String
+    }
+    private var pageText: [PageTranscription] = []
 
     private enum CodingKeys: String, CodingKey {
         case noteId, pageCount, phase, cards, readPages, failedPages, skippedPages, requestPages
@@ -216,6 +225,12 @@ public struct LordsDayReview: Codable, Equatable, Sendable {
     public var canRetry: Bool { !isDrafting && phase != .notStarted && !unreadPages.isEmpty }
     /// The first kept card that can't be kept as it is (a key point or quote with no words).
     public var blockingCardIndex: Int? { cards.firstIndex { $0.kept && !$0.isComplete } }
+    /// What the model read on that page, once it has been read.
+    public func transcription(forPage page: Int) -> String? { pageText.first { $0.page == page }?.text }
+    /// The most recently read page's transcription.
+    public var newestTranscription: String? { pageText.last?.text }
+    /// How many pages have come back with their words.
+    public var transcribedPageCount: Int { pageText.count }
     public var undecidedCount: Int { cards.filter(\.isUndecided).count }
     public var firstUndecidedIndex: Int? { cards.firstIndex(where: \.isUndecided) }
     public var keptCount: Int { cards.filter(\.kept).count }
@@ -246,8 +261,12 @@ public struct LordsDayReview: Codable, Equatable, Sendable {
         switch event {
         case .started:
             break
-        case .page(let requestPage, let cardCount):
+        case .page(let requestPage, let cardCount, let extractedText):
             guard let page = notePage(requestPage) else { return }
+            if let extractedText, !extractedText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                pageText.removeAll { $0.page == page }
+                pageText.append(PageTranscription(page: page, text: extractedText))
+            }
             failedPages.remove(page)
             if let cardCount {
                 let expected = max(0, cardCount)

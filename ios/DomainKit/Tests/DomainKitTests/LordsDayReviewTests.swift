@@ -6,8 +6,8 @@ import XCTest
 final class LordsDayCardsEventTests: XCTestCase {
     func testParsesEveryStreamEvent() throws {
         XCTAssertEqual(try LordsDayCardsEvent.parse(line: #"{"type":"started","pages":2,"model":"gemini-3.8-flash"}"#), .started(pages: 2))
-        XCTAssertEqual(try LordsDayCardsEvent.parse(line: #"{"type":"page","page":1,"extractedText":"notes","rejected":2}"#), .page(1, cardCount: nil))
-        XCTAssertEqual(try LordsDayCardsEvent.parse(line: #"{"type":"page","page":1,"extractedText":"notes","rejected":2,"cardCount":3}"#), .page(1, cardCount: 3))
+        XCTAssertEqual(try LordsDayCardsEvent.parse(line: #"{"type":"page","page":1,"extractedText":"notes","rejected":2}"#), .page(1, cardCount: nil, extractedText: "notes"))
+        XCTAssertEqual(try LordsDayCardsEvent.parse(line: #"{"type":"page","page":1,"extractedText":"notes","rejected":2,"cardCount":3}"#), .page(1, cardCount: 3, extractedText: "notes"))
         XCTAssertEqual(try LordsDayCardsEvent.parse(line: #"{"type":"error","page":0,"code":"unreadable","message":"x"}"#), .pageFailed(0))
         XCTAssertEqual(try LordsDayCardsEvent.parse(line: #"{"type":"done","cards":[],"rejected":0,"failedPages":[1],"costUsd":0.01}"#), .done(failedPages: [1]))
         let card = try LordsDayCardsEvent.parse(line: #"{"type":"card","card":{"id":"p0-1","kind":"quote","page":0,"order":1,"text":"He is not finished.","attribution":"Rev. Smith"}}"#)
@@ -81,6 +81,31 @@ final class LordsDayReviewTests: XCTestCase {
         // ...and it can be undone before finishing.
         review.keep(review.cards[1].id)
         XCTAssertEqual(review.keptCount, 3)
+    }
+
+    func testPageEventsCarryTheTranscriptionSoDraftingCanShowIt() throws {
+        var review = LordsDayReview(noteId: noteId, pageCount: 2)
+        _ = review.begin()
+        review.apply(.started(pages: 2))
+        XCTAssertNil(review.transcription(forPage: 0), "nothing read yet")
+        XCTAssertNil(review.newestTranscription)
+
+        review.apply(.page(0, cardCount: 1, extractedText: "Page one, as the model read it."))
+        XCTAssertEqual(review.transcription(forPage: 0), "Page one, as the model read it.")
+        XCTAssertEqual(review.newestTranscription, "Page one, as the model read it.")
+
+        review.apply(.page(1, cardCount: 1, extractedText: "Page two."))
+        XCTAssertEqual(review.transcription(forPage: 1), "Page two.")
+        XCTAssertEqual(review.newestTranscription, "Page two.", "the most recently read page")
+        XCTAssertEqual(review.transcription(forPage: 0), "Page one, as the model read it.", "earlier pages are kept")
+    }
+
+    func testAPageEventWithoutTranscriptionLeavesNoText() {
+        var review = LordsDayReview(noteId: noteId, pageCount: 1)
+        _ = review.begin()
+        review.apply(.started(pages: 1))
+        review.apply(.page(0, cardCount: 1))
+        XCTAssertNil(review.transcription(forPage: 0))
     }
 
     func testDraftedVerseKeepsOnlyItsReference() {
