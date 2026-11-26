@@ -258,6 +258,20 @@ struct ReviewView: View {
                     }
                     .accessibilityIdentifier("review.edit")
 
+                    if model.canRedraft(card.id) {
+                        Button { model.redraft(card.id) } label: {
+                            Label("Try again", systemImage: "arrow.triangle.2.circlepath")
+                                .font(.system(size: 15))
+                                .padding(.vertical, 10)
+                                .padding(.horizontal, 14)
+                                .foregroundStyle(chapel)
+                                .opacity(model.redrafting == card.id ? 0.4 : 1)
+                        }
+                        .disabled(model.redrafting != nil)
+                        .accessibilityIdentifier("review.redraft")
+                        .accessibilityHint("Asks for another card in this one's place")
+                    }
+
                     Button { model.remove(card.id) } label: {
                         Label("Remove", systemImage: "xmark")
                             .font(.system(size: 15))
@@ -280,6 +294,17 @@ struct ReviewView: View {
     @ViewBuilder private var notices: some View {
         let canSkipUnread = !review.isDrafting && !review.unhandledUnreadPages.isEmpty && !review.cards.isEmpty
         VStack(spacing: 8) {
+            if let redraftFailure = model.redraftFailure {
+                note(
+                    redraftFailure == .noCard
+                        ? "Nothing new came back for that card. The one you have is unchanged."
+                        : "That card couldn't be drafted again. The one you have is unchanged.",
+                    actionTitle: "OK",
+                    actionId: "review.redraftFailure.dismiss"
+                ) {
+                    model.dismissRedraftFailure()
+                }
+            }
             if model.failure == .accountNeeded {
                 if auth.isConfigured {
                     note("Sign in to draft cards from your notes. Your notes are saved.", actionTitle: "Sign in", actionId: "review.signIn") {
@@ -336,6 +361,7 @@ struct ReviewView: View {
         case .offline: "You're offline. Your notes are saved; try again when you're back online."
         case .rateLimited: "Too many notes at once. Try again in a few minutes."
         case .failed: "Something went wrong reading your notes. They're saved; try again."
+        case .noCard: "Nothing new came back for that card. The one you have is unchanged."
         case nil: nil
         }
     }

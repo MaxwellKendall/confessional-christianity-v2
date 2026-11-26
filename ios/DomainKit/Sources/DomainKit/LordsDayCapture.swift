@@ -139,6 +139,34 @@ public func normalizedNoteField(_ value: String?) -> String? {
 /// The JSON body of `POST /api/lords-day/cards` (contract in src/lib/lordsDay/handler.ts).
 /// Photos and typed notes are two inputs to the same call; photos win when both exist,
 /// because the endpoint takes exactly one.
+/// One card, drafted again from text the model already transcribed (TKL-1053).
+public struct LordsDayRedraftRequest: Sendable {
+    /// The transcription of the page the card came from.
+    public var extractedText: String
+    /// Pins the replacement to the kind being replaced.
+    public var kind: CardKind?
+    /// Text or references already on screen, so the answer is a new one.
+    public var avoid: [String]
+    public var passage: String?
+    public var title: String?
+    public var preacher: String?
+
+    public init(extractedText: String, kind: CardKind?, avoid: [String] = [], passage: String? = nil, title: String? = nil, preacher: String? = nil) {
+        self.extractedText = extractedText; self.kind = kind; self.avoid = avoid
+        self.passage = passage; self.title = title; self.preacher = preacher
+    }
+
+    public func body() throws -> Data {
+        var json: [String: Any] = ["extractedText": extractedText]
+        if let kind { json["kind"] = kind.rawValue }
+        if !avoid.isEmpty { json["avoid"] = avoid }
+        if let passage, !passage.isEmpty { json["passage"] = passage }
+        if let title, !title.isEmpty { json["title"] = title }
+        if let preacher, !preacher.isEmpty { json["preacher"] = preacher }
+        return try JSONSerialization.data(withJSONObject: json)
+    }
+}
+
 public struct LordsDayCardsRequest: Sendable {
     public static let maxBodyBytes = 4_000_000
 

@@ -111,6 +111,47 @@ final class ReviewModel {
 
     // MARK: Changes
 
+    /// True while that card is being drafted again.
+    private(set) var redrafting: String?
+    /// Set when a redraft came back with nothing usable, so the card you have stays.
+    private(set) var redraftFailure: CardsGeneratorError?
+
+    /// Whether this card can be asked for again: only while the page's transcription
+    /// is in memory (it is not persisted, so a resumed review cannot redraft).
+    func canRedraft(_ id: String) -> Bool {
+        guard let card = review.card(id) else { return false }
+        return review.transcription(forPage: card.page) != nil
+    }
+
+    /// Asks the model for another card in this one's place. On any failure the
+    /// existing card is untouched (TKL-1053).
+    func redraft(_ id: String) {
+        guard redrafting == nil, let card = review.card(id),
+              let text = review.transcription(forPage: card.page) else { return }
+        redrafting = id
+        redraftFailure = nil
+        let request = LordsDayRedraftRequest(
+            extractedText: text,
+            kind: card.kind,
+            avoid: review.cards.compactMap { $0.kind == .verse ? $0.verseRef : $0.words }.filter { !$0.isEmpty },
+            passage: passage,
+            preacher: preacher
+        )
+        Task { [weak self, generator] in
+            do {
+                let replacement = try await generator.redraft(request)
+                guard let self else { return }
+                try self.review.replace(id, with: replacement)
+                self.save()
+            } catch {
+                self?.redraftFailure = (error as? CardsGeneratorError) ?? .failed
+            }
+            self?.redrafting = nil
+        }
+    }
+
+    func dismissRedraftFailure() { redraftFailure = nil }
+
     func keep(_ id: String) { review.keep(id); save() }
     func remove(_ id: String) { review.remove(id); save() }
     func skipUnreadPages() { review.skipUnreadPages(); save() }

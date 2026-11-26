@@ -377,6 +377,25 @@ public struct LordsDayReview: Codable, Equatable, Sendable {
         }
     }
 
+    /// Swaps one card's words for a freshly drafted replacement, keeping its id,
+    /// page, order and keep/remove decision (TKL-1053). A redraft is the model's
+    /// work, not the reader's, so `editedByUser` is cleared.
+    public mutating func replace(_ id: String, with draft: DraftCardPayload) throws {
+        guard let kind = CardKind(rawValue: draft.kind) else { throw LordsDayReviewError.noSuchCard }
+        let reference = normalizedNoteField(draft.osis) ?? normalizedNoteField(draft.reference)
+        if kind == .verse && reference == nil { throw LordsDayReviewError.verseNeedsReference }
+        let words = kind == .verse ? "" : (draft.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        if kind != .verse && words.isEmpty { throw LordsDayReviewError.versesHaveNoWords }
+        try change(id) { card in
+            card.kind = kind
+            card.words = words
+            card.verseRef = kind == .verse ? reference : nil
+            card.attribution = kind == .quote ? draft.attribution : nil
+            card.editedByUser = false
+            return true
+        }
+    }
+
     public mutating func editText(_ id: String, to text: String) throws {
         let words = text.trimmingCharacters(in: .whitespacesAndNewlines)
         try change(id) { card in

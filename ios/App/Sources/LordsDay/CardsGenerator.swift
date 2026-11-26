@@ -15,10 +15,14 @@ enum CardsGeneratorError: Error, Equatable {
     case rateLimited
     case offline
     case failed
+    /// The model had nothing usable to offer for this card; the original stays.
+    case noCard
 }
 
 protocol CardsGenerator: Sendable {
     func draft(_ request: LordsDayCardsRequest) -> AsyncThrowingStream<LordsDayCardsEvent, Error>
+    /// One replacement card, drafted from text already transcribed (TKL-1053).
+    func redraft(_ request: LordsDayRedraftRequest) async throws -> DraftCardPayload
 }
 
 struct LiveCardsGenerator: CardsGenerator {
@@ -34,6 +38,10 @@ struct LiveCardsGenerator: CardsGenerator {
         }
         #endif
         return URL(string: "\(WebLinks.base)/api/lords-day/cards")!
+    }
+
+    static var redraftEndpoint: URL {
+        URL(string: "\(endpoint.absoluteString)/redraft")!
     }
 
     /// Provides the signed-in session's Cognito access token (`forceRefresh` requests a fresh token after a 401).
@@ -89,6 +97,36 @@ struct LiveCardsGenerator: CardsGenerator {
         }
     }
 
+    func redraft(_ request: LordsDayRedraftRequest) async throws -> DraftCardPayload {
+        guard await NetworkConnectivity.shared.isOnline() else { throw CardsGeneratorError.offline }
+        guard let initial = await accessToken(false) else { throw CardsGeneratorError.accountNeeded }
+        let body = try request.body()
+        var (data, status) = try await postJSON(body: body, token: initial)
+        if status == 401, let refreshed = await accessToken(true) {
+            (data, status) = try await postJSON(body: body, token: refreshed)
+        }
+        switch status {
+        case 200: break
+        case 401: throw CardsGeneratorError.accountNeeded
+        case 422: throw CardsGeneratorError.noCard
+        case 429: throw CardsGeneratorError.rateLimited
+        default: throw CardsGeneratorError.failed
+        }
+        struct Reply: Decodable { let card: DraftCardPayload }
+        guard let reply = try? JSONDecoder().decode(Reply.self, from: data) else { throw CardsGeneratorError.failed }
+        return reply.card
+    }
+
+    private func postJSON(body: Data, token: String) async throws -> (Data, Int) {
+        var http = URLRequest(url: Self.redraftEndpoint, timeoutInterval: 90)
+        http.httpMethod = "POST"
+        http.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        http.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        http.httpBody = body
+        let (data, response) = try await session.data(for: http)
+        return (data, (response as? HTTPURLResponse)?.statusCode ?? 0)
+    }
+
     private func post(body: Data, token: String) async throws -> (URLSession.AsyncBytes, Int) {
         var http = URLRequest(url: Self.endpoint, timeoutInterval: 120)
         http.httpMethod = "POST"
@@ -132,6 +170,18 @@ struct FixtureCardsGenerator: CardsGenerator {
             DraftCardPayload(kind: "quote", page: 2, order: 0, text: "Your worst day is not outside his purpose.", attribution: "Rev. [your pastor]"),
         ],
     ]
+
+    /// A fixture redraft: the next sample card of the same kind, so the review
+    /// screen can be exercised without the network.
+    func redraft(_ request: LordsDayRedraftRequest) async throws -> DraftCardPayload {
+        try? await Task.sleep(for: delay)
+        let all = Self.sample.flatMap { $0 }
+        let candidates = request.kind.map { kind in all.filter { $0.kind == kind.rawValue } } ?? all
+        guard let card = candidates.first(where: { card in
+            !request.avoid.contains(card.text ?? card.reference ?? "")
+        }) else { throw CardsGeneratorError.noCard }
+        return card
+    }
 
     func draft(_ request: LordsDayCardsRequest) -> AsyncThrowingStream<LordsDayCardsEvent, Error> {
         let pages = Self.sample
