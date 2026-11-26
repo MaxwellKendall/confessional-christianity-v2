@@ -190,3 +190,84 @@ public func verseLead(_ text: String) -> VerseLead {
     if let comma = words.prefix(3).firstIndex(where: { $0.hasSuffix(",") || $0.hasSuffix(";") }) { count = comma + 1 }
     return VerseLead(lead: words.prefix(count).joined(separator: " "), rest: words.dropFirst(count).joined(separator: " "))
 }
+
+/// Geometry for a full-screen Lord's Day feed card (TKL-1057): keeps the
+/// hairline border cleanly framed between the status bar and floating tab bar,
+/// keeps header controls and footer actions inside the border with uniform
+/// inner padding, and places the body optically above the vertical middle.
+public struct LordsDayCardLayout: Equatable, Sendable {
+    /// Horizontal margin between the screen edge and the card's hairline border.
+    /// Leaves room on the trailing edge for the 4pt dot rail at 7pt from the edge.
+    public static let outerHorizontal: Double = 16
+    /// Gap between the top safe area (status bar / Dynamic Island) and the top hairline border.
+    public static let outerTopGap: Double = 16
+    /// Space reserved below the card's bottom hairline border (16pt above the 88pt floating tab bar).
+    public static let outerBottom: Double = 104
+    /// Minimum padding between the hairline border and every inner element (header, body, footer).
+    public static let innerPadding: Double = 20
+    /// Minimum vertical separation between the body and the header/footer bands.
+    public static let bandSpacing: Double = 16
+    /// Share of spare vertical space placed above the body (42% top / 58% bottom = optical center).
+    public static let bodyTopFraction: Double = 0.42
+    /// Trailing inset of the page-indicator dot rail from the screen edge.
+    public static let dotRailTrailing: Double = 7
+    /// Width of the page-indicator dot rail.
+    public static let dotRailWidth: Double = 4
+
+    public let safeAreaTop: Double
+    public let safeAreaBottom: Double
+
+    public init(safeAreaTop: Double, safeAreaBottom: Double = 0) {
+        self.safeAreaTop = max(0, safeAreaTop)
+        self.safeAreaBottom = max(0, safeAreaBottom)
+    }
+
+    /// Distance from the screen's top edge to the card's top hairline border.
+    public var outerTop: Double {
+        safeAreaTop + Self.outerTopGap
+    }
+
+    /// Distance from the screen's bottom edge to the card's bottom hairline border.
+    public var outerBottomInset: Double {
+        max(Self.outerBottom, safeAreaBottom + Self.outerTopGap)
+    }
+
+    /// The card's hairline border rectangle inside a full-screen container.
+    public func borderFrame(in containerWidth: Double, height containerHeight: Double) -> Rect {
+        Rect(
+            x: Self.outerHorizontal,
+            y: outerTop,
+            width: max(0, containerWidth - Self.outerHorizontal * 2),
+            height: max(0, containerHeight - outerTop - outerBottomInset)
+        )
+    }
+
+    /// The inner content rectangle inside the hairline border (inset by `innerPadding` on all four edges).
+    public func innerFrame(in containerWidth: Double, height containerHeight: Double) -> Rect {
+        let border = borderFrame(in: containerWidth, height: containerHeight)
+        return Rect(
+            x: border.x + Self.innerPadding,
+            y: border.y + Self.innerPadding,
+            width: max(0, border.width - Self.innerPadding * 2),
+            height: max(0, border.height - Self.innerPadding * 2)
+        )
+    }
+
+    /// Vertical origin for the body block inside the open band between header and footer.
+    public static func bodyOriginY(bandTop: Double, bandHeight: Double, contentHeight: Double) -> Double {
+        let spare = max(0, bandHeight - contentHeight)
+        return bandTop + spare * bodyTopFraction
+    }
+
+    public struct Rect: Equatable, Sendable {
+        public let x: Double
+        public let y: Double
+        public let width: Double
+        public let height: Double
+        public var minX: Double { x }
+        public var maxX: Double { x + width }
+        public var minY: Double { y }
+        public var maxY: Double { y + height }
+        public var midY: Double { y + height / 2 }
+    }
+}

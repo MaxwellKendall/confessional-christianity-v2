@@ -9,62 +9,101 @@ import SwiftUI
 import SwiftData
 import DomainKit
 
-struct LordsDayFeedView: View {
+struct LordsDayFeedView<HeaderControls: View>: View {
     let feed: LordsDayFeed
     /// False while the tab is mounted but hidden (at launch): verse text then comes from the bundle only.
     var allowsNetwork = true
+    let headerControls: (QuoteCardPalette) -> HeaderControls
     @State private var current: UUID?
+    @State private var safeInsets = EdgeInsets(top: 59, leading: 0, bottom: 34, trailing: 0)
     @Environment(\.colorScheme) private var colorScheme
 
-    init(feed: LordsDayFeed, allowsNetwork: Bool = true) {
+    init(
+        feed: LordsDayFeed,
+        allowsNetwork: Bool = true,
+        @ViewBuilder headerControls: @escaping (QuoteCardPalette) -> HeaderControls
+    ) {
         self.feed = feed
         self.allowsNetwork = allowsNetwork
+        self.headerControls = headerControls
         _current = State(initialValue: feed.todayIndex.map { feed.cards[$0].id })
     }
 
     private var dark: Bool { colorScheme == .dark }
 
+    private var activeCardId: UUID? {
+        current ?? feed.todayIndex.map { feed.cards[$0].id } ?? feed.cards.first?.id
+    }
+
     private var currentPalette: QuoteCardPalette {
-        let card = feed.cards.first { $0.id == current } ?? feed.cards.first
+        let card = feed.cards.first { $0.id == activeCardId } ?? feed.cards.first
         return LordsDayFeed.palette(card?.palette ?? .vellum, dark: dark)
+    }
+
+    private var layout: LordsDayCardLayout {
+        LordsDayCardLayout(safeAreaTop: Double(safeInsets.top), safeAreaBottom: Double(safeInsets.bottom))
     }
 
     var body: some View {
         // `.scrollPosition(id:)` ignores its initial value on first layout of a
         // paging LazyVStack inside a NavigationStack, so the feed opened on
         // Monday's card with the rail on today's (TKL-1020). Scroll there explicitly.
-        ScrollViewReader { proxy in
-        ScrollView(.vertical, showsIndicators: false) {
-            LazyVStack(spacing: 0) {
-                ForEach(feed.cards) { card in
-                    FeedCardView(card: card, palette: LordsDayFeed.palette(card.palette, dark: dark), allowsNetwork: allowsNetwork && card.id == (current ?? feed.cards.first?.id), readerSource: feed.readerSource(for: card))
-                        .containerRelativeFrame([.horizontal, .vertical])
-                        .id(card.id)
+        ZStack {
+            ScrollViewReader { proxy in
+                ScrollView(.vertical, showsIndicators: false) {
+                    LazyVStack(spacing: 0) {
+                        ForEach(feed.cards) { card in
+                            let cardPalette = LordsDayFeed.palette(card.palette, dark: dark)
+                            let isActiveCard = card.id == activeCardId
+                            FeedCardView(
+                                card: card,
+                                palette: cardPalette,
+                                layout: layout,
+                                allowsNetwork: allowsNetwork && isActiveCard,
+                                readerSource: feed.readerSource(for: card),
+                                headerControls: headerControls(cardPalette)
+                            )
+                            .containerRelativeFrame([.horizontal, .vertical])
+                            .id(card.id)
+                        }
+                    }
+                    .scrollTargetLayout()
+                }
+                .scrollTargetBehavior(.paging)
+                .scrollPosition(id: $current)
+                .onAppear {
+                    guard let today = feed.todayIndex.map({ feed.cards[$0].id }) else { return }
+                    // After the first layout pass: scrolling during it is dropped too.
+                    DispatchQueue.main.async {
+                        proxy.scrollTo(today, anchor: .top)
+                        current = today
+                    }
                 }
             }
-            .scrollTargetLayout()
+            .ignoresSafeArea()
+            .overlay(alignment: .trailing) {
+                DotRail(ids: feed.cards.map(\.id), current: activeCardId, ink: Color(hex: currentPalette.ink))
+                    .padding(.trailing, CGFloat(LordsDayCardLayout.dotRailTrailing))
+            }
+            .background(Color(hex: currentPalette.field).ignoresSafeArea())
         }
-        .scrollTargetBehavior(.paging)
-        .scrollPosition(id: $current)
-        .onAppear {
-            guard let today = feed.todayIndex.map({ feed.cards[$0].id }) else { return }
-            // After the first layout pass: scrolling during it is dropped too.
-            DispatchQueue.main.async {
-                proxy.scrollTo(today, anchor: .top)
-                current = today
+        .background {
+            GeometryReader { geo in
+                Color.clear
+                    .onAppear { safeInsets = geo.safeAreaInsets }
+                    .onChange(of: geo.safeAreaInsets) { _, insets in safeInsets = insets }
             }
         }
-        }
-        .ignoresSafeArea()
-        .overlay(alignment: .trailing) {
-            DotRail(ids: feed.cards.map(\.id), current: current ?? feed.cards.first?.id, ink: Color(hex: currentPalette.ink))
-                .padding(.trailing, 7)
-        }
-        .background(Color(hex: currentPalette.field).ignoresSafeArea())
         // On screen and in the foreground: count the day (once per local day, TKL-947).
         .onChange(of: allowsNetwork, initial: true) { _, onScreen in
             if onScreen { LoopCounter.dayOpened() }
         }
+    }
+}
+
+extension LordsDayFeedView where HeaderControls == EmptyView {
+    init(feed: LordsDayFeed, allowsNetwork: Bool = true) {
+        self.init(feed: feed, allowsNetwork: allowsNetwork) { _ in EmptyView() }
     }
 }
 
@@ -88,12 +127,14 @@ private struct DotRail: View {
     }
 }
 
-private struct FeedCardView: View {
+private struct FeedCardView<HeaderControls: View>: View {
     let card: LordsDayFeedCard
     let palette: QuoteCardPalette
+    let layout: LordsDayCardLayout
     let allowsNetwork: Bool
     /// Where the verse card's reader opens; nil for other cards and unparsed references.
     let readerSource: ReaderSource?
+    let headerControls: HeaderControls
     @State private var verseText: String?
 
     private struct VerseRequest: Equatable {
@@ -101,11 +142,20 @@ private struct FeedCardView: View {
         let isActive: Bool
     }
 
-    init(card: LordsDayFeedCard, palette: QuoteCardPalette, allowsNetwork: Bool, readerSource: ReaderSource?) {
+    init(
+        card: LordsDayFeedCard,
+        palette: QuoteCardPalette,
+        layout: LordsDayCardLayout,
+        allowsNetwork: Bool,
+        readerSource: ReaderSource?,
+        headerControls: HeaderControls
+    ) {
         self.card = card
         self.palette = palette
+        self.layout = layout
         self.allowsNetwork = allowsNetwork
         self.readerSource = readerSource
+        self.headerControls = headerControls
         _verseText = State(initialValue: card.verseOsis.flatMap(bundledEsvText).flatMap(Self.nonEmpty))
     }
 
@@ -115,36 +165,29 @@ private struct FeedCardView: View {
     private var muted: Color { Color(hex: palette.muted) }
 
     var body: some View {
-        ZStack(alignment: .topLeading) {
+        let border = RoundedRectangle(cornerRadius: 4)
+        ZStack {
             field
-            // The hairline frame.
-            RoundedRectangle(cornerRadius: 4)
-                .strokeBorder(Color(hex: palette.frame).opacity(0.8), lineWidth: 1)
-                .padding(EdgeInsets(top: 92, leading: 16, bottom: 104, trailing: 16))
-
-            if let day = card.dayLabel {
-                Text(day)
-                    .font(.ccDisplay(11))
-                    .tracking(11 * 0.18)
-                    .textCase(.uppercase)
-                    .foregroundStyle(card.isToday ? accent : muted)
-                    .padding(.top, 110)
-                    .padding(.leading, 34)
+            FeedCardStackLayout(
+                bandSpacing: CGFloat(LordsDayCardLayout.bandSpacing),
+                topFraction: CGFloat(LordsDayCardLayout.bodyTopFraction)
+            ) {
+                headerRow
+                bodyBlock
+                footerRow
             }
-
-            VStack(alignment: .leading, spacing: 0) {
-                Spacer(minLength: 0)
-                kindLabel.padding(.bottom, 26)
-                content
-                Spacer(minLength: 0)
+            .padding(CGFloat(LordsDayCardLayout.innerPadding))
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .background {
+                border.strokeBorder(Color(hex: palette.frame).opacity(0.8), lineWidth: 1)
+                    .allowsHitTesting(false)
             }
-            .padding(EdgeInsets(top: 130, leading: 34, bottom: 150, trailing: 64))
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-
-            actions
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
-                .padding(.trailing, 12)
-                .padding(.bottom, 124)
+            .padding(EdgeInsets(
+                top: CGFloat(layout.outerTop),
+                leading: CGFloat(LordsDayCardLayout.outerHorizontal),
+                bottom: CGFloat(layout.outerBottomInset),
+                trailing: CGFloat(LordsDayCardLayout.outerHorizontal)
+            ))
         }
         .foregroundStyle(ink)
         .task(id: VerseRequest(reference: card.verseOsis, isActive: allowsNetwork)) {
@@ -156,6 +199,52 @@ private struct FeedCardView: View {
         .onChange(of: card.verseOsis) { _, reference in
             verseText = reference.flatMap(bundledEsvText).flatMap(Self.nonEmpty)
         }
+    }
+
+    @ViewBuilder private var headerRow: some View {
+        let controls = headerControls
+        if let day = card.dayLabel {
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .center, spacing: 12) {
+                    dayLabel(day)
+                        .fixedSize(horizontal: true, vertical: false)
+                    Spacer(minLength: 0)
+                    controls
+                        .fixedSize(horizontal: true, vertical: false)
+                }
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack(spacing: 0) {
+                        Spacer(minLength: 0)
+                        controls
+                    }
+                    dayLabel(day)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        } else {
+            HStack(spacing: 0) {
+                Spacer(minLength: 0)
+                controls
+            }
+            .frame(maxWidth: .infinity)
+        }
+    }
+
+    private func dayLabel(_ day: String) -> some View {
+        Text(day)
+            .font(.ccDisplay(11))
+            .tracking(11 * 0.18)
+            .textCase(.uppercase)
+            .foregroundStyle(card.isToday ? accent : muted)
+            .lineLimit(1)
+    }
+
+    private var bodyBlock: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            kindLabel.padding(.bottom, 26)
+            content
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var kindLabel: some View {
@@ -205,7 +294,7 @@ private struct FeedCardView: View {
                     .tracking(12 * 0.18)
                     .textCase(.uppercase)
                     .foregroundStyle(accent)
-                    .padding(.top, 12)
+                    .padding(.top, 18)
             }
         }
     }
@@ -227,39 +316,148 @@ private struct FeedCardView: View {
         }
     }
 
-    /// Share comes first on every card. Until TKL-844's share flow lands, it
-    /// hands the card's words and reference to the system share sheet.
-    private var actions: some View {
-        HStack(spacing: 16) {
-            ShareLink(item: card.shareText(verseText: verseText)) {
-                VStack(spacing: 3) {
-                    Image(systemName: "square.and.arrow.up")
-                        .font(.system(size: 18, weight: .medium))
-                        .frame(width: 42, height: 42)
-                        .background(accent, in: Circle())
-                        .foregroundStyle(field)
-                    Text("Share")
-                        .font(.system(size: 10.5))
-                        .foregroundStyle(ink.opacity(0.9))
-                }
-                .frame(width: 44)
-            }
-            .accessibilityLabel("Share this card")
-            .simultaneousGesture(TapGesture().onEnded { LoopCounter.record(.cardShared(kind: card.kind)) })
+    /// Single footer row inside the card's inner padding: contextual per-card
+    /// action on the leading side and Share anchored on the trailing side.
+    private var footerRow: some View {
+        ViewThatFits(in: .horizontal) {
+            footerContent(compact: false)
+            footerContent(compact: true)
+        }
+    }
+
+    private func footerContent(compact: Bool) -> some View {
+        HStack(alignment: .center, spacing: 12) {
             if let readerSource {
                 NavigationLink(value: ScriptureRoute.reader(readerSource)) {
-                    Text("Read full passage")
+                    HStack(spacing: 6) {
+                        if !compact {
+                            Image(systemName: "book")
+                                .font(.subheadline.weight(.medium))
+                        }
+                        Text("Read full passage")
+                            .font(.subheadline.weight(.semibold))
+                            .lineLimit(1)
+                            .minimumScaleFactor(compact ? 0.8 : 1)
+                    }
+                    .foregroundStyle(ink)
+                    .padding(.horizontal, compact ? 12 : 14)
+                    .frame(minHeight: 44)
+                    .background(ink.opacity(0.10), in: Capsule())
                 }
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(ink)
-                .frame(minHeight: 44)
+                .fixedSize(horizontal: !compact, vertical: false)
+                .accessibilityIdentifier("lordsDay.readFullPassage")
             }
+            Spacer(minLength: 0)
+            ShareLink(item: card.shareText(verseText: verseText)) {
+                HStack(spacing: 6) {
+                    Image(systemName: "square.and.arrow.up")
+                        .font(.subheadline.weight(.semibold))
+                    Text("Share")
+                        .font(.subheadline.weight(.semibold))
+                        .lineLimit(1)
+                        .minimumScaleFactor(compact ? 0.85 : 1)
+                }
+                .foregroundStyle(field)
+                .padding(.horizontal, compact ? 14 : 16)
+                .frame(minHeight: 44)
+                .background(accent, in: Capsule())
+            }
+            .fixedSize(horizontal: !compact, vertical: false)
+            .accessibilityLabel("Share this card")
+            .simultaneousGesture(TapGesture().onEnded { LoopCounter.record(.cardShared(kind: card.kind)) })
         }
+        .frame(maxWidth: .infinity)
     }
 
     private static func nonEmpty(_ s: String?) -> String? {
         guard let t = s?.trimmingCharacters(in: .whitespacesAndNewlines), !t.isEmpty else { return nil }
         return t
+    }
+}
+
+/// Three-band card layout (header, optically placed body, footer) inside the
+/// hairline border. Anchors header to top and footer to bottom while placing
+/// the body optically above the vertical midpoint.
+private struct FeedCardStackLayout: Layout {
+    let bandSpacing: CGFloat
+    let topFraction: CGFloat
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        proposal.replacingUnspecifiedDimensions()
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        guard subviews.count == 3 else { return }
+        let widthProposal = ProposedViewSize(width: bounds.width, height: nil)
+        let headerSize = subviews[0].sizeThatFits(widthProposal)
+        let footerSize = subviews[2].sizeThatFits(widthProposal)
+
+        let topGap: CGFloat = headerSize.height > 0 ? bandSpacing : 0
+        let bottomGap: CGFloat = footerSize.height > 0 ? bandSpacing : 0
+        let bandTop = bounds.minY + headerSize.height + topGap
+        let bandBottom = bounds.maxY - footerSize.height - bottomGap
+        let bandHeight = max(0, bandBottom - bandTop)
+
+        let bodyProposal = ProposedViewSize(width: bounds.width, height: bandHeight)
+        let bodySize = subviews[1].sizeThatFits(bodyProposal)
+        let clampedBodyHeight = min(bodySize.height, bandHeight)
+        let bodyY = CGFloat(LordsDayCardLayout.bodyOriginY(
+            bandTop: Double(bandTop),
+            bandHeight: Double(bandHeight),
+            contentHeight: Double(clampedBodyHeight)
+        ))
+
+        subviews[0].place(
+            at: CGPoint(x: bounds.minX, y: bounds.minY),
+            anchor: .topLeading,
+            proposal: ProposedViewSize(width: bounds.width, height: headerSize.height)
+        )
+        subviews[1].place(
+            at: CGPoint(x: bounds.minX, y: bodyY),
+            anchor: .topLeading,
+            proposal: ProposedViewSize(width: bounds.width, height: clampedBodyHeight)
+        )
+        subviews[2].place(
+            at: CGPoint(x: bounds.minX, y: bounds.maxY - footerSize.height),
+            anchor: .topLeading,
+            proposal: ProposedViewSize(width: bounds.width, height: footerSize.height)
+        )
+    }
+}
+
+/// Shared visual treatment for the feed header pills so `LordsDayTabView` and
+/// `LordsDayFeedFixture` render identical controls inside the card border.
+struct LordsDayHeaderPillLabel: View {
+    let title: String
+    let systemImage: String
+    let ink: Color
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: systemImage)
+                .font(.subheadline.weight(.medium))
+            Text(title)
+                .font(.subheadline.weight(.semibold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.85)
+        }
+        .foregroundStyle(ink)
+        .padding(.horizontal, 14)
+        .frame(minHeight: 40)
+        .background(ink.opacity(0.12), in: Capsule())
+    }
+}
+
+struct LordsDayHeaderCameraLabel: View {
+    let ink: Color
+    var systemImage = "camera"
+
+    var body: some View {
+        Image(systemName: systemImage)
+            .font(.system(size: 16, weight: .medium))
+            .foregroundStyle(ink)
+            .frame(width: 40, height: 40)
+            .background(ink.opacity(0.12), in: Circle())
     }
 }
 
@@ -283,10 +481,38 @@ struct LordsDayFeedFixture: View {
                 LordsDayTabView(path: $path, startsCapture: .constant(false))
                     .modelContainer(Self.savedContainer)
             } else if let feed {
+                let showHeader = UserDefaults.standard.bool(forKey: "LordsDayFeedShowHeader")
+                let pendingReviews = UserDefaults.standard.integer(forKey: "LordsDayFeedPendingReviews")
                 NavigationStack(path: $path) {
-                    LordsDayFeedView(feed: feed)
-                        .toolbar(.hidden, for: .navigationBar)
-                        .appDestinations(path: $path)
+                    LordsDayFeedView(feed: feed) { palette in
+                        if showHeader || pendingReviews > 0 {
+                            let ink = Color(hex: palette.ink)
+                            HStack(spacing: 8) {
+                                if pendingReviews > 0 {
+                                    Button {} label: {
+                                        LordsDayHeaderPillLabel(
+                                            title: pendingReviews == 1 ? "Review cards" : "Review cards (\(pendingReviews))",
+                                            systemImage: "rectangle.stack",
+                                            ink: ink
+                                        )
+                                    }
+                                    .accessibilityIdentifier("lordsDay.review")
+                                }
+                                Button {} label: {
+                                    LordsDayHeaderCameraLabel(ink: ink, systemImage: "book.closed")
+                                }
+                                .accessibilityLabel("Journal")
+                                .accessibilityIdentifier("lordsDay.journal")
+                                Button {} label: {
+                                    LordsDayHeaderCameraLabel(ink: ink)
+                                }
+                                .accessibilityLabel("Photograph Sunday's notes")
+                                .accessibilityIdentifier("lordsDay.capture")
+                            }
+                        }
+                    }
+                    .toolbar(.hidden, for: .navigationBar)
+                    .appDestinations(path: $path)
                 }
                 .onHidesFloatingTabBarChange { hidesBar = $0 }
                 .task {

@@ -29,17 +29,10 @@ struct LordsDayTabView: View {
         NavigationStack(path: $path) {
             Group {
                 if let feed {
-                    LordsDayFeedView(feed: feed, allowsNetwork: isActive && scenePhase == .active)
-                        .id(feedDay)
-                        .overlay(alignment: .topTrailing) {
-                            HStack(spacing: 8) {
-                                if status.reviewable { reviewButton }
-                                journalButton
-                                captureButton
-                            }
-                            .padding(.trailing, 16)
-                            .padding(.top, 40)
-                        }
+                    LordsDayFeedView(feed: feed, allowsNetwork: isActive && scenePhase == .active) { palette in
+                        feedHeaderControls(palette: palette)
+                    }
+                    .id(feedDay)
                 } else {
                     emptyState
                 }
@@ -86,39 +79,39 @@ struct LordsDayTabView: View {
         }
     }
 
+    @ViewBuilder
+    private func feedHeaderControls(palette: QuoteCardPalette) -> some View {
+        let ink = Color(hex: palette.ink)
+        HStack(spacing: 8) {
+            if status.reviewable { reviewButton(ink: ink) }
+            journalButton(ink: ink)
+            captureButton(ink: ink)
+        }
+    }
+
     /// The sermon journal: every kept Lord's Day (TKL-944).
-    private var journalButton: some View {
+    private func journalButton(ink: Color) -> some View {
         Button { path.append(JournalRoute.journal) } label: {
-            Image(systemName: "book.closed")
-                .font(.system(size: 16, weight: .medium))
-                .frame(width: 40, height: 40)
-                .background(.ultraThinMaterial, in: Circle())
+            LordsDayHeaderCameraLabel(ink: ink, systemImage: "book.closed")
         }
         .accessibilityLabel("Journal")
         .accessibilityIdentifier("lordsDay.journal")
     }
 
     /// Until the Sunday cover card (TKL-864) carries it, the way back to the camera.
-    private var captureButton: some View {
+    private func captureButton(ink: Color) -> some View {
         Button { capture = CaptureModel(context: context) } label: {
-            Image(systemName: "camera")
-                .font(.system(size: 16, weight: .medium))
-                .frame(width: 40, height: 40)
-                .background(.ultraThinMaterial, in: Circle())
+            LordsDayHeaderCameraLabel(ink: ink)
         }
         .accessibilityLabel(status.resumable ? "Continue Sunday's notes" : "Photograph Sunday's notes")
         .accessibilityIdentifier("lordsDay.capture")
     }
 
     @ViewBuilder
-    private var reviewButton: some View {
+    private func reviewButton(ink: Color) -> some View {
         if status.pendingReviews.count == 1, let only = status.pendingReviews.first {
             Button { openReview(noteId: only.id) } label: {
-                Label("Review cards", systemImage: "rectangle.stack")
-                    .font(.system(size: 14, weight: .semibold))
-                    .padding(.horizontal, 14)
-                    .frame(height: 40)
-                    .background(.ultraThinMaterial, in: Capsule())
+                LordsDayHeaderPillLabel(title: "Review cards", systemImage: "rectangle.stack", ink: ink)
             }
             .accessibilityIdentifier("lordsDay.review")
         } else {
@@ -128,11 +121,7 @@ struct LordsDayTabView: View {
                         .accessibilityIdentifier("lordsDay.review.\(item.id.uuidString)")
                 }
             } label: {
-                Label("Review cards (\(status.pendingReviews.count))", systemImage: "rectangle.stack")
-                    .font(.system(size: 14, weight: .semibold))
-                    .padding(.horizontal, 14)
-                    .frame(height: 40)
-                    .background(.ultraThinMaterial, in: Capsule())
+                LordsDayHeaderPillLabel(title: "Review cards (\(status.pendingReviews.count))", systemImage: "rectangle.stack", ink: ink)
             }
             .accessibilityIdentifier("lordsDay.review")
         }

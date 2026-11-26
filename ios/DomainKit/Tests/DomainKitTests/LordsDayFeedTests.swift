@@ -164,3 +164,60 @@ final class VerseLeadTests: XCTestCase {
         XCTAssertEqual(verseLead("  "), .init(lead: "", rest: ""))
     }
 }
+
+final class LordsDayCardLayoutTests: XCTestCase {
+    func testBorderClearsStatusBarTabBarAndDotRailAcrossDevices() {
+        let devices: [(name: String, width: Double, height: Double, top: Double, bottom: Double)] = [
+            ("iPhone SE", 375, 667, 20, 0),
+            ("iPhone 14", 390, 844, 47, 34),
+            ("iPhone 17 Pro", 402, 874, 62, 34),
+            ("iPhone 17 Pro Max", 440, 956, 62, 34),
+        ]
+        for device in devices {
+            let layout = LordsDayCardLayout(safeAreaTop: device.top, safeAreaBottom: device.bottom)
+            let border = layout.borderFrame(in: device.width, height: device.height)
+            let inner = layout.innerFrame(in: device.width, height: device.height)
+
+            // Clears top safe area by at least outerTopGap.
+            XCTAssertGreaterThanOrEqual(border.minY, device.top + LordsDayCardLayout.outerTopGap, device.name)
+            // Clears the 88pt floating tab bar (64pt tall + 24pt bottom) by at least 16pt.
+            XCTAssertLessThanOrEqual(border.maxY, device.height - 104, device.name)
+            // Leaves room on the right for the dot rail outside the card border.
+            let dotRailMinX = device.width - LordsDayCardLayout.dotRailTrailing - LordsDayCardLayout.dotRailWidth
+            XCTAssertLessThan(border.maxX, dotRailMinX, device.name)
+
+            // Inner content rect keeps at least innerPadding from every card border edge.
+            XCTAssertGreaterThanOrEqual(inner.minX - border.minX, LordsDayCardLayout.innerPadding, device.name)
+            XCTAssertGreaterThanOrEqual(border.maxX - inner.maxX, LordsDayCardLayout.innerPadding, device.name)
+            XCTAssertGreaterThanOrEqual(inner.minY - border.minY, LordsDayCardLayout.innerPadding, device.name)
+            XCTAssertGreaterThanOrEqual(border.maxY - inner.maxY, LordsDayCardLayout.innerPadding, device.name)
+            // Enough width for single-row footer actions ("Read full passage" + "Share") at Dynamic Type Large.
+            XCTAssertGreaterThanOrEqual(inner.width, 300, device.name)
+        }
+    }
+
+    func testBodyIsPlacedOpticallyAboveVerticalMiddleAndNeverOverflowsBand() {
+        let layout = LordsDayCardLayout(safeAreaTop: 62, safeAreaBottom: 34)
+        let border = layout.borderFrame(in: 402, height: 874)
+        let inner = layout.innerFrame(in: 402, height: 874)
+        let headerHeight: Double = 40
+        let footerHeight: Double = 44
+        let bandTop = inner.minY + headerHeight + LordsDayCardLayout.bandSpacing
+        let bandBottom = inner.maxY - footerHeight - LordsDayCardLayout.bandSpacing
+        let bandHeight = bandBottom - bandTop
+
+        // Short quote / verse content starts well above the card's vertical middle.
+        for contentHeight in [180.0, 220.0, 320.0] {
+            let y = LordsDayCardLayout.bodyOriginY(bandTop: bandTop, bandHeight: bandHeight, contentHeight: contentHeight)
+            let contentMidY = y + contentHeight / 2
+            XCTAssertGreaterThanOrEqual(y, bandTop)
+            XCTAssertLessThanOrEqual(y + contentHeight, bandBottom)
+            XCTAssertLessThan(contentMidY, border.midY, "body should sit optically above card midpoint")
+            XCTAssertLessThan(y, border.midY - 60, "body should start well above card midpoint")
+        }
+
+        // Tall content clamps cleanly to the top of the band instead of colliding with the header.
+        let clamped = LordsDayCardLayout.bodyOriginY(bandTop: bandTop, bandHeight: bandHeight, contentHeight: bandHeight + 80)
+        XCTAssertEqual(clamped, bandTop)
+    }
+}
