@@ -113,6 +113,7 @@ final class ReviewModel {
 
     func keep(_ id: String) { review.keep(id); save() }
     func remove(_ id: String) { review.remove(id); save() }
+    func skipUnreadPages() { review.skipUnreadPages(); save() }
     func setKind(_ id: String, to kind: CardKind) throws { try review.setKind(id, to: kind); save() }
     func chooseVerse(_ id: String, osis: String) throws { try review.chooseVerse(id, osis: osis); save() }
     func edit(_ id: String, words: String, attribution: String?) throws {
@@ -124,6 +125,7 @@ final class ReviewModel {
     /// Keeps the kept cards, in order, as this note's week. The photos stay on the device.
     func finish() throws {
         guard review.undecidedCount == 0 else { throw LordsDayReviewError.unreviewedCards }
+        guard review.unhandledUnreadPages.isEmpty else { throw LordsDayReviewError.unreadPagesRemaining }
         guard review.canFinish else { throw LordsDayReviewError.nothingToKeep }
         let kept = review.keptCards()
         try LordsDayStore(context: context).keepCards(kept, for: note)

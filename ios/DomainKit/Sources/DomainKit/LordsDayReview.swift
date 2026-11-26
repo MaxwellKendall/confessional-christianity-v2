@@ -64,7 +64,7 @@ public enum LordsDayCardsEvent: Equatable, Sendable {
 // MARK: The review
 
 public enum LordsDayReviewError: Error, Equatable {
-    case noSuchCard, verseNeedsReference, versesHaveNoWords, onlyQuotesAreAttributed, unreviewedCards, nothingToKeep
+    case noSuchCard, verseNeedsReference, versesHaveNoWords, onlyQuotesAreAttributed, unreviewedCards, unreadPagesRemaining, nothingToKeep
 }
 
 /// One drafted card as the user is reviewing it.
@@ -75,10 +75,10 @@ public struct ReviewCard: Codable, Equatable, Identifiable, Sendable {
         case remove
     }
 
-    /// `p<page>-<order>` in the note's own page numbering.
+    /// Stable card id on this review (`p<page>-<index>`).
     public let id: String
     public let page: Int
-    public let order: Int
+    public fileprivate(set) var order: Int
     public fileprivate(set) var kind: CardKind
     /// The words of a key point or quote. Kept while the card is a verse, so switching back restores them.
     public fileprivate(set) var words: String
@@ -88,6 +88,9 @@ public struct ReviewCard: Codable, Equatable, Identifiable, Sendable {
     public fileprivate(set) var attribution: String?
     public fileprivate(set) var decision: Decision
     public fileprivate(set) var editedByUser: Bool
+    /// Immutable identity of the drafted source payload, separate from user edits,
+    /// so a reordered retry reconciles against the card it originally drafted.
+    public let sourceKey: String
 
     public var kept: Bool { decision == .keep }
     public var isRemoved: Bool { decision == .remove }
@@ -99,13 +102,14 @@ public struct ReviewCard: Codable, Equatable, Identifiable, Sendable {
     public var isComplete: Bool { kind == .verse ? normalizedNoteField(verseRef) != nil : normalizedNoteField(words) != nil }
 
     private enum CodingKeys: String, CodingKey {
-        case id, page, order, kind, words, verseRef, attribution, decision, editedByUser
+        case id, page, order, kind, words, verseRef, attribution, decision, editedByUser, sourceKey
     }
 
-    init(id: String, page: Int, order: Int, kind: CardKind, words: String, verseRef: String?, attribution: String?, decision: Decision, editedByUser: Bool) {
+    init(id: String, page: Int, order: Int, kind: CardKind, words: String, verseRef: String?, attribution: String?, decision: Decision, editedByUser: Bool, sourceKey: String? = nil) {
         self.id = id; self.page = page; self.order = order; self.kind = kind
         self.words = words; self.verseRef = verseRef; self.attribution = attribution
         self.decision = decision; self.editedByUser = editedByUser
+        self.sourceKey = sourceKey ?? Self.makeSourceKey(kind: kind, words: words, verseRef: verseRef)
     }
 
     public init(from decoder: Decoder) throws {
@@ -120,6 +124,23 @@ public struct ReviewCard: Codable, Equatable, Identifiable, Sendable {
         // Legacy review.json files without a decision default to undecided so nothing unseen is kept.
         decision = try c.decodeIfPresent(Decision.self, forKey: .decision) ?? .undecided
         editedByUser = try c.decode(Bool.self, forKey: .editedByUser)
+        sourceKey = try c.decodeIfPresent(String.self, forKey: .sourceKey)
+            ?? Self.makeSourceKey(kind: kind, words: words, verseRef: verseRef)
+    }
+
+    static func makeSourceKey(kind: CardKind, words: String, verseRef: String?) -> String {
+        if kind == .verse {
+            let ref = (verseRef ?? "").trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            return "verse:\(ref)"
+        }
+        let normalized = words
+            .precomposedStringWithCompatibilityMapping
+            .lowercased()
+            .replacingOccurrences(of: "['’‘`]", with: "", options: .regularExpression)
+            .components(separatedBy: CharacterSet.alphanumerics.inverted)
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
+        return "\(kind.rawValue):\(normalized)"
     }
 }
 
@@ -154,6 +175,8 @@ public struct LordsDayReview: Codable, Equatable, Sendable {
     public private(set) var cards: [ReviewCard] = []
     public private(set) var readPages: Set<Int> = []
     public private(set) var failedPages: Set<Int> = []
+    /// Unread pages the user explicitly chose to skip so the already-read cards can be finished.
+    public private(set) var skippedPages: Set<Int> = []
     /// The note page each page of the request in flight stands for (a retry sends only some).
     private var requestPages: [Int] = []
     /// In-flight page completion state (cleared on begin / done / interrupt; not persisted).
@@ -162,7 +185,7 @@ public struct LordsDayReview: Codable, Equatable, Sendable {
     private var seenPagesWithoutCount: Set<Int> = []
 
     private enum CodingKeys: String, CodingKey {
-        case noteId, pageCount, phase, cards, readPages, failedPages, requestPages
+        case noteId, pageCount, phase, cards, readPages, failedPages, skippedPages, requestPages
     }
 
     public init(noteId: UUID, pageCount: Int) {
@@ -170,23 +193,46 @@ public struct LordsDayReview: Codable, Equatable, Sendable {
         self.pageCount = max(pageCount, 1)
     }
 
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        noteId = try c.decode(UUID.self, forKey: .noteId)
+        pageCount = try c.decode(Int.self, forKey: .pageCount)
+        phase = try c.decode(Phase.self, forKey: .phase)
+        cards = try c.decode([ReviewCard].self, forKey: .cards)
+        readPages = try c.decode(Set<Int>.self, forKey: .readPages)
+        failedPages = try c.decode(Set<Int>.self, forKey: .failedPages)
+        skippedPages = try c.decodeIfPresent(Set<Int>.self, forKey: .skippedPages) ?? []
+        requestPages = try c.decode([Int].self, forKey: .requestPages)
+    }
+
     public var isDrafting: Bool { phase == .drafting }
     public var progress: Double { Double(readPages.count + failedPages.count) / Double(pageCount) }
     public var unreadPages: [Int] { (0..<pageCount).filter { !readPages.contains($0) } }
+    /// Unread pages that have neither completed nor been explicitly skipped by the user.
+    public var unhandledUnreadPages: [Int] { unreadPages.filter { !skippedPages.contains($0) } }
     public var canRetry: Bool { !isDrafting && phase != .notStarted && !unreadPages.isEmpty }
     /// The first kept card that can't be kept as it is (a key point or quote with no words).
     public var blockingCardIndex: Int? { cards.firstIndex { $0.kept && !$0.isComplete } }
     public var undecidedCount: Int { cards.filter(\.isUndecided).count }
     public var firstUndecidedIndex: Int? { cards.firstIndex(where: \.isUndecided) }
     public var keptCount: Int { cards.filter(\.kept).count }
-    public var canFinish: Bool { !isDrafting && !cards.isEmpty && undecidedCount == 0 && keptCount > 0 && blockingCardIndex == nil }
+    public var canFinish: Bool {
+        !isDrafting && !cards.isEmpty && undecidedCount == 0 && keptCount > 0 && blockingCardIndex == nil && unhandledUnreadPages.isEmpty
+    }
 
     public func card(_ id: String) -> ReviewCard? { cards.first { $0.id == id } }
+
+    /// Explicitly skip remaining unread pages so the cards already reviewed can be finished.
+    public mutating func skipUnreadPages() {
+        guard !isDrafting else { return }
+        skippedPages.formUnion(unreadPages)
+    }
 
     /// Starts a run for every page not yet read and returns those note pages, in order.
     public mutating func begin() -> [Int] {
         requestPages = unreadPages
         failedPages.subtract(requestPages)
+        skippedPages.subtract(requestPages)
         clearInFlightPageTracking()
         phase = .drafting
         return requestPages
@@ -205,6 +251,7 @@ public struct LordsDayReview: Codable, Equatable, Sendable {
                 expectedCardCounts[page] = expected
                 if (receivedCardCounts[page] ?? 0) >= expected {
                     readPages.insert(page)
+                    skippedPages.remove(page)
                 }
             } else {
                 // Without a declared card count, wait for `done` so a drop mid-page replays it.
@@ -218,32 +265,36 @@ public struct LordsDayReview: Codable, Equatable, Sendable {
             if let expected = expectedCardCounts[page], receivedCardCounts[page, default: 0] >= expected {
                 readPages.insert(page)
                 failedPages.remove(page)
+                skippedPages.remove(page)
             }
             guard let kind = CardKind(rawValue: draft.kind) else { return }
-            let id = "p\(page)-\(draft.order)"
-            guard card(id) == nil else { return }
             let reference = normalizedNoteField(draft.osis) ?? normalizedNoteField(draft.reference)
             if kind == .verse && reference == nil { return }
             let words = kind == .verse ? "" : (draft.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-            let isDuplicateContent = cards.contains { existing in
-                existing.page == page && existing.kind == kind &&
-                (kind == .verse ? existing.verseRef == reference : existing.words == words)
+            let sourceKey = ReviewCard.makeSourceKey(kind: kind, words: words, verseRef: kind == .verse ? reference : nil)
+            // Reconcile by immutable source identity rather than positional order:
+            // a reordered retry keeps existing user edits/decisions and updates order without dropping or duplicating.
+            if let existingIndex = cards.firstIndex(where: { $0.page == page && $0.sourceKey == sourceKey }) {
+                cards[existingIndex].order = draft.order
+                cards.sort { ($0.page, $0.order, $0.id) < ($1.page, $1.order, $1.id) }
+                return
             }
-            guard !isDuplicateContent else { return }
+            let id = allocateCardId(page: page, preferredOrder: draft.order)
             cards.append(ReviewCard(
                 id: id, page: page, order: draft.order, kind: kind,
                 words: words,
                 verseRef: kind == .verse ? reference : nil,
                 attribution: kind == .quote ? normalizedNoteField(draft.attribution) : nil,
-                decision: .undecided, editedByUser: false
+                decision: .undecided, editedByUser: false, sourceKey: sourceKey
             ))
-            cards.sort { ($0.page, $0.order) < ($1.page, $1.order) }
+            cards.sort { ($0.page, $0.order, $0.id) < ($1.page, $1.order, $1.id) }
         case .done(let failed):
             let failedSet = Set(failed.compactMap(notePage))
             for page in failedSet where !readPages.contains(page) { failedPages.insert(page) }
             for page in seenPagesWithoutCount where !failedSet.contains(page) {
                 readPages.insert(page)
                 failedPages.remove(page)
+                skippedPages.remove(page)
             }
             for (page, expected) in expectedCardCounts where (receivedCardCounts[page] ?? 0) < expected && !readPages.contains(page) {
                 failedPages.insert(page)
@@ -251,6 +302,14 @@ public struct LordsDayReview: Codable, Equatable, Sendable {
             clearInFlightPageTracking()
             phase = .ready
         }
+    }
+
+    private func allocateCardId(page: Int, preferredOrder: Int) -> String {
+        let preferred = "p\(page)-\(preferredOrder)"
+        if card(preferred) == nil { return preferred }
+        var index = 0
+        while card("p\(page)-\(index)") != nil { index += 1 }
+        return "p\(page)-\(index)"
     }
 
     /// The stream ended without `done`.

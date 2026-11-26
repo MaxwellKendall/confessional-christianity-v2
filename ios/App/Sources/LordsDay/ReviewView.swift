@@ -253,6 +253,7 @@ struct ReviewView: View {
     // MARK: Notices and footer
 
     @ViewBuilder private var notices: some View {
+        let canSkipUnread = !review.isDrafting && !review.unhandledUnreadPages.isEmpty && !review.cards.isEmpty
         VStack(spacing: 8) {
             if model.failure == .accountNeeded {
                 if auth.isConfigured {
@@ -263,16 +264,37 @@ struct ReviewView: View {
                     note("Drafting cards needs an account. Your notes are saved.", actionTitle: nil) {}
                 }
             } else if let message = failureMessage {
-                note(message, actionTitle: (review.canRetry || review.phase == .notStarted) ? "Try again" : nil, actionId: "review.retry") {
+                note(
+                    message,
+                    actionTitle: (review.canRetry || review.phase == .notStarted) ? "Try again" : nil,
+                    actionId: "review.retry",
+                    secondaryTitle: canSkipUnread ? "Skip unread" : nil,
+                    secondaryId: "review.skipUnread",
+                    secondaryAction: { model.skipUnreadPages() }
+                ) {
                     model.retry()
                 }
-            } else if !review.isDrafting, !review.failedPages.isEmpty {
+            } else if !review.isDrafting, !review.unhandledUnreadPages.isEmpty, !review.failedPages.isEmpty {
                 let pages = review.failedPages.sorted().map { "\($0 + 1)" }.joined(separator: ", ")
-                note("Page \(pages) couldn't be read. Try again, or keep these and retake it later.", actionTitle: "Try again", actionId: "review.retry") {
+                note(
+                    "Page \(pages) couldn't be read. Try again, or skip it to keep the cards already here.",
+                    actionTitle: "Try again",
+                    actionId: "review.retry",
+                    secondaryTitle: canSkipUnread ? "Skip unread" : nil,
+                    secondaryId: "review.skipUnread",
+                    secondaryAction: { model.skipUnreadPages() }
+                ) {
                     model.retry()
                 }
-            } else if review.phase == .interrupted {
-                note("Some of your notes haven't been read yet.", actionTitle: "Try again", actionId: "review.retry") {
+            } else if !review.isDrafting, !review.unhandledUnreadPages.isEmpty, review.phase != .notStarted {
+                note(
+                    "Some of your notes haven't been read yet.",
+                    actionTitle: "Try again",
+                    actionId: "review.retry",
+                    secondaryTitle: canSkipUnread ? "Skip unread" : nil,
+                    secondaryId: "review.skipUnread",
+                    secondaryAction: { model.skipUnreadPages() }
+                ) {
                     model.retry()
                 }
             }
@@ -293,14 +315,29 @@ struct ReviewView: View {
         }
     }
 
-    private func note(_ text: String, actionTitle: String?, actionId: String? = nil, action: @escaping () -> Void) -> some View {
+    private func note(
+        _ text: String,
+        actionTitle: String?,
+        actionId: String? = nil,
+        secondaryTitle: String? = nil,
+        secondaryId: String? = nil,
+        secondaryAction: (() -> Void)? = nil,
+        action: @escaping () -> Void
+    ) -> some View {
         HStack(alignment: .center, spacing: 10) {
             Text(text).font(.system(size: 14)).fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
-            if let actionTitle {
-                Button(actionTitle, action: action)
-                    .font(.system(size: 14, weight: .semibold))
-                    .accessibilityIdentifier(actionId ?? actionTitle)
+            VStack(alignment: .trailing, spacing: 6) {
+                if let actionTitle {
+                    Button(actionTitle, action: action)
+                        .font(.system(size: 14, weight: .semibold))
+                        .accessibilityIdentifier(actionId ?? actionTitle)
+                }
+                if let secondaryTitle, let secondaryAction {
+                    Button(secondaryTitle, action: secondaryAction)
+                        .font(.system(size: 13, weight: .medium))
+                        .accessibilityIdentifier(secondaryId ?? secondaryTitle)
+                }
             }
         }
         .foregroundStyle(danger)
@@ -330,6 +367,12 @@ struct ReviewView: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityIdentifier("review.undecidedHint")
+            } else if !review.isDrafting, !review.unhandledUnreadPages.isEmpty {
+                let n = review.unhandledUnreadPages.count
+                Text("Retry or skip \(n) unread page\(n == 1 ? "" : "s") to finish.")
+                    .font(.system(size: 13))
+                    .foregroundStyle(ink2)
+                    .accessibilityIdentifier("review.unreadHint")
             }
             Button {
                 do {

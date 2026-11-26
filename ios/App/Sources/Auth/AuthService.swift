@@ -153,7 +153,7 @@ final class AuthService {
         case .signIn:
             do {
                 let result = try await Amplify.Auth.confirmSignIn(challengeResponse: token)
-                await finishSignIn(result)
+                await finishSignIn(result, email: normalized)
             } catch {
                 machine.handle(.verifyFailed(Self.message(for: error)))
             }
@@ -171,7 +171,7 @@ final class AuthService {
                 return
             }
             do {
-                await finishSignIn(try await Amplify.Auth.autoSignIn())
+                await finishSignIn(try await Amplify.Auth.autoSignIn(), email: normalized)
             } catch {
                 machine.handle(.verifyFailed(Self.message(for: error)))
             }
@@ -203,6 +203,7 @@ final class AuthService {
         }
         #endif
         _ = await Amplify.Auth.signOut()
+        Self.clearCachedEmail()
         machine.handle(.signedOut)
     }
 
@@ -218,17 +219,29 @@ final class AuthService {
 
     // MARK: - Private
 
-    private func finishSignIn(_ result: AuthSignInResult) async {
-        guard result.isSignedIn, let user = await Self.currentUser() else {
+    private static let cachedUserIdKey = "AuthCachedUserId"
+    private static let cachedUserEmailKey = "AuthCachedUserEmail"
+
+    private func finishSignIn(_ result: AuthSignInResult, email: String) async {
+        guard result.isSignedIn, let user = await Self.currentUser(fallbackEmail: email) else {
             machine.handle(.verifyFailed("Sign-in didn't finish (\(result.nextStep))"))
             return
         }
+        Self.cacheEmail(user.email, for: user.id)
         machine.handle(.verified(user))
     }
 
+    /// Restores the signed-in state strictly from local Keychain + cached email
+    /// (zero network calls on launch, offline or online). Token refresh happens
+    /// lazily when `accessToken(forceRefresh:)` is called for an authenticated API request.
     private func restore() async {
-        let signedIn = (try? await Amplify.Auth.fetchAuthSession())?.isSignedIn == true
-        machine.handle(.restored(signedIn ? await Self.currentUser() : nil))
+        guard let user = try? await Amplify.Auth.getCurrentUser() else {
+            Self.clearCachedEmail()
+            machine.handle(.restored(nil))
+            return
+        }
+        let email = Self.cachedEmail(for: user.userId) ?? (user.username.contains("@") ? user.username : nil)
+        machine.handle(.restored(DomainKit.AuthUser(id: user.userId, email: email)))
     }
 
     private func listen() {
@@ -239,6 +252,7 @@ final class AuthService {
                 switch name {
                 case HubPayload.EventName.Auth.sessionExpired, HubPayload.EventName.Auth.signedOut,
                      HubPayload.EventName.Auth.userDeleted:
+                    Self.clearCachedEmail()
                     self.machine.handle(.sessionEnded)
                 default:
                     break
@@ -247,11 +261,30 @@ final class AuthService {
         }
     }
 
-    private static func currentUser() async -> DomainKit.AuthUser? {
+    private static func currentUser(fallbackEmail: String? = nil) async -> DomainKit.AuthUser? {
         guard let user = try? await Amplify.Auth.getCurrentUser() else { return nil }
         let attributes = (try? await Amplify.Auth.fetchUserAttributes()) ?? []
-        let email = attributes.first { $0.key == .email }?.value
+        let email = attributes.first { $0.key == .email }?.value ?? fallbackEmail
         return DomainKit.AuthUser(id: user.userId, email: email)
+    }
+
+    private static func cacheEmail(_ email: String?, for userId: String) {
+        UserDefaults.standard.set(userId, forKey: cachedUserIdKey)
+        if let email {
+            UserDefaults.standard.set(email, forKey: cachedUserEmailKey)
+        } else {
+            UserDefaults.standard.removeObject(forKey: cachedUserEmailKey)
+        }
+    }
+
+    private static func cachedEmail(for userId: String) -> String? {
+        guard UserDefaults.standard.string(forKey: cachedUserIdKey) == userId else { return nil }
+        return UserDefaults.standard.string(forKey: cachedUserEmailKey)
+    }
+
+    private static func clearCachedEmail() {
+        UserDefaults.standard.removeObject(forKey: cachedUserIdKey)
+        UserDefaults.standard.removeObject(forKey: cachedUserEmailKey)
     }
 
     /// Amplify can be configured once per process.

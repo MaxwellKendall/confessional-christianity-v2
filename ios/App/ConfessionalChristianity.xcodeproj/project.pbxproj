@@ -16,6 +16,7 @@
 		1EF79ED90ACDDF6E3CCA99C5 /* LordsDaySkeletonUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C4B68D1D371A1DA4EFC1936 /* LordsDaySkeletonUITests.swift */; };
 		201B7050D78A373293882C3A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 323DE6E62344832D8ECF9AD4 /* SettingsView.swift */; };
 		245590EE79D47D4EDB15C19D /* OnboardingSignInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32FF271F04742E0BB93E44AE /* OnboardingSignInView.swift */; };
+		25C6A1209F49CF4F47899202 /* NetworkConnectivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9FEB859D902931C1BE0BDD /* NetworkConnectivity.swift */; };
 		28CBE251D286E2BEE5825C57 /* EsvClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72FB0289223150F84B4EF930 /* EsvClient.swift */; };
 		2940242738B000E1BE7AE7E0 /* ScriptureRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05EB0F0C3B3D18BF87EFE32C /* ScriptureRoute.swift */; };
 		29D30D54F2AA11DA246A2F3F /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FD56999FD625474310C151DA /* SwiftUI.framework */; };
@@ -132,6 +133,7 @@
 		1355BBE9BF8900B5FE2A2F86 /* SearchRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchRoute.swift; sourceTree = "<group>"; };
 		186C722AE6BB4430FEB87466 /* FeedOpensAtTodayUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedOpensAtTodayUITests.swift; sourceTree = "<group>"; };
 		18C002AEB0FB5E9D3623E1D3 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		1F9FEB859D902931C1BE0BDD /* NetworkConnectivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkConnectivity.swift; sourceTree = "<group>"; };
 		245AE89B18EF74ECA2A2C5B1 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		27A1DF330C4DA1EC70E025A1 /* SessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionView.swift; sourceTree = "<group>"; };
 		2803DDC4DF75B0849AF89D85 /* PracticeReminderScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PracticeReminderScheduler.swift; sourceTree = "<group>"; };
@@ -253,6 +255,7 @@
 				C23F51243C50FFC327642E50 /* FlowLayout.swift */,
 				C7CC21628E6787C6FD581730 /* HidesFloatingTabBar.swift */,
 				2CA73F64DC39A88E251E81D2 /* MarkdownText.swift */,
+				1F9FEB859D902931C1BE0BDD /* NetworkConnectivity.swift */,
 				98A25657E65FD99C28C300E6 /* RootTab.swift */,
 				AA107B8B544A9F504E2D6E4F /* SiteHeaderView.swift */,
 				81D5508EB376718085AA71A6 /* TabIcons.swift */,
@@ -668,6 +671,7 @@
 				C801FA2EAE0401DFF8830CAE /* LordsDayTabView.swift in Sources */,
 				A8520A15B4644D91821657B7 /* MarkdownText.swift in Sources */,
 				744A53A6115745E063B78CE1 /* MilestonesView.swift in Sources */,
+				25C6A1209F49CF4F47899202 /* NetworkConnectivity.swift in Sources */,
 				2C79C43E53D7D9B6B2BCAE32 /* OnboardingDemos.swift in Sources */,
 				245590EE79D47D4EDB15C19D /* OnboardingSignInView.swift in Sources */,
 				9346E28CF529C63C3765514B /* OnboardingView.swift in Sources */,

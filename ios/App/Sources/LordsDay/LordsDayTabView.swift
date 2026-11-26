@@ -84,15 +84,32 @@ struct LordsDayTabView: View {
         .accessibilityIdentifier("lordsDay.capture")
     }
 
+    @ViewBuilder
     private var reviewButton: some View {
-        Button(action: openReview) {
-            Label("Review cards", systemImage: "rectangle.stack")
-                .font(.system(size: 14, weight: .semibold))
-                .padding(.horizontal, 14)
-                .frame(height: 40)
-                .background(.ultraThinMaterial, in: Capsule())
+        if status.pendingReviews.count == 1, let only = status.pendingReviews.first {
+            Button { openReview(noteId: only.id) } label: {
+                Label("Review cards", systemImage: "rectangle.stack")
+                    .font(.system(size: 14, weight: .semibold))
+                    .padding(.horizontal, 14)
+                    .frame(height: 40)
+                    .background(.ultraThinMaterial, in: Capsule())
+            }
+            .accessibilityIdentifier("lordsDay.review")
+        } else {
+            Menu {
+                ForEach(status.pendingReviews) { item in
+                    Button(item.label) { openReview(noteId: item.id) }
+                        .accessibilityIdentifier("lordsDay.review.\(item.id.uuidString)")
+                }
+            } label: {
+                Label("Review cards (\(status.pendingReviews.count))", systemImage: "rectangle.stack")
+                    .font(.system(size: 14, weight: .semibold))
+                    .padding(.horizontal, 14)
+                    .frame(height: 40)
+                    .background(.ultraThinMaterial, in: Capsule())
+            }
+            .accessibilityIdentifier("lordsDay.review")
         }
-        .accessibilityIdentifier("lordsDay.review")
     }
 
     private var emptyState: some View {
@@ -117,8 +134,8 @@ struct LordsDayTabView: View {
                             .lineSpacing(3)
                             .foregroundStyle(.ccInk2)
                             .fixedSize(horizontal: false, vertical: true)
-                        if status.reviewable {
-                            Button(action: openReview) {
+                        if status.pendingReviews.count == 1, let only = status.pendingReviews.first {
+                            Button { openReview(noteId: only.id) } label: {
                                 Label("Review your cards", systemImage: "rectangle.stack")
                                     .font(.system(size: 15.5, weight: .semibold))
                                     .frame(maxWidth: .infinity)
@@ -127,6 +144,21 @@ struct LordsDayTabView: View {
                                     .foregroundStyle(Color.ccOnChapel)
                             }
                             .accessibilityIdentifier("lordsDay.review")
+                            .padding(.top, 16)
+                        } else if status.pendingReviews.count > 1 {
+                            VStack(spacing: 8) {
+                                ForEach(status.pendingReviews) { item in
+                                    Button { openReview(noteId: item.id) } label: {
+                                        Label("Review · \(item.label)", systemImage: "rectangle.stack")
+                                            .font(.system(size: 15, weight: .semibold))
+                                            .frame(maxWidth: .infinity)
+                                            .padding(.vertical, 12)
+                                            .background(Color.ccChapel, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                            .foregroundStyle(Color.ccOnChapel)
+                                    }
+                                    .accessibilityIdentifier("lordsDay.review.\(item.id.uuidString)")
+                                }
+                            }
                             .padding(.top, 16)
                         }
                         Button { capture = CaptureModel(context: context) } label: {
@@ -174,9 +206,8 @@ struct LordsDayTabView: View {
         }
     }
 
-    private func openReview() {
-        guard let id = status.pendingReviewNoteId,
-              let note = try? LordsDayStore(context: context).note(id: id) else { return }
+    private func openReview(noteId: UUID) {
+        guard let note = try? LordsDayStore(context: context).note(id: noteId) else { return }
         review = ReviewModel.session(for: note, context: context, generator: makeGenerator())
     }
 
@@ -189,12 +220,18 @@ struct LordsDayTabView: View {
     }
 }
 
+private struct PendingReviewItem: Identifiable, Equatable {
+    let id: UUID
+    let label: String
+}
+
 /// What the tab says about notes waiting to be finished or reviewed.
 private struct CaptureStatus {
     var resumable = false
-    /// Saved note id of the newest pending review (independent of service date / current week).
-    var pendingReviewNoteId: UUID?
-    var reviewable: Bool { pendingReviewNoteId != nil }
+    /// All pending reviews, newest first, each addressable by its saved note id so
+    /// a newer review (even one with zero cards) never hides an older saved review.
+    var pendingReviews: [PendingReviewItem] = []
+    var reviewable: Bool { !pendingReviews.isEmpty }
     var savedLine: String?
 
     init() {}
@@ -202,9 +239,14 @@ private struct CaptureStatus {
     @MainActor init(context: ModelContext, now: Date, calendar: Calendar) {
         resumable = (try? CaptureDraft.activeNoteId()) != nil
         let store = LordsDayStore(context: context)
-        let pending = (try? store.pendingReviewNotes(activeSessionIds: ReviewModel.activeSessionIds))?.first
-        pendingReviewNoteId = pending?.id
-        guard let note = pending ?? (try? store.currentWeek(on: now, calendar: calendar)) else { return }
+        let pending = (try? store.pendingReviewNotes(activeSessionIds: ReviewModel.activeSessionIds)) ?? []
+        pendingReviews = pending.map { note in
+            let date = note.serviceDate.formatted(.dateTime.month(.abbreviated).day())
+            let passage = normalizedNoteField(note.passageRef)
+            let label = passage.map { "\($0) · \(date)" } ?? date
+            return PendingReviewItem(id: note.id, label: label)
+        }
+        guard let note = pending.first ?? (try? store.currentWeek(on: now, calendar: calendar)) else { return }
         let pages = CaptureDraft.savedPageCount(noteId: note.id)
         let what = pages > 0 ? "\(pages) page\(pages == 1 ? "" : "s")" : "typed notes"
         savedLine = "Saved: \(note.serviceDate.formatted(.dateTime.weekday(.wide).day().month())) · \(what)."

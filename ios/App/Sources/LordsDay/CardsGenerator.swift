@@ -47,6 +47,7 @@ struct LiveCardsGenerator: CardsGenerator {
                     #if DEBUG
                     if UserDefaults.standard.bool(forKey: "EsvOffline") { throw CardsGeneratorError.offline }
                     #endif
+                    guard await NetworkConnectivity.shared.isOnline() else { throw CardsGeneratorError.offline }
                     guard let initialToken = await accessToken(false) else { throw CardsGeneratorError.accountNeeded }
                     let body = try request.body()
                     let startedAt = ContinuousClock.now

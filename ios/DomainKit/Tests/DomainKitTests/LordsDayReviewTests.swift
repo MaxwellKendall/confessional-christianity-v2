@@ -196,14 +196,18 @@ final class LordsDayReviewTests: XCTestCase {
         XCTAssertEqual(review.failedPages, [1])
         XCTAssertTrue(review.canRetry)
         for card in review.cards { review.keep(card.id) }
-        XCTAssertTrue(review.canFinish, "the cards that did arrive can be kept once decided")
-        // The retry sends only page 1; the server numbers it 0.
+        XCTAssertFalse(review.canFinish, "an unread failed page blocks finishing until retried or explicitly skipped")
+        XCTAssertEqual(review.unhandledUnreadPages, [1])
+        review.skipUnreadPages()
+        XCTAssertTrue(review.canFinish, "the cards that did arrive can be kept after explicitly skipping unread pages")
+        // The retry sends only page 1; the server numbers it 0, and clears its skipped state.
         XCTAssertEqual(review.begin(), [1])
         review.apply(.page(0, cardCount: 1))
         review.apply(card("quote", page: 0, order: 0, text: "Two words here"))
         review.apply(.done(failedPages: []))
         XCTAssertEqual(review.cards.map(\.text), ["One", "Two words here", "Three"])
         XCTAssertEqual(review.failedPages, [])
+        XCTAssertEqual(review.skippedPages, [])
         XCTAssertFalse(review.canRetry)
     }
 
@@ -216,8 +220,96 @@ final class LordsDayReviewTests: XCTestCase {
         XCTAssertEqual(review.phase, .interrupted)
         XCTAssertTrue(review.canRetry)
         review.keep(review.cards[0].id)
-        XCTAssertTrue(review.canFinish)
+        XCTAssertFalse(review.canFinish, "an unread page blocks finishing until retried or explicitly skipped")
         XCTAssertEqual(review.begin(), [1])
+    }
+
+    func testFinishBlockedWhenMidPageDropLeavesUnreadPageUntilSkippedOrCompleted() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("unread-drop-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        var review = LordsDayReview(noteId: noteId, pageCount: 1)
+        _ = review.begin()
+        // Two-card stream drops after the first card: page 0 is still unread.
+        review.apply(.page(0, cardCount: 2))
+        review.apply(card("key_point", page: 0, order: 0, text: "First card"))
+        review.interrupt()
+
+        review.keep("p0-0")
+        XCTAssertEqual(review.unreadPages, [0])
+        XCTAssertEqual(review.unhandledUnreadPages, [0])
+        XCTAssertFalse(review.canFinish, "keeping the first card of a dropped page must not unlock finish")
+
+        // Explicit skip unlocks finish and persists across save/load.
+        review.skipUnreadPages()
+        XCTAssertEqual(review.unhandledUnreadPages, [])
+        XCTAssertTrue(review.canFinish)
+        try review.save(root: root)
+        let reopened = try XCTUnwrap(LordsDayReview.load(noteId: noteId, root: root))
+        XCTAssertEqual(reopened.skippedPages, [0])
+        XCTAssertTrue(reopened.canFinish)
+    }
+
+    func testReorderedRetryPreservesEditsWithoutDroppingOrDuplicatingCards() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("reorder-retry-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        var review = LordsDayReview(noteId: noteId, pageCount: 1)
+        _ = review.begin()
+        review.apply(.page(0, cardCount: 2))
+        review.apply(card("key_point", page: 0, order: 0, text: "Card A"))
+        review.interrupt()
+
+        // Edit and keep Card A, then persist and reopen before retrying.
+        let cardAId = try XCTUnwrap(review.cards.first?.id)
+        try review.editText(cardAId, to: "Edited A")
+        try review.setKind(cardAId, to: .quote)
+        review.keep(cardAId)
+        try review.save(root: root)
+        review = try XCTUnwrap(LordsDayReview.load(noteId: noteId, root: root))
+
+        // Retry returns [B, A] in reversed order, so B has positional order 0 and A has order 1.
+        XCTAssertEqual(review.begin(), [0])
+        review.apply(.page(0, cardCount: 2))
+        review.apply(card("key_point", page: 0, order: 0, text: "Card B"))
+        review.apply(card("key_point", page: 0, order: 1, text: "Card A"))
+        review.apply(.done(failedPages: []))
+
+        XCTAssertEqual(review.readPages, [0])
+        XCTAssertEqual(review.unreadPages, [])
+        XCTAssertEqual(review.cards.count, 2, "neither dropped B nor duplicated A")
+        XCTAssertEqual(review.cards.map(\.text), ["Card B", "Edited A"])
+        let reconciledA = try XCTUnwrap(review.card(cardAId))
+        XCTAssertEqual(reconciledA.text, "Edited A")
+        XCTAssertEqual(reconciledA.kind, .quote)
+        XCTAssertTrue(reconciledA.editedByUser)
+        XCTAssertEqual(reconciledA.decision, .keep)
+        let newB = try XCTUnwrap(review.cards.first { $0.id != cardAId })
+        XCTAssertEqual(newB.text, "Card B")
+        XCTAssertEqual(newB.decision, .undecided)
+        XCTAssertFalse(newB.editedByUser)
+    }
+
+    func testReorderedRetryPreservesEditedVerseCardWithoutDuplicating() throws {
+        var review = LordsDayReview(noteId: noteId, pageCount: 1)
+        _ = review.begin()
+        review.apply(.page(0, cardCount: 2))
+        review.apply(.card(DraftCardPayload(kind: "verse", page: 0, order: 0, reference: "Romans 8:28", osis: "Rom.8.28")))
+        review.interrupt()
+
+        let verseId = try XCTUnwrap(review.cards.first?.id)
+        try review.chooseVerse(verseId, osis: "Rom.8.29")
+        review.keep(verseId)
+
+        XCTAssertEqual(review.begin(), [0])
+        review.apply(.page(0, cardCount: 2))
+        review.apply(card("key_point", page: 0, order: 0, text: "God works all things together"))
+        review.apply(.card(DraftCardPayload(kind: "verse", page: 0, order: 1, reference: "Romans 8:28", osis: "Rom.8.28")))
+        review.apply(.done(failedPages: []))
+
+        XCTAssertEqual(review.cards.count, 2)
+        let keptVerse = try XCTUnwrap(review.card(verseId))
+        XCTAssertEqual(keptVerse.verseRef, "Rom.8.29")
+        XCTAssertTrue(keptVerse.kept)
+        XCTAssertTrue(keptVerse.editedByUser)
     }
 
     func testDropBetweenPageHeaderAndLastCardReplaysWithoutLosingEditsOrDuplicating() throws {
@@ -380,5 +472,39 @@ final class LordsDayReviewTests: XCTestCase {
         try store.keepCards(review.keptCards(), for: oldNote)
         try LordsDayReview.delete(noteId: oldNote.id, root: root)
         XCTAssertEqual(try store.pendingReviewNotes(root: root).map(\.id), [])
+    }
+
+    func testNewerZeroCardPendingReviewDoesNotHideOlderPendingReview() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("pending-multi-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let container = try ModelContainer(for: progressSchema, configurations: [ModelConfiguration(schema: progressSchema, isStoredInMemoryOnly: true)])
+        let store = LordsDayStore(context: ModelContext(container))
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let today = calendar.date(from: DateComponents(year: 2026, month: 11, day: 25))!
+        let eightDaysAgo = calendar.date(byAdding: .day, value: -8, to: today)!
+
+        let older = LordsDayNote(serviceDate: eightDaysAgo, passageRef: "Psalm 98", extractedText: "Sing a new song", updatedAt: eightDaysAgo)
+        try store.save(older)
+        var olderReview = LordsDayReview(noteId: older.id, pageCount: 1)
+        _ = olderReview.begin()
+        olderReview.apply(.page(0, cardCount: 1))
+        olderReview.apply(.card(DraftCardPayload(kind: "key_point", page: 0, order: 0, text: "Sing to the Lord.")))
+        olderReview.apply(.done(failedPages: []))
+        try olderReview.save(root: root)
+
+        let newer = LordsDayNote(serviceDate: today, passageRef: "Romans 8", extractedText: "Blank notes", updatedAt: today)
+        try store.save(newer)
+        var newerReview = LordsDayReview(noteId: newer.id, pageCount: 1)
+        _ = newerReview.begin()
+        newerReview.apply(.page(0, cardCount: 0))
+        newerReview.apply(.done(failedPages: []))
+        try newerReview.save(root: root)
+        XCTAssertFalse(newerReview.canFinish)
+
+        let pending = try store.pendingReviewNotes(root: root)
+        XCTAssertEqual(pending.map(\.id), [newer.id, older.id], "both newer zero-card and older pending reviews remain listed")
+        XCTAssertEqual(try store.note(id: older.id)?.id, older.id)
+        XCTAssertEqual(try LordsDayReview.load(noteId: older.id, root: root)?.cards.count, 1)
     }
 }

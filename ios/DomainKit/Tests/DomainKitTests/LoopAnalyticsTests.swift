@@ -268,4 +268,31 @@ import Testing
         let working = LoopAnalytics(config: config, defaults: store) { _ in 200 }
         #expect(await working.recordDayOpened(now: at, calendar: .current) == 200)
     }
+
+    @Test func offlineSkipsAnalyticsTransportWithoutConsumingTheDay() async {
+        final class OnlineFlag: @unchecked Sendable {
+            private let lock = NSLock()
+            private var value = false
+            var isOnline: Bool {
+                get { lock.lock(); defer { lock.unlock() }; return value }
+                set { lock.lock(); value = newValue; lock.unlock() }
+            }
+        }
+        let flag = OnlineFlag()
+        let sent = Sent()
+        let store = defaults()
+        let analytics = LoopAnalytics(config: config, defaults: store, isOnline: { flag.isOnline }) { request in
+            sent.add(request)
+            return 200
+        }
+        // Offline launch on a new day: zero requests, and the day stays uncounted.
+        #expect(await analytics.recordDayOpened(now: at, calendar: .current) == nil)
+        #expect(await analytics.record(.cardShared(kind: .quote), at: at) == nil)
+        #expect(sent.all.isEmpty)
+
+        // Back online later the same day: dayOpened now sends once.
+        flag.isOnline = true
+        #expect(await analytics.recordDayOpened(now: at, calendar: .current) == 200)
+        #expect(sent.all.count == 1)
+    }
 }

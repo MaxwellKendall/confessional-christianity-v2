@@ -11,8 +11,15 @@ struct ConfessionalChristianityApp: App {
     private let container = makeSharedModelContainer()
     private let showsOpening = DailyOpening.claim(in: .standard)
 
-    // Account session (guest by default); restored from the Keychain at launch.
-    @State private var auth = AuthService()
+    // Account session (guest by default); restored locally from the Keychain at launch.
+    @State private var auth: AuthService
+
+    init() {
+        #if DEBUG
+        NetworkAudit.installIfConfigured()
+        #endif
+        _auth = State(initialValue: AuthService())
+    }
 
     var body: some Scene {
         WindowGroup {

@@ -20,6 +20,9 @@ actor EsvClient {
     private static let readerSession: URLSession = {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.urlCache = nil
+        #if DEBUG
+        NetworkAudit.configure(configuration)
+        #endif
         return URLSession(configuration: configuration)
     }()
     private var verseCache: [String: Task<[ReaderVerse]?, Never>] = [:]
@@ -42,6 +45,7 @@ actor EsvClient {
         // Screenshot hook: `-EsvOffline YES` simulates no network for the reader.
         if UserDefaults.standard.bool(forKey: "EsvOffline") { return nil }
         #endif
+        guard await NetworkConnectivity.shared.isOnline() else { return nil }
         guard var components = URLComponents(string: baseURL) else { return nil }
         components.queryItems = [
             URLQueryItem(name: "osis", value: osis),
@@ -79,6 +83,10 @@ actor EsvClient {
     }
 
     private static func fetchChapter(osis: String) async -> ReaderChapter? {
+        #if DEBUG
+        if UserDefaults.standard.bool(forKey: "EsvOffline") { return nil }
+        #endif
+        guard await NetworkConnectivity.shared.isOnline() else { return nil }
         guard var components = URLComponents(string: baseURL) else { return nil }
         components.queryItems = [
             URLQueryItem(name: "osis", value: ReaderChapter.queryOSIS(for: osis)),
@@ -121,6 +129,7 @@ actor EsvClient {
         #if DEBUG
         if UserDefaults.standard.bool(forKey: "EsvOffline") { return nil }
         #endif
+        guard await NetworkConnectivity.shared.isOnline() else { return nil }
         guard let encoded = osis.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
               let url = URL(string: "\(baseURL)?osis=\(encoded)") else {
             return nil

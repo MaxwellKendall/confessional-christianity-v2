@@ -210,8 +210,20 @@ final class LordsDaySkeletonUITests: XCTestCase {
     }
 
     @MainActor func testOfflineRelaunchShowsSameWeekFromLocalStorage() throws {
-        // Relaunch with no fixture launch arguments and offline (-EsvOffline YES, unreachable cards endpoint).
-        let app = launchLive(extra: ["-EsvOffline", "YES"])
+        // Cold offline relaunch on a fresh day (cleared LoopAnalyticsLastDayOpened) with
+        // NetworkAuditFile armed to observe every URLRequest across URLSession.shared and
+        // default/ephemeral sessions (Amplify, LoopCounter, EsvClient, LiveCardsGenerator).
+        // Asserts zero network requests without relying on `-EsvOffline`.
+        let auditFile = scratchDir.appendingPathComponent("offline-network-audit.log")
+        let armedFile = auditFile.appendingPathExtension("armed")
+        try? FileManager.default.removeItem(at: auditFile)
+        try? FileManager.default.removeItem(at: armedFile)
+
+        let app = launchLive(extra: [
+            "-OfflineMode", "YES",
+            "-LoopAnalyticsLastDayOpened", "",
+            "-NetworkAuditFile", auditFile.path,
+        ])
 
         let lordsDayTab = app.buttons["Lord's Day"]
         XCTAssertTrue(lordsDayTab.waitForExistence(timeout: 20), "Lord's Day tab did not appear on relaunch")
@@ -219,7 +231,7 @@ final class LordsDaySkeletonUITests: XCTestCase {
 
         let todayLabel = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH[c] 'Today'")).firstMatch
         XCTAssertTrue(todayLabel.waitForExistence(timeout: 15), "Saved week did not show offline on relaunch")
-        sleep(2)
+        sleep(3)
         XCTAssertTrue(todayLabel.isHittable, "Today's card is not on screen after offline relaunch")
         saveShot("12-offline-relaunch-feed.png")
 
@@ -230,5 +242,9 @@ final class LordsDaySkeletonUITests: XCTestCase {
         if let online {
             XCTAssertEqual(summary, online, "Offline relaunch week differs from online week")
         }
+
+        XCTAssertTrue(FileManager.default.fileExists(atPath: armedFile.path), "Network audit observer was not armed on launch")
+        let recorded = (try? String(contentsOf: auditFile, encoding: .utf8))?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        XCTAssertEqual(recorded, "", "Cold offline relaunch attempted outgoing network requests:\n\(recorded)")
     }
 }

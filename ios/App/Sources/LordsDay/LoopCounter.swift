@@ -12,10 +12,21 @@ enum LoopCounter {
     private static let analytics: LoopAnalytics = {
         #if DEBUG
         let environment = "debug"
+        let transport: LoopAnalytics.Transport = { request in
+            let configuration = URLSessionConfiguration.ephemeral
+            NetworkAudit.configure(configuration)
+            let (_, response) = try await URLSession(configuration: configuration).data(for: request)
+            return (response as? HTTPURLResponse)?.statusCode ?? 0
+        }
         #else
         let environment = "release"
+        let transport = LoopAnalytics.urlSession
         #endif
-        return LoopAnalytics(config: LoopAnalyticsConfig(info: Bundle.main.infoDictionary ?? [:], environment: environment))
+        return LoopAnalytics(
+            config: LoopAnalyticsConfig(info: Bundle.main.infoDictionary ?? [:], environment: environment),
+            isOnline: { await NetworkConnectivity.shared.isOnline() },
+            transport: transport
+        )
     }()
 
     static func record(_ event: LoopEvent) {

@@ -54,21 +54,27 @@ public struct LoopAnalyticsConfig: Equatable, Sendable {
 public actor LoopAnalytics {
     /// Sends a request and returns its HTTP status.
     public typealias Transport = @Sendable (URLRequest) async throws -> Int
+    /// Returns false when the device is offline so no network call is attempted.
+    public typealias Connectivity = @Sendable () async -> Bool
 
     static let installIdKey = "LoopAnalyticsInstallId"
     static let lastDayOpenedKey = "LoopAnalyticsLastDayOpened"
 
     private let config: LoopAnalyticsConfig?
     private let defaults: UserDefaults
+    private let isOnline: Connectivity
     private let transport: Transport
     /// Days whose `dayOpened` send is in flight. The actor can take another call while a send
     /// awaits the network, so a day is reserved before the await, not saved after it. Sends either
     /// side of midnight can overlap, so each day keeps its own reservation (TKL-995).
     private var dayOpenedInFlight: Set<String> = []
 
-    public init(config: LoopAnalyticsConfig?, defaults: UserDefaults = .standard, transport: @escaping Transport = LoopAnalytics.urlSession) {
+    public init(config: LoopAnalyticsConfig?, defaults: UserDefaults = .standard,
+                isOnline: @escaping Connectivity = { true },
+                transport: @escaping Transport = LoopAnalytics.urlSession) {
         self.config = config
         self.defaults = defaults
+        self.isOnline = isOnline
         self.transport = transport
     }
 
@@ -81,7 +87,7 @@ public actor LoopAnalytics {
     /// Never throws: counting must never get in the way of the person using the app.
     @discardableResult
     public func record(_ event: LoopEvent, at date: Date = Date()) async -> Int? {
-        guard let config,
+        guard let config, await isOnline(),
               let request = Self.captureRequest(event, config: config, installId: installId(), at: date)
         else { return nil }
         return try? await transport(request)
@@ -96,7 +102,8 @@ public actor LoopAnalytics {
         // Days are "yyyy-MM-dd", so string order is date order: a day on or before the last one
         // counted has been counted already.
         guard config != nil, !dayOpenedInFlight.contains(day),
-              (defaults.string(forKey: Self.lastDayOpenedKey) ?? "") < day else { return nil }
+              (defaults.string(forKey: Self.lastDayOpenedKey) ?? "") < day,
+              await isOnline() else { return nil }
         dayOpenedInFlight.insert(day)
         defer { dayOpenedInFlight.remove(day) }
         guard let status = await record(.dayOpened, at: now), (200..<300).contains(status) else { return nil }
