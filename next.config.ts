@@ -24,6 +24,7 @@ const CUT_PROGRAMS = [
 ] as const;
 
 const nextConfig: NextConfig = {
+  transpilePackages: ['@studio/auth'],
   async redirects() {
     return [
       // v1 document pages -> library TOCs

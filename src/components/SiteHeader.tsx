@@ -25,6 +25,7 @@ export function SiteHeader() {
       <nav className="mt-3 flex justify-center gap-[22px] label-caps text-[9.5px] tracking-[0.1em] text-ink-3 sm:mt-4 sm:gap-9 sm:text-[11.5px]">
         <Link href="/library" className="text-ink no-underline">Library</Link>
         <Link href="/reflections" className="text-ink-3 no-underline">Resources</Link>
+        <Link href="/account" className="text-ink-3 no-underline">Account</Link>
       </nav>
     </header>
   );

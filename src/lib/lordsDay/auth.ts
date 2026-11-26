@@ -1,30 +1,53 @@
-import { CognitoJwtVerifier } from 'aws-jwt-verify';
+import { verify, type StudioClaims, type VerifyOptions } from '@studio/auth';
 
-// The app signs in against the stage's Cognito pool (infra/, TKL-850). The
-// generator accepts only that pool's *access* tokens for the iOS app client;
-// the subject it verifies is what the rate limit keys on.
+// Server-side Cognito token verification backed by @studio/auth (TKL-1043;
+// vendored from studio-platform/packages/auth). Accepts STUDIO_USER_POOL_ID /
+// STUDIO_CLIENT_ID first and falls back to the legacy COGNITO_* names so
+// existing production deployments stay configured without interruption.
 
 export interface CognitoConfig {
   userPoolId: string;
   clientId: string;
 }
 
-export const cognitoConfigFromEnv = (): CognitoConfig | null => {
-  const userPoolId = process.env.COGNITO_USER_POOL_ID?.trim();
-  const clientId = process.env.COGNITO_CLIENT_ID?.trim();
-  return userPoolId && clientId ? { userPoolId, clientId } : null;
+export const studioAuthConfigFromEnv = (env: NodeJS.ProcessEnv = process.env): CognitoConfig | null => {
+  const studioPool = env.STUDIO_USER_POOL_ID?.trim();
+  const studioClient = env.STUDIO_CLIENT_ID?.trim();
+  if (studioPool || studioClient) {
+    return studioPool && studioClient ? { userPoolId: studioPool, clientId: studioClient } : null;
+  }
+  const legacyPool = env.COGNITO_USER_POOL_ID?.trim();
+  const legacyClient = env.COGNITO_CLIENT_ID?.trim();
+  return legacyPool && legacyClient ? { userPoolId: legacyPool, clientId: legacyClient } : null;
 };
 
-export const createCognitoVerifier = ({ userPoolId, clientId }: CognitoConfig) =>
-  CognitoJwtVerifier.create({ userPoolId, clientId, tokenUse: 'access' });
+/** Backwards-compatible alias for studioAuthConfigFromEnv. */
+export const cognitoConfigFromEnv = studioAuthConfigFromEnv;
 
-let cached: { key: string; verifier: ReturnType<typeof createCognitoVerifier> } | null = null;
+export const verifyStudioToken = (
+  token: string,
+  config: CognitoConfig,
+  opts: Pick<VerifyOptions, 'jwks'> = {},
+): Promise<StudioClaims> =>
+  verify(token, config.clientId, {
+    userPoolId: config.userPoolId,
+    jwks: opts.jwks,
+  });
 
-/** One verifier per warm instance, so the pool's JWKS is fetched once and cached. */
-export const verifierFor = (config: CognitoConfig) => {
-  const key = `${config.userPoolId}:${config.clientId}`;
-  if (cached?.key !== key) cached = { key, verifier: createCognitoVerifier(config) };
-  return cached.verifier;
+/**
+ * Verifies an access token issued to this product's studio client.
+ * Rejects ID tokens so API endpoints that expect access tokens stay strict.
+ */
+export const verifyStudioAccessToken = async (
+  token: string,
+  config: CognitoConfig,
+  opts: Pick<VerifyOptions, 'jwks'> = {},
+): Promise<{ sub: string; claims: StudioClaims }> => {
+  const claims = await verifyStudioToken(token, config, opts);
+  if (claims.token_use !== 'access') {
+    throw new Error('Expected an access token');
+  }
+  return { sub: String(claims.sub), claims };
 };
 
 export const bearerToken = (request: Request): string | null =>

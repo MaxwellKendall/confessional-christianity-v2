@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { createCognitoVerifier } from '@/lib/lordsDay/auth';
+import { verifyStudioAccessToken } from '@/lib/lordsDay/auth';
 import { handleCardsRequest, type CardsDeps } from '@/lib/lordsDay/handler';
 import { createRateLimiter } from '@/lib/lordsDay/rateLimit';
 import { POST } from '@/app/api/lords-day/cards/route';
@@ -53,14 +53,13 @@ const pageReply = (body: Record<string, unknown>) => {
 };
 
 const deps = (overrides: Partial<CardsDeps> = {}): CardsDeps => {
-  const verifier = createCognitoVerifier({ userPoolId: TEST_POOL_ID, clientId: TEST_CLIENT_ID });
-  verifier.cacheJwks(pool.jwks as never);
+  const config = { userPoolId: TEST_POOL_ID, clientId: TEST_CLIENT_ID };
   return {
     geminiApiKey: 'test-gemini-key',
     model: 'gemini-3.8-flash',
     verifyAccessToken: async (token) => {
-      const payload = await verifier.verify(token);
-      return { sub: String(payload.sub) };
+      const { sub } = await verifyStudioAccessToken(token, config, { jwks: pool.jwks as never });
+      return { sub };
     },
     limiter: createRateLimiter({ limit: 20, windowMs: 60 * 60 * 1000 }),
     fetchImpl: fakeGemini(pageReply) as unknown as typeof fetch,
@@ -99,6 +98,8 @@ const readEvents = async (response: Response) => {
 
 beforeEach(() => {
   delete process.env.GEMINI_API_KEY;
+  delete process.env.STUDIO_USER_POOL_ID;
+  delete process.env.STUDIO_CLIENT_ID;
   delete process.env.COGNITO_USER_POOL_ID;
   delete process.env.COGNITO_CLIENT_ID;
   pool = createTestPool();
@@ -108,6 +109,8 @@ beforeEach(() => {
 afterEach(() => {
   vi.unstubAllGlobals();
   delete process.env.GEMINI_API_KEY;
+  delete process.env.STUDIO_USER_POOL_ID;
+  delete process.env.STUDIO_CLIENT_ID;
   delete process.env.COGNITO_USER_POOL_ID;
   delete process.env.COGNITO_CLIENT_ID;
 });

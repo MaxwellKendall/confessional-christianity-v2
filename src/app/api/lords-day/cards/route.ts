@@ -1,4 +1,4 @@
-import { cognitoConfigFromEnv, verifierFor } from '@/lib/lordsDay/auth';
+import { studioAuthConfigFromEnv, verifyStudioAccessToken } from '@/lib/lordsDay/auth';
 import { cardsModel } from '@/lib/lordsDay/gemini';
 import { handleCardsRequest } from '@/lib/lordsDay/handler';
 import { createRateLimiter } from '@/lib/lordsDay/rateLimit';
@@ -13,15 +13,14 @@ export const maxDuration = 60;
 const limiter = createRateLimiter({ limit: 20, windowMs: 60 * 60 * 1000 });
 
 export async function POST(request: Request) {
-  const cognito = cognitoConfigFromEnv();
-  const verifier = cognito ? verifierFor(cognito) : null;
+  const studioAuth = studioAuthConfigFromEnv();
   return handleCardsRequest(request, {
     geminiApiKey: process.env.GEMINI_API_KEY?.trim() || undefined,
     model: cardsModel(),
-    verifyAccessToken: verifier
+    verifyAccessToken: studioAuth
       ? async (token) => {
-          const payload = await verifier.verify(token);
-          return { sub: String(payload.sub) };
+          const { sub } = await verifyStudioAccessToken(token, studioAuth);
+          return { sub };
         }
       : null,
     limiter,
