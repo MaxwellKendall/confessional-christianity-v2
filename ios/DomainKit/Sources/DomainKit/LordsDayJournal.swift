@@ -34,6 +34,12 @@ public struct JournalCard: Equatable, Sendable {
 
     /// What a card shows: its words, or a verse's reference.
     public var text: String { kind == .verse ? (reference ?? "") : body }
+
+    /// A verse card's OSIS id, when its reference parses.
+    public var verseOsis: String? { kind == .verse ? reference.flatMap(LordsDayFeed.osis(for:)) : nil }
+
+    /// A verse card's bundled ESV text, readable offline; nil when it isn't bundled.
+    public var bundledVerseText: String? { verseOsis.flatMap(bundledEsvText(for:)) }
 }
 
 public struct JournalEntry: Identifiable, Equatable, Sendable {
@@ -93,8 +99,17 @@ public struct JournalEntry: Identifiable, Equatable, Sendable {
         return points + quotes
     }
 
-    /// The first verse card's reference, for the summary's quoted line.
-    public var keyVerse: String? { cards.first { $0.kind == .verse }?.reference.flatMap(normalizedNoteField) }
+    /// The first verse card, for the summary's quoted line.
+    public var keyVerse: JournalCard? { cards.first { $0.kind == .verse && normalizedNoteField($0.reference) != nil } }
+
+    /// Every reference the week touched: the passage, then the verse cards'.
+    public var references: [String] {
+        var refs: [String] = passage.map { [$0] } ?? []
+        for card in cards where card.kind == .verse {
+            if let ref = normalizedNoteField(card.reference), !refs.contains(ref) { refs.append(ref) }
+        }
+        return refs
+    }
 
     /// Book and chapter of a reference, OSIS or as written.
     static func locate(_ reference: String) -> ChapterKey? {
@@ -123,6 +138,8 @@ public struct JournalFilter: Equatable, Hashable, Sendable {
     public init(year: Int? = nil, month: Int? = nil, book: Int? = nil, chapter: Int? = nil) {
         self.year = year; self.month = month; self.book = book; self.chapter = chapter
     }
+
+    public static let monthNames = journalMonths
 
     public var isEmpty: Bool { year == nil && month == nil && book == nil && chapter == nil }
     public var hasTime: Bool { year != nil }
@@ -192,6 +209,7 @@ public struct JournalChapterCounts: Equatable, Sendable {
     public let preached: [ChapterKey: Int]
     /// Verse cards citing each chapter.
     public let cited: [ChapterKey: Int]
+    public init(preached: [ChapterKey: Int], cited: [ChapterKey: Int]) { self.preached = preached; self.cited = cited }
     /// Books with a sermon preached from them, in canonical order.
     public var preachedBooks: [Int] { Set(preached.keys.map(\.book)).sorted() }
 }

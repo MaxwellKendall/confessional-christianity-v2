@@ -3,7 +3,8 @@
 // is the empty state from TKL-885's prototype (TKL-868 replaces it), with the
 // way into photographing Sunday's notes (TKL-860). Finishing a capture opens
 // the review of the drafted cards (TKL-863), which can be left and reopened
-// from here until the week is kept. The archive is TKL-865.
+// from here until the week is kept. The header opens the sermon journal of
+// every kept Lord's Day (TKL-944); back returns to the feed where it was.
 import SwiftUI
 import SwiftData
 import DomainKit
@@ -33,6 +34,7 @@ struct LordsDayTabView: View {
                         .overlay(alignment: .topTrailing) {
                             HStack(spacing: 8) {
                                 if status.reviewable { reviewButton }
+                                journalButton
                                 captureButton
                             }
                             .padding(.trailing, 16)
@@ -44,6 +46,12 @@ struct LordsDayTabView: View {
             }
             .toolbar(.hidden, for: .navigationBar)
             .appDestinations(path: $path)
+            .navigationDestination(for: JournalRoute.self) { _ in
+                JournalView(onCapture: {
+                    path = NavigationPath()
+                    capture = CaptureModel(context: context)
+                })
+            }
         }
         .tint(.ccInk)
         .fullScreenCover(item: $capture, onDismiss: afterCapture) { model in
@@ -56,6 +64,12 @@ struct LordsDayTabView: View {
             ReviewView(model: model, onClose: { review = nil }, onFinish: { review = nil })
         }
         .onAppear(perform: refresh)
+        #if DEBUG
+        .task {
+            // Screenshot hook: `-OpenJournal YES` pushes the journal on launch.
+            if UserDefaults.standard.bool(forKey: "OpenJournal"), path.isEmpty { path.append(JournalRoute.journal) }
+        }
+        #endif
         .onChange(of: startsCapture, initial: true) { _, requested in
             guard requested else { return }
             capture = CaptureModel(context: context)
@@ -70,6 +84,18 @@ struct LordsDayTabView: View {
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.significantTimeChangeNotification)) { _ in
             refresh()
         }
+    }
+
+    /// The sermon journal: every kept Lord's Day (TKL-944).
+    private var journalButton: some View {
+        Button { path.append(JournalRoute.journal) } label: {
+            Image(systemName: "book.closed")
+                .font(.system(size: 16, weight: .medium))
+                .frame(width: 40, height: 40)
+                .background(.ultraThinMaterial, in: Circle())
+        }
+        .accessibilityLabel("Journal")
+        .accessibilityIdentifier("lordsDay.journal")
     }
 
     /// Until the Sunday cover card (TKL-864) carries it, the way back to the camera.
@@ -115,14 +141,25 @@ struct LordsDayTabView: View {
     private var emptyState: some View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    Text("Pillar two")
-                        .labelCaps(size: 10.5, tracking: 0.16)
-                        .padding(.top, 16)
-                    Text("The Lord's Day")
-                        .font(.ccDisplay(25, semibold: true))
-                        .foregroundStyle(.ccInk)
-                        .padding(.top, 4)
-                        .padding(.bottom, 16)
+                    HStack(alignment: .bottom) {
+                        VStack(alignment: .leading, spacing: 0) {
+                            Text("Pillar two")
+                                .labelCaps(size: 10.5, tracking: 0.16)
+                                .padding(.top, 16)
+                            Text("The Lord's Day")
+                                .font(.ccDisplay(25, semibold: true))
+                                .foregroundStyle(.ccInk)
+                                .padding(.top, 4)
+                        }
+                        Spacer()
+                        Button { path.append(JournalRoute.journal) } label: {
+                            Label("Journal", systemImage: "book.closed")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(Color.ccChapel)
+                        }
+                        .accessibilityIdentifier("lordsDay.journal")
+                    }
+                    .padding(.bottom, 16)
 
                     VStack(alignment: .leading, spacing: 0) {
                         Text("Keep Sunday's sermon")

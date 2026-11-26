@@ -28,6 +28,7 @@
 		4BF1AA038DAF23E878D34262 /* SiteHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA107B8B544A9F504E2D6E4F /* SiteHeaderView.swift */; };
 		4C9F8EC58B6134846888E049 /* ReaderChapterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78ABC84F127EEF53401B4B8F /* ReaderChapterView.swift */; };
 		58641ED3BB13D794A63BE99F /* ConfessionalChristianityApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D721D4D4D91E53FCEF7C32EB /* ConfessionalChristianityApp.swift */; };
+		5F0AE0B4CA8FD0DDD6ADC7BA /* JournalSermonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BF4EBFFAF6B1CC5D8878AFE /* JournalSermonView.swift */; };
 		617170D8BB94B48A2C5FCD5D /* amplify_outputs.prod.json in Resources */ = {isa = PBXBuildFile; fileRef = 98955822F58692860E6C5A5F /* amplify_outputs.prod.json */; };
 		6A97BA0F07B755DABF4297B5 /* ReaderConfessionsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 421AEA827B9B261BB8EB27EE /* ReaderConfessionsSheet.swift */; };
 		735B92C856F999EE4F7294F6 /* CatechismTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99285AF1E154635D23996AA9 /* CatechismTabView.swift */; };
@@ -38,6 +39,7 @@
 		792F3E7354EBF8639091C677 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ED45E06DF435369D44194FD /* TodayView.swift */; };
 		7B246BA5EFD0AB22AE029116 /* CardsGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52EFEC9F374B7B3FE8384E73 /* CardsGenerator.swift */; };
 		7C611E39E3B058BE6D93D933 /* SessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27A1DF330C4DA1EC70E025A1 /* SessionView.swift */; };
+		7E731B6ED4D8DE981A37AEBE /* JournalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FB6B38BB185E74EA8806A80 /* JournalView.swift */; };
 		7F658028A04AEB6639B58A82 /* LordsDayFeedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1C91F026BE4FEE54E8BB42E /* LordsDayFeedView.swift */; };
 		8B6C145E341F77C8E643D573 /* CameraController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B457BF311BED9BFB4321BC0F /* CameraController.swift */; };
 		8B7CCA1620D28C8EE82E0212 /* CatechismWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C4BE3D3CA7C31C59ACB5286 /* CatechismWidget.swift */; };
@@ -128,8 +130,10 @@
 		0622E7353216946347CF3DD1 /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
 		0696F7777BB06E349FC8B348 /* ReflectionsRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReflectionsRoute.swift; sourceTree = "<group>"; };
 		09DC9BA05478BE3F8C6ABE62 /* LibraryEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryEntryView.swift; sourceTree = "<group>"; };
+		0BF4EBFFAF6B1CC5D8878AFE /* JournalSermonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JournalSermonView.swift; sourceTree = "<group>"; };
 		0C4B68D1D371A1DA4EFC1936 /* LordsDaySkeletonUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LordsDaySkeletonUITests.swift; sourceTree = "<group>"; };
 		0DEE3A1FB42239248ABA0E9F /* Cinzel-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Cinzel-Regular.ttf"; sourceTree = "<group>"; };
+		0FB6B38BB185E74EA8806A80 /* JournalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JournalView.swift; sourceTree = "<group>"; };
 		1092716DFCAAFBFA67FC835E /* SignInSheetUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignInSheetUITests.swift; sourceTree = "<group>"; };
 		1355BBE9BF8900B5FE2A2F86 /* SearchRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchRoute.swift; sourceTree = "<group>"; };
 		186C722AE6BB4430FEB87466 /* FeedOpensAtTodayUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedOpensAtTodayUITests.swift; sourceTree = "<group>"; };
@@ -372,6 +376,8 @@
 				DFB100594401DF03A33600E0 /* CaptureModel.swift */,
 				E00C25ED916B66A447B8C411 /* CaptureView.swift */,
 				52EFEC9F374B7B3FE8384E73 /* CardsGenerator.swift */,
+				0BF4EBFFAF6B1CC5D8878AFE /* JournalSermonView.swift */,
+				0FB6B38BB185E74EA8806A80 /* JournalView.swift */,
 				BD4AB7A9E7C2AD7577016708 /* LoopCounter.swift */,
 				F1C91F026BE4FEE54E8BB42E /* LordsDayFeedView.swift */,
 				F9026BA4701C493912921EF2 /* LordsDayTabView.swift */,
@@ -665,6 +671,8 @@
 				30DF48B35840FA30269AA83C /* FloatingTabBarView.swift in Sources */,
 				DE6921043A9DF51BC51CDB04 /* FlowLayout.swift in Sources */,
 				CCA59BAED520814729154AF4 /* HidesFloatingTabBar.swift in Sources */,
+				5F0AE0B4CA8FD0DDD6ADC7BA /* JournalSermonView.swift in Sources */,
+				7E731B6ED4D8DE981A37AEBE /* JournalView.swift in Sources */,
 				1759D64CAD6C6F870DE4716A /* JumpToQuestionView.swift in Sources */,
 				03406E43F389106CA35A9696 /* LaunchOpening.swift in Sources */,
 				C1E4EAF8F6E8528DE63DA7EB /* LibraryEntryView.swift in Sources */,
