@@ -103,6 +103,11 @@ public func todayCardIndex(serviceDate: Date, today: Date, cardCount: Int, calen
         note.updatedAt = now
         try context.save()
     }
+    /// Every live note, for the journal (TKL-944).
+    func allNotes() throws -> [LordsDayNote] {
+        try context.fetch(FetchDescriptor<LordsDayNote>(predicate: #Predicate { $0.deletedAt == nil }))
+    }
+    func allCards() throws -> [NoteCard] { try context.fetch(FetchDescriptor<NoteCard>()) }
     public func removeCard(_ card: NoteCard) throws { card.deletedAt = Date(); card.updatedAt = Date(); try context.save() }
     public func note(id: UUID) throws -> LordsDayNote? {
         try context.fetch(FetchDescriptor<LordsDayNote>()).first { $0.id == id && $0.deletedAt == nil }
