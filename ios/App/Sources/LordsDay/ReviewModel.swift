@@ -124,7 +124,6 @@ final class ReviewModel {
 
     /// Keeps the kept cards, in order, as this note's week. The photos stay on the device.
     func finish() throws {
-        guard review.undecidedCount == 0 else { throw LordsDayReviewError.unreviewedCards }
         guard review.unhandledUnreadPages.isEmpty else { throw LordsDayReviewError.unreadPagesRemaining }
         guard review.canFinish else { throw LordsDayReviewError.nothingToKeep }
         let kept = review.keptCards()

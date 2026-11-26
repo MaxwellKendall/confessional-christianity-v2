@@ -220,31 +220,47 @@ struct ReviewView: View {
                     .accessibilityHint(kind == .verse ? "Opens the Bible to pick the verse" : "")
                 }
             }
-            HStack(spacing: 4) {
-                Button { model.keep(card.id) } label: {
-                    Label("Keep", systemImage: card.kept ? "checkmark.circle.fill" : "circle")
-                }
-                .foregroundStyle(card.kept ? chapel : ink2)
-                .accessibilityIdentifier("review.keep")
-                if card.kind == .verse {
-                    Button { pickingVerseFor = card } label: { Label("Change verse", systemImage: "book") }
-                        .foregroundStyle(chapel)
-                        .accessibilityIdentifier("review.edit")
+            // Cards arrive kept, so there is no Keep to press. Editing is the
+            // call to action; removing is deliberate, quiet and reversible.
+            HStack(spacing: 10) {
+                if card.isRemoved {
+                    Button { model.keep(card.id) } label: {
+                        Label("Keep this card", systemImage: "arrow.uturn.backward")
+                            .font(.system(size: 15, weight: .semibold))
+                            .padding(.vertical, 10)
+                            .padding(.horizontal, 18)
+                            .background(chapel.opacity(0.14), in: Capsule())
+                            .foregroundStyle(chapel)
+                    }
+                    .accessibilityIdentifier("review.keep")
                 } else {
-                    Button { editing = card } label: { Label("Edit", systemImage: "pencil") }
-                        .foregroundStyle(chapel)
-                        .accessibilityIdentifier("review.edit")
+                    Button {
+                        if card.kind == .verse { pickingVerseFor = card } else { editing = card }
+                    } label: {
+                        Label(
+                            card.kind == .verse ? "Change verse" : "Edit",
+                            systemImage: card.kind == .verse ? "book" : "pencil"
+                        )
+                        .font(.system(size: 15, weight: .semibold))
+                        .padding(.vertical, 10)
+                        .padding(.horizontal, 20)
+                        .background(chapel, in: Capsule())
+                        .foregroundStyle(onChapel)
+                    }
+                    .accessibilityIdentifier("review.edit")
+
+                    Button { model.remove(card.id) } label: {
+                        Label("Remove", systemImage: "xmark")
+                            .font(.system(size: 15))
+                            .padding(.vertical, 10)
+                            .padding(.horizontal, 14)
+                            .foregroundStyle(ink2)
+                    }
+                    .accessibilityIdentifier("review.remove")
                 }
-                Button { model.remove(card.id) } label: {
-                    Label("Remove", systemImage: card.isRemoved ? "xmark.circle.fill" : "xmark")
-                }
-                .foregroundStyle(card.isRemoved ? danger : ink2)
-                .accessibilityIdentifier("review.remove")
             }
-            .font(.system(size: 14.5))
-            .buttonStyle(.borderless)
+            .buttonStyle(.plain)
             .labelStyle(.titleAndIcon)
-            .controlSize(.regular)
             .padding(.horizontal, 4)
         }
         .padding(.top, 14)
@@ -357,16 +373,6 @@ struct ReviewView: View {
                         .foregroundStyle(danger)
                 }
                 .buttonStyle(.plain)
-            } else if !review.isDrafting, review.undecidedCount > 0, let nextIndex = review.firstUndecidedIndex {
-                Button {
-                    withAnimation(.easeOut(duration: 0.25)) { current = review.cards[nextIndex].id }
-                } label: {
-                    Text("Keep or remove \(review.undecidedCount) remaining card\(review.undecidedCount == 1 ? "" : "s") to continue.")
-                        .font(.system(size: 13))
-                        .foregroundStyle(ink2)
-                }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier("review.undecidedHint")
             } else if !review.isDrafting, !review.unhandledUnreadPages.isEmpty {
                 let n = review.unhandledUnreadPages.count
                 Text("Retry or skip \(n) unread page\(n == 1 ? "" : "s") to finish.")
@@ -427,7 +433,15 @@ private struct ReviewCardView: View {
                     .textCase(.uppercase)
                     .foregroundStyle(accent)
                     .padding(.bottom, 18)
-                content
+                // A long passage must never trail off (TKL-1053). When the words fit
+                // they render as before; when they don't, the card scrolls them.
+                ViewThatFits(in: .vertical) {
+                    content
+                    ScrollView(.vertical, showsIndicators: false) {
+                        content.frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .scrollBounceBehavior(.basedOnSize)
+                }
                 Spacer(minLength: 0)
             }
             .padding(EdgeInsets(top: 34, leading: 26, bottom: 48, trailing: 26))
@@ -469,8 +483,6 @@ private struct ReviewCardView: View {
             Text(card.text.isEmpty ? "No words yet. Tap Edit." : card.text)
                 .font(.ccBody(22))
                 .lineSpacing(5)
-                .lineLimit(10)
-                .minimumScaleFactor(0.6)
                 .opacity(card.text.isEmpty ? 0.6 : 1)
         case .verse:
             let reference = card.verseRef.map { ref in osis(ref).map(parseOsisBibleReference) ?? ref } ?? ""
@@ -478,8 +490,6 @@ private struct ReviewCardView: View {
                 Text(verseText)
                     .font(.ccBody(21))
                     .lineSpacing(5)
-                    .lineLimit(10)
-                    .minimumScaleFactor(0.5)
                 Text(reference)
                     .font(.ccDisplay(12))
                     .tracking(12 * 0.18)

@@ -70,6 +70,7 @@ public enum LordsDayReviewError: Error, Equatable {
 /// One drafted card as the user is reviewing it.
 public struct ReviewCard: Codable, Equatable, Identifiable, Sendable {
     public enum Decision: String, Codable, Equatable, Sendable {
+        /// Legacy: only in reviews saved before cards arrived kept. Reads as kept.
         case undecided
         case keep
         case remove
@@ -92,7 +93,9 @@ public struct ReviewCard: Codable, Equatable, Identifiable, Sendable {
     /// so a reordered retry reconciles against the card it originally drafted.
     public let sourceKey: String
 
-    public var kept: Bool { decision == .keep }
+    /// Kept unless explicitly removed. `undecided` only ever comes from a review
+    /// saved before cards began arriving kept (TKL-1053); it reads as kept.
+    public var kept: Bool { decision != .remove }
     public var isRemoved: Bool { decision == .remove }
     public var isUndecided: Bool { decision == .undecided }
 
@@ -122,7 +125,7 @@ public struct ReviewCard: Codable, Equatable, Identifiable, Sendable {
         verseRef = try c.decodeIfPresent(String.self, forKey: .verseRef)
         attribution = try c.decodeIfPresent(String.self, forKey: .attribution)
         // Legacy review.json files without a decision default to undecided so nothing unseen is kept.
-        decision = try c.decodeIfPresent(Decision.self, forKey: .decision) ?? .undecided
+        decision = try c.decodeIfPresent(Decision.self, forKey: .decision) ?? .keep
         editedByUser = try c.decode(Bool.self, forKey: .editedByUser)
         sourceKey = try c.decodeIfPresent(String.self, forKey: .sourceKey)
             ?? Self.makeSourceKey(kind: kind, words: words, verseRef: verseRef)
@@ -217,7 +220,7 @@ public struct LordsDayReview: Codable, Equatable, Sendable {
     public var firstUndecidedIndex: Int? { cards.firstIndex(where: \.isUndecided) }
     public var keptCount: Int { cards.filter(\.kept).count }
     public var canFinish: Bool {
-        !isDrafting && !cards.isEmpty && undecidedCount == 0 && keptCount > 0 && blockingCardIndex == nil && unhandledUnreadPages.isEmpty
+        !isDrafting && !cards.isEmpty && keptCount > 0 && blockingCardIndex == nil && unhandledUnreadPages.isEmpty
     }
 
     public func card(_ id: String) -> ReviewCard? { cards.first { $0.id == id } }
@@ -285,7 +288,7 @@ public struct LordsDayReview: Codable, Equatable, Sendable {
                 words: words,
                 verseRef: kind == .verse ? reference : nil,
                 attribution: kind == .quote ? normalizedNoteField(draft.attribution) : nil,
-                decision: .undecided, editedByUser: false, sourceKey: sourceKey
+                decision: .keep, editedByUser: false, sourceKey: sourceKey
             ))
             cards.sort { ($0.page, $0.order, $0.id) < ($1.page, $1.order, $1.id) }
         case .done(let failed):

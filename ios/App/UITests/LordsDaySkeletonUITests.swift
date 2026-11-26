@@ -109,9 +109,11 @@ final class LordsDaySkeletonUITests: XCTestCase {
         app.buttons["signIn.verify"].tap()
 
         // 4. After sign-in, drafting automatically resumes for the saved typed notes!
-        let undecidedHint = app.buttons["review.undecidedHint"]
-        XCTAssertTrue(undecidedHint.waitForExistence(timeout: 60), "Typed notes did not draft after signing in")
-        XCTAssertFalse(app.buttons["review.finish"].isEnabled, "Finish must stay disabled while drafts are undecided")
+        // Drafting is done when the whole set can be accepted: cards arrive kept.
+        let typedFinish = app.buttons["review.finish"]
+        XCTAssertTrue(typedFinish.waitForExistence(timeout: 60), "Typed notes did not draft after signing in")
+        let typedReady = expectation(for: NSPredicate(format: "isEnabled == true"), evaluatedWith: typedFinish)
+        wait(for: [typedReady], timeout: 60)
         saveShot("04-typed-notes-drafted.png")
 
         // Close typed-notes review so we can run the real two-page photo flow.
@@ -160,29 +162,25 @@ final class LordsDaySkeletonUITests: XCTestCase {
         sleep(2)
         saveShot("08-review-streaming.png")
 
-        // Wait up to 60s for stream to finish and show undecided cards.
-        XCTAssertTrue(undecidedHint.waitForExistence(timeout: 60), "Drafted cards did not finish streaming within 60s")
-        XCTAssertFalse(finishBtn.isEnabled, "Nothing unseen can be finished before deciding on each card")
-        saveShot("09-review-drafted-undecided.png")
+        // Wait up to 60s for the stream to finish. Cards arrive kept, so the set is
+        // ready to accept as soon as drafting ends (TKL-1053).
+        let streamed = expectation(for: NSPredicate(format: "isEnabled == true"), evaluatedWith: finishBtn)
+        wait(for: [streamed], timeout: 60)
+        saveShot("09-review-drafted.png")
 
-        // 7. Decide on every drafted card (log each card's accessibility label for inspection).
+        // 7. Log each drafted card's accessibility label for inspection; nothing to decide.
         var loggedCards: [String] = []
-        let keepBtn = app.buttons["review.keep"]
         for step in 0..<20 {
-            if finishBtn.isEnabled { break }
-            if undecidedHint.exists && undecidedHint.isHittable {
-                undecidedHint.tap()
-                usleep(400_000)
-            }
             let visibleCards = app.descendants(matching: .any)
                 .matching(NSPredicate(format: "identifier BEGINSWITH 'review.card.'"))
                 .allElementsBoundByIndex
                 .filter { app.windows.firstMatch.frame.contains(CGPoint(x: $0.frame.midX, y: $0.frame.midY)) }
             if let card = visibleCards.first {
                 loggedCards.append("[\(step)] \(card.identifier): \(card.label)")
+            } else {
+                break
             }
-            XCTAssertTrue(keepBtn.waitForExistence(timeout: 5), "Keep button missing")
-            keepBtn.tap()
+            app.swipeLeft()
             usleep(250_000)
         }
         try loggedCards.joined(separator: "\n").write(

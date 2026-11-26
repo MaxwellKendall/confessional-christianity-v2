@@ -29,8 +29,8 @@ final class LordsDayReviewTests: XCTestCase {
     }
 
     /// A two-page review whose drafting finished with a key point, a quote and a verse.
-    /// Cards start undecided; pass `keepAll: true` for tests exercising post-decision behavior.
-    private func readyReview(keepAll: Bool = false) -> LordsDayReview {
+    /// Cards arrive kept (TKL-1053), so nothing has to be decided before finishing.
+    private func readyReview() -> LordsDayReview {
         var review = LordsDayReview(noteId: noteId, pageCount: 2)
         _ = review.begin()
         review.apply(.started(pages: 2))
@@ -40,9 +40,6 @@ final class LordsDayReviewTests: XCTestCase {
         review.apply(card("quote", page: 0, order: 1, text: "He is not finished.", attribution: "Rev. Smith"))
         review.apply(card("key_point", page: 0, order: 0, text: "God's purpose decides what is good."))
         review.apply(.done(failedPages: []))
-        if keepAll {
-            for card in review.cards { review.keep(card.id) }
-        }
         return review
     }
 
@@ -64,31 +61,26 @@ final class LordsDayReviewTests: XCTestCase {
         review.apply(.done(failedPages: []))
         XCTAssertEqual(review.phase, .ready)
         XCTAssertFalse(review.isDrafting)
-        XCTAssertFalse(review.canFinish, "cards start undecided until the user keeps or removes each one")
-        for card in review.cards { review.keep(card.id) }
-        XCTAssertTrue(review.canFinish)
+        XCTAssertTrue(review.canFinish, "cards arrive kept, so the whole set can be accepted at once")
     }
 
-    func testEachDraftStartsUndecidedAndAnUntouchedQuoteCannotBeFinished() {
-        var review = readyReview(keepAll: false)
-        XCTAssertEqual(review.cards.map(\.decision), [.undecided, .undecided, .undecided])
-        XCTAssertEqual(review.undecidedCount, 3)
-        XCTAssertEqual(review.keptCount, 0)
-        XCTAssertTrue(review.keptCards().isEmpty)
-        XCTAssertFalse(review.canFinish)
+    func testEveryDraftStartsKeptSoTheWholeSetIsAcceptedInOneAction() {
+        var review = readyReview()
+        XCTAssertEqual(review.cards.map(\.decision), [.keep, .keep, .keep])
+        XCTAssertEqual(review.keptCount, 3)
+        XCTAssertEqual(review.undecidedCount, 0, "nothing waits on the user")
+        XCTAssertTrue(review.canFinish, "accepting every card is one action, not one per card")
+        XCTAssertEqual(review.keptCards().count, 3)
 
-        // Keep the key point and verse, leaving the quote untouched.
-        review.keep(review.cards[0].id)
-        review.keep(review.cards[2].id)
-        XCTAssertEqual(review.undecidedCount, 1)
-        XCTAssertFalse(review.canFinish, "an untouched quote blocks finishing")
-        XCTAssertFalse(review.keptCards().contains { $0.kind == .quote }, "an untouched quote is never in keptCards")
-
-        // Once the quote is explicitly removed (or kept), finishing unlocks.
+        // Removing is the deliberate act.
         review.remove(review.cards[1].id)
-        XCTAssertEqual(review.undecidedCount, 0)
+        XCTAssertEqual(review.keptCount, 2)
         XCTAssertTrue(review.canFinish)
         XCTAssertEqual(review.keptCards().map(\.kind), [.keyPoint, .verse])
+
+        // ...and it can be undone before finishing.
+        review.keep(review.cards[1].id)
+        XCTAssertEqual(review.keptCount, 3)
     }
 
     func testDraftedVerseKeepsOnlyItsReference() {
@@ -117,7 +109,7 @@ final class LordsDayReviewTests: XCTestCase {
     }
 
     func testSwitchingToVerseNeedsAPickedReference() throws {
-        var review = readyReview(keepAll: true)
+        var review = readyReview()
         let point = review.cards[0]
         XCTAssertThrowsError(try review.setKind(point.id, to: .verse))
         try review.chooseVerse(point.id, osis: "John.3.16")
@@ -134,7 +126,7 @@ final class LordsDayReviewTests: XCTestCase {
     }
 
     func testEditingMarksTheCardEditedButKeepingDoesNot() throws {
-        var review = readyReview(keepAll: true)
+        var review = readyReview()
         let quote = review.cards[1]
         review.remove(quote.id)
         review.keep(quote.id)
@@ -148,7 +140,7 @@ final class LordsDayReviewTests: XCTestCase {
     }
 
     func testQuoteAttributionCanBeChangedAndCleared() throws {
-        var review = readyReview(keepAll: true)
+        var review = readyReview()
         let quote = review.cards[1]
         XCTAssertEqual(quote.attribution, "Rev. Smith")
         try review.editAttribution(quote.id, to: "Rev. Jones")
@@ -161,7 +153,7 @@ final class LordsDayReviewTests: XCTestCase {
     }
 
     func testKeptCardsComeOutInOrderWithoutRemovedOnes() throws {
-        var review = readyReview(keepAll: true)
+        var review = readyReview()
         review.remove(review.cards[0].id)
         let kept = review.keptCards()
         XCTAssertEqual(kept.map(\.kind), [.quote, .verse])
@@ -173,7 +165,7 @@ final class LordsDayReviewTests: XCTestCase {
     }
 
     func testAKeptCardWithNoWordsBlocksFinishing() throws {
-        var review = readyReview(keepAll: true)
+        var review = readyReview()
         let verse = review.cards[2]
         try review.setKind(verse.id, to: .quote)
         XCTAssertEqual(review.blockingCardIndex, 2)
@@ -284,7 +276,7 @@ final class LordsDayReviewTests: XCTestCase {
         XCTAssertEqual(reconciledA.decision, .keep)
         let newB = try XCTUnwrap(review.cards.first { $0.id != cardAId })
         XCTAssertEqual(newB.text, "Card B")
-        XCTAssertEqual(newB.decision, .undecided)
+        XCTAssertEqual(newB.decision, .keep)
         XCTAssertFalse(newB.editedByUser)
     }
 
@@ -347,7 +339,7 @@ final class LordsDayReviewTests: XCTestCase {
         XCTAssertEqual(review.card("p1-0")?.editedByUser, true)
         XCTAssertEqual(review.card("p1-0")?.decision, .keep)
         XCTAssertEqual(review.card("p1-1")?.text, "Second card from page 1")
-        XCTAssertEqual(review.card("p1-1")?.decision, .undecided)
+        XCTAssertEqual(review.card("p1-1")?.decision, .keep)
     }
 
     func testDropAfterPageHeaderWithNoCardCountReplaysPage() throws {

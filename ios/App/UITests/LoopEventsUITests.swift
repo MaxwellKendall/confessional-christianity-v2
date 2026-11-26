@@ -34,18 +34,10 @@ final class LoopEventsUITests: XCTestCase {
         let app = launch(["-LordsDayReviewFixture", "complete"])
         let add = app.buttons["review.finish"]
         XCTAssertTrue(add.waitForExistence(timeout: 20))
-        // Wait for drafting to finish (5 sample cards), then explicitly keep each undecided card.
-        let hint = app.buttons["review.undecidedHint"]
-        XCTAssertTrue(hint.waitForExistence(timeout: 20))
-        XCTAssertFalse(add.isEnabled, "nothing unseen may be finished before deciding")
-        let keep = app.buttons["review.keep"]
-        for _ in 0..<10 {
-            if add.isEnabled { break }
-            if hint.exists { hint.tap() }
-            if keep.waitForExistence(timeout: 5) { keep.tap() }
-        }
+        // Cards arrive kept (TKL-1053): once drafting ends the whole set is accepted
+        // in one tap, with nothing to decide card by card.
         let enabled = expectation(for: NSPredicate(format: "isEnabled == true"), evaluatedWith: add)
-        wait(for: [enabled], timeout: 10)
+        wait(for: [enabled], timeout: 30)
         add.tap()
         sleep(3)
     }
