@@ -1,5 +1,5 @@
 {
-  "_about": "Golden set for POST /api/lords-day/cards (TKL-861). Twelve real handwritten sermon-note pages, photographed by the note-taker on an iPhone and shared for this eval on TKL-861 (2026-11-21); uprighted, downscaled to 1600 px and stripped of all metadata (EXIF/GPS) before commit. Per case: the sermon passage a Verse card must name (OSIS book.chapter), other passages the notes name (recall only, not scored), and key spans: ideas a Key point or Quote card should carry. A span matches when any of its '|' alternatives is a substring of the normalised card text. Written by reading each photo.",
+  "_about": "Golden set for POST /api/lords-day/cards (TKL-861). Twelve real handwritten sermon-note pages, photographed by the note-taker on an iPhone and shared for this eval on TKL-861 (2026-11-21); uprighted, downscaled to 1600 px and stripped of all metadata (EXIF/GPS) before commit. Per case: the sermon passage a Verse card must name (OSIS book.chapter), other passages the notes name (recall only, not scored), and key spans: ideas a Key point or Quote card should carry. A span matches when any of its '|' alternatives is a substring of the normalised card text. Written by reading each photo. TKL-1061 adds `sermon` truth (title, preacher, passage, church, serviceDate; null = the notes don't say it) to sermon-12, read from its heading, and three typed-note cases (`typed` instead of `photo`): smyrna-rev-2 (the Revelation 2:8-11 note behind the approved journal prototype, TKL-951, retyped from its heading and points), passage-only and no-heading.",
   "cases": [
     {
       "id": "sermon-01",
@@ -95,7 +95,35 @@
       "notes": "Mark 4:33-41, a fearful circumstance; the page names the preacher (Rev Ross Hodges)",
       "passage": "Mark.4",
       "otherPassages": ["Isa.41", "Matt.5"],
-      "keySpans": ["fear|anxious", "storm|affliction", "disciple", "care|god with us|loves us"]
+      "keySpans": ["fear|anxious", "storm|affliction", "disciple", "care|god with us|loves us"],
+      "sermon": { "title": "fearful circumstance", "preacher": "ross hodges", "passage": "Mark 4:33-41", "church": null, "serviceDate": "2026-07-26" }
+    },
+    {
+      "id": "smyrna-rev-2",
+      "typed": "Revelation 2:8-11 — To the Church at Smyrna\nThe words of the first and the last, who died and came to life. We are comforted by the supreme place of Christ as both First and Last.\nThe hatred of the world is part of our heritage with Christ (John 15:18-25).\nTrue union with Christ is a matter of the heart, by the Spirit (Rom 2:28-29).\n\"Do not fear\" is a constant refrain in the Bible. Christ walks among his lampstands; he is with us in his church.\nThe Devil is behind these fiery persecutions, but we are called to endure his rage. Dan 3:18. God is behind the testing (1 Pet 1:7).\nBe faithful unto death, and I will give you the crown of life. The crown is our participation in the victory of Christ over sin, death, hell, and the Devil.\nMargaret Wilson: \"I see Christ wrestling there.\"",
+      "notes": "Revelation 2:8-11, To the Church at Smyrna; no preacher, church or date on the page",
+      "passage": "Rev.2",
+      "otherPassages": ["John.15", "Rom.2", "Dan.3", "1Pet.1"],
+      "keySpans": ["hatred of the world|heritage", "do not fear|lampstand", "crown of life|faithful unto death", "first and last|first and the last"],
+      "sermon": { "title": "church at smyrna", "preacher": null, "passage": "Revelation 2:8-11", "church": null, "serviceDate": null }
+    },
+    {
+      "id": "passage-only",
+      "typed": "Romans 12:1-2\nPresent your bodies as a living sacrifice: all of life is worship, not only Sunday.\nDo not be conformed to this world; be transformed by the renewal of your mind.\nThe mercies of God (ch. 1-11) come first; our obedience answers them.\nWe test and discern the will of God by his Word.",
+      "notes": "Only the passage at the top; no title, preacher, church or date",
+      "passage": "Rom.12",
+      "otherPassages": [],
+      "keySpans": ["living sacrifice|worship", "conformed|transformed|renewal", "mercies|mercy", "will of god|discern"],
+      "sermon": { "title": null, "preacher": null, "passage": "Romans 12:1-2", "church": null, "serviceDate": null }
+    },
+    {
+      "id": "no-heading",
+      "typed": "God is never in a hurry and never late.\nWaiting is not wasted: he is shaping us while we wait.\nAbraham waited 25 years for the promised son.\n\"The Lord is good to those who wait for him.\"\nPrayer is how we wait well.",
+      "notes": "No heading at all: no title, preacher, passage, church or date",
+      "passage": "",
+      "otherPassages": [],
+      "keySpans": ["hurry|late", "wait", "abraham|promise", "prayer|pray"],
+      "sermon": { "title": null, "preacher": null, "passage": null, "church": null, "serviceDate": null }
     }
   ]
 }

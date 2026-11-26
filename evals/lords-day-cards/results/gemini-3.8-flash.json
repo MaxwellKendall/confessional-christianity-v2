@@ -1,13 +1,13 @@
 {
   "summary": {
     "model": "gemini-3.8-flash",
-    "date": "2026-11-21T20:14:16.711Z",
-    "passed": 11,
-    "total": 12,
-    "costUsdTotal": 0.21289650000000002,
-    "costUsdPerPhoto": 0.017741375,
-    "medianSeconds": 16.465,
-    "rejectedTotal": 0
+    "date": "2026-11-26T23:57:04.650Z",
+    "passed": 13,
+    "total": 15,
+    "costUsdTotal": 0.25431,
+    "costUsdPerPhoto": 0.016954,
+    "medianSeconds": 15.6,
+    "rejectedTotal": 2
   },
   "results": [
     {
@@ -20,182 +20,250 @@
       },
       "kinds": [
         "verse",
-        "verse",
-        "verse",
+        "key_point",
         "verse",
         "verse",
         "quote",
         "verse",
-        "key_point"
+        "key_point",
+        "verse",
+        "key_point",
+        "verse",
+        "quote",
+        "quote"
       ],
       "verses": [
         "2Thess.3",
-        "1Thess.3",
+        "1Thess.5",
         "Num.6",
         "Luke.24",
         "Gen.27",
         "Ps.3"
       ],
       "otherPassagesFound": "3/3",
-      "spansInCards": "2/4",
+      "spansInCards": "4/4",
       "spansInTranscript": "4/4",
-      "quotesKept": 1,
+      "sermon": {
+        "title": "Benediction",
+        "preacher": null,
+        "passage": "2 Thessalonians 3:17",
+        "church": null,
+        "serviceDate": null
+      },
+      "transcript": "2 Thessalonians 3:17 Benediction\n\nPaul is seeking God's blessing for his\nchurch. He does this through prayer (chapter 1)\nIn the epistle, the audience is the church,\nso he cannot write a prayer addressing God directly.\nHe is communicating w/ the people, not God. But\nhe is indeed praying in a sense: 1 Thessalonians\n5 and 2 Thessalonians 3:17 - he breaks into\nprayer.\n\nNumbers 6 sees the High Priest and his\nsons are told to say the Aaronic blessing and\nto do so in perpetuity. This blessing was\nsaid to \"put God's Name\" upon his people.\n\nLuke 24 after the resurrection Jesus\nascends into heaven. Before doing so, he lifts\nhis hands to bless his people.\n\nGenesis 27 Calvin teaches whatever the heralds\nof salvation proclaim will surely come to pass insofar\nas the message as it has its foundation in\nGod. The benediction, then, is from God rather\nthan men.\n\nPsalm 3 God is the \"lifter of my head\"\n\nWe live expectantly. Hoping for his return. Trusting\nin his \"good hand\" upon us.",
+      "sermonMisread": [],
+      "sermonMadeUp": [],
+      "quotesKept": 3,
       "rejected": 0,
-      "costUsd": 0.015559499999999999,
-      "seconds": 14.195,
+      "costUsd": 0.020577,
+      "seconds": 21.13,
       "streamedBeforeDone": true,
       "cards": [
         {
           "id": "p0-0",
-          "kind": "verse",
           "page": 0,
+          "sourceKey": "fd8b9686-16f5-4c87-900d-f15ef12b2154:0",
+          "kind": "verse",
           "order": 0,
           "reference": "2 Thessalonians 3:17",
           "osis": "2Thess.3.17"
         },
         {
           "id": "p0-1",
-          "kind": "verse",
           "page": 0,
+          "sourceKey": "fd8b9686-16f5-4c87-900d-f15ef12b2154:1",
+          "kind": "key_point",
           "order": 1,
-          "reference": "1 Thessalonians 3",
-          "osis": "1Thess.3"
+          "text": "While addressing the congregation rather than speaking directly to God, the apostle breaks into prayer to seek God's blessing on the church."
         },
         {
           "id": "p0-2",
-          "kind": "verse",
           "page": 0,
+          "sourceKey": "fd8b9686-16f5-4c87-900d-f15ef12b2154:2",
+          "kind": "verse",
           "order": 2,
+          "reference": "1 Thessalonians 5",
+          "osis": "1Thess.5"
+        },
+        {
+          "id": "p0-3",
+          "page": 0,
+          "sourceKey": "fd8b9686-16f5-4c87-900d-f15ef12b2154:3",
+          "kind": "verse",
+          "order": 3,
           "reference": "Numbers 6",
           "osis": "Num.6"
         },
         {
-          "id": "p0-3",
-          "kind": "verse",
+          "id": "p0-4",
           "page": 0,
-          "order": 3,
+          "sourceKey": "fd8b9686-16f5-4c87-900d-f15ef12b2154:4",
+          "kind": "quote",
+          "order": 4,
+          "text": "put God's Name\" upon his people."
+        },
+        {
+          "id": "p0-5",
+          "page": 0,
+          "sourceKey": "fd8b9686-16f5-4c87-900d-f15ef12b2154:5",
+          "kind": "verse",
+          "order": 5,
           "reference": "Luke 24",
           "osis": "Luke.24"
         },
         {
-          "id": "p0-4",
-          "kind": "verse",
+          "id": "p0-6",
           "page": 0,
-          "order": 4,
+          "sourceKey": "fd8b9686-16f5-4c87-900d-f15ef12b2154:6",
+          "kind": "key_point",
+          "order": 6,
+          "text": "Before ascending to heaven after the resurrection, Jesus lifted His hands to bless His people."
+        },
+        {
+          "id": "p0-7",
+          "page": 0,
+          "sourceKey": "fd8b9686-16f5-4c87-900d-f15ef12b2154:7",
+          "kind": "verse",
+          "order": 7,
           "reference": "Genesis 27",
           "osis": "Gen.27"
         },
         {
-          "id": "p0-5",
-          "kind": "quote",
+          "id": "p0-8",
           "page": 0,
-          "order": 5,
-          "text": "The benediction, then, is from God rather than men."
+          "sourceKey": "fd8b9686-16f5-4c87-900d-f15ef12b2154:8",
+          "kind": "key_point",
+          "order": 8,
+          "text": "Because the heralds' message is founded in God, the benediction comes from God rather than men."
         },
         {
-          "id": "p0-6",
-          "kind": "verse",
+          "id": "p0-9",
           "page": 0,
-          "order": 6,
+          "sourceKey": "fd8b9686-16f5-4c87-900d-f15ef12b2154:9",
+          "kind": "verse",
+          "order": 9,
           "reference": "Psalms 3",
           "osis": "Ps.3"
         },
         {
-          "id": "p0-7",
-          "kind": "key_point",
+          "id": "p0-10",
           "page": 0,
-          "order": 7,
-          "text": "Believers are called to live expectantly, hoping for Christ's return and trusting in God's good hand upon them."
+          "sourceKey": "fd8b9686-16f5-4c87-900d-f15ef12b2154:10",
+          "kind": "quote",
+          "order": 10,
+          "text": "lifter of my head"
+        },
+        {
+          "id": "p0-11",
+          "page": 0,
+          "sourceKey": "fd8b9686-16f5-4c87-900d-f15ef12b2154:11",
+          "kind": "quote",
+          "order": 11,
+          "text": "good hand\" upon us."
         }
       ]
     },
     {
       "id": "sermon-02",
-      "pass": true,
+      "pass": false,
       "checks": {
         "atLeast3Cards": true,
-        "passageFound": true,
+        "passageFound": false,
         "keySpans": true
       },
       "kinds": [
-        "verse",
-        "verse",
         "quote",
         "quote",
         "key_point",
+        "key_point",
         "quote",
+        "key_point",
         "key_point",
         "verse"
       ],
       "verses": [
-        "Matt.5",
-        "Matt.5",
         "Ps.86"
       ],
       "otherPassagesFound": "1/1",
-      "spansInCards": "3/4",
+      "spansInCards": "4/4",
       "spansInTranscript": "4/4",
+      "sermon": {
+        "title": null,
+        "preacher": null,
+        "passage": null,
+        "church": null,
+        "serviceDate": null
+      },
+      "transcript": "MATTHEW 5:9; 43-48\n\n\"Blessed are the peacemakers for they shall\nbe called sons of God\"\n\nINTRO The posture and disposition of strength\nis to seek and desire peace. We are\nwar-makers. Strife, division and conflict\nare the air we breathe.\n\nWe have eternal, internal peace w/ God. We are\ncalled to bring peace to those around us.\nThose who think highly of themselves (rich in\nspirit) do not make peace. We make great\nstrife. Sinners are at war w/ God. The gospel\nis a message of peace. The gospel is the foundation\nof peace: it makes peace, but is not peace keepg.\nThe strife of this life does not come from\nthe gospel. People hate the gospel. Not because it\nis wrong but b/c they are at enmity w/ Christ.\nWe identify issues that are not places for\nconflict: preference, not w/r/t truth.\nLove the difficult people. Ps 86:5 God is\nready to forgive.",
+      "sermonMisread": [],
+      "sermonMadeUp": [],
       "quotesKept": 3,
-      "rejected": 0,
-      "costUsd": 0.0145095,
-      "seconds": 16.465,
+      "rejected": 1,
+      "costUsd": 0.019564500000000002,
+      "seconds": 21.894,
       "streamedBeforeDone": true,
       "cards": [
         {
           "id": "p0-0",
-          "kind": "verse",
           "page": 0,
-          "order": 0,
-          "reference": "Matthew 5:9",
-          "osis": "Matt.5.9"
-        },
-        {
-          "id": "p0-1",
-          "kind": "verse",
-          "page": 0,
-          "order": 1,
-          "reference": "Matthew 5:43-48",
-          "osis": "Matt.5.43-Matt.5.48"
-        },
-        {
-          "id": "p0-2",
+          "sourceKey": "f3c10241-388f-4952-b4d5-a38fda9f485b:0",
           "kind": "quote",
-          "page": 0,
-          "order": 2,
+          "order": 0,
           "text": "The posture and disposition of strength is to seek and desire peace."
         },
         {
-          "id": "p0-3",
-          "kind": "quote",
+          "id": "p0-1",
           "page": 0,
-          "order": 3,
+          "sourceKey": "f3c10241-388f-4952-b4d5-a38fda9f485b:1",
+          "kind": "quote",
+          "order": 1,
           "text": "Strife, division and conflict are the air we breathe."
         },
         {
-          "id": "p0-4",
-          "kind": "key_point",
+          "id": "p0-2",
           "page": 0,
+          "sourceKey": "f3c10241-388f-4952-b4d5-a38fda9f485b:2",
+          "kind": "key_point",
+          "order": 2,
+          "text": "Because believers have eternal peace with God, they are called to bring peace to those around them."
+        },
+        {
+          "id": "p0-3",
+          "page": 0,
+          "sourceKey": "f3c10241-388f-4952-b4d5-a38fda9f485b:3",
+          "kind": "key_point",
+          "order": 3,
+          "text": "Those who are proud do not make peace, but instead create strife."
+        },
+        {
+          "id": "p0-4",
+          "page": 0,
+          "sourceKey": "f3c10241-388f-4952-b4d5-a38fda9f485b:4",
+          "kind": "quote",
           "order": 4,
-          "text": "Having eternal peace with God, believers are called to bring peace to those around them."
+          "text": "The gospel is the foundation of peace: it makes peace, but is not peace keepg."
         },
         {
           "id": "p0-5",
-          "kind": "quote",
           "page": 0,
+          "sourceKey": "f3c10241-388f-4952-b4d5-a38fda9f485b:5",
+          "kind": "key_point",
           "order": 5,
-          "text": "The gospel is the foundation of peace: it makes peace, but is not peace keeping."
+          "text": "Opposition to the gospel arises not from error in the message, but from hostility toward Christ."
         },
         {
           "id": "p0-6",
-          "kind": "key_point",
           "page": 0,
+          "sourceKey": "f3c10241-388f-4952-b4d5-a38fda9f485b:6",
+          "kind": "key_point",
           "order": 6,
-          "text": "People resist the gospel not because it is false, but because they are at enmity with Christ."
+          "text": "Believers should avoid conflict over personal preferences rather than matters of truth, and love difficult people."
         },
         {
           "id": "p0-7",
-          "kind": "verse",
           "page": 0,
+          "sourceKey": "f3c10241-388f-4952-b4d5-a38fda9f485b:7",
+          "kind": "verse",
           "order": 7,
           "reference": "Psalms 86:5",
           "osis": "Ps.86.5"
@@ -212,7 +280,10 @@
       },
       "kinds": [
         "verse",
+        "key_point",
+        "key_point",
         "quote",
+        "key_point",
         "key_point",
         "key_point",
         "key_point",
@@ -222,56 +293,96 @@
         "Ps.1"
       ],
       "otherPassagesFound": "0/0",
-      "spansInCards": "3/4",
+      "spansInCards": "4/4",
       "spansInTranscript": "4/4",
+      "sermon": {
+        "title": "Rules for Walking in Fellowship",
+        "preacher": "John Owen",
+        "passage": "Psalms 1",
+        "church": null,
+        "serviceDate": null
+      },
+      "transcript": "Rules for Walking in Fellowship (John Owen)\n\nPsalm 1 is our aim: to be the blessed\nman who \"meditates\" upon God's Law. We\nsee it as \"not burdensome\" and as a\n\"delight.\"\n\n1. Sincere, affectionate and genuine love for one another\nlove is the fulfilling of the law. \"Love is the\nfountain of all our duties concerning God and\nman.\" (John Owen) This is one way in\nwhich men are drawn to Christ. Love consists\nin relishing the sight of seeing folks as\nblessed.\n2. Unity in general and in particular\nForgiveness, humility, to those who are difficult.\n3. Encouragement and edification\nExhorting one another\n4. Admonishment and watchfulness\nThis should apply first of all to ourselves. We\nshould also make it abundantly clear that\nour concern is the glory of Christ and\nto good of our neighbor.\n\n\"Hiding, removing, covering offenses is from the\nfootsteps of Christ...\"",
+      "sermonMisread": [],
+      "sermonMadeUp": [],
       "quotesKept": 2,
       "rejected": 0,
-      "costUsd": 0.029187,
-      "seconds": 33.418,
+      "costUsd": 0.019999500000000003,
+      "seconds": 19.949,
       "streamedBeforeDone": true,
       "cards": [
         {
           "id": "p0-0",
-          "kind": "verse",
           "page": 0,
+          "sourceKey": "9515b871-b36a-4194-adb3-645124888e56:0",
+          "kind": "verse",
           "order": 0,
           "reference": "Psalms 1",
           "osis": "Ps.1"
         },
         {
           "id": "p0-1",
-          "kind": "quote",
           "page": 0,
+          "sourceKey": "9515b871-b36a-4194-adb3-645124888e56:1",
+          "kind": "key_point",
           "order": 1,
-          "text": "Love is the fountain of all our duties concerning God and\nman."
+          "text": "Our aim is to be blessed people who meditate on God's law, viewing it not as burdensome but as a delight."
         },
         {
           "id": "p0-2",
-          "kind": "key_point",
           "page": 0,
+          "sourceKey": "9515b871-b36a-4194-adb3-645124888e56:2",
+          "kind": "key_point",
           "order": 2,
-          "text": "Genuine love fulfills the law and draws others to Christ when we delight in seeing fellow believers blessed."
+          "text": "Sincere, affectionate, and genuine love fulfills the law and draws people to Christ."
         },
         {
           "id": "p0-3",
-          "kind": "key_point",
           "page": 0,
+          "sourceKey": "9515b871-b36a-4194-adb3-645124888e56:3",
+          "kind": "quote",
           "order": 3,
-          "text": "Unity in fellowship requires showing forgiveness and humility toward people who are difficult."
+          "text": "Love is the fountain of all our duties concerning God and man."
         },
         {
           "id": "p0-4",
-          "kind": "key_point",
           "page": 0,
+          "sourceKey": "9515b871-b36a-4194-adb3-645124888e56:4",
+          "kind": "key_point",
           "order": 4,
-          "text": "Admonishment begins with ourselves, aimed solely at Christ's glory and our neighbor's good."
+          "text": "Love consists in relishing the sight of seeing others blessed."
         },
         {
           "id": "p0-5",
-          "kind": "quote",
           "page": 0,
+          "sourceKey": "9515b871-b36a-4194-adb3-645124888e56:5",
+          "kind": "key_point",
           "order": 5,
-          "text": "Hiding, removing, covering offenses is from the\nfootsteps of Christ..."
+          "text": "Maintain unity through forgiveness and humility toward those who are difficult."
+        },
+        {
+          "id": "p0-6",
+          "page": 0,
+          "sourceKey": "9515b871-b36a-4194-adb3-645124888e56:6",
+          "kind": "key_point",
+          "order": 6,
+          "text": "Encourage and edify one another through mutual exhortation."
+        },
+        {
+          "id": "p0-7",
+          "page": 0,
+          "sourceKey": "9515b871-b36a-4194-adb3-645124888e56:7",
+          "kind": "key_point",
+          "order": 7,
+          "text": "Admonishment and watchfulness must start with ourselves, motivated by the glory of Christ and our neighbor's good."
+        },
+        {
+          "id": "p0-8",
+          "page": 0,
+          "sourceKey": "9515b871-b36a-4194-adb3-645124888e56:8",
+          "kind": "quote",
+          "order": 8,
+          "text": "Hiding, removing, covering offenses is from the footsteps of Christ..."
         }
       ]
     },
@@ -286,69 +397,123 @@
       "kinds": [
         "verse",
         "key_point",
+        "quote",
+        "key_point",
         "verse",
         "verse",
+        "verse",
+        "key_point",
         "key_point",
         "verse"
       ],
       "verses": [
         "Mal.1",
         "Deut.7",
+        "Gen.34",
         "Eph.1",
         "John.3"
       ],
       "otherPassagesFound": "3/3",
-      "spansInCards": "2/4",
+      "spansInCards": "4/4",
       "spansInTranscript": "4/4",
-      "quotesKept": 0,
-      "rejected": 0,
-      "costUsd": 0.0424845,
-      "seconds": 43.494,
+      "sermon": {
+        "title": null,
+        "preacher": null,
+        "passage": "Malachi 1:2-5",
+        "church": null,
+        "serviceDate": null
+      },
+      "transcript": "MALACHI: Chapter One: 2-5\n\nINTRO Israel is waiting for freedom and\na King. They had been restored to the land,\nbut are still under the thumb of a foreign King.\nThey were waiting for the Dynasty of David.\nWaiting gives way to doubt and then despondency.\nThe Grounds of Gods Covenant Love\n\"I have loved you\" says the Lord... But Israel\nresponds in contrariness. They expected God to\nfulfill their felt needs. But God's love comes\nthrough his unconditional election: Deuteronomy 7:6\nfor example, or also consider the person of Jacob.\nGenesis 34 - Ephesians 1. This should create\nwonder in worship, zeal in our service and perspective\nin our trials\nThe Proof of God's Covenant Love\nThis is found in Jacob and Esau. Esau is\ncut off. Even though Jacob was brought near.\nGod says: look at Edom, look at Esau, He shows\nhis love by fierce opposition to his enemies.\nThose embraced by the covenant of God's\nchoosing are greatly loved. John 3:17 those who\nare unbelieving are outside the covenant and\n\"condemned already.\"\nThe Assurance of God's Covenant Love",
+      "sermonMisread": [],
+      "sermonMadeUp": [],
+      "quotesKept": 1,
+      "rejected": 1,
+      "costUsd": 0.0231645,
+      "seconds": 21.994,
       "streamedBeforeDone": true,
       "cards": [
         {
           "id": "p0-0",
-          "kind": "verse",
           "page": 0,
+          "sourceKey": "f43d422b-8e6e-41a3-be8d-2afae61bbe34:0",
+          "kind": "verse",
           "order": 0,
           "reference": "Malachi 1:2-5",
           "osis": "Mal.1.2-Mal.1.5"
         },
         {
           "id": "p0-1",
-          "kind": "key_point",
           "page": 0,
+          "sourceKey": "f43d422b-8e6e-41a3-be8d-2afae61bbe34:1",
+          "kind": "key_point",
           "order": 1,
-          "text": "Israel doubted God because they expected Him to fulfill their felt needs, but His love is rooted in unconditional election."
+          "text": "Israel was waiting for freedom and a king, but waiting gave way to doubt and despondency."
         },
         {
           "id": "p0-2",
-          "kind": "verse",
           "page": 0,
+          "sourceKey": "f43d422b-8e6e-41a3-be8d-2afae61bbe34:2",
+          "kind": "quote",
           "order": 2,
+          "text": "I have loved you"
+        },
+        {
+          "id": "p0-3",
+          "page": 0,
+          "sourceKey": "f43d422b-8e6e-41a3-be8d-2afae61bbe34:3",
+          "kind": "key_point",
+          "order": 3,
+          "text": "God's covenant love is rooted in unconditional election rather than in fulfilling felt needs."
+        },
+        {
+          "id": "p0-4",
+          "page": 0,
+          "sourceKey": "f43d422b-8e6e-41a3-be8d-2afae61bbe34:4",
+          "kind": "verse",
+          "order": 4,
           "reference": "Deuteronomy 7:6",
           "osis": "Deut.7.6"
         },
         {
-          "id": "p0-3",
-          "kind": "verse",
+          "id": "p0-5",
           "page": 0,
-          "order": 3,
+          "sourceKey": "f43d422b-8e6e-41a3-be8d-2afae61bbe34:5",
+          "kind": "verse",
+          "order": 5,
+          "reference": "Genesis 34",
+          "osis": "Gen.34"
+        },
+        {
+          "id": "p0-6",
+          "page": 0,
+          "sourceKey": "f43d422b-8e6e-41a3-be8d-2afae61bbe34:6",
+          "kind": "verse",
+          "order": 6,
           "reference": "Ephesians 1",
           "osis": "Eph.1"
         },
         {
-          "id": "p0-4",
-          "kind": "key_point",
+          "id": "p0-7",
           "page": 0,
-          "order": 4,
-          "text": "God's unconditional election should create wonder in worship, zeal in service, and perspective in trials."
+          "sourceKey": "f43d422b-8e6e-41a3-be8d-2afae61bbe34:7",
+          "kind": "key_point",
+          "order": 7,
+          "text": "Understanding God's election produces wonder in worship, zeal in service, and perspective in trials."
         },
         {
-          "id": "p0-5",
-          "kind": "verse",
+          "id": "p0-8",
           "page": 0,
-          "order": 5,
+          "sourceKey": "f43d422b-8e6e-41a3-be8d-2afae61bbe34:8",
+          "kind": "key_point",
+          "order": 8,
+          "text": "God proves His covenant love through His choice of Jacob over Esau and His opposition to His enemies."
+        },
+        {
+          "id": "p0-9",
+          "page": 0,
+          "sourceKey": "f43d422b-8e6e-41a3-be8d-2afae61bbe34:9",
+          "kind": "verse",
+          "order": 9,
           "reference": "John 3:17",
           "osis": "John.3.17"
         }
@@ -364,7 +529,10 @@
       },
       "kinds": [
         "verse",
+        "quote",
         "key_point",
+        "key_point",
+        "quote",
         "quote",
         "verse",
         "key_point"
@@ -376,48 +544,87 @@
       "otherPassagesFound": "1/1",
       "spansInCards": "4/4",
       "spansInTranscript": "4/4",
-      "quotesKept": 1,
+      "sermon": {
+        "title": "Congregational Singing to the Glory of God (pt II)",
+        "preacher": null,
+        "passage": "Psalms 98",
+        "church": null,
+        "serviceDate": null
+      },
+      "transcript": "Psalm 98 Congregational Singing to the Glory\nof God (pt II)\n\nINTRO Christians are a rejoicing people. In all\ncircumstances and in every season we are\nto give thanks, rejoice, and marvel at\nGod's grace. There is the command to\npraise (v1) based on his works (v1-2, 3, 9),\nand the scope of praise extending to\n\"all the ends of the earth.\" (v3) The\ncommand to sing goes out to \"all the\nearth.\" (v4)\n\nI. The Scope of Praise\nIt should bother us that the scope of God's\npraise among men does not extend universally.\nThe birds are singing but men will not.\n\nINTRO: The \"labrynth\" of sin. We are lost,\nconfused. A FOOTBALL player doesn't\nbelong @ Walmart, but he also\ndoesn't belong on a baseball field.\n\n- What does it mean to be \"found\"?\n↳ WORSHIP (Rom 3.23): GLORIFYING\nGOD\n↳ FULFILLING our creation ordinances:\nor \"living under them\" w/ joy\nWORK, FAMILY, [?] WORSHIP/SABBATH",
+      "sermonMisread": [],
+      "sermonMadeUp": [],
+      "quotesKept": 3,
       "rejected": 0,
-      "costUsd": 0.0096345,
-      "seconds": 10.394,
+      "costUsd": 0.014059499999999999,
+      "seconds": 11.879,
       "streamedBeforeDone": true,
       "cards": [
         {
           "id": "p0-0",
-          "kind": "verse",
           "page": 0,
+          "sourceKey": "c50f12a6-193c-4d9c-8a2a-8be433bbbd1e:0",
+          "kind": "verse",
           "order": 0,
           "reference": "Psalms 98",
           "osis": "Ps.98"
         },
         {
           "id": "p0-1",
-          "kind": "key_point",
           "page": 0,
+          "sourceKey": "c50f12a6-193c-4d9c-8a2a-8be433bbbd1e:1",
+          "kind": "quote",
           "order": 1,
-          "text": "Christians are called to be a rejoicing people who thank, praise, and marvel at God's grace in every season and circumstance."
+          "text": "Christians are a rejoicing people."
         },
         {
           "id": "p0-2",
-          "kind": "quote",
           "page": 0,
+          "sourceKey": "c50f12a6-193c-4d9c-8a2a-8be433bbbd1e:2",
+          "kind": "key_point",
           "order": 2,
-          "text": "It should bother us that the scope of God's\npraise among men does not extend universally.\nThe birds are singing but man will not."
+          "text": "In every season and circumstance, Christians are called to give thanks, rejoice, and marvel at God's grace."
         },
         {
           "id": "p0-3",
-          "kind": "verse",
           "page": 0,
+          "sourceKey": "c50f12a6-193c-4d9c-8a2a-8be433bbbd1e:3",
+          "kind": "key_point",
           "order": 3,
+          "text": "The command to praise God based on His works and sing extends to all the ends of the earth."
+        },
+        {
+          "id": "p0-4",
+          "page": 0,
+          "sourceKey": "c50f12a6-193c-4d9c-8a2a-8be433bbbd1e:4",
+          "kind": "quote",
+          "order": 4,
+          "text": "It should bother us that the scope of God's praise among men does not extend universally."
+        },
+        {
+          "id": "p0-5",
+          "page": 0,
+          "sourceKey": "c50f12a6-193c-4d9c-8a2a-8be433bbbd1e:5",
+          "kind": "quote",
+          "order": 5,
+          "text": "The birds are singing but men will not."
+        },
+        {
+          "id": "p0-6",
+          "page": 0,
+          "sourceKey": "c50f12a6-193c-4d9c-8a2a-8be433bbbd1e:6",
+          "kind": "verse",
+          "order": 6,
           "reference": "Romans 3:23",
           "osis": "Rom.3.23"
         },
         {
-          "id": "p0-4",
-          "kind": "key_point",
+          "id": "p0-7",
           "page": 0,
-          "order": 4,
-          "text": "Being found means glorifying God in worship and joyfully living out creation ordinances in work, family, and sabbath rest."
+          "sourceKey": "c50f12a6-193c-4d9c-8a2a-8be433bbbd1e:7",
+          "kind": "key_point",
+          "order": 7,
+          "text": "To be found means glorifying God in worship and joyfully fulfilling creation ordinances through work, family, and worship."
         }
       ]
     },
@@ -431,6 +638,7 @@
       },
       "kinds": [
         "verse",
+        "key_point",
         "quote",
         "quote",
         "key_point",
@@ -443,46 +651,69 @@
       "otherPassagesFound": "1/1",
       "spansInCards": "3/4",
       "spansInTranscript": "4/4",
+      "sermon": {
+        "title": "Congregational Singing to the Glory of God",
+        "preacher": null,
+        "passage": "Psalms 98",
+        "church": null,
+        "serviceDate": null
+      },
+      "transcript": "PSALM 98: Congregational Singing to the\nGlory of God\n\nSinging is an expression of our unity in Christ.\n\"...sing... for he has done marvelous things!\" A silent\nChristian appears to be unbelieving regarding these\nthings. They would otherwise be compelled - in the\nmarvel of it - to sing. \"His right hand and\nholy arm have worked salvation for him. The Lord\nhas made known his salvation; he has revealed\nhis righteousness in the sight of the nations.\" This\nis a rich declaration of God's \"marvelous\" works.\nIt is the \"marvel\" of God's work which elicits\nour songs. \"He has remembered,\" not us, \"his steadfast\nlove and faithfulness to the house of Israel. All the\nends of the earth have seen the salvation of\nour God.\"\nI. We are commanded to sing because he knows what\nwe need. Acts 16:25 shows God's design for our songs to\nbe triumphant. It is a great witness and encourgment\nto see and hear others sing.",
+      "sermonMisread": [],
+      "sermonMadeUp": [],
       "quotesKept": 2,
       "rejected": 0,
-      "costUsd": 0.0088995,
-      "seconds": 9.802,
+      "costUsd": 0.024634500000000004,
+      "seconds": 23.901,
       "streamedBeforeDone": true,
       "cards": [
         {
           "id": "p0-0",
-          "kind": "verse",
           "page": 0,
+          "sourceKey": "cfd9c46f-dd91-4af8-9ca5-02e1db4487f6:0",
+          "kind": "verse",
           "order": 0,
           "reference": "Psalms 98",
           "osis": "Ps.98"
         },
         {
           "id": "p0-1",
-          "kind": "quote",
           "page": 0,
+          "sourceKey": "cfd9c46f-dd91-4af8-9ca5-02e1db4487f6:1",
+          "kind": "key_point",
           "order": 1,
-          "text": "A silent Christian appears to be unbelieving regarding these things."
+          "text": "Singing serves as a vital expression of believers' unity in Christ."
         },
         {
           "id": "p0-2",
-          "kind": "quote",
           "page": 0,
+          "sourceKey": "cfd9c46f-dd91-4af8-9ca5-02e1db4487f6:2",
+          "kind": "quote",
           "order": 2,
-          "text": "It is the \"marvel\" of God's work which elicits our songs."
+          "text": "A silent Christian appears to be unbelieving regarding these things. They would otherwise be compelled - in the marvel of it - to sing."
         },
         {
           "id": "p0-3",
-          "kind": "key_point",
           "page": 0,
+          "sourceKey": "cfd9c46f-dd91-4af8-9ca5-02e1db4487f6:3",
+          "kind": "quote",
           "order": 3,
-          "text": "We are commanded to sing because God knows our needs, designing our songs to be triumphant and an encouraging witness."
+          "text": "It is the \"marvel\" of God's work which elicits our songs."
         },
         {
           "id": "p0-4",
-          "kind": "verse",
           "page": 0,
+          "sourceKey": "cfd9c46f-dd91-4af8-9ca5-02e1db4487f6:4",
+          "kind": "key_point",
           "order": 4,
+          "text": "God commands us to sing because He knows our needs, designing song to be a triumphant witness and encouragement to others."
+        },
+        {
+          "id": "p0-5",
+          "page": 0,
+          "sourceKey": "cfd9c46f-dd91-4af8-9ca5-02e1db4487f6:5",
+          "kind": "verse",
+          "order": 5,
           "reference": "Acts 16:25",
           "osis": "Acts.16.25"
         }
@@ -490,18 +721,22 @@
     },
     {
       "id": "sermon-07",
-      "pass": false,
+      "pass": true,
       "checks": {
         "atLeast3Cards": true,
         "passageFound": true,
-        "keySpans": false
+        "keySpans": true
       },
       "kinds": [
         "verse",
         "key_point",
         "verse",
+        "key_point",
+        "quote",
+        "key_point",
         "verse",
         "verse",
+        "key_point",
         "quote",
         "key_point"
       ],
@@ -512,66 +747,115 @@
         "Rev.19"
       ],
       "otherPassagesFound": "2/2",
-      "spansInCards": "1/4",
+      "spansInCards": "4/4",
       "spansInTranscript": "4/4",
-      "quotesKept": 1,
+      "sermon": {
+        "title": "Triumph of the Lamb",
+        "preacher": null,
+        "passage": "Revelation 1:1-3",
+        "church": null,
+        "serviceDate": "2020-09-20"
+      },
+      "transcript": "Triumph of the Lamb 09/20/2020\nRevelation 1:1-3\n\nThe book of Revelation was given to the Church to assure her Christ is sovereign over world history and, in the end, he is exalted as a triumphant King over the new creation. God knows it often feels like Satan is winning. The revelation is from God the Father, to Jesus Christ and\n(1) Preterist View: the book is already fulfilled\n(2) Futurist View: the fulfillment entails a literal thousand year reign of Christ, rapture, and so on\n(3) Historicist View: a chronological view of Church History\n(4) Idealist View: encouragement for spiritual warfare\n\nRev 13 and the beast\n- (1) sees him as Roman emperor\n(2) sees him as antichrist\n(3) sees him as the Pope\n(4) sees him as govt in any age\n\nWith (1), we do see the revelation was given for the first century churches; (2) it speaks to the end of times; (3) it is relevant to all history\n\nThe book cites the OT over 500x - more than all the New Testament books combined.\n\nThree foundational themes of Revelation\n(1) The Victory and Reign of Christ\nIt is the great testimony of Christ; Rev 1:5-9, Rev 19\n(2) The Church is in a Spiritual Battle\nThings are not always as they appear. There is a great spiritual war, which we can only see the effects. Satan is both a lion w/ a roar and a serpent with a slither. The imagery of Revelation shows the world as it truly is: for example, the nations and armies are doomed to destruction but the suffering Church is destined for glory.\n(3) They are blessed who hear + keep Revelation\nThere is a great blessing to listen to this book. To \"keep\" it no matter the cost: our lives, wealth, etc... there is a great blessing.",
+      "sermonMisread": [],
+      "sermonMadeUp": [],
+      "quotesKept": 2,
       "rejected": 0,
-      "costUsd": 0.016602,
-      "seconds": 66.122,
+      "costUsd": 0.015724500000000002,
+      "seconds": 8.561,
       "streamedBeforeDone": true,
       "cards": [
         {
           "id": "p0-0",
-          "kind": "verse",
           "page": 0,
+          "sourceKey": "ff9b3804-856b-4cae-a953-28f69120311a:0",
+          "kind": "verse",
           "order": 0,
           "reference": "Revelation 1:1-3",
           "osis": "Rev.1.1-Rev.1.3"
         },
         {
           "id": "p0-1",
-          "kind": "key_point",
           "page": 0,
+          "sourceKey": "ff9b3804-856b-4cae-a953-28f69120311a:1",
+          "kind": "key_point",
           "order": 1,
-          "text": "Revelation was given to assure the church that Christ is sovereign over history and reigns triumphant over the new creation."
+          "text": "Revelation was given to assure the Church that Christ is sovereign over world history and will be exalted as triumphant King over the new creation."
         },
         {
           "id": "p0-2",
-          "kind": "verse",
           "page": 0,
+          "sourceKey": "ff9b3804-856b-4cae-a953-28f69120311a:2",
+          "kind": "verse",
           "order": 2,
           "reference": "Revelation 13",
           "osis": "Rev.13"
         },
         {
           "id": "p0-3",
-          "kind": "verse",
           "page": 0,
+          "sourceKey": "ff9b3804-856b-4cae-a953-28f69120311a:3",
+          "kind": "key_point",
           "order": 3,
-          "reference": "Revelation 1:5-7",
-          "osis": "Rev.1.5-Rev.1.7"
+          "text": "The four views of Revelation each capture an aspect of truth: it spoke to first-century churches, speaks to the end of times, and remains relevant throughout all history."
         },
         {
           "id": "p0-4",
-          "kind": "verse",
           "page": 0,
+          "sourceKey": "ff9b3804-856b-4cae-a953-28f69120311a:4",
+          "kind": "quote",
           "order": 4,
+          "text": "The book cites the OT over 500x - more than all the New Testament books combined."
+        },
+        {
+          "id": "p0-5",
+          "page": 0,
+          "sourceKey": "ff9b3804-856b-4cae-a953-28f69120311a:5",
+          "kind": "key_point",
+          "order": 5,
+          "text": "Revelation's first foundational theme is the victory and reign of Christ as the great testimony of Christ."
+        },
+        {
+          "id": "p0-6",
+          "page": 0,
+          "sourceKey": "ff9b3804-856b-4cae-a953-28f69120311a:6",
+          "kind": "verse",
+          "order": 6,
+          "reference": "Revelation 1:5-9",
+          "osis": "Rev.1.5-Rev.1.9"
+        },
+        {
+          "id": "p0-7",
+          "page": 0,
+          "sourceKey": "ff9b3804-856b-4cae-a953-28f69120311a:7",
+          "kind": "verse",
+          "order": 7,
           "reference": "Revelation 19",
           "osis": "Rev.19"
         },
         {
-          "id": "p0-5",
-          "kind": "quote",
+          "id": "p0-8",
           "page": 0,
-          "order": 5,
-          "text": "Things are not always as they appear."
+          "sourceKey": "ff9b3804-856b-4cae-a953-28f69120311a:8",
+          "kind": "key_point",
+          "order": 8,
+          "text": "The Church is engaged in a spiritual war where earthly powers face destruction while the suffering Church is destined for glory."
         },
         {
-          "id": "p0-6",
-          "kind": "key_point",
+          "id": "p0-9",
           "page": 0,
-          "order": 6,
-          "text": "Revelation reveals that worldly powers are headed for destruction while the suffering church is destined for glory."
+          "sourceKey": "ff9b3804-856b-4cae-a953-28f69120311a:9",
+          "kind": "quote",
+          "order": 9,
+          "text": "Satan is both a lion w/ a roar and a serpent with a slither."
+        },
+        {
+          "id": "p0-10",
+          "page": 0,
+          "sourceKey": "ff9b3804-856b-4cae-a953-28f69120311a:10",
+          "kind": "key_point",
+          "order": 10,
+          "text": "There is a great blessing promised to those who listen to Revelation and keep it regardless of the cost."
         }
       ]
     },
@@ -585,78 +869,148 @@
       },
       "kinds": [
         "verse",
+        "quote",
         "key_point",
+        "verse",
         "quote",
         "verse",
         "verse",
+        "verse",
         "quote",
-        "key_point"
+        "verse",
+        "key_point",
+        "verse"
       ],
       "verses": [
         "Gal.5",
+        "Gal.5",
         "John.15",
-        "John.14"
+        "John.14",
+        "John.19",
+        "Gal.5",
+        "Gal.5"
       ],
       "otherPassagesFound": "2/2",
       "spansInCards": "4/4",
       "spansInTranscript": "4/4",
-      "quotesKept": 2,
+      "sermon": {
+        "title": null,
+        "preacher": null,
+        "passage": "Galatians 5:16-26",
+        "church": null,
+        "serviceDate": "2020-09-06"
+      },
+      "transcript": "Galatians 5:16-26 09/06/20\nHow do you see your practice of Christianity as connected to God's promises?\n\nWe \"use\" the righteous standing God has given to us to fulfill the law of love - which is the righteous requirement of the law. The death of the flesh is seen in the crucifixion of Christ.\n\nv22-23 The fruit of Christ. It is the \"produce\" of God's Spirit. These qualities find their perfection in Christ. We see, or ought to see, these fruits in him before we look for them in ourselves. Love John 15:13 Greater love has no one than this, to lay down his life. Joy that endures beyond circumstance. Peace w/ others and freedom from strife, harmony w/ others. John 14:27 Patience or long suffering. John 19:1 Kindness a warmth toward others and being \"tolerant.\" Goodness or uprightness. Faithfulness dependability. Gentleness or \"power under control.\" Having power, and wielding it w/ skill and for the best interest. Self Control power over + against our passions.\nv24 we must fight for consistency between our confession\nv26",
+      "sermonMisread": [],
+      "sermonMadeUp": [],
+      "quotesKept": 3,
       "rejected": 0,
-      "costUsd": 0.0132795,
-      "seconds": 11.694,
+      "costUsd": 0.019587000000000004,
+      "seconds": 17.19,
       "streamedBeforeDone": true,
       "cards": [
         {
           "id": "p0-0",
-          "kind": "verse",
           "page": 0,
+          "sourceKey": "fb19fc35-d200-42b6-80bf-8a18b00c958f:0",
+          "kind": "verse",
           "order": 0,
           "reference": "Galatians 5:16-26",
           "osis": "Gal.5.16-Gal.5.26"
         },
         {
           "id": "p0-1",
-          "kind": "key_point",
           "page": 0,
+          "sourceKey": "fb19fc35-d200-42b6-80bf-8a18b00c958f:1",
+          "kind": "quote",
           "order": 1,
-          "text": "We use the righteous standing God has given us to fulfill the law of love, which is the law's righteous requirement."
+          "text": "How do you see your practice of Christianity as connected to God's promises?"
         },
         {
           "id": "p0-2",
-          "kind": "quote",
           "page": 0,
+          "sourceKey": "fb19fc35-d200-42b6-80bf-8a18b00c958f:2",
+          "kind": "key_point",
           "order": 2,
-          "text": "We see, or ought to see, these fruits in him before we look for them in ourselves."
+          "text": "Believers use the righteous standing given by God to fulfill the law of love."
         },
         {
           "id": "p0-3",
-          "kind": "verse",
           "page": 0,
+          "sourceKey": "fb19fc35-d200-42b6-80bf-8a18b00c958f:3",
+          "kind": "verse",
           "order": 3,
+          "reference": "Galatians 5:22-23",
+          "osis": "Gal.5.22-Gal.5.23"
+        },
+        {
+          "id": "p0-4",
+          "page": 0,
+          "sourceKey": "fb19fc35-d200-42b6-80bf-8a18b00c958f:4",
+          "kind": "quote",
+          "order": 4,
+          "text": "These qualities find their perfection in Christ. We see, or ought to see, these fruits in him before we look for them in ourselves."
+        },
+        {
+          "id": "p0-5",
+          "page": 0,
+          "sourceKey": "fb19fc35-d200-42b6-80bf-8a18b00c958f:5",
+          "kind": "verse",
+          "order": 5,
           "reference": "John 15:13",
           "osis": "John.15.13"
         },
         {
-          "id": "p0-4",
-          "kind": "verse",
+          "id": "p0-6",
           "page": 0,
-          "order": 4,
+          "sourceKey": "fb19fc35-d200-42b6-80bf-8a18b00c958f:6",
+          "kind": "verse",
+          "order": 6,
           "reference": "John 14:27",
           "osis": "John.14.27"
         },
         {
-          "id": "p0-5",
-          "kind": "quote",
+          "id": "p0-7",
           "page": 0,
-          "order": 5,
+          "sourceKey": "fb19fc35-d200-42b6-80bf-8a18b00c958f:7",
+          "kind": "verse",
+          "order": 7,
+          "reference": "John 19:1",
+          "osis": "John.19.1"
+        },
+        {
+          "id": "p0-8",
+          "page": 0,
+          "sourceKey": "fb19fc35-d200-42b6-80bf-8a18b00c958f:8",
+          "kind": "quote",
+          "order": 8,
           "text": "Gentleness or \"power under control.\" Having power, and wielding it w/ skill and for the best interest."
         },
         {
-          "id": "p0-6",
-          "kind": "key_point",
+          "id": "p0-9",
           "page": 0,
-          "order": 6,
-          "text": "Believers must fight for consistency between what they confess and how they live."
+          "sourceKey": "fb19fc35-d200-42b6-80bf-8a18b00c958f:9",
+          "kind": "verse",
+          "order": 9,
+          "reference": "Galatians 5:24",
+          "osis": "Gal.5.24"
+        },
+        {
+          "id": "p0-10",
+          "page": 0,
+          "sourceKey": "fb19fc35-d200-42b6-80bf-8a18b00c958f:10",
+          "kind": "key_point",
+          "order": 10,
+          "text": "Believers must fight for consistency between their confession and their actions."
+        },
+        {
+          "id": "p0-11",
+          "page": 0,
+          "sourceKey": "fb19fc35-d200-42b6-80bf-8a18b00c958f:11",
+          "kind": "verse",
+          "order": 11,
+          "reference": "Galatians 5:26",
+          "osis": "Gal.5.26"
         }
       ]
     },
@@ -681,47 +1035,62 @@
       "otherPassagesFound": "0/0",
       "spansInCards": "4/4",
       "spansInTranscript": "4/4",
+      "sermon": {
+        "title": "Gospel Partnership",
+        "preacher": null,
+        "passage": "Philippians 4:14-20",
+        "church": null,
+        "serviceDate": "2020-08-16"
+      },
+      "transcript": "Gospel Partnership\n08.16.20\nPhilippians 4:14-20\nYet it was kind of you to share my trouble. And you Philippians know that in the beginning of the gospel, when I left Macedonia, no church entered into partnership with me in giving and receiving, except you only. Even in Thessalonica you sent me help for my needs once and again. Not that I seek the gift, but I seek the fruit that increases to your credit. I have received full payment, and more. I am well supplied, having received Epaphroditus the gifts you sent, a fragrant offering a sacrifice acceptable and pleasing to God. And my God will supply every need of yours according to his riches in glory in Christ Jesus. To our God and Father be glory forever and ever.\n\nI. A Partnership which bears one another's burdens\nNot just \"writing checks\" but encouraging one another.\n\"Sharing our troubles.\" This is a great blessing of being a Christian.\nII. Sacrificial Giving\nThe church at Philippi was the only one which supported Paul. God accepts and is pleased w/ our giving.\n- God promises to provide our every need\nIII. Motives for God's glory\nWe give for the right purposes. To see God's glory.",
+      "sermonMisread": [],
+      "sermonMadeUp": [],
       "quotesKept": 1,
       "rejected": 0,
-      "costUsd": 0.018507,
-      "seconds": 16.595,
+      "costUsd": 0.014561999999999999,
+      "seconds": 13.833,
       "streamedBeforeDone": true,
       "cards": [
         {
           "id": "p0-0",
-          "kind": "verse",
           "page": 0,
+          "sourceKey": "79674b14-9d83-40d9-b88c-d0e4c1574b30:0",
+          "kind": "verse",
           "order": 0,
           "reference": "Philippians 4:14-20",
           "osis": "Phil.4.14-Phil.4.20"
         },
         {
           "id": "p0-1",
-          "kind": "key_point",
           "page": 0,
+          "sourceKey": "79674b14-9d83-40d9-b88c-d0e4c1574b30:1",
+          "kind": "key_point",
           "order": 1,
-          "text": "True gospel partnership involves encouraging each other and bearing one another's burdens, not merely writing checks."
+          "text": "True gospel partnership is not merely writing checks, but sharing troubles, encouraging one another, and bearing each other's burdens."
         },
         {
           "id": "p0-2",
-          "kind": "quote",
           "page": 0,
+          "sourceKey": "79674b14-9d83-40d9-b88c-d0e4c1574b30:2",
+          "kind": "quote",
           "order": 2,
-          "text": "Not just \"writing checks\" but encouraging one another."
+          "text": "This is a great blessing of being a Christian."
         },
         {
           "id": "p0-3",
-          "kind": "key_point",
           "page": 0,
+          "sourceKey": "79674b14-9d83-40d9-b88c-d0e4c1574b30:3",
+          "kind": "key_point",
           "order": 3,
-          "text": "God is pleased with sacrificial giving and promises to provide for our every need."
+          "text": "God accepts and is pleased with sacrificial giving, and He promises to supply our every need."
         },
         {
           "id": "p0-4",
-          "kind": "key_point",
           "page": 0,
+          "sourceKey": "79674b14-9d83-40d9-b88c-d0e4c1574b30:4",
+          "kind": "key_point",
           "order": 4,
-          "text": "Believers should give with the right motives to bring glory to God."
+          "text": "Our giving should be driven by the right motives: to see God's glory."
         }
       ]
     },
@@ -735,7 +1104,9 @@
       },
       "kinds": [
         "verse",
+        "quote",
         "verse",
+        "key_point",
         "quote",
         "key_point",
         "key_point"
@@ -747,48 +1118,79 @@
       "otherPassagesFound": "1/1",
       "spansInCards": "4/4",
       "spansInTranscript": "4/4",
-      "quotesKept": 1,
+      "sermon": {
+        "title": "A Tale of Two Prayers",
+        "preacher": null,
+        "passage": "Luke 18:9-14",
+        "church": null,
+        "serviceDate": "2020-08-16"
+      },
+      "transcript": "A Tale of Two Prayers 08.16.20\nLuke 18:9-14 \"God be merciful to me, a sinner\"\n\nAt creation, Genesis 3, we see God created man for fellowship with himself. But Adam and Eve believed God witheld from them and trusted in Satan. He did not leave them w/o hope for reconciliation.\n\nJesus told this parable \"to those who trusted they themselves were righteous.\" The two men are total opposites. Based on appearances, it seemed like the Pharisee was right w/ God.\n\nThe Pharisees Prayer: compares himself to others. This is similar to todays rhetoric where everyone is comparing themselves and degradation of others in anger. Reviling, being self righteous happens constantly online. He also refers to himself in self-reliance w/o giving any expression of a need for God at all.\n\nThe Tax collector's Prayer: A humble and contrite approach to God is fundamental. This approach to God is of the essence of Christian faith. His prayer - in greek - says \"the sinner\" and the word for mercy is from atonement.",
+      "sermonMisread": [],
+      "sermonMadeUp": [],
+      "quotesKept": 2,
       "rejected": 0,
-      "costUsd": 0.013632,
-      "seconds": 12.379,
+      "costUsd": 0.018897,
+      "seconds": 16.489,
       "streamedBeforeDone": true,
       "cards": [
         {
           "id": "p0-0",
-          "kind": "verse",
           "page": 0,
+          "sourceKey": "3ce40463-f351-4c9e-879e-426d66b5c9ed:0",
+          "kind": "verse",
           "order": 0,
           "reference": "Luke 18:9-14",
           "osis": "Luke.18.9-Luke.18.14"
         },
         {
           "id": "p0-1",
-          "kind": "verse",
           "page": 0,
+          "sourceKey": "3ce40463-f351-4c9e-879e-426d66b5c9ed:1",
+          "kind": "quote",
           "order": 1,
+          "text": "God be merciful to me, a sinner"
+        },
+        {
+          "id": "p0-2",
+          "page": 0,
+          "sourceKey": "3ce40463-f351-4c9e-879e-426d66b5c9ed:2",
+          "kind": "verse",
+          "order": 2,
           "reference": "Genesis 3",
           "osis": "Gen.3"
         },
         {
-          "id": "p0-2",
-          "kind": "quote",
-          "page": 0,
-          "order": 2,
-          "text": "God be merciful to me, a sinner"
-        },
-        {
           "id": "p0-3",
-          "kind": "key_point",
           "page": 0,
+          "sourceKey": "3ce40463-f351-4c9e-879e-426d66b5c9ed:3",
+          "kind": "key_point",
           "order": 3,
-          "text": "The Pharisee relied on himself and looked down on others, showing no need for God at all."
+          "text": "God created man for fellowship with Himself and did not leave humanity without hope for reconciliation after the fall."
         },
         {
           "id": "p0-4",
-          "kind": "key_point",
           "page": 0,
+          "sourceKey": "3ce40463-f351-4c9e-879e-426d66b5c9ed:4",
+          "kind": "quote",
           "order": 4,
-          "text": "A humble and contrite approach to God is fundamental and of the essence of Christian faith."
+          "text": "to those who trusted they themselves were righteous."
+        },
+        {
+          "id": "p0-5",
+          "page": 0,
+          "sourceKey": "3ce40463-f351-4c9e-879e-426d66b5c9ed:5",
+          "kind": "key_point",
+          "order": 5,
+          "text": "The Pharisee relied on himself and compared himself to others without expressing any need for God."
+        },
+        {
+          "id": "p0-6",
+          "page": 0,
+          "sourceKey": "3ce40463-f351-4c9e-879e-426d66b5c9ed:6",
+          "kind": "key_point",
+          "order": 6,
+          "text": "A humble and contrite approach to God is fundamental and essential to the Christian faith."
         }
       ]
     },
@@ -804,10 +1206,12 @@
         "verse",
         "quote",
         "verse",
+        "verse",
         "key_point",
         "verse"
       ],
       "verses": [
+        "Acts.4",
         "Acts.4",
         "Acts.4",
         "Isa.37"
@@ -815,47 +1219,71 @@
       "otherPassagesFound": "1/1",
       "spansInCards": "3/4",
       "spansInTranscript": "4/4",
+      "sermon": {
+        "title": "A Prayer of Bold Witness",
+        "preacher": null,
+        "passage": "Acts 4:23-31",
+        "church": null,
+        "serviceDate": null
+      },
+      "transcript": "Acts 4:23-31 A Prayer of Bold Witness\n\nWhat is the proper place of evangelism in our prayers and in our lives? A lack of prayer for the lost is a red flag.\n\nActs 4:18, 20 \"They called them and charged them not to speak or teach in the name of Jesus... But Peter and John answered them \"Whether it is right in the sight of God to listen to you rather than to God, you must judge, for we cannot but speak of what we've seen and heard.\n\nIn response to this adversity, they prayed. We invoke creation to encourage our faith. They describe and acknowledge the hostility of Satan and the world even putting it in perspective as part of his plan.\nIsaiah 37 seems to be a template for this prayer - the prayer of Hezekiah against the siege.",
+      "sermonMisread": [],
+      "sermonMadeUp": [],
       "quotesKept": 1,
       "rejected": 0,
-      "costUsd": 0.010931999999999999,
-      "seconds": 11.312,
+      "costUsd": 0.015837,
+      "seconds": 15.6,
       "streamedBeforeDone": true,
       "cards": [
         {
           "id": "p0-0",
-          "kind": "verse",
           "page": 0,
+          "sourceKey": "16138a3b-c63e-4e13-94c9-110801328985:0",
+          "kind": "verse",
           "order": 0,
           "reference": "Acts 4:23-31",
           "osis": "Acts.4.23-Acts.4.31"
         },
         {
           "id": "p0-1",
-          "kind": "quote",
           "page": 0,
+          "sourceKey": "16138a3b-c63e-4e13-94c9-110801328985:1",
+          "kind": "quote",
           "order": 1,
           "text": "A lack of prayer for the lost is a red flag."
         },
         {
           "id": "p0-2",
-          "kind": "verse",
           "page": 0,
+          "sourceKey": "16138a3b-c63e-4e13-94c9-110801328985:2",
+          "kind": "verse",
           "order": 2,
-          "reference": "Acts 4:18-20",
-          "osis": "Acts.4.18-Acts.4.20"
+          "reference": "Acts 4:18",
+          "osis": "Acts.4.18"
         },
         {
           "id": "p0-3",
-          "kind": "key_point",
           "page": 0,
+          "sourceKey": "16138a3b-c63e-4e13-94c9-110801328985:3",
+          "kind": "verse",
           "order": 3,
-          "text": "When facing adversity, prayer strengthens faith by remembering God as Creator and seeing hostility within His sovereign plan."
+          "reference": "Acts 4:20",
+          "osis": "Acts.4.20"
         },
         {
           "id": "p0-4",
-          "kind": "verse",
           "page": 0,
+          "sourceKey": "16138a3b-c63e-4e13-94c9-110801328985:4",
+          "kind": "key_point",
           "order": 4,
+          "text": "When facing adversity, prayer invokes creation to strengthen faith and frames worldly hostility within God's sovereign plan."
+        },
+        {
+          "id": "p0-5",
+          "page": 0,
+          "sourceKey": "16138a3b-c63e-4e13-94c9-110801328985:5",
+          "kind": "verse",
+          "order": 5,
           "reference": "Isaiah 37",
           "osis": "Isa.37"
         }
@@ -863,86 +1291,461 @@
     },
     {
       "id": "sermon-12",
-      "pass": true,
+      "pass": false,
       "checks": {
         "atLeast3Cards": true,
         "passageFound": true,
-        "keySpans": true
+        "keySpans": true,
+        "sermon": false
       },
       "kinds": [
         "verse",
         "verse",
         "verse",
         "key_point",
+        "verse",
+        "key_point",
         "quote",
+        "verse",
         "key_point",
         "quote"
       ],
       "verses": [
         "Mark.4",
         "Isa.41",
-        "Matt.5"
+        "Matt.5",
+        "Mark.4",
+        "Mark.4"
       ],
       "otherPassagesFound": "2/2",
-      "spansInCards": "3/4",
+      "spansInCards": "4/4",
       "spansInTranscript": "4/4",
+      "sermon": {
+        "title": "An Fearful Circumstance",
+        "preacher": "Rev Ross Hodges",
+        "passage": "Mark 4:33-41",
+        "church": null,
+        "serviceDate": "2020-07-26"
+      },
+      "transcript": "MARK 4:33-41 : An Fearful Circumstance       07/26/20\nRev Ross Hodges\nIt is a common exhortation: do not fear. Isaiah 41,\nMATTHEW 5, etc... We are told to not be anxious and not\nto fear. In circumstances that are hard, we can be taught\nto trust rather than fear.\nI. A Right View of Discipleship (v37) \"And a great\nwindstorm arose and waves were filling the boat.\" Jesus tells\nthem \"Let us go across to the other side.\"\nOnce the storm arose the disciples must've become\nbewildered: \"Why did he lead us here? Did he not know\nthis storm would come?\" The truth is, we learn much by\naffliction. We long for heaven. \"It was good for me I was\nafflicted. This is essential to discipleship\nII. A Right View of Christ (v38) \"Teacher, do you not care\nthat we are perishing?\" This is an absurd question. He is\nin the boat, indeed, on the earth precisely because he\ncares. Being exhausted, beaten, tortured. Jesus is God w/ us.\nHe loves us. He needs only to raise his voice.",
+      "sermonMatched": "4/5",
+      "sermonMisread": [
+        "serviceDate"
+      ],
+      "sermonMadeUp": [],
       "quotesKept": 2,
       "rejected": 0,
-      "costUsd": 0.019669500000000003,
-      "seconds": 19.721,
+      "costUsd": 0.0157095,
+      "seconds": 13.481,
       "streamedBeforeDone": true,
       "cards": [
         {
           "id": "p0-0",
-          "kind": "verse",
           "page": 0,
+          "sourceKey": "b8c02c25-7bef-42bd-b96a-7186e9044df9:0",
+          "kind": "verse",
           "order": 0,
-          "reference": "Mark 4:35-41",
-          "osis": "Mark.4.35-Mark.4.41"
+          "reference": "Mark 4:33-41",
+          "osis": "Mark.4.33-Mark.4.41"
         },
         {
           "id": "p0-1",
-          "kind": "verse",
           "page": 0,
+          "sourceKey": "b8c02c25-7bef-42bd-b96a-7186e9044df9:1",
+          "kind": "verse",
           "order": 1,
           "reference": "Isaiah 41",
           "osis": "Isa.41"
         },
         {
           "id": "p0-2",
-          "kind": "verse",
           "page": 0,
+          "sourceKey": "b8c02c25-7bef-42bd-b96a-7186e9044df9:2",
+          "kind": "verse",
           "order": 2,
           "reference": "Matthew 5",
           "osis": "Matt.5"
         },
         {
           "id": "p0-3",
-          "kind": "key_point",
           "page": 0,
+          "sourceKey": "b8c02c25-7bef-42bd-b96a-7186e9044df9:3",
+          "kind": "key_point",
           "order": 3,
-          "text": "In difficult circumstances, believers can be taught to trust God rather than give in to fear."
+          "text": "In hard circumstances, believers can be taught to trust God rather than fear."
         },
         {
           "id": "p0-4",
-          "kind": "quote",
           "page": 0,
+          "sourceKey": "b8c02c25-7bef-42bd-b96a-7186e9044df9:4",
+          "kind": "verse",
           "order": 4,
-          "text": "The truth is, we learn much by affliction."
+          "reference": "Mark 4:37",
+          "osis": "Mark.4.37"
         },
         {
           "id": "p0-5",
-          "kind": "key_point",
           "page": 0,
+          "sourceKey": "b8c02c25-7bef-42bd-b96a-7186e9044df9:5",
+          "kind": "key_point",
           "order": 5,
-          "text": "Jesus entered our world and stays with us in the storm precisely because he cares for us."
+          "text": "Learning through affliction is essential to discipleship and makes us long for heaven."
         },
         {
           "id": "p0-6",
-          "kind": "quote",
           "page": 0,
+          "sourceKey": "b8c02c25-7bef-42bd-b96a-7186e9044df9:6",
+          "kind": "quote",
           "order": 6,
-          "text": "He needs only to raise his voice."
+          "text": "The truth is, we learn much by affliction. We long for heaven."
+        },
+        {
+          "id": "p0-7",
+          "page": 0,
+          "sourceKey": "b8c02c25-7bef-42bd-b96a-7186e9044df9:7",
+          "kind": "verse",
+          "order": 7,
+          "reference": "Mark 4:38",
+          "osis": "Mark.4.38"
+        },
+        {
+          "id": "p0-8",
+          "page": 0,
+          "sourceKey": "b8c02c25-7bef-42bd-b96a-7186e9044df9:8",
+          "kind": "key_point",
+          "order": 8,
+          "text": "Jesus is present with us and suffered on earth precisely because He cares and loves us."
+        },
+        {
+          "id": "p0-9",
+          "page": 0,
+          "sourceKey": "b8c02c25-7bef-42bd-b96a-7186e9044df9:9",
+          "kind": "quote",
+          "order": 9,
+          "text": "He is in the boat, indeed, on the earth precisely because he cares."
+        }
+      ]
+    },
+    {
+      "id": "smyrna-rev-2",
+      "pass": true,
+      "checks": {
+        "atLeast3Cards": true,
+        "passageFound": true,
+        "keySpans": true,
+        "sermon": true
+      },
+      "kinds": [
+        "verse",
+        "key_point",
+        "key_point",
+        "verse",
+        "key_point",
+        "verse",
+        "key_point",
+        "key_point",
+        "verse",
+        "verse",
+        "quote",
+        "key_point",
+        "quote"
+      ],
+      "verses": [
+        "Rev.2",
+        "John.15",
+        "Rom.2",
+        "Dan.3",
+        "1Pet.1"
+      ],
+      "otherPassagesFound": "4/4",
+      "spansInCards": "3/4",
+      "spansInTranscript": "4/4",
+      "sermon": {
+        "title": "To the Church at Smyrna",
+        "preacher": null,
+        "passage": "Revelation 2:8-11",
+        "church": null,
+        "serviceDate": null
+      },
+      "transcript": "Revelation 2:8-11 — To the Church at Smyrna\nThe words of the first and the last, who died and came to life. We are comforted by the supreme place of Christ as both First and Last.\nThe hatred of the world is part of our heritage with Christ (John 15:18-25).\nTrue union with Christ is a matter of the heart, by the Spirit (Rom 2:28-29).\n\"Do not fear\" is a constant refrain in the Bible. Christ walks among his lampstands; he is with us in his church.\nThe Devil is behind these fiery persecutions, but we are called to endure his rage. Dan 3:18. God is behind the testing (1 Pet 1:7).\nBe faithful unto death, and I will give you the crown of life. The crown is our participation in the victory of Christ over sin, death, hell, and the Devil.\nMargaret Wilson: \"I see Christ wrestling there.\"",
+      "sermonMatched": "5/5",
+      "sermonMisread": [],
+      "sermonMadeUp": [],
+      "quotesKept": 2,
+      "rejected": 0,
+      "costUsd": 0.011958,
+      "seconds": 12.077,
+      "streamedBeforeDone": true,
+      "cards": [
+        {
+          "id": "p0-0",
+          "page": 0,
+          "sourceKey": "cb784959-e5fd-44c1-94b9-87ff97e4a0f3:0",
+          "kind": "verse",
+          "order": 0,
+          "reference": "Revelation 2:8-11",
+          "osis": "Rev.2.8-Rev.2.11"
+        },
+        {
+          "id": "p0-1",
+          "page": 0,
+          "sourceKey": "cb784959-e5fd-44c1-94b9-87ff97e4a0f3:1",
+          "kind": "key_point",
+          "order": 1,
+          "text": "We are comforted by the supreme place of Christ as both First and Last, who died and came to life."
+        },
+        {
+          "id": "p0-2",
+          "page": 0,
+          "sourceKey": "cb784959-e5fd-44c1-94b9-87ff97e4a0f3:2",
+          "kind": "key_point",
+          "order": 2,
+          "text": "The hatred of the world is part of our heritage with Christ."
+        },
+        {
+          "id": "p0-3",
+          "page": 0,
+          "sourceKey": "cb784959-e5fd-44c1-94b9-87ff97e4a0f3:3",
+          "kind": "verse",
+          "order": 3,
+          "reference": "John 15:18-25",
+          "osis": "John.15.18-John.15.25"
+        },
+        {
+          "id": "p0-4",
+          "page": 0,
+          "sourceKey": "cb784959-e5fd-44c1-94b9-87ff97e4a0f3:4",
+          "kind": "key_point",
+          "order": 4,
+          "text": "True union with Christ is a matter of the heart, by the Spirit."
+        },
+        {
+          "id": "p0-5",
+          "page": 0,
+          "sourceKey": "cb784959-e5fd-44c1-94b9-87ff97e4a0f3:5",
+          "kind": "verse",
+          "order": 5,
+          "reference": "Romans 2:28-29",
+          "osis": "Rom.2.28-Rom.2.29"
+        },
+        {
+          "id": "p0-6",
+          "page": 0,
+          "sourceKey": "cb784959-e5fd-44c1-94b9-87ff97e4a0f3:6",
+          "kind": "key_point",
+          "order": 6,
+          "text": "Christ is present with us in his church, giving us reason not to fear."
+        },
+        {
+          "id": "p0-7",
+          "page": 0,
+          "sourceKey": "cb784959-e5fd-44c1-94b9-87ff97e4a0f3:7",
+          "kind": "key_point",
+          "order": 7,
+          "text": "Although the Devil is behind fiery persecutions, God is behind the testing and calls us to endure."
+        },
+        {
+          "id": "p0-8",
+          "page": 0,
+          "sourceKey": "cb784959-e5fd-44c1-94b9-87ff97e4a0f3:8",
+          "kind": "verse",
+          "order": 8,
+          "reference": "Daniel 3:18",
+          "osis": "Dan.3.18"
+        },
+        {
+          "id": "p0-9",
+          "page": 0,
+          "sourceKey": "cb784959-e5fd-44c1-94b9-87ff97e4a0f3:9",
+          "kind": "verse",
+          "order": 9,
+          "reference": "1 Peter 1:7",
+          "osis": "1Pet.1.7"
+        },
+        {
+          "id": "p0-10",
+          "page": 0,
+          "sourceKey": "cb784959-e5fd-44c1-94b9-87ff97e4a0f3:10",
+          "kind": "quote",
+          "order": 10,
+          "text": "Be faithful unto death, and I will give you the crown of life."
+        },
+        {
+          "id": "p0-11",
+          "page": 0,
+          "sourceKey": "cb784959-e5fd-44c1-94b9-87ff97e4a0f3:11",
+          "kind": "key_point",
+          "order": 11,
+          "text": "The crown of life is our participation in the victory of Christ over sin, death, hell, and the Devil."
+        },
+        {
+          "id": "p0-12",
+          "page": 0,
+          "sourceKey": "cb784959-e5fd-44c1-94b9-87ff97e4a0f3:12",
+          "kind": "quote",
+          "order": 12,
+          "text": "I see Christ wrestling there."
+        }
+      ]
+    },
+    {
+      "id": "passage-only",
+      "pass": true,
+      "checks": {
+        "atLeast3Cards": true,
+        "passageFound": true,
+        "keySpans": true,
+        "sermon": true
+      },
+      "kinds": [
+        "verse",
+        "key_point",
+        "key_point",
+        "key_point",
+        "key_point"
+      ],
+      "verses": [
+        "Rom.12"
+      ],
+      "otherPassagesFound": "0/0",
+      "spansInCards": "4/4",
+      "spansInTranscript": "4/4",
+      "sermon": {
+        "title": null,
+        "preacher": null,
+        "passage": "Romans 12:1-2",
+        "church": null,
+        "serviceDate": null
+      },
+      "transcript": "Romans 12:1-2\nPresent your bodies as a living sacrifice: all of life is worship, not only Sunday.\nDo not be conformed to this world; be transformed by the renewal of your mind.\nThe mercies of God (ch. 1-11) come first; our obedience answers them.\nWe test and discern the will of God by his Word.",
+      "sermonMatched": "5/5",
+      "sermonMisread": [],
+      "sermonMadeUp": [],
+      "quotesKept": 0,
+      "rejected": 0,
+      "costUsd": 0.0057765,
+      "seconds": 5.361,
+      "streamedBeforeDone": true,
+      "cards": [
+        {
+          "id": "p0-0",
+          "page": 0,
+          "sourceKey": "79316b8c-1728-43a0-a437-2fae4810afc2:0",
+          "kind": "verse",
+          "order": 0,
+          "reference": "Romans 12:1-2",
+          "osis": "Rom.12.1-Rom.12.2"
+        },
+        {
+          "id": "p0-1",
+          "page": 0,
+          "sourceKey": "79316b8c-1728-43a0-a437-2fae4810afc2:1",
+          "kind": "key_point",
+          "order": 1,
+          "text": "All of life is an act of worship, not only Sunday, as we present our bodies as a living sacrifice."
+        },
+        {
+          "id": "p0-2",
+          "page": 0,
+          "sourceKey": "79316b8c-1728-43a0-a437-2fae4810afc2:2",
+          "kind": "key_point",
+          "order": 2,
+          "text": "We are not to be conformed to this world, but transformed by the renewal of our minds."
+        },
+        {
+          "id": "p0-3",
+          "page": 0,
+          "sourceKey": "79316b8c-1728-43a0-a437-2fae4810afc2:3",
+          "kind": "key_point",
+          "order": 3,
+          "text": "God's mercies come first, and our obedience is an answer to them."
+        },
+        {
+          "id": "p0-4",
+          "page": 0,
+          "sourceKey": "79316b8c-1728-43a0-a437-2fae4810afc2:4",
+          "kind": "key_point",
+          "order": 4,
+          "text": "We test and discern the will of God through His Word."
+        }
+      ]
+    },
+    {
+      "id": "no-heading",
+      "pass": true,
+      "checks": {
+        "atLeast3Cards": true,
+        "passageFound": true,
+        "keySpans": true,
+        "sermon": true
+      },
+      "kinds": [
+        "key_point",
+        "key_point",
+        "key_point",
+        "quote",
+        "key_point"
+      ],
+      "verses": [],
+      "otherPassagesFound": "0/0",
+      "spansInCards": "4/4",
+      "spansInTranscript": "4/4",
+      "sermon": {
+        "title": null,
+        "preacher": null,
+        "passage": null,
+        "church": null,
+        "serviceDate": null
+      },
+      "transcript": "God is never in a hurry and never late.\nWaiting is not wasted: he is shaping us while we wait.\nAbraham waited 25 years for the promised son.\n\"The Lord is good to those who wait for him.\"\nPrayer is how we wait well.",
+      "sermonMatched": "5/5",
+      "sermonMisread": [],
+      "sermonMadeUp": [],
+      "quotesKept": 1,
+      "rejected": 0,
+      "costUsd": 0.014258999999999999,
+      "seconds": 14.433,
+      "streamedBeforeDone": true,
+      "cards": [
+        {
+          "id": "p0-0",
+          "page": 0,
+          "sourceKey": "71612f7a-cda3-46c6-996b-41760a7bcb61:0",
+          "kind": "key_point",
+          "order": 0,
+          "text": "God is never in a hurry and never late."
+        },
+        {
+          "id": "p0-1",
+          "page": 0,
+          "sourceKey": "71612f7a-cda3-46c6-996b-41760a7bcb61:1",
+          "kind": "key_point",
+          "order": 1,
+          "text": "Waiting is not wasted time, because God is shaping us while we wait."
+        },
+        {
+          "id": "p0-2",
+          "page": 0,
+          "sourceKey": "71612f7a-cda3-46c6-996b-41760a7bcb61:2",
+          "kind": "key_point",
+          "order": 2,
+          "text": "Abraham waited 25 years for the promised son."
+        },
+        {
+          "id": "p0-3",
+          "page": 0,
+          "sourceKey": "71612f7a-cda3-46c6-996b-41760a7bcb61:3",
+          "kind": "quote",
+          "order": 3,
+          "text": "The Lord is good to those who wait for him."
+        },
+        {
+          "id": "p0-4",
+          "page": 0,
+          "sourceKey": "71612f7a-cda3-46c6-996b-41760a7bcb61:4",
+          "kind": "key_point",
+          "order": 4,
+          "text": "Prayer is how we wait well."
         }
       ]
     }

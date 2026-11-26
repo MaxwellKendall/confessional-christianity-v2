@@ -2,7 +2,7 @@ import { createHash, randomUUID } from 'crypto';
 import { mkdir, readdir, readFile, rename, stat, unlink, writeFile } from 'fs/promises';
 import { join } from 'path';
 
-import type { DraftCard } from './cards';
+import type { DraftCard, SermonDetails } from './cards';
 import type { PageInput } from './gemini';
 
 // Per-account replay cache for generated Lord's Day pages (TKL-940).
@@ -25,6 +25,8 @@ export interface CachedPage {
   extractedText: string;
   rejected: number;
   cards: CachedPageCard[];
+  /** TKL-1061; absent on pages cached before it, read as all null */
+  sermon?: SermonDetails;
 }
 
 export interface PageReplayCache {

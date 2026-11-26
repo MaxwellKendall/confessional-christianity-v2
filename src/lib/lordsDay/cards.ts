@@ -69,8 +69,88 @@ export const GENERATION_SCHEMA = {
         required: ['kind'],
       },
     },
+    // TKL-1061. Optional and additive: TKL-1058 extends the same object later.
+    sermon: {
+      type: 'object',
+      description: 'Which sermon these notes are on, only as the notes themselves state it. Omit any field the notes do not say.',
+      properties: {
+        title: { type: 'string', description: "The sermon's title as written in the notes." },
+        preacher: { type: 'string', description: 'The preacher as written in the notes.' },
+        passage: { type: 'string', description: 'The sermon\'s main text as a Bible reference with the full book name ("Revelation 2:8-11").' },
+        church: { type: 'string', description: 'The church or congregation as written in the notes.' },
+        serviceDate: { type: 'string', description: 'The date written on the notes, as YYYY-MM-DD.' },
+      },
+    },
   },
   required: ['extractedText', 'cards'],
+};
+
+// MARK: Which sermon (TKL-1061)
+
+export const SERMON_FIELDS = ['title', 'preacher', 'passage', 'church', 'serviceDate'] as const;
+export type SermonField = (typeof SERMON_FIELDS)[number];
+/** Each field is null unless the notes say it. */
+export type SermonDetails = Record<SermonField, string | null>;
+
+export const emptySermon = (): SermonDetails => ({ title: null, preacher: null, passage: null, church: null, serviceDate: null });
+export const hasSermonDetails = (sermon: SermonDetails) => SERMON_FIELDS.some((f) => sermon[f] !== null);
+
+const MAX_SERMON_TEXT = 120;
+const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+/**
+ * A title, preacher or church is kept only when the notes contain it: every word of
+ * three letters or more must appear in the source. That lets the model drop an
+ * article or add "Rev." but never supply a name the page doesn't have.
+ */
+const foundInSource = (value: string, sourceWords: Set<string>) => {
+  const words = normalizeForMatch(value)
+    .split(' ')
+    .filter((w) => w.length >= 3 && w !== 'rev');
+  return words.length > 0 && words.every((w) => sourceWords.has(w));
+};
+
+const realIsoDate = (value: unknown): string | null => {
+  if (typeof value !== 'string') return null;
+  const match = ISO_DATE.exec(value.trim());
+  if (!match) return null;
+  const [y, m, d] = match.slice(1).map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d));
+  if (date.getUTCFullYear() !== y || date.getUTCMonth() !== m - 1 || date.getUTCDate() !== d) return null;
+  if (y < 1900 || y > 2200) return null;
+  return value.trim();
+};
+
+/** The model's `sermon` object, checked against what the page actually says. */
+export const validateSermon = (raw: unknown, sourceText: string): SermonDetails => {
+  const sermon = emptySermon();
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return sermon;
+  const fields = raw as Record<string, unknown>;
+  const sourceWords = new Set(normalizeForMatch(sourceText).split(' ').filter(Boolean));
+  for (const field of ['title', 'preacher', 'church'] as const) {
+    const value = fields[field];
+    if (typeof value !== 'string') continue;
+    const trimmed = value.trim().replace(/\s+/g, ' ');
+    if (!trimmed || trimmed.length > MAX_SERMON_TEXT) continue;
+    if (foundInSource(trimmed, sourceWords)) sermon[field] = trimmed;
+  }
+  // A passage or date must have its numbers on the page: the chapter, and the day of the month.
+  const numbers = new Set([...sourceWords].filter((w) => /^\d+$/.test(w)).map(Number));
+  // "Matthew 5:9; 43-48" isn't one reference: keep its first part rather than nothing.
+  const passage = fields.passage;
+  const osis = referenceToOsis(passage) ?? (typeof passage === 'string' ? referenceToOsis(passage.split(/[;,]/)[0].trim()) : null);
+  if (osis && numbers.has(Number(osis.split('.')[1]))) sermon.passage = parseOsisBibleReference(osis);
+  const date = realIsoDate(fields.serviceDate);
+  const year = date ? Number(date.slice(0, 4)) : 0;
+  if (date && numbers.has(Number(date.slice(8, 10))) && (numbers.has(year) || numbers.has(year % 100))) sermon.serviceDate = date;
+  return sermon;
+};
+
+/** One sermon for the whole request: each field's first value, in page order. */
+export const mergeSermons = (pages: SermonDetails[]): SermonDetails => {
+  const merged = emptySermon();
+  for (const page of pages) for (const field of SERMON_FIELDS) merged[field] ??= page[field];
+  return merged;
 };
 
 /** Case, quote marks, punctuation and whitespace folded away, for the quote span check. */

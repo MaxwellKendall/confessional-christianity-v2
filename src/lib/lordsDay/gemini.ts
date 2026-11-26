@@ -64,6 +64,8 @@ export interface DraftPageOptions {
 export interface DraftPageResult {
   extractedText: string;
   rawCards: unknown[];
+  /** the model's `sermon` object, unchecked (validateSermon) */
+  rawSermon?: unknown;
   usage?: GeminiUsage;
   costUsd: number;
 }
@@ -76,7 +78,8 @@ Return JSON with:
   - key_point: one main point of the sermon as one clear sentence (at most 200 characters), in plain words, faithful to the notes. Never add doctrine the notes do not contain.
   - quote: a memorable line copied character for character from extractedText. Never compose, paraphrase, merge or tidy a quote. If no line is worth quoting, give no quote cards.
   - verse: a Bible passage named in the notes, as a reference only, with the full English book name ("Psalm 86:5", "1 Thessalonians 3", "Matthew 5:43-48"). Never write the words of Scripture, and never add a passage the notes do not name.
-Do not name the preacher or anyone else as the speaker of a quote.`;
+Do not name the preacher or anyone else as the speaker of a quote.
+- sermon: which sermon the notes are on, only as the notes themselves state it, usually in a heading: title, preacher, passage (the main text, full book name), church, and serviceDate (the date written on the page, as YYYY-MM-DD). Leave out every field the notes do not state. Naming the passage here never replaces its verse card: the sermon's passage still gets its own verse card in cards. Never guess a title from the content, a passage from the topic, or a date from anything but what is written.`;
 
 const promptFor = (input: PageInput, meta: SermonMeta) => {
   const context = [
@@ -152,7 +155,7 @@ export const draftPage = async (input: PageInput, meta: SermonMeta, options: Dra
   } catch {
     throw new CardsError(502, 'bad_model_output', 'The card generator returned invalid JSON.');
   }
-  const { extractedText, cards } = (parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {}) as Record<
+  const { extractedText, cards, sermon } = (parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {}) as Record<
     string,
     unknown
   >;
@@ -162,6 +165,7 @@ export const draftPage = async (input: PageInput, meta: SermonMeta, options: Dra
   return {
     extractedText: input.kind === 'text' ? input.text : typeof extractedText === 'string' ? extractedText : '',
     rawCards: cards,
+    rawSermon: sermon,
     usage: data.usageMetadata,
     costUsd: geminiCost(data.usageMetadata),
   };

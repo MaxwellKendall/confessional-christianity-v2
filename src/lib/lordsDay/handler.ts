@@ -1,7 +1,7 @@
 import { randomUUID } from 'crypto';
 
 import { bearerToken } from './auth';
-import { validateGeneratedCards, type DraftCard } from './cards';
+import { emptySermon, hasSermonDetails, mergeSermons, validateGeneratedCards, validateSermon, type DraftCard, type SermonDetails } from './cards';
 import { CardsError, draftPage, type PageInput } from './gemini';
 import type { RateLimiter } from './rateLimit';
 import { pageReplayKey, type CachedPage, type CachedPageCard, type PageReplayCache } from './replayCache';
@@ -22,9 +22,15 @@ import { pageReplayKey, type CachedPage, type CachedPageCard, type PageReplayCac
 // Otherwise a 200 NDJSON stream, one event per line, so the app fills cards in
 // as each page finishes instead of waiting on a spinner:
 //   { type: "started", pages, model }
-//   { type: "page", page, extractedText, rejected, cardCount, generationId }  then  { type: "card", card } per card
+//   { type: "page", page, extractedText, rejected, cardCount, generationId }
+//   { type: "sermon", page, sermon }   (only when that page names something; TKL-1061)
+//   { type: "card", card } per card
 //   { type: "error", page, code, message }            (that page failed; others continue)
-//   { type: "done", cards: [...ordered by page, order], rejected, failedPages, costUsd }
+//   { type: "done", cards: [...ordered by page, order], rejected, failedPages, costUsd, sermon }
+// `sermon` is { title, preacher, passage, church, serviceDate }, each a string or null:
+// null unless the notes say it (validateSermon drops anything not on the page). The
+// passage is a canonical reference; serviceDate is YYYY-MM-DD. `done.sermon` merges
+// the pages, first value per field in page order.
 
 export interface CardsDeps {
   geminiApiKey?: string;
@@ -174,6 +180,7 @@ export const handleCardsRequest = async (request: Request, deps: CardsDeps): Pro
 
       const all: DraftCard[] = [];
       const failedPages: number[] = [];
+      const sermons = new Map<number, SermonDetails>();
       let rejected = 0;
       let costUsd = 0;
 
@@ -208,6 +215,7 @@ export const handleCardsRequest = async (request: Request, deps: CardsDeps): Pro
                   extractedText: result.extractedText,
                   rejected: pageRejected.length,
                   cards: cachedCards,
+                  sermon: validateSermon(result.rawSermon, result.extractedText),
                 },
                 costUsd: result.costUsd,
               };
@@ -249,6 +257,9 @@ export const handleCardsRequest = async (request: Request, deps: CardsDeps): Pro
               cardCount: cards.length,
               generationId: resolved.page.generationId,
             });
+            const sermon = resolved.page.sermon ?? emptySermon();
+            sermons.set(page, sermon);
+            if (hasSermonDetails(sermon)) send({ type: 'sermon', page, sermon });
             for (const card of cards) send({ type: 'card', card });
           } catch (error) {
             failedPages.push(page);
@@ -270,7 +281,8 @@ export const handleCardsRequest = async (request: Request, deps: CardsDeps): Pro
       console.info(
         `[lords-day/cards] model=${model} pages=${pages.length} failed=${failedPages.length} cards=${all.length} rejected=${rejected} costUsd=${costUsd.toFixed(5)}`,
       );
-      send({ type: 'done', cards: all, rejected, failedPages, costUsd });
+      const sermon = mergeSermons([...sermons.entries()].sort(([a], [b]) => a - b).map(([, s]) => s));
+      send({ type: 'done', cards: all, rejected, failedPages, costUsd, sermon });
       controller.close();
     },
   });
