@@ -12,32 +12,50 @@ const outputsByConfiguration = {
   Debug: "amplify_outputs.dev.json",
 };
 
-function checkAuthOutputs(appDir, configuration) {
-  const file = outputsByConfiguration[configuration];
-  const fullPath = join(appDir, "Resources", file);
+// Returns why the outputs file at fullPath would leave the app a guest, or null.
+// `label` names the file in messages; `missing` is the message when it is absent.
+function outputsProblem(fullPath, label, missing) {
   let raw;
   try {
     raw = readFileSync(fullPath, "utf8");
   } catch (error) {
-    if (error.code === "ENOENT") {
-      return configuration === "Release"
-        ? `Release requires ios/App/Resources/${file} (without it the app falls back to guest mode; prod pool waits on TKL-1037 / TKL-965). Pass --configuration Debug to install against the dev pool.`
-        : `Debug requires ios/App/Resources/${file} (without it the app falls back to guest mode).`;
-    }
+    if (error.code === "ENOENT") return missing;
     throw error;
   }
   let parsed;
   try {
     parsed = JSON.parse(raw);
   } catch {
-    return `ios/App/Resources/${file} is not valid JSON (the app would fall back to guest mode)`;
+    return `${label} is not valid JSON (the app would fall back to guest mode)`;
   }
   const poolId = parsed?.auth?.user_pool_id;
   const clientId = parsed?.auth?.user_pool_client_id;
   if (typeof poolId !== "string" || !poolId.trim() || typeof clientId !== "string" || !clientId.trim()) {
-    return `ios/App/Resources/${file} is missing auth.user_pool_id or auth.user_pool_client_id (the app would fall back to guest mode)`;
+    return `${label} is missing auth.user_pool_id or auth.user_pool_client_id (the app would fall back to guest mode)`;
   }
   return null;
+}
+
+function checkAuthOutputs(appDir, configuration) {
+  const file = outputsByConfiguration[configuration];
+  return outputsProblem(
+    join(appDir, "Resources", file),
+    `ios/App/Resources/${file}`,
+    configuration === "Release"
+      ? `Release requires ios/App/Resources/${file} (without it the app falls back to guest mode; prod pool waits on TKL-1037 / TKL-965). Pass --configuration Debug to install against the dev pool.`
+      : `Debug requires ios/App/Resources/${file} (without it the app falls back to guest mode).`,
+  );
+}
+
+// The source file existing is not enough: a project generated before the file
+// landed builds without it (TKL-1036 verify). Check what is actually bundled.
+function checkBuiltApp(app, configuration) {
+  const file = outputsByConfiguration[configuration];
+  return outputsProblem(
+    join(app, file),
+    `the built app's ${file}`,
+    `the built app has no ${file}, so it would run as a guest; the Xcode project predates the file: run \`xcodegen generate\` in ios/App and commit the project`,
+  );
 }
 
 function readRecord(path) {
@@ -121,6 +139,11 @@ export function run(argv, { cwd = process.cwd(), exec = execute, log = console.l
         "-derivedDataPath", derived, "-allowProvisioningUpdates", "build",
       ], appDir);
       const app = join(derived, "Build", "Products", `${configuration}-iphoneos`, "ConfessionalChristianity.app");
+      const bundleProblem = checkBuiltApp(app, configuration);
+      if (bundleProblem) {
+        log(`device-install: refused: ${bundleProblem}`);
+        return 2;
+      }
       exec("xcrun", ["devicectl", "device", "install", "app", "--device", device, app], appDir);
       saveInstall(path, device, { sha, branch, configuration, installedAt: new Date().toISOString(), onMain: true });
     } finally {

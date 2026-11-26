@@ -7,11 +7,26 @@ import { run } from "./device-install.mjs";
 
 let root, calls, log;
 const git = (...args) => execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
-const install = (...args) => run(args, {
-  cwd: root,
-  log,
-  exec: (command, argv, cwd) => calls.push([command, argv, cwd]),
-});
+// A stand-in xcodebuild: it "builds" the app by copying the configuration's
+// amplify_outputs file into the bundle, the way the regenerated project does.
+// `bundle` overrides what lands in the .app (null = nothing, as a stale
+// project without the resource would build).
+function fakeBuild(argv, { bundle } = {}) {
+  const configuration = argv[argv.indexOf("-configuration") + 1];
+  const derived = argv[argv.indexOf("-derivedDataPath") + 1];
+  const app = join(derived, "Build", "Products", `${configuration}-iphoneos`, "ConfessionalChristianity.app");
+  mkdirSync(app, { recursive: true });
+  const file = configuration === "Release" ? "amplify_outputs.prod.json" : "amplify_outputs.dev.json";
+  const content = bundle === undefined
+    ? readFileSync(join(root, "ios/App/Resources", file), "utf8")
+    : bundle;
+  if (content !== null) writeFileSync(join(app, file), content);
+}
+const execWith = (options) => (command, argv, cwd) => {
+  calls.push([command, argv, cwd]);
+  if (command === "xcodebuild") fakeBuild(argv, options);
+};
+const install = (...args) => run(args, { cwd: root, log, exec: execWith() });
 const record = () => JSON.parse(readFileSync(join(root, ".git", "device-install.json"), "utf8"));
 const validOutputs = JSON.stringify({
   version: "1.4",
@@ -142,10 +157,28 @@ test("a failed install leaves the record alone and can be retried", { timeout: 3
   expect(run(["--device", "PHONE"], {
     cwd: root,
     log,
-    exec: (command) => {
+    exec: (command, argv) => {
+      if (command === "xcodebuild") fakeBuild(argv);
       if (command === "xcrun") throw new Error("phone unreachable");
     },
   })).toBe(1);
   expect(record).toThrow(/ENOENT/);
   expect(install("--device", "PHONE")).toBe(0);
+});
+
+test("refuses to install a built app that lacks the configuration's amplify_outputs resource", { timeout: 30_000 }, () => {
+  commitOutputs("prod");
+  expect(run(["--device", "PHONE"], { cwd: root, log, exec: execWith({ bundle: null }) })).toBe(2);
+  expect(log).toHaveBeenCalledWith(expect.stringMatching(/refused.*built app.*amplify_outputs\.prod\.json.*xcodegen/i));
+  expect(calls.map(([command]) => command)).toEqual(["xcodebuild"]);
+  expect(record).toThrow(/ENOENT/);
+});
+
+test("refuses to install a built app whose bundled amplify_outputs has no pool ids", { timeout: 30_000 }, () => {
+  commitOutputs("prod");
+  const bundle = JSON.stringify({ version: "1.4", auth: {} });
+  expect(run(["--device", "PHONE"], { cwd: root, log, exec: execWith({ bundle }) })).toBe(2);
+  expect(log).toHaveBeenCalledWith(expect.stringMatching(/refused.*built app.*user_pool_id/i));
+  expect(calls.map(([command]) => command)).toEqual(["xcodebuild"]);
+  expect(record).toThrow(/ENOENT/);
 });
