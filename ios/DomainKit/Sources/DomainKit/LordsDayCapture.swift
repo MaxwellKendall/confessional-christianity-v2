@@ -175,9 +175,24 @@ public struct LordsDayCardsRequest: Sendable {
     public var passage: String?
     public var title: String?
     public var preacher: String?
+    /// Request page indices that already have partial cards on device and must only replay
+    /// their original server-generated page, never trigger a fresh generation.
+    public var replayOnlyPages: [Int]
+    /// Expected server generation IDs (by request page index) for partial pages that already
+    /// received server-assigned sourceKeys.
+    public var expectedGenerationIds: [Int: String]
 
-    public init(pages: [Data], typedText: String?, passage: String?, title: String?, preacher: String?) {
+    public init(
+        pages: [Data],
+        typedText: String?,
+        passage: String?,
+        title: String?,
+        preacher: String?,
+        replayOnlyPages: [Int] = [],
+        expectedGenerationIds: [Int: String] = [:]
+    ) {
         self.pages = pages; self.typedText = typedText; self.passage = passage; self.title = title; self.preacher = preacher
+        self.replayOnlyPages = replayOnlyPages; self.expectedGenerationIds = expectedGenerationIds
     }
 
     public func body() throws -> Data {
@@ -192,6 +207,17 @@ public struct LordsDayCardsRequest: Sendable {
         }
         for (key, value) in [("passage", passage), ("title", title), ("preacher", preacher)] {
             if let value = normalizedNoteField(value) { json[key] = value }
+        }
+        let sortedReplay = Array(Set(replayOnlyPages)).sorted()
+        if !sortedReplay.isEmpty {
+            json["replayOnlyPages"] = sortedReplay
+        }
+        if !expectedGenerationIds.isEmpty {
+            var encodedIds: [String: String] = [:]
+            for (index, genId) in expectedGenerationIds {
+                if let trimmed = normalizedNoteField(genId) { encodedIds[String(index)] = trimmed }
+            }
+            if !encodedIds.isEmpty { json["expectedGenerationIds"] = encodedIds }
         }
         let data = try JSONSerialization.data(withJSONObject: json, options: [.sortedKeys])
         guard data.count <= Self.maxBodyBytes else { throw CaptureError.tooLarge }

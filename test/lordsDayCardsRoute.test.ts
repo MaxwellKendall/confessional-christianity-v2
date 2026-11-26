@@ -1,3 +1,7 @@
+import { mkdtempSync, rmSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
+
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { verifyStudioAccessToken } from '@/lib/lordsDay/auth';
@@ -216,6 +220,10 @@ describe('request validation', () => {
     ['image data that is not base64', { images: [{ data: 'not base64!', mimeType: 'image/jpeg' }] }, 400, 'bad_image'],
     ['typed text that is too long', { extractedText: 'x'.repeat(20_001) }, 400, 'text_too_long'],
     ['a passage that is not a string', { extractedText: 'x', passage: 5 }, 400, 'bad_metadata'],
+    ['replayOnlyPages out of range', { ...twoPages, replayOnlyPages: [2] }, 400, 'bad_replay_pages'],
+    ['replayOnlyPages not an array', { ...twoPages, replayOnlyPages: '0' }, 400, 'bad_replay_pages'],
+    ['expectedGenerationIds out of range', { ...twoPages, expectedGenerationIds: { '2': 'gen-1' } }, 400, 'bad_replay_pages'],
+    ['expectedGenerationIds with blank id', { ...twoPages, expectedGenerationIds: { '0': '  ' } }, 400, 'bad_replay_pages'],
   ];
   test.each(cases)('%s → %i %s', async (_name, body, status, error) => {
     const response = await handleCardsRequest(request(body), deps());
@@ -252,6 +260,7 @@ describe('the stream', () => {
       extractedText: 'Page two. Strife does not come from the gospel.',
       rejected: 2,
       cardCount: 1,
+      generationId: (events[2].card.sourceKey as string).split(':')[0],
     });
     expect(events[3]).toEqual({
       type: 'page',
@@ -259,6 +268,7 @@ describe('the stream', () => {
       extractedText: 'Page one. "God is ready to forgive." Ps 86:5',
       rejected: 0,
       cardCount: 3,
+      generationId: (events[4].card.sourceKey as string).split(':')[0],
     });
 
     const done = events.at(-1);
@@ -488,11 +498,160 @@ describe('the stream', () => {
     expect(geminiCalls).toHaveLength(1);
     expect(r2.at(-1).cards).toEqual(r1.at(-1).cards);
 
-    // After TTL expires, a new request generates fresh.
+    // After TTL expires, a new request without replayOnlyPages generates fresh.
     now += 10_001;
     const r3 = await readEvents(await handleCardsRequest(request(body), d));
     expect(geminiCalls).toHaveLength(2);
     expect(r3.at(-1).cards[0].text).toBe('Version 2');
     expect(r3.at(-1).cards[0].sourceKey).not.toBe(r1.at(-1).cards[0].sourceKey);
+  });
+
+  test('disk-backed replay cache survives process restart, memory eviction, and 8-day delayed retry without regenerating', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'cc-replay-test-'));
+    try {
+      let now = Date.UTC(2026, 10, 22, 16, 0, 0);
+      let call = 0;
+      const changingGemini = fakeGemini((body) => {
+        call += 1;
+        if (imageData(body) === 'cGFnZTI=') {
+          return {
+            extractedText: 'Page two. Pray without ceasing.',
+            cards:
+              call <= 2
+                ? [
+                    { kind: 'key_point', text: 'Pray without ceasing.' },
+                    { kind: 'key_point', text: 'Rejoice always.' },
+                  ]
+                : [
+                    { kind: 'key_point', text: 'Pray continually.' },
+                    { kind: 'key_point', text: 'Be joyful always.' },
+                  ],
+          };
+        }
+        return pageReply(body);
+      });
+
+      // Process 1: generate two pages with a tiny in-memory cap (1) so page 0 is evicted from memory.
+      const cache1 = createPageReplayCache({ dir, maxEntries: 1, now: () => now });
+      const d1 = deps({ replayCache: cache1, fetchImpl: changingGemini as unknown as typeof fetch });
+      const first = await readEvents(await handleCardsRequest(request(twoPages), d1));
+      expect(geminiCalls).toHaveLength(2);
+      const firstPage1Cards = first.filter((e) => e.type === 'card' && e.card.page === 1).map((e) => e.card);
+      const firstGenId = (firstPage1Cards[0].sourceKey as string).split(':')[0];
+
+      // Simulate server restart (brand-new cache instance, empty in-memory map) AND 8-day delay.
+      now += 8 * 24 * 60 * 60 * 1000;
+      const cache2 = createPageReplayCache({ dir, maxEntries: 1, now: () => now });
+      const d2 = deps({ replayCache: cache2, fetchImpl: changingGemini as unknown as typeof fetch });
+      const retryBody = {
+        images: [twoPages.images[1]],
+        passage: twoPages.passage,
+        title: twoPages.title,
+        replayOnlyPages: [0],
+        expectedGenerationIds: { '0': firstGenId },
+      };
+      const retry = await readEvents(await handleCardsRequest(request(retryBody), d2));
+      expect(geminiCalls).toHaveLength(2); // zero fresh Gemini calls across restart + 8 days
+      expect(retry.at(-1).failedPages).toEqual([]);
+      expect(retry.at(-1).costUsd).toBe(0);
+      expect(retry.filter((e) => e.type === 'card').map((e) => e.card)).toEqual(
+        firstPage1Cards.map((c: Record<string, unknown>, order: number) => ({
+          ...c,
+          id: `p0-${order}`,
+          page: 0,
+        })),
+      );
+
+      // Account isolation still holds across disk persistence.
+      const otherUser = await readEvents(
+        await handleCardsRequest(request(retryBody, pool.sign({ sub: 'someone-else' })), d2),
+      );
+      expect(geminiCalls).toHaveLength(2); // replayOnlyPages must never generate for another account either
+      expect(otherUser).toContainEqual({
+        type: 'error',
+        page: 0,
+        code: 'replay_unavailable',
+        message: expect.any(String),
+      });
+      expect(otherUser.at(-1).failedPages).toEqual([0]);
+      expect(otherUser.at(-1).cards).toEqual([]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test('replayOnlyPages surfaces replay_unavailable without calling Gemini when the original page is missing, expired, or mismatched', async () => {
+    const dirA = mkdtempSync(join(tmpdir(), 'cc-replay-a-'));
+    const dirB = mkdtempSync(join(tmpdir(), 'cc-replay-b-'));
+    try {
+      let now = 1_000;
+      const cacheA = createPageReplayCache({ dir: dirA, ttlMs: 10_000, now: () => now });
+      const dA = deps({ replayCache: cacheA });
+      const singlePage2 = { images: [twoPages.images[1]], passage: twoPages.passage, title: twoPages.title };
+
+      const first = await readEvents(await handleCardsRequest(request(singlePage2), dA));
+      expect(geminiCalls).toHaveLength(1);
+      const genId = (first.at(-1).cards[0].sourceKey as string).split(':')[0];
+
+      // 1) Completely cold / empty cache (e.g. wiped or another container): never regenerates.
+      const coldCache = createPageReplayCache({ dir: dirB, ttlMs: 10_000, now: () => now });
+      const coldRetry = await readEvents(
+        await handleCardsRequest(
+          request({ ...singlePage2, replayOnlyPages: [0], expectedGenerationIds: { '0': genId } }),
+          deps({ replayCache: coldCache }),
+        ),
+      );
+      expect(geminiCalls).toHaveLength(1);
+      expect(coldRetry).toContainEqual({
+        type: 'error',
+        page: 0,
+        code: 'replay_unavailable',
+        message: expect.any(String),
+      });
+      expect(coldRetry.at(-1)).toMatchObject({ failedPages: [0], cards: [], costUsd: 0 });
+
+      // 2) Mismatched expectedGenerationId on an existing cache entry: never returns a different generation.
+      const mismatchRetry = await readEvents(
+        await handleCardsRequest(
+          request({ ...singlePage2, replayOnlyPages: [0], expectedGenerationIds: { '0': 'different-gen-id' } }),
+          dA,
+        ),
+      );
+      expect(geminiCalls).toHaveLength(1);
+      expect(mismatchRetry).toContainEqual({
+        type: 'error',
+        page: 0,
+        code: 'replay_unavailable',
+        message: expect.any(String),
+      });
+      expect(mismatchRetry.at(-1)).toMatchObject({ failedPages: [0], cards: [], costUsd: 0 });
+
+      // 3) Expired entry (> TTL): replayOnlyPages refuses to regenerate, while a non-replay page in the same request still drafts.
+      now += 10_001;
+      const mixedRetry = await readEvents(
+        await handleCardsRequest(
+          request({
+            images: [twoPages.images[1], twoPages.images[0]],
+            passage: twoPages.passage,
+            title: twoPages.title,
+            replayOnlyPages: [0],
+          }),
+          dA,
+        ),
+      );
+      // Only page 1 (page1 image, NOT replayOnly) called Gemini; page 0 returned replay_unavailable.
+      expect(geminiCalls).toHaveLength(2);
+      expect(mixedRetry).toContainEqual({
+        type: 'error',
+        page: 0,
+        code: 'replay_unavailable',
+        message: expect.any(String),
+      });
+      expect(mixedRetry.at(-1).failedPages).toEqual([0]);
+      expect(mixedRetry.at(-1).cards.every((c: { page: number }) => c.page === 1)).toBe(true);
+    } finally {
+      rmSync(dirA, { recursive: true, force: true });
+      rmSync(dirB, { recursive: true, force: true });
+    }
   });
 });

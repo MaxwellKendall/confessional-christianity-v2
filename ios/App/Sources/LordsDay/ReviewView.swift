@@ -324,6 +324,28 @@ struct ReviewView: View {
                 ) {
                     model.retry()
                 }
+            } else if !review.isDrafting, !review.unhandledUnreadPages.isEmpty, !review.replayUnavailablePages.isEmpty {
+                let pages = review.replayUnavailablePages.sorted().map { "\($0 + 1)" }.joined(separator: ", ")
+                if review.canRetry {
+                    note(
+                        "Page \(pages)'s original draft is no longer available to resume. Try the remaining pages, or keep the cards already here.",
+                        actionTitle: "Try again",
+                        actionId: "review.retry",
+                        secondaryTitle: canSkipUnread ? "Keep what's here" : nil,
+                        secondaryId: "review.skipUnread",
+                        secondaryAction: { model.skipUnreadPages() }
+                    ) {
+                        model.retry()
+                    }
+                } else {
+                    note(
+                        "Page \(pages)'s original draft is no longer available to resume. Your cards so far are saved.",
+                        actionTitle: canSkipUnread ? "Keep what's here" : nil,
+                        actionId: "review.skipUnread"
+                    ) {
+                        model.skipUnreadPages()
+                    }
+                }
             } else if !review.isDrafting, !review.unhandledUnreadPages.isEmpty, !review.failedPages.isEmpty {
                 let pages = review.failedPages.sorted().map { "\($0 + 1)" }.joined(separator: ", ")
                 note(
@@ -410,7 +432,11 @@ struct ReviewView: View {
                 .buttonStyle(.plain)
             } else if !review.isDrafting, !review.unhandledUnreadPages.isEmpty {
                 let n = review.unhandledUnreadPages.count
-                Text("Retry or skip \(n) unread page\(n == 1 ? "" : "s") to finish.")
+                Text(
+                    review.canRetry
+                        ? "Retry or skip \(n) unread page\(n == 1 ? "" : "s") to finish."
+                        : "Keep what's here to finish without \(n) unfinished page\(n == 1 ? "" : "s")."
+                )
                     .font(.system(size: 13))
                     .foregroundStyle(ink2)
                     .accessibilityIdentifier("review.unreadHint")

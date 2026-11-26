@@ -9,6 +9,7 @@ final class LordsDayCardsEventTests: XCTestCase {
         XCTAssertEqual(try LordsDayCardsEvent.parse(line: #"{"type":"page","page":1,"extractedText":"notes","rejected":2}"#), .page(1, cardCount: nil, extractedText: "notes"))
         XCTAssertEqual(try LordsDayCardsEvent.parse(line: #"{"type":"page","page":1,"extractedText":"notes","rejected":2,"cardCount":3}"#), .page(1, cardCount: 3, extractedText: "notes"))
         XCTAssertEqual(try LordsDayCardsEvent.parse(line: #"{"type":"error","page":0,"code":"unreadable","message":"x"}"#), .pageFailed(0))
+        XCTAssertEqual(try LordsDayCardsEvent.parse(line: #"{"type":"error","page":1,"code":"replay_unavailable","message":"gone"}"#), .pageReplayUnavailable(1))
         XCTAssertEqual(try LordsDayCardsEvent.parse(line: #"{"type":"done","cards":[],"rejected":0,"failedPages":[1],"costUsd":0.01}"#), .done(failedPages: [1]))
         let card = try LordsDayCardsEvent.parse(line: #"{"type":"card","card":{"id":"p0-1","sourceKey":"gen-1:1","kind":"quote","page":0,"order":1,"text":"He is not finished.","attribution":"Rev. Smith"}}"#)
         XCTAssertEqual(card, .card(DraftCardPayload(kind: "quote", page: 0, order: 1, text: "He is not finished.", attribution: "Rev. Smith", sourceKey: "gen-1:1")))
@@ -590,6 +591,129 @@ final class LordsDayReviewTests: XCTestCase {
         XCTAssertEqual(review.card("p1-0")?.editedByUser, true)
     }
 
+    func testPartialUnreadPageMarksReplayOnlyAndSurfacesReplayUnavailableWithoutDuplicating() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("replay-unavailable-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        var review = LordsDayReview(noteId: noteId, pageCount: 2)
+        XCTAssertEqual(review.begin(), [0, 1])
+        // Page 0 drops after card 1; page 1 received no cards yet.
+        review.apply(.page(0, cardCount: 2))
+        review.apply(.card(DraftCardPayload(kind: "key_point", page: 0, order: 0, text: "Pray without ceasing.", sourceKey: "gen-0:0")))
+        review.interrupt()
+
+        try review.editText("p0-0", to: "Pray continually.")
+        review.keep("p0-0")
+        try review.save(root: root)
+        review = try XCTUnwrap(LordsDayReview.load(noteId: noteId, root: root))
+
+        // Delayed retry: page 0 is replay-only (with expected gen-0); page 1 can still generate fresh.
+        let sent = review.begin()
+        XCTAssertEqual(sent, [0, 1])
+        XCTAssertEqual(review.replayOnlyRequestIndices(for: sent), [0])
+        XCTAssertEqual(review.expectedGenerationIds(for: sent), [0: "gen-0"])
+
+        // Server says page 0's original draft is gone, while page 1 drafts cleanly.
+        review.apply(.pageReplayUnavailable(0))
+        review.apply(.page(1, cardCount: 1))
+        review.apply(.card(DraftCardPayload(kind: "key_point", page: 1, order: 0, text: "Give thanks.", sourceKey: "gen-1:0")))
+        review.apply(.done(failedPages: [0]))
+
+        XCTAssertEqual(review.readPages, [1])
+        XCTAssertEqual(review.replayUnavailablePages, [0])
+        XCTAssertEqual(review.failedPages, [0])
+        XCTAssertFalse(review.canRetry, "no retryable unread pages remain once only replay-unavailable pages are left")
+        XCTAssertFalse(review.canFinish, "missing original page must be explicitly acknowledged before finishing")
+        XCTAssertEqual(review.cards.count, 2, "zero duplicate cards appended")
+        XCTAssertEqual(review.cards.map(\.text), ["Pray continually.", "Give thanks."])
+        XCTAssertEqual(review.card("p0-0")?.editedByUser, true)
+
+        // Persists replayUnavailablePages across save/load.
+        try review.save(root: root)
+        var reopened = try XCTUnwrap(LordsDayReview.load(noteId: noteId, root: root))
+        XCTAssertEqual(reopened.replayUnavailablePages, [0])
+        XCTAssertFalse(reopened.canRetry)
+        XCTAssertFalse(reopened.canFinish)
+
+        // User chooses to keep what's here.
+        reopened.skipUnreadPages()
+        XCTAssertTrue(reopened.canFinish)
+        XCTAssertEqual(reopened.keptCards().map(\.body), ["Pray continually.", "Give thanks."])
+    }
+
+    func testLegacyReviewWithoutSourceKeyMarksReplayOnlyAndNeverDuplicatesWhenReplayUnavailable() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("legacy-unavail-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let legacyJSON = """
+        {
+          "noteId": "\(noteId.uuidString)",
+          "pageCount": 1,
+          "phase": "interrupted",
+          "cards": [
+            {
+              "id": "p0-0",
+              "page": 0,
+              "order": 0,
+              "kind": "quote",
+              "words": "Pray continually.",
+              "decision": "keep",
+              "editedByUser": true
+            }
+          ],
+          "readPages": [],
+          "failedPages": [],
+          "requestPages": [0]
+        }
+        """
+        let file = LordsDayReview.url(noteId: noteId, root: root)
+        try FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try Data(legacyJSON.utf8).write(to: file)
+
+        var review = try XCTUnwrap(LordsDayReview.load(noteId: noteId, root: root))
+        let sent = review.begin()
+        XCTAssertEqual(sent, [0])
+        XCTAssertEqual(review.replayOnlyRequestIndices(for: sent), [0])
+        XCTAssertEqual(review.expectedGenerationIds(for: sent), [:])
+
+        review.apply(.pageReplayUnavailable(0))
+        review.apply(.done(failedPages: [0]))
+
+        XCTAssertEqual(review.cards.count, 1)
+        XCTAssertEqual(review.card("p0-0")?.text, "Pray continually.")
+        XCTAssertEqual(review.replayUnavailablePages, [0])
+        XCTAssertFalse(review.canRetry)
+        XCTAssertFalse(review.canFinish)
+        review.skipUnreadPages()
+        XCTAssertTrue(review.canFinish)
+    }
+
+    func testMismatchedServerGenerationOnRetryIsRejectedWithoutDuplicatingEditedCard() throws {
+        var review = LordsDayReview(noteId: noteId, pageCount: 1)
+        _ = review.begin()
+        review.apply(.page(0, cardCount: 2))
+        review.apply(.card(DraftCardPayload(kind: "key_point", page: 0, order: 0, text: "Pray without ceasing.", sourceKey: "gen-A:0")))
+        review.interrupt()
+
+        try review.editText("p0-0", to: "Pray continually.")
+        review.keep("p0-0")
+
+        // Even if a server returns a fresh generation (gen-B) instead of replaying gen-A, the client rejects it.
+        XCTAssertEqual(review.begin(), [0])
+        review.apply(.page(0, cardCount: 2))
+        review.apply(.card(DraftCardPayload(kind: "key_point", page: 0, order: 0, text: "Pray always.", sourceKey: "gen-B:0")))
+        review.apply(.card(DraftCardPayload(kind: "key_point", page: 0, order: 1, text: "Rejoice always.", sourceKey: "gen-B:1")))
+        review.apply(.done(failedPages: []))
+
+        XCTAssertEqual(review.cards.count, 1, "mismatched generation must never append duplicate cards")
+        XCTAssertEqual(review.card("p0-0")?.text, "Pray continually.")
+        XCTAssertEqual(review.readPages, [])
+        XCTAssertEqual(review.replayUnavailablePages, [0])
+        XCTAssertEqual(review.failedPages, [0])
+        XCTAssertFalse(review.canRetry)
+        XCTAssertFalse(review.canFinish)
+    }
+
     func testEditsSurviveARetry() throws {
         var review = LordsDayReview(noteId: noteId, pageCount: 2)
         _ = review.begin()
@@ -728,4 +852,29 @@ final class LordsDayReviewTests: XCTestCase {
         XCTAssertEqual(try store.note(id: older.id)?.id, older.id)
         XCTAssertEqual(try LordsDayReview.load(noteId: older.id, root: root)?.cards.count, 1)
     }
+    func testRetryUsesSavedGenerationWhenStreamDropsAfterPageHeader() throws {
+        var review = LordsDayReview(noteId: UUID(), pageCount: 2)
+        XCTAssertEqual(review.begin(), [0, 1])
+        let header = try XCTUnwrap(LordsDayCardsEvent.parse(line: """
+        {"type":"page","page":1,"cardCount":2,"generationId":"original-page"}
+        """))
+        review.apply(header)
+        review.interrupt()
+
+        let saved = try JSONEncoder().encode(review)
+        var reopened = try JSONDecoder().decode(LordsDayReview.self, from: saved)
+        XCTAssertEqual(reopened.readPages, [])
+        XCTAssertTrue(reopened.cards.isEmpty)
+        let pages = reopened.begin()
+        XCTAssertEqual(reopened.replayOnlyRequestIndices(for: pages), [1])
+        XCTAssertEqual(reopened.expectedGenerationIds(for: pages), [1: "original-page"])
+
+        reopened.apply(.page(1, cardCount: 1, generationId: "different-page"))
+        reopened.apply(.card(DraftCardPayload(
+            kind: "key_point", page: 1, order: 0, text: "New words.", sourceKey: "different-page:0"
+        )))
+        XCTAssertTrue(reopened.cards.isEmpty)
+        XCTAssertEqual(reopened.replayUnavailablePages, [1])
+    }
+
 }
