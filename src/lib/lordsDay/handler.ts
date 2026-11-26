@@ -1,7 +1,10 @@
+import { randomUUID } from 'crypto';
+
 import { bearerToken } from './auth';
 import { validateGeneratedCards, type DraftCard } from './cards';
 import { CardsError, draftPage, type PageInput } from './gemini';
 import type { RateLimiter } from './rateLimit';
+import { pageReplayKey, type CachedPage, type CachedPageCard, type PageReplayCache } from './replayCache';
 
 // POST /api/lords-day/cards: sermon notes (photos or typed text) → drafted
 // Key point / Quote / Verse cards. Returns drafts only: nothing is persisted
@@ -27,6 +30,7 @@ export interface CardsDeps {
   /** null: Cognito isn't configured on this deployment */
   verifyAccessToken: ((token: string) => Promise<{ sub: string }>) | null;
   limiter: RateLimiter;
+  replayCache?: PageReplayCache;
   fetchImpl?: typeof fetch;
   retryDelayMs?: number;
 }
@@ -116,7 +120,7 @@ export const handleCardsRequest = async (request: Request, deps: CardsDeps): Pro
   if (parsed instanceof Response) return parsed;
 
   const { pages, passage, title, preacher } = parsed;
-  const { geminiApiKey, model, fetchImpl, retryDelayMs } = deps;
+  const { geminiApiKey, model, replayCache, fetchImpl, retryDelayMs } = deps;
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream<Uint8Array>({
@@ -132,17 +136,53 @@ export const handleCardsRequest = async (request: Request, deps: CardsDeps): Pro
       await Promise.all(
         pages.map(async (input, page) => {
           try {
-            // the preacher is never sent: attribution is metadata, not model output
-            const result = await draftPage(input, { passage, title }, { apiKey: geminiApiKey, model, fetchImpl, retryDelayMs });
-            costUsd += result.costUsd;
-            const { cards, rejected: pageRejected } = validateGeneratedCards(result.rawCards, {
-              sourceText: result.extractedText,
-              preacher,
+            const generatePage = async (): Promise<{ page: CachedPage; costUsd: number }> => {
+              // the preacher is never sent: attribution is metadata, not model output
+              const result = await draftPage(input, { passage, title }, { apiKey: geminiApiKey, model, fetchImpl, retryDelayMs });
+              const { cards: validated, rejected: pageRejected } = validateGeneratedCards(result.rawCards, {
+                sourceText: result.extractedText,
+                preacher,
+                page,
+              });
+              const generationId = randomUUID();
+              const cachedCards: CachedPageCard[] = validated.map((card) => ({
+                sourceKey: `${generationId}:${card.order}`,
+                kind: card.kind,
+                order: card.order,
+                ...(card.text !== undefined ? { text: card.text } : {}),
+                ...(card.reference !== undefined ? { reference: card.reference } : {}),
+                ...(card.osis !== undefined ? { osis: card.osis } : {}),
+                ...(card.attribution !== undefined ? { attribution: card.attribution } : {}),
+              }));
+              return {
+                page: {
+                  extractedText: result.extractedText,
+                  rejected: pageRejected.length,
+                  cards: cachedCards,
+                },
+                costUsd: result.costUsd,
+              };
+            };
+
+            const resolved = replayCache
+              ? await replayCache.getOrCreate(pageReplayKey({ sub, model, input, passage, title, preacher }), generatePage)
+              : { ...(await generatePage()), hit: false };
+
+            costUsd += resolved.costUsd;
+            rejected += resolved.page.rejected;
+            const cards: DraftCard[] = resolved.page.cards.map((card) => ({
+              id: `p${page}-${card.order}`,
               page,
-            });
-            rejected += pageRejected.length;
+              ...card,
+            }));
             all.push(...cards);
-            send({ type: 'page', page, extractedText: result.extractedText, rejected: pageRejected.length, cardCount: cards.length });
+            send({
+              type: 'page',
+              page,
+              extractedText: resolved.page.extractedText,
+              rejected: resolved.page.rejected,
+              cardCount: cards.length,
+            });
             for (const card of cards) send({ type: 'card', card });
           } catch (error) {
             failedPages.push(page);

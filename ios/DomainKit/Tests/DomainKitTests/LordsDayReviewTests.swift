@@ -10,8 +10,8 @@ final class LordsDayCardsEventTests: XCTestCase {
         XCTAssertEqual(try LordsDayCardsEvent.parse(line: #"{"type":"page","page":1,"extractedText":"notes","rejected":2,"cardCount":3}"#), .page(1, cardCount: 3, extractedText: "notes"))
         XCTAssertEqual(try LordsDayCardsEvent.parse(line: #"{"type":"error","page":0,"code":"unreadable","message":"x"}"#), .pageFailed(0))
         XCTAssertEqual(try LordsDayCardsEvent.parse(line: #"{"type":"done","cards":[],"rejected":0,"failedPages":[1],"costUsd":0.01}"#), .done(failedPages: [1]))
-        let card = try LordsDayCardsEvent.parse(line: #"{"type":"card","card":{"id":"p0-1","kind":"quote","page":0,"order":1,"text":"He is not finished.","attribution":"Rev. Smith"}}"#)
-        XCTAssertEqual(card, .card(DraftCardPayload(kind: "quote", page: 0, order: 1, text: "He is not finished.", attribution: "Rev. Smith")))
+        let card = try LordsDayCardsEvent.parse(line: #"{"type":"card","card":{"id":"p0-1","sourceKey":"gen-1:1","kind":"quote","page":0,"order":1,"text":"He is not finished.","attribution":"Rev. Smith"}}"#)
+        XCTAssertEqual(card, .card(DraftCardPayload(kind: "quote", page: 0, order: 1, text: "He is not finished.", attribution: "Rev. Smith", sourceKey: "gen-1:1")))
     }
 
     func testIgnoresBlankAndUnknownLinesButRejectsGarbage() throws {
@@ -384,6 +384,210 @@ final class LordsDayReviewTests: XCTestCase {
         review.apply(.done(failedPages: []))
         XCTAssertEqual(review.readPages, [0])
         XCTAssertEqual(review.cards.map(\.text), ["Edited", "Second"])
+    }
+
+    func testReplayWithServerSourceKeysEndsWithExactOriginalCardsAfterEditAndDrop() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("server-replay-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        var review = LordsDayReview(noteId: noteId, pageCount: 1)
+        _ = review.begin()
+        // Stream drops after card 1 of 2 (with server-assigned sourceKey).
+        review.apply(.page(0, cardCount: 2))
+        review.apply(.card(DraftCardPayload(kind: "key_point", page: 0, order: 0, text: "Pray without ceasing.", sourceKey: "gen-abc:0")))
+        review.interrupt()
+
+        // User edits text, switches kind, keeps card 1, saves and reopens.
+        let firstId = try XCTUnwrap(review.cards.first?.id)
+        try review.editText(firstId, to: "Pray continually in every circumstance.")
+        try review.setKind(firstId, to: .quote)
+        review.keep(firstId)
+        try review.save(root: root)
+        review = try XCTUnwrap(LordsDayReview.load(noteId: noteId, root: root))
+
+        // Retry replays the exact generated page (same sourceKeys, even if wording/order differed).
+        XCTAssertEqual(review.begin(), [0])
+        review.apply(.page(0, cardCount: 2))
+        review.apply(.card(DraftCardPayload(kind: "key_point", page: 0, order: 0, text: "Pray without ceasing.", sourceKey: "gen-abc:0")))
+        review.apply(.card(DraftCardPayload(kind: "key_point", page: 0, order: 1, text: "Rejoice always.", sourceKey: "gen-abc:1")))
+        review.apply(.done(failedPages: []))
+
+        XCTAssertEqual(review.readPages, [0])
+        XCTAssertEqual(review.unreadPages, [])
+        XCTAssertEqual(review.cards.count, 2, "page ends with exactly its original two cards")
+        XCTAssertEqual(review.cards.map(\.text), ["Pray continually in every circumstance.", "Rejoice always."])
+        XCTAssertEqual(review.card(firstId)?.kind, .quote)
+        XCTAssertEqual(review.card(firstId)?.decision, .keep)
+        XCTAssertEqual(review.card(firstId)?.editedByUser, true)
+        XCTAssertEqual(review.cards[1].decision, .keep)
+        XCTAssertEqual(review.cards[1].editedByUser, false)
+    }
+
+    func testLegacyReviewWithoutSourceKeyPreservesEditedCardWithoutDuplicatingOnRetry() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("legacy-review-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        // A review.json saved by an earlier build (before sourceKey existed):
+        // card 1 arrived, the user edited its wording and kind and kept it, and the stream dropped before card 2.
+        let legacyJSON = """
+        {
+          "noteId": "\(noteId.uuidString)",
+          "pageCount": 1,
+          "phase": "interrupted",
+          "cards": [
+            {
+              "id": "p0-0",
+              "page": 0,
+              "order": 0,
+              "kind": "quote",
+              "words": "Pray continually in every circumstance.",
+              "attribution": "Rev. Smith",
+              "decision": "keep",
+              "editedByUser": true
+            }
+          ],
+          "readPages": [],
+          "failedPages": [],
+          "requestPages": [0]
+        }
+        """
+        let file = LordsDayReview.url(noteId: noteId, root: root)
+        try FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try Data(legacyJSON.utf8).write(to: file)
+
+        var review = try XCTUnwrap(LordsDayReview.load(noteId: noteId, root: root))
+        XCTAssertEqual(review.cards.count, 1)
+        XCTAssertNil(review.cards[0].sourceKey, "legacy cards must not synthesize a sourceKey from edited text")
+
+        // Retry replays the original generated page (with server sourceKeys).
+        XCTAssertEqual(review.begin(), [0])
+        review.apply(.page(0, cardCount: 2))
+        review.apply(.card(DraftCardPayload(kind: "key_point", page: 0, order: 0, text: "Pray without ceasing.", sourceKey: "gen-legacy:0")))
+        review.apply(.card(DraftCardPayload(kind: "key_point", page: 0, order: 1, text: "Rejoice always.", sourceKey: "gen-legacy:1")))
+        review.apply(.done(failedPages: []))
+
+        XCTAssertEqual(review.readPages, [0])
+        XCTAssertEqual(review.cards.count, 2, "legacy edited card must not be duplicated on retry")
+        XCTAssertEqual(review.cards.map(\.text), ["Pray continually in every circumstance.", "Rejoice always."])
+        XCTAssertEqual(review.card("p0-0")?.kind, .quote)
+        XCTAssertEqual(review.card("p0-0")?.attribution, "Rev. Smith")
+        XCTAssertEqual(review.card("p0-0")?.decision, .keep)
+        XCTAssertEqual(review.card("p0-0")?.editedByUser, true)
+        XCTAssertEqual(review.card("p0-0")?.sourceKey, "gen-legacy:0", "matched legacy card backfills server sourceKey")
+        XCTAssertEqual(review.cards[1].decision, .keep)
+    }
+
+    func testLegacyReviewWithUneditedCardDoesNotDuplicateEvenWhenReorderedOnRetry() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("legacy-unedited-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let legacyJSON = """
+        {
+          "noteId": "\(noteId.uuidString)",
+          "pageCount": 1,
+          "phase": "interrupted",
+          "cards": [
+            {
+              "id": "p0-0",
+              "page": 0,
+              "order": 0,
+              "kind": "key_point",
+              "words": "Pray without ceasing.",
+              "decision": "keep",
+              "editedByUser": false
+            }
+          ],
+          "readPages": [],
+          "failedPages": [],
+          "requestPages": [0]
+        }
+        """
+        let file = LordsDayReview.url(noteId: noteId, root: root)
+        try FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try Data(legacyJSON.utf8).write(to: file)
+
+        var review = try XCTUnwrap(LordsDayReview.load(noteId: noteId, root: root))
+        XCTAssertEqual(review.begin(), [0])
+        review.apply(.page(0, cardCount: 2))
+        review.apply(.card(DraftCardPayload(kind: "key_point", page: 0, order: 0, text: "Rejoice always.", sourceKey: "gen-2:0")))
+        review.apply(.card(DraftCardPayload(kind: "key_point", page: 0, order: 1, text: "Pray without ceasing.", sourceKey: "gen-2:1")))
+        review.apply(.done(failedPages: []))
+
+        XCTAssertEqual(review.cards.count, 2)
+        XCTAssertEqual(review.cards.map(\.text), ["Rejoice always.", "Pray without ceasing."])
+        XCTAssertEqual(review.card("p0-0")?.decision, .keep)
+        XCTAssertEqual(review.card("p0-0")?.sourceKey, "gen-2:1")
+    }
+
+    func testContentDerivedSourceKeyFromPriorBuildUpgradesToServerSourceKeyWithoutDuplicating() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("content-key-upgrade-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        // A review.json saved by build 54f9adc (which stored content-derived sourceKey before server sourceKey existed).
+        let priorBuildJSON = """
+        {
+          "noteId": "\(noteId.uuidString)",
+          "pageCount": 1,
+          "phase": "interrupted",
+          "cards": [
+            {
+              "id": "p0-0",
+              "page": 0,
+              "order": 0,
+              "kind": "quote",
+              "words": "My edited words",
+              "decision": "keep",
+              "editedByUser": true,
+              "sourceKey": "key_point:pray without ceasing"
+            }
+          ],
+          "readPages": [],
+          "failedPages": [],
+          "requestPages": [0]
+        }
+        """
+        let file = LordsDayReview.url(noteId: noteId, root: root)
+        try FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try Data(priorBuildJSON.utf8).write(to: file)
+
+        var review = try XCTUnwrap(LordsDayReview.load(noteId: noteId, root: root))
+        XCTAssertEqual(review.begin(), [0])
+        review.apply(.page(0, cardCount: 2))
+        review.apply(.card(DraftCardPayload(kind: "key_point", page: 0, order: 0, text: "Pray without ceasing.", sourceKey: "gen-srv:0")))
+        review.apply(.card(DraftCardPayload(kind: "key_point", page: 0, order: 1, text: "Rejoice always.", sourceKey: "gen-srv:1")))
+        review.apply(.done(failedPages: []))
+
+        XCTAssertEqual(review.cards.count, 2)
+        XCTAssertEqual(review.cards.map(\.text), ["My edited words", "Rejoice always."])
+        XCTAssertEqual(review.card("p0-0")?.sourceKey, "gen-srv:0")
+    }
+
+    func testMultiPageRetryRemappedToRequestPageZeroMatchesServerSourceKey() throws {
+        var review = LordsDayReview(noteId: noteId, pageCount: 2)
+        XCTAssertEqual(review.begin(), [0, 1])
+        review.apply(.page(0, cardCount: 1))
+        review.apply(.card(DraftCardPayload(kind: "key_point", page: 0, order: 0, text: "Page zero point.", sourceKey: "gen-p0:0")))
+        // Page 1 drops after its first card.
+        review.apply(.page(1, cardCount: 2))
+        review.apply(.card(DraftCardPayload(kind: "key_point", page: 1, order: 0, text: "Pray without ceasing.", sourceKey: "gen-p1:0")))
+        review.interrupt()
+
+        // User edits and keeps page 1's first card.
+        try review.editText("p1-0", to: "Pray always in Christ.")
+        review.keep("p1-0")
+
+        // Retry sends only page 1; the server replays the cached page numbered as request page 0 with the same sourceKeys.
+        XCTAssertEqual(review.begin(), [1])
+        review.apply(.page(0, cardCount: 2))
+        review.apply(.card(DraftCardPayload(kind: "key_point", page: 0, order: 0, text: "Pray without ceasing.", sourceKey: "gen-p1:0")))
+        review.apply(.card(DraftCardPayload(kind: "key_point", page: 0, order: 1, text: "Give thanks in all circumstances.", sourceKey: "gen-p1:1")))
+        review.apply(.done(failedPages: []))
+
+        XCTAssertEqual(review.readPages, [0, 1])
+        XCTAssertEqual(review.unreadPages, [])
+        XCTAssertEqual(review.cards.count, 3)
+        XCTAssertEqual(review.cards.map(\.text), ["Page zero point.", "Pray always in Christ.", "Give thanks in all circumstances."])
+        XCTAssertEqual(review.card("p1-0")?.decision, .keep)
+        XCTAssertEqual(review.card("p1-0")?.editedByUser, true)
     }
 
     func testEditsSurviveARetry() throws {

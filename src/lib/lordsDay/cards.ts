@@ -9,6 +9,8 @@ export type CardKind = (typeof CARD_KINDS)[number];
 export interface DraftCard {
   /** `p<page>-<order>`: stable within one response */
   id: string;
+  /** stable identity of this generated card across retries (independent of request page index and user edits) */
+  sourceKey?: string;
   kind: CardKind;
   /** index of the photo (0 for typed notes) */
   page: number;

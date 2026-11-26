@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { verifyStudioAccessToken } from '@/lib/lordsDay/auth';
 import { handleCardsRequest, type CardsDeps } from '@/lib/lordsDay/handler';
 import { createRateLimiter } from '@/lib/lordsDay/rateLimit';
+import { createPageReplayCache } from '@/lib/lordsDay/replayCache';
 import { POST } from '@/app/api/lords-day/cards/route';
 
 import { createTestPool, otherSigningKey, TEST_CLIENT_ID, TEST_POOL_ID, type TestPool } from './support/cognitoJwt';
@@ -62,6 +63,7 @@ const deps = (overrides: Partial<CardsDeps> = {}): CardsDeps => {
       return { sub };
     },
     limiter: createRateLimiter({ limit: 20, windowMs: 60 * 60 * 1000 }),
+    replayCache: createPageReplayCache(),
     fetchImpl: fakeGemini(pageReply) as unknown as typeof fetch,
     retryDelayMs: 0,
     ...overrides,
@@ -264,13 +266,22 @@ describe('the stream', () => {
     expect(done.cards.map((c: { kind: string }) => c.kind)).toEqual(['key_point', 'quote', 'verse', 'key_point']);
     expect(done.cards[1]).toEqual({
       id: 'p0-1',
+      sourceKey: expect.any(String),
       kind: 'quote',
       page: 0,
       order: 1,
       text: 'God is ready to forgive.',
       attribution: 'Rev. Ross Hodges',
     });
-    expect(done.cards[2]).toEqual({ id: 'p0-2', kind: 'verse', page: 0, order: 2, reference: 'Psalms 86:5', osis: 'Ps.86.5' });
+    expect(done.cards[2]).toEqual({
+      id: 'p0-2',
+      sourceKey: expect.any(String),
+      kind: 'verse',
+      page: 0,
+      order: 2,
+      reference: 'Psalms 86:5',
+      osis: 'Ps.86.5',
+    });
     expect(done.rejected).toBe(2);
     expect(done.failedPages).toEqual([]);
     expect(done.costUsd).toBeCloseTo(2 * ((2000 * 1.5 + 500 * 7.5) / 1_000_000), 9);
@@ -327,5 +338,161 @@ describe('the stream', () => {
     await readEvents(await handleCardsRequest(request(twoPages), deps({ fetchImpl: fetchImpl as unknown as typeof fetch })));
     expect(spy).not.toHaveBeenCalled();
     expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
+  test('retry gets the same generated page back (cards and sourceKeys) without calling Gemini again', async () => {
+    let attempt = 0;
+    const changingGemini = fakeGemini((body) => {
+      attempt += 1;
+      if (imageData(body) === 'cGFnZTI=') {
+        return {
+          extractedText: 'Page two. Pray without ceasing.',
+          cards:
+            attempt <= 2
+              ? [
+                  { kind: 'key_point', text: 'Pray without ceasing.' },
+                  { kind: 'key_point', text: 'Rejoice always.' },
+                ]
+              : [
+                  // Would have returned reworded/reordered cards if regenerated!
+                  { kind: 'key_point', text: 'Be joyful always.' },
+                  { kind: 'key_point', text: 'Pray continually.' },
+                ],
+        };
+      }
+      return pageReply(body);
+    });
+
+    const d = deps({ fetchImpl: changingGemini as unknown as typeof fetch });
+    const first = await readEvents(await handleCardsRequest(request(twoPages), d));
+    expect(geminiCalls).toHaveLength(2);
+    const firstPage1Cards = first.filter((e) => e.type === 'card' && e.card.page === 1).map((e) => e.card);
+    expect(firstPage1Cards).toHaveLength(2);
+    expect(firstPage1Cards.every((c: { sourceKey?: string }) => typeof c.sourceKey === 'string' && c.sourceKey.length > 0)).toBe(true);
+
+    // Client retries only the unread second page (now at request page index 0).
+    const retryBody = {
+      images: [twoPages.images[1]],
+      passage: twoPages.passage,
+      title: twoPages.title,
+    };
+    const retry = await readEvents(await handleCardsRequest(request(retryBody), d));
+    expect(geminiCalls).toHaveLength(2); // never a fresh generation
+    const retryCards = retry.filter((e) => e.type === 'card').map((e) => e.card);
+    expect(retryCards).toEqual(
+      firstPage1Cards.map((c: Record<string, unknown>, order: number) => ({
+        ...c,
+        id: `p0-${order}`,
+        page: 0,
+      })),
+    );
+    const retryDone = retry.at(-1);
+    expect(retryDone.costUsd).toBe(0);
+    expect(retryDone.cards).toEqual(retryCards);
+  });
+
+  test('replay cache is scoped per account and does not cache failed pages', async () => {
+    let page2Calls = 0;
+    const flakyGemini = vi.fn(async (url: string, init: RequestInit) => {
+      const body = JSON.parse(init.body as string);
+      geminiCalls.push({ url, body });
+      if (imageData(body) === 'cGFnZTI=') {
+        page2Calls += 1;
+        if (page2Calls === 1) return new Response('transient', { status: 400 });
+        return new Response(
+          JSON.stringify({
+            candidates: [
+              {
+                content: {
+                  parts: [
+                    {
+                      text: JSON.stringify({
+                        extractedText: 'Page two.',
+                        cards: [{ kind: 'key_point', text: `Generated #${page2Calls}` }],
+                      }),
+                    },
+                  ],
+                },
+                finishReason: 'STOP',
+              },
+            ],
+          }),
+          { status: 200 },
+        );
+      }
+      return fakeGemini(pageReply)(url, init);
+    });
+
+    const d = deps({ fetchImpl: flakyGemini as unknown as typeof fetch });
+    const singlePage2 = { images: [twoPages.images[1]], passage: twoPages.passage, title: twoPages.title };
+
+    // First try fails for alice — must NOT be cached.
+    const failed = await readEvents(await handleCardsRequest(request(singlePage2, pool.sign({ sub: 'alice' })), d));
+    expect(failed.at(-1).failedPages).toEqual([0]);
+
+    // Second try succeeds for alice and gets cached.
+    const okAlice = await readEvents(await handleCardsRequest(request(singlePage2, pool.sign({ sub: 'alice' })), d));
+    expect(okAlice.at(-1).failedPages).toEqual([]);
+    const aliceCard = okAlice.at(-1).cards[0];
+    expect(aliceCard.text).toBe('Generated #2');
+
+    // Third try for alice replays the exact same card & sourceKey with no new Gemini call.
+    const replayAlice = await readEvents(await handleCardsRequest(request(singlePage2, pool.sign({ sub: 'alice' })), d));
+    expect(replayAlice.at(-1).cards[0]).toEqual(aliceCard);
+    expect(page2Calls).toBe(2);
+
+    // Different user bob does NOT get alice's cached page.
+    const okBob = await readEvents(await handleCardsRequest(request(singlePage2, pool.sign({ sub: 'bob' })), d));
+    expect(page2Calls).toBe(3);
+    expect(okBob.at(-1).cards[0].text).toBe('Generated #3');
+    expect(okBob.at(-1).cards[0].sourceKey).not.toBe(aliceCard.sourceKey);
+  });
+
+  test('typed notes retry replays the same page and sourceKeys without calling Gemini again', async () => {
+    let call = 0;
+    const fetchImpl = fakeGemini(() => {
+      call += 1;
+      return {
+        extractedText: '',
+        cards: [{ kind: 'key_point', text: `Typed point v${call}` }],
+      };
+    });
+    const d = deps({ fetchImpl: fetchImpl as unknown as typeof fetch });
+    const body = { extractedText: 'Pray without ceasing.' };
+
+    const first = await readEvents(await handleCardsRequest(request(body), d));
+    const retry = await readEvents(await handleCardsRequest(request(body), d));
+    expect(geminiCalls).toHaveLength(1);
+    expect(retry.at(-1).cards).toEqual(first.at(-1).cards);
+    expect(retry.at(-1).costUsd).toBe(0);
+  });
+
+  test('overlapping retry shares the in-flight page generation and respects TTL expiry', async () => {
+    let now = 1_000;
+    let call = 0;
+    const replayCache = createPageReplayCache({ ttlMs: 10_000, now: () => now });
+    const fetchImpl = fakeGemini(
+      () => {
+        call += 1;
+        return { extractedText: '', cards: [{ kind: 'key_point', text: `Version ${call}` }] };
+      },
+      () => 40,
+    );
+    const d = deps({ replayCache, fetchImpl: fetchImpl as unknown as typeof fetch });
+    const body = { extractedText: 'Overlap test notes.' };
+
+    const [r1, r2] = await Promise.all([
+      handleCardsRequest(request(body), d).then(readEvents),
+      handleCardsRequest(request(body), d).then(readEvents),
+    ]);
+    expect(geminiCalls).toHaveLength(1);
+    expect(r2.at(-1).cards).toEqual(r1.at(-1).cards);
+
+    // After TTL expires, a new request generates fresh.
+    now += 10_001;
+    const r3 = await readEvents(await handleCardsRequest(request(body), d));
+    expect(geminiCalls).toHaveLength(2);
+    expect(r3.at(-1).cards[0].text).toBe('Version 2');
+    expect(r3.at(-1).cards[0].sourceKey).not.toBe(r1.at(-1).cards[0].sourceKey);
   });
 });

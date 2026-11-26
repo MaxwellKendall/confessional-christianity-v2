@@ -2,6 +2,7 @@ import { studioAuthConfigFromEnv, verifyStudioAccessToken } from '@/lib/lordsDay
 import { cardsModel } from '@/lib/lordsDay/gemini';
 import { handleCardsRequest } from '@/lib/lordsDay/handler';
 import { createRateLimiter } from '@/lib/lordsDay/rateLimit';
+import { createPageReplayCache } from '@/lib/lordsDay/replayCache';
 
 // Sermon notes → drafted Lord's Day cards (TKL-861). Contract: src/lib/lordsDay/handler.ts.
 // GEMINI_API_KEY lives only in this deployment's environment, read per request;
@@ -11,6 +12,8 @@ export const maxDuration = 60;
 
 // 20 drafts per hour per account: a sermon is drafted once a week, retries included.
 const limiter = createRateLimiter({ limit: 20, windowMs: 60 * 60 * 1000 });
+// Replays already-generated pages (same cards and sourceKeys) so retries never regenerate.
+const replayCache = createPageReplayCache({ ttlMs: 24 * 60 * 60 * 1000, maxEntries: 500 });
 
 export async function POST(request: Request) {
   const studioAuth = studioAuthConfigFromEnv();
@@ -24,5 +27,6 @@ export async function POST(request: Request) {
         }
       : null,
     limiter,
+    replayCache,
   });
 }

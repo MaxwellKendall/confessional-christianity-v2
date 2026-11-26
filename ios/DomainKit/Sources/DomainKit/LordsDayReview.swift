@@ -20,10 +20,12 @@ public struct DraftCardPayload: Codable, Equatable, Sendable {
     public var reference: String?
     public var osis: String?
     public var attribution: String?
+    /// Server-assigned immutable card identity, preserved across retries of the same page.
+    public var sourceKey: String?
 
-    public init(kind: String, page: Int, order: Int, text: String? = nil, reference: String? = nil, osis: String? = nil, attribution: String? = nil) {
+    public init(kind: String, page: Int, order: Int, text: String? = nil, reference: String? = nil, osis: String? = nil, attribution: String? = nil, sourceKey: String? = nil) {
         self.kind = kind; self.page = page; self.order = order; self.text = text
-        self.reference = reference; self.osis = osis; self.attribution = attribution
+        self.reference = reference; self.osis = osis; self.attribution = attribution; self.sourceKey = sourceKey
     }
 }
 
@@ -92,8 +94,9 @@ public struct ReviewCard: Codable, Equatable, Identifiable, Sendable {
     public fileprivate(set) var decision: Decision
     public fileprivate(set) var editedByUser: Bool
     /// Immutable identity of the drafted source payload, separate from user edits,
-    /// so a reordered retry reconciles against the card it originally drafted.
-    public let sourceKey: String
+    /// so a retry reconciles against the card it originally drafted.
+    /// Nil for cards loaded from a review saved by an earlier build before `sourceKey` existed.
+    public fileprivate(set) var sourceKey: String?
 
     /// Kept unless explicitly removed. `undecided` only ever comes from a review
     /// saved before cards began arriving kept (TKL-1053); it reads as kept.
@@ -114,7 +117,7 @@ public struct ReviewCard: Codable, Equatable, Identifiable, Sendable {
         self.id = id; self.page = page; self.order = order; self.kind = kind
         self.words = words; self.verseRef = verseRef; self.attribution = attribution
         self.decision = decision; self.editedByUser = editedByUser
-        self.sourceKey = sourceKey ?? Self.makeSourceKey(kind: kind, words: words, verseRef: verseRef)
+        self.sourceKey = sourceKey
     }
 
     public init(from decoder: Decoder) throws {
@@ -129,8 +132,9 @@ public struct ReviewCard: Codable, Equatable, Identifiable, Sendable {
         // Legacy review.json files without a decision default to undecided so nothing unseen is kept.
         decision = try c.decodeIfPresent(Decision.self, forKey: .decision) ?? .keep
         editedByUser = try c.decode(Bool.self, forKey: .editedByUser)
+        // Preserve nil when absent on reviews saved by earlier builds: deriving from possibly-edited
+        // fields would fail to reconcile against the replayed original page.
         sourceKey = try c.decodeIfPresent(String.self, forKey: .sourceKey)
-            ?? Self.makeSourceKey(kind: kind, words: words, verseRef: verseRef)
     }
 
     static func makeSourceKey(kind: CardKind, words: String, verseRef: String?) -> String {
@@ -293,11 +297,21 @@ public struct LordsDayReview: Codable, Equatable, Sendable {
             let reference = normalizedNoteField(draft.osis) ?? normalizedNoteField(draft.reference)
             if kind == .verse && reference == nil { return }
             let words = kind == .verse ? "" : (draft.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-            let sourceKey = ReviewCard.makeSourceKey(kind: kind, words: words, verseRef: kind == .verse ? reference : nil)
-            // Reconcile by immutable source identity rather than positional order:
-            // a reordered retry keeps existing user edits/decisions and updates order without dropping or duplicating.
-            if let existingIndex = cards.firstIndex(where: { $0.page == page && $0.sourceKey == sourceKey }) {
+            let serverSourceKey = normalizedNoteField(draft.sourceKey)
+            let fallbackSourceKey = ReviewCard.makeSourceKey(kind: kind, words: words, verseRef: kind == .verse ? reference : nil)
+            let incomingSourceKey = serverSourceKey ?? fallbackSourceKey
+            // Reconcile by server-assigned source identity first, then content-derived identity,
+            // then legacy (sourceKey == nil) reconciliation so retries never lose edits or duplicate cards.
+            if let existingIndex = existingCardIndex(
+                on: page,
+                order: draft.order,
+                serverSourceKey: serverSourceKey,
+                fallbackSourceKey: fallbackSourceKey
+            ) {
                 cards[existingIndex].order = draft.order
+                if cards[existingIndex].sourceKey == nil || (serverSourceKey != nil && cards[existingIndex].sourceKey != serverSourceKey) {
+                    cards[existingIndex].sourceKey = incomingSourceKey
+                }
                 cards.sort { ($0.page, $0.order, $0.id) < ($1.page, $1.order, $1.id) }
                 return
             }
@@ -307,7 +321,7 @@ public struct LordsDayReview: Codable, Equatable, Sendable {
                 words: words,
                 verseRef: kind == .verse ? reference : nil,
                 attribution: kind == .quote ? normalizedNoteField(draft.attribution) : nil,
-                decision: .keep, editedByUser: false, sourceKey: sourceKey
+                decision: .keep, editedByUser: false, sourceKey: incomingSourceKey
             ))
             cards.sort { ($0.page, $0.order, $0.id) < ($1.page, $1.order, $1.id) }
         case .done(let failed):
@@ -324,6 +338,36 @@ public struct LordsDayReview: Codable, Equatable, Sendable {
             clearInFlightPageTracking()
             phase = .ready
         }
+    }
+
+    private func existingCardIndex(on page: Int, order: Int, serverSourceKey: String?, fallbackSourceKey: String) -> Int? {
+        if let serverSourceKey,
+           let index = cards.firstIndex(where: { $0.page == page && $0.sourceKey == serverSourceKey }) {
+            return index
+        }
+        if let index = cards.firstIndex(where: { $0.page == page && $0.sourceKey == fallbackSourceKey }) {
+            return index
+        }
+        // Legacy cards saved by earlier builds have sourceKey == nil.
+        // 1) Unedited legacy cards match by content (handles reordered replays).
+        if let index = cards.firstIndex(where: {
+            $0.page == page && $0.sourceKey == nil && !$0.editedByUser &&
+            ReviewCard.makeSourceKey(kind: $0.kind, words: $0.words, verseRef: $0.verseRef) == fallbackSourceKey
+        }) {
+            return index
+        }
+        // 2) Edited legacy cards (original wording was never stored) match their original slot on the replayed page.
+        let legacyId = "p\(page)-\(order)"
+        if let index = cards.firstIndex(where: {
+            $0.page == page && $0.sourceKey == nil && $0.editedByUser && ($0.order == order || $0.id == legacyId)
+        }) {
+            return index
+        }
+        // 3) Fallback for attribution-only edited legacy cards if reordered.
+        return cards.firstIndex(where: {
+            $0.page == page && $0.sourceKey == nil && $0.editedByUser &&
+            ReviewCard.makeSourceKey(kind: $0.kind, words: $0.words, verseRef: $0.verseRef) == fallbackSourceKey
+        })
     }
 
     private func allocateCardId(page: Int, preferredOrder: Int) -> String {
