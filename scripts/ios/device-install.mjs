@@ -42,7 +42,7 @@ function checkAuthOutputs(appDir, configuration) {
     join(appDir, "Resources", file),
     `ios/App/Resources/${file}`,
     configuration === "Release"
-      ? `Release requires ios/App/Resources/${file} (without it the app falls back to guest mode; prod pool waits on TKL-1037 / TKL-965). Pass --configuration Debug to install against the dev pool.`
+      ? `Release requires ios/App/Resources/${file} (without it the app falls back to guest mode; generate it in ~/dev/studio-platform/infra with \`npm run outputs confessional prod\`). Pass --configuration Debug to install against the dev pool.`
       : `Debug requires ios/App/Resources/${file} (without it the app falls back to guest mode).`,
   );
 }

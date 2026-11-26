@@ -12,8 +12,8 @@
 // from sign-up.
 //
 // Amplify persists and refreshes the session in the Keychain; it is restored
-// on launch. A missing or invalid amplify_outputs file (prod until TKL-893)
-// leaves the app a guest with no sign-in entry point (`isConfigured`).
+// on launch. A missing or invalid amplify_outputs file leaves the app a guest
+// with no sign-in entry point (`isConfigured`).
 @preconcurrency import Amplify
 import enum Amplify.AuthError
 import AWSCognitoAuthPlugin
@@ -25,7 +25,7 @@ import DomainKit
 @MainActor
 @Observable
 final class AuthService {
-    /// Debug builds use ConfessionalChristianity-dev, Release the prod pool.
+    /// Debug builds use ConfessionalChristianity-dev (until TKL-965); Release uses Studio-prod (TKL-1041).
     /// Each configuration bundles only its own file (project.yml).
     #if DEBUG
     static let outputsResource = "amplify_outputs.dev"

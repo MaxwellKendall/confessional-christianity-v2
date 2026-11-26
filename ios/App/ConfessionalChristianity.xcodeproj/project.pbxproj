@@ -28,6 +28,7 @@
 		4BF1AA038DAF23E878D34262 /* SiteHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA107B8B544A9F504E2D6E4F /* SiteHeaderView.swift */; };
 		4C9F8EC58B6134846888E049 /* ReaderChapterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78ABC84F127EEF53401B4B8F /* ReaderChapterView.swift */; };
 		58641ED3BB13D794A63BE99F /* ConfessionalChristianityApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D721D4D4D91E53FCEF7C32EB /* ConfessionalChristianityApp.swift */; };
+		617170D8BB94B48A2C5FCD5D /* amplify_outputs.prod.json in Resources */ = {isa = PBXBuildFile; fileRef = 98955822F58692860E6C5A5F /* amplify_outputs.prod.json */; };
 		6A97BA0F07B755DABF4297B5 /* ReaderConfessionsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 421AEA827B9B261BB8EB27EE /* ReaderConfessionsSheet.swift */; };
 		735B92C856F999EE4F7294F6 /* CatechismTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99285AF1E154635D23996AA9 /* CatechismTabView.swift */; };
 		744A53A6115745E063B78CE1 /* MilestonesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA5673ACB1419E8AFFF76F5A /* MilestonesView.swift */; };
@@ -162,6 +163,7 @@
 		8E695AE85593396B01EA0946 /* Marcellus-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Marcellus-Regular.ttf"; sourceTree = "<group>"; };
 		943068F9BE1D5E9C1869664E /* JumpToQuestionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JumpToQuestionView.swift; sourceTree = "<group>"; };
 		96AC6B242BD5EEB00B86DCB9 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		98955822F58692860E6C5A5F /* amplify_outputs.prod.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = amplify_outputs.prod.json; sourceTree = "<group>"; };
 		98A25657E65FD99C28C300E6 /* RootTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootTab.swift; sourceTree = "<group>"; };
 		99285AF1E154635D23996AA9 /* CatechismTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatechismTabView.swift; sourceTree = "<group>"; };
 		9AC1A22AE440A42245983156 /* WebLinks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebLinks.swift; sourceTree = "<group>"; };
@@ -444,6 +446,7 @@
 			isa = PBXGroup;
 			children = (
 				E5B9751431F844A576E40DBE /* amplify_outputs.dev.json */,
+				98955822F58692860E6C5A5F /* amplify_outputs.prod.json */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -612,6 +615,7 @@
 				ABC676EECAD6EB2A5DDE8916 /* Marcellus-Regular.ttf in Resources */,
 				78B5CAD5AED7EEBC4EEBAB97 /* PrivacyInfo.xcprivacy in Resources */,
 				A56C84960C4D791864614828 /* amplify_outputs.dev.json in Resources */,
+				617170D8BB94B48A2C5FCD5D /* amplify_outputs.prod.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

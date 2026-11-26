@@ -132,13 +132,12 @@ iOS client). Stage from `-c stage=…` (default dev). Nothing is created in the 
 - Dev: pool `us-east-1_Tbhzx2V7a`, client `1qibu96101fa0n6iaiuqmpklq1`, mail from `cc-dev-mail.barbrabell.com`. Codes sent to
   `otp-test@cc-dev-mail.barbrabell.com` land in S3: `AWS_PROFILE=aicoach-dev infra/scripts/inbox-code.sh <since-epoch>` prints
   the newest. Never send codes to made-up outside addresses (bounces hurt the sender); SES is still in the sandbox.
-- Prod: sends from `confessionalchristianity.com`, whose DNS is on Vercel (not reachable by agents). Its DKIM records are the
-  `DkimRecords` output of `ConfessionalChristianityMail-prod`; the prod pool can't deploy until they verify.
+- Prod: runs on the studio pool `Studio-prod` (`us-east-1_80qmmpRpD`, `confessional` client `138ua04t4vtitttt5uaq72iji2`, managed in `~/dev/studio-platform`, TKL-1039/TKL-1040/TKL-1041). Sends as `Confessional Christianity <no-reply@confessionalchristianity.com>` through the existing verified SES identity from `ConfessionalChristianityMail-prod` (DNS on Vercel). Regenerate `ios/App/Resources/amplify_outputs.prod.json` via `AWS_PROFILE=aicoach-dev npm run outputs confessional prod` in `~/dev/studio-platform/infra` and copy `outputs/confessional/amplify_outputs.prod.json` here.
 - Account sync uses DynamoDB behind Cognito-authorized AppSync (TKL-891).
-- **The app (TKL-928):** amplify-swift `exactVersion: 2.62.0` (Amplify + AWSCognitoAuthPlugin); `AuthService` signs up first
+- **The app (TKL-928, TKL-1041):** amplify-swift `exactVersion: 2.62.0` (Amplify + AWSCognitoAuthPlugin); `AuthService` signs up first
   (passwordless, 6-digit code, then auto sign-in) and falls back to sign-in (8-digit `EMAIL_OTP` code) on `usernameExists`,
-  because the pool hides unknown users from sign-in but not from sign-up. Debug bundles `amplify_outputs.dev.json`, Release
-  `amplify_outputs.prod.json`; without a valid file the app is a guest and Settings has no Account section. A cold iOS
+  because the pool hides unknown users from sign-in but not from sign-up. Debug bundles `amplify_outputs.dev.json` (`ConfessionalChristianity-dev`, until TKL-965), Release
+  `amplify_outputs.prod.json` (`Studio-prod`); without a valid file the app is a guest, Settings has no Account section, and `device-install` refuses. A cold iOS
   build compiles the AWS SDK and takes well over 10 minutes.
 
 ## Gotchas

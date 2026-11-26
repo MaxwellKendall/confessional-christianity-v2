@@ -72,8 +72,10 @@ targets:
         DEVELOPMENT_TEAM: 7GZKY29XJH
         CODE_SIGN_STYLE: Automatic
       configs:
-        # Each build bundles only its own user pool (infra/, `npm run outputs`), as in
-        # remix. Without the file (prod until TKL-1037 / TKL-965) the app runs as a guest.
+        # Each build bundles only its own user pool: Debug uses ConfessionalChristianity-dev
+        # (infra/, until TKL-965 moves dev to the studio pool) and Release uses Studio-prod
+        # (~/dev/studio-platform, `npm run outputs confessional prod`, TKL-1041). Without the
+        # configuration's file the app runs as a guest and `device-install` refuses.
         Debug:
           EXCLUDED_SOURCE_FILE_NAMES: amplify_outputs.prod.json
         Release:

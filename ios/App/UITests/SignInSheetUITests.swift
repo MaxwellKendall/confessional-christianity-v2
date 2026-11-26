@@ -132,4 +132,37 @@ final class SignInSheetUITests: XCTestCase {
         let signInRow = app.buttons["settings.signIn"]
         XCTAssertTrue(signInRow.waitForExistence(timeout: 10), "Canceling after verify failure should return to guest Settings")
     }
+
+    /// TKL-1041: works with no DEBUG launch arguments so Release builds can
+    /// prove they bundle amplify_outputs.prod.json and reach sign-in rather
+    /// than silently falling back to guest mode.
+    @MainActor func testLaunchReachesSignInScreen() {
+        let app = XCUIApplication()
+        app.launch()
+
+        let skip = app.buttons["Skip"]
+        if skip.waitForExistence(timeout: 10) {
+            skip.tap()
+            let signInLink = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Sign in'")).firstMatch
+            XCTAssertTrue(signInLink.waitForExistence(timeout: 10), "Onboarding Sign in link missing (auth not configured / guest mode)")
+            signInLink.tap()
+            XCTAssertTrue(app.textFields["Email"].waitForExistence(timeout: 10), "Sign-in email field did not appear")
+            XCTAssertTrue(app.buttons["Send code"].exists, "Send code button missing on sign-in screen")
+            XCTAssertFalse(app.staticTexts["Sign-in is unavailable on this device."].exists, "App fell back to guest mode")
+            return
+        }
+
+        let settings = app.buttons["Settings"]
+        XCTAssertTrue(settings.waitForExistence(timeout: 15), "Neither Onboarding nor Today Settings appeared")
+        settings.tap()
+        let signOut = app.buttons["settings.signOut"]
+        if signOut.waitForExistence(timeout: 3) {
+            signOut.tap()
+        }
+        let signInRow = app.buttons["settings.signIn"]
+        XCTAssertTrue(signInRow.waitForExistence(timeout: 10), "Settings Account/Sign in row missing (auth not configured / guest mode)")
+        signInRow.tap()
+        XCTAssertTrue(app.textFields["signIn.email"].waitForExistence(timeout: 10), "Sign-in email field did not appear")
+        XCTAssertTrue(app.buttons["signIn.send"].exists, "Send code button missing on sign-in screen")
+    }
 }

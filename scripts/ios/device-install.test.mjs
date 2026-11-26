@@ -62,7 +62,7 @@ afterEach(() => rmSync(root, { recursive: true, force: true }));
 test("refuses a Release install and dry run when amplify_outputs.prod.json is missing", () => {
   commitOutputs("dev");
   expect(install("--device", "PHONE")).toBe(2);
-  expect(log).toHaveBeenCalledWith(expect.stringMatching(/refused.*amplify_outputs\.prod\.json.*TKL-1037/i));
+  expect(log).toHaveBeenCalledWith(expect.stringMatching(/refused.*amplify_outputs\.prod\.json.*npm run outputs confessional prod/i));
   expect(calls).toEqual([]);
   expect(record).toThrow(/ENOENT/);
 
