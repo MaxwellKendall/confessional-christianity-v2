@@ -12,9 +12,13 @@ const outputsByConfiguration = {
   Debug: "amplify_outputs.dev.json",
 };
 
+const nonEmptyString = (value) => typeof value === "string" && value.trim() !== "";
+
 // Returns why the outputs file at fullPath would leave the app a guest, or null.
 // `label` names the file in messages; `missing` is the message when it is absent.
-function outputsProblem(fullPath, label, missing) {
+// Amplify Swift's decoder needs a string `version` and `auth.aws_region` as well
+// as the pool ids; any of them missing makes configureAmplify throw (TKL-1045).
+export function amplifyOutputsProblem(fullPath, label, missing) {
   let raw;
   try {
     raw = readFileSync(fullPath, "utf8");
@@ -28,17 +32,23 @@ function outputsProblem(fullPath, label, missing) {
   } catch {
     return `${label} is not valid JSON (the app would fall back to guest mode)`;
   }
-  const poolId = parsed?.auth?.user_pool_id;
-  const clientId = parsed?.auth?.user_pool_client_id;
-  if (typeof poolId !== "string" || !poolId.trim() || typeof clientId !== "string" || !clientId.trim()) {
-    return `${label} is missing auth.user_pool_id or auth.user_pool_client_id (the app would fall back to guest mode)`;
+  const auth = parsed?.auth;
+  const fields = {
+    version: parsed?.version,
+    "auth.aws_region": auth?.aws_region,
+    "auth.user_pool_id": auth?.user_pool_id,
+    "auth.user_pool_client_id": auth?.user_pool_client_id,
+  };
+  const bad = Object.keys(fields).filter((name) => !nonEmptyString(fields[name]));
+  if (bad.length) {
+    return `${label} is missing or has a non-string ${bad.join(", ")} (the app would fall back to guest mode)`;
   }
   return null;
 }
 
 function checkAuthOutputs(appDir, configuration) {
   const file = outputsByConfiguration[configuration];
-  return outputsProblem(
+  return amplifyOutputsProblem(
     join(appDir, "Resources", file),
     `ios/App/Resources/${file}`,
     configuration === "Release"
@@ -51,7 +61,7 @@ function checkAuthOutputs(appDir, configuration) {
 // landed builds without it (TKL-1036 verify). Check what is actually bundled.
 function checkBuiltApp(app, configuration) {
   const file = outputsByConfiguration[configuration];
-  return outputsProblem(
+  return amplifyOutputsProblem(
     join(app, file),
     `the built app's ${file}`,
     `the built app has no ${file}, so it would run as a guest; the Xcode project predates the file: run \`xcodegen generate\` in ios/App and commit the project`,

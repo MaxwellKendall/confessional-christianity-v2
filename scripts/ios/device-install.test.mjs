@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
-import { run } from "./device-install.mjs";
+import { amplifyOutputsProblem, run } from "./device-install.mjs";
 
 let root, calls, log;
 const git = (...args) => execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
@@ -181,4 +181,42 @@ test("refuses to install a built app whose bundled amplify_outputs has no pool i
   expect(log).toHaveBeenCalledWith(expect.stringMatching(/refused.*built app.*user_pool_id/i));
   expect(calls.map(([command]) => command)).toEqual(["xcodebuild"]);
   expect(record).toThrow(/ENOENT/);
+});
+
+// Amplify Swift's decoder also requires a top-level string `version` and a
+// string `auth.aws_region`; without them configureAmplify throws and the app
+// is a guest (TKL-1045).
+const base = JSON.parse(validOutputs);
+const defects = {
+  "missing version": { ...base, version: undefined },
+  "numeric version": { ...base, version: 1.4 },
+  "empty version": { ...base, version: " " },
+  "missing aws_region": { ...base, auth: { ...base.auth, aws_region: undefined } },
+  "numeric aws_region": { ...base, auth: { ...base.auth, aws_region: 1 } },
+  "empty aws_region": { ...base, auth: { ...base.auth, aws_region: "" } },
+};
+const fieldOf = (name) => (name.includes("version") ? /version/ : /aws_region/);
+
+test.each(Object.keys(defects))("refuses source outputs with %s before xcodebuild", (name) => {
+  commitOutputs("prod", JSON.stringify(defects[name]));
+  expect(install("--device", "PHONE")).toBe(2);
+  expect(log).toHaveBeenCalledWith(expect.stringMatching(/refused.*amplify_outputs\.prod\.json.*guest/i));
+  expect(log).toHaveBeenCalledWith(expect.stringMatching(fieldOf(name)));
+  expect(calls).toEqual([]);
+  expect(record).toThrow(/ENOENT/);
+});
+
+test.each(Object.keys(defects))("refuses a built app whose bundled outputs have %s before devicectl", { timeout: 30_000 }, (name) => {
+  commitOutputs("prod");
+  const bundle = JSON.stringify(defects[name]);
+  expect(run(["--device", "PHONE"], { cwd: root, log, exec: execWith({ bundle }) })).toBe(2);
+  expect(log).toHaveBeenCalledWith(expect.stringMatching(/refused.*built app.*amplify_outputs\.prod\.json.*guest/i));
+  expect(log).toHaveBeenCalledWith(expect.stringMatching(fieldOf(name)));
+  expect(calls.map(([command]) => command)).toEqual(["xcodebuild"]);
+  expect(record).toThrow(/ENOENT/);
+});
+
+test.each(["amplify_outputs.dev.json", "amplify_outputs.prod.json"])("the committed %s passes validation", (file) => {
+  const path = join(import.meta.dirname, "../../ios/App/Resources", file);
+  expect(amplifyOutputsProblem(path, file, "missing")).toBeNull();
 });
