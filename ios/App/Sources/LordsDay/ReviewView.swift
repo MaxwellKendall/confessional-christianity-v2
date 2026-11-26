@@ -133,7 +133,7 @@ struct ReviewView: View {
             return "\(where_)\(so). You can close this; they keep coming."
         }
         if count == 0 { return "No cards yet." }
-        return "Swipe through. Keep, change the kind, edit the words, or remove."
+        return "Swipe through. Change the kind, edit the words, ask again, or remove."
     }
 
     // MARK: Pager

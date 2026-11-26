@@ -157,6 +157,14 @@ struct FixtureCardsGenerator: CardsGenerator {
     var stopsAfter: Int?
     var delay: Duration = .milliseconds(450)
 
+    /// What the model "read" on each page, so the drafting screen shows words and
+    /// Try again is available in the fixture (TKL-1053).
+    static let sampleText: [String] = [
+        "Rom 8:28-30. All things work together for good \u{2014} not all things ARE good.\nGod's purpose decides what good means, not my circumstances.",
+        "The golden chain: foreknew > predestined > called > justified > glorified.\nNo weak link, because God forged every one.",
+        "Your worst day is not outside his purpose.",
+    ]
+
     static let sample: [[DraftCardPayload]] = [
         [
             DraftCardPayload(kind: "key_point", page: 0, order: 0, text: "God's purpose, not my circumstances, decides what is good."),
@@ -197,7 +205,11 @@ struct FixtureCardsGenerator: CardsGenerator {
                         try? await Task.sleep(for: .seconds(3600))
                         return
                     }
-                    continuation.yield(.page(index, cardCount: cards.count))
+                    continuation.yield(.page(
+                        index,
+                        cardCount: cards.count,
+                        extractedText: Self.sampleText.indices.contains(index) ? Self.sampleText[index] : nil
+                    ))
                     for card in cards { continuation.yield(.card(card)) }
                 }
                 continuation.yield(.done(failedPages: []))
