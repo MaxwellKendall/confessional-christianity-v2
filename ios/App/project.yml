@@ -65,7 +65,7 @@ targets:
         POSTHOG_KEY: phc_dF6Jl6RuY7mAZpIA2zAp84Ji1L9oikmKdPUQJBaBsJq
         POSTHOG_HOST: https://us.i.posthog.com
         MARKETING_VERSION: "1.1"
-        CURRENT_PROJECT_VERSION: "3"
+        CURRENT_PROJECT_VERSION: "4"
         TARGETED_DEVICE_FAMILY: "1"
         SWIFT_VERSION: "6.0"
         CODE_SIGN_ENTITLEMENTS: Sources/ConfessionalChristianity.entitlements
@@ -150,7 +150,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.confessionalchristianity.app.widget
         MARKETING_VERSION: "1.1"
-        CURRENT_PROJECT_VERSION: "3"
+        CURRENT_PROJECT_VERSION: "4"
         TARGETED_DEVICE_FAMILY: "1"
         SWIFT_VERSION: "6.0"
         SKIP_INSTALL: "YES"
