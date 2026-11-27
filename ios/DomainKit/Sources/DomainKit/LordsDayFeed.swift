@@ -32,6 +32,36 @@ public struct LordsDayFeedCard: Identifiable, Equatable, Sendable {
     public let attributionLine: String?
     /// The sermon's passage, for the share text.
     public let passage: String?
+    /// A quote's speaker (its own attribution, else the preacher); nil for other cards.
+    public let speaker: String?
+
+    /// The card as a shareable quote card (TKL-1060): its words, who said it or
+    /// where it came from, and the app's mark. A verse without its text shows
+    /// its reference.
+    public func quoteCardContent(verseText: String? = nil) -> QuoteCardContent {
+        switch kind {
+        case .keyPoint:
+            return QuoteCardContent(text: body, kind: .plain,
+                                    attribution: .init(passage: passage, source: passage == nil ? nil : "Sermon notes"))
+        case .quote:
+            return QuoteCardContent(text: body, kind: .quote, attribution: .init(preacher: speaker, passage: passage))
+        case .verse:
+            let ref = reference ?? ""
+            guard let text = verseText?.trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty else {
+                return QuoteCardContent(text: ref, kind: .plain)
+            }
+            let parts = verseLead(text)
+            return QuoteCardContent(text: parts.rest, kind: .verse(lead: parts.lead),
+                                    attribution: .init(passage: ref.isEmpty ? nil : ref, detail: "ESV"))
+        }
+    }
+
+    /// The square share image in the palette on screen, as PNG. Pure and
+    /// thread-safe, so the app renders it off the main thread.
+    public func sharePNG(verseText: String? = nil, dark: Bool) -> Data? {
+        QuoteCardRenderer.pngData(quoteCardContent(verseText: verseText),
+                                  palette: LordsDayFeed.palette(palette, dark: dark), format: .square)
+    }
 
     /// What the system share sheet gets until TKL-844's share flow lands: the
     /// card's words and its reference.
@@ -108,6 +138,7 @@ public struct LordsDayFeed: Equatable, Sendable {
                 [card.attribution == nil ? preacher : normalizedNoteField(card.attribution), passage].compactMap { $0 }.joined(separator: " · ").nilIfEmpty
             case .verse: nil
             }
+            let speaker: String? = card.kind == .quote ? (card.attribution == nil ? preacher : normalizedNoteField(card.attribution)) : nil
             let ref = normalizedNoteField(card.verseRef)
             let osis = card.kind == .verse ? ref.flatMap(Self.osis(for:)) : nil
             return LordsDayFeedCard(
@@ -121,7 +152,8 @@ public struct LordsDayFeed: Equatable, Sendable {
                 dayLabel: dayLabel,
                 isToday: isToday,
                 attributionLine: attribution,
-                passage: passage
+                passage: passage,
+                speaker: speaker
             )
         }
     }

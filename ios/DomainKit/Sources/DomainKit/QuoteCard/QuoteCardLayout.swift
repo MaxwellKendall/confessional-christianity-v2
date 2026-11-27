@@ -170,6 +170,8 @@ private struct Body {
                 para.append(Text.attributed(" ", body, p.ink))
             }
             para.append(Text.smallCapsLord(text, font: body, size: fs, color: p.ink))
+        case .plain:
+            para.append(Text.attributed(text, body, p.ink))
         case .quote, .questionAndAnswer:
             if let split = Text.dropCapSplit(text) {
                 let ds = 3.3 * fs

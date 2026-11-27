@@ -133,6 +133,8 @@ public enum QuoteCardKind: Hashable, Sendable {
     case questionAndAnswer(question: String)
     /// Scripture: opens with a gilt lead-in clause instead of a drop cap.
     case verse(lead: String)
+    /// Plain words with no drop cap: a sermon key point, or a bare reference (TKL-1060).
+    case plain
 }
 
 public struct QuoteCardContent: Hashable, Sendable {

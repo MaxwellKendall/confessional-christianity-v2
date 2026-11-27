@@ -8,6 +8,7 @@
 import SwiftUI
 import SwiftData
 import DomainKit
+import UniformTypeIdentifiers
 
 struct LordsDayFeedView<HeaderControls: View>: View {
     let feed: LordsDayFeed
@@ -136,6 +137,18 @@ private struct FeedCardView<HeaderControls: View>: View {
     let readerSource: ReaderSource?
     let headerControls: HeaderControls
     @State private var verseText: String?
+    @State private var shareImage: ShareImage?
+    @Environment(\.colorScheme) private var colorScheme
+
+    private struct ShareImage {
+        let png: Data
+        let preview: UIImage
+    }
+
+    private struct ShareRequest: Equatable {
+        let verseText: String?
+        let dark: Bool
+    }
 
     private struct VerseRequest: Equatable {
         let reference: String?
@@ -195,6 +208,16 @@ private struct FeedCardView<HeaderControls: View>: View {
             let text = Self.nonEmpty(await EsvClient.shared.text(for: osis))
             guard !Task.isCancelled else { return }
             verseText = text
+        }
+        .task(id: ShareRequest(verseText: verseText, dark: colorScheme == .dark)) {
+            let card = card, verseText = verseText, dark = colorScheme == .dark
+            let image = await Task.detached(priority: .userInitiated) { () -> ShareImage? in
+                guard let png = card.sharePNG(verseText: verseText, dark: dark),
+                      let preview = UIImage(data: png) else { return nil }
+                return ShareImage(png: png, preview: preview)
+            }.value
+            guard !Task.isCancelled else { return }
+            shareImage = image
         }
         .onChange(of: card.verseOsis) { _, reference in
             verseText = reference.flatMap(bundledEsvText).flatMap(Self.nonEmpty)
@@ -348,30 +371,58 @@ private struct FeedCardView<HeaderControls: View>: View {
                 .accessibilityIdentifier("lordsDay.readFullPassage")
             }
             Spacer(minLength: 0)
-            ShareLink(item: card.shareText(verseText: verseText)) {
-                HStack(spacing: 6) {
-                    Image(systemName: "square.and.arrow.up")
-                        .font(.subheadline.weight(.semibold))
-                    Text("Share")
-                        .font(.subheadline.weight(.semibold))
-                        .lineLimit(1)
-                        .minimumScaleFactor(compact ? 0.85 : 1)
-                }
-                .foregroundStyle(field)
-                .padding(.horizontal, compact ? 14 : 16)
-                .frame(minHeight: 44)
-                .background(accent, in: Capsule())
-            }
-            .fixedSize(horizontal: !compact, vertical: false)
-            .accessibilityLabel("Share this card")
-            .simultaneousGesture(TapGesture().onEnded { LoopCounter.record(.cardShared(kind: card.kind)) })
+            shareButton(compact: compact)
+                .fixedSize(horizontal: !compact, vertical: false)
+                .accessibilityLabel("Share this card")
+                .simultaneousGesture(TapGesture().onEnded { LoopCounter.record(.cardShared(kind: card.kind)) })
         }
         .frame(maxWidth: .infinity)
+    }
+
+    /// Share sends the card as a square PNG with its words as the message
+    /// (TKL-1060). The image is pre-rendered off the main thread, so the sheet
+    /// opens at once; until it's ready, Share sends the words alone.
+    @ViewBuilder private func shareButton(compact: Bool) -> some View {
+        let text = card.shareText(verseText: verseText)
+        if let shareImage {
+            ShareLink(
+                item: SharedCardImage(png: shareImage.png),
+                message: Text(text),
+                preview: SharePreview(card.kind.label, image: Image(uiImage: shareImage.preview))
+            ) { shareLabel(compact: compact) }
+        } else {
+            ShareLink(item: text) { shareLabel(compact: compact) }
+        }
+    }
+
+    private func shareLabel(compact: Bool) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: "square.and.arrow.up")
+                .font(.subheadline.weight(.semibold))
+            Text("Share")
+                .font(.subheadline.weight(.semibold))
+                .lineLimit(1)
+                .minimumScaleFactor(compact ? 0.85 : 1)
+        }
+        .foregroundStyle(field)
+        .padding(.horizontal, compact ? 14 : 16)
+        .frame(minHeight: 44)
+        .background(accent, in: Capsule())
     }
 
     private static func nonEmpty(_ s: String?) -> String? {
         guard let t = s?.trimmingCharacters(in: .whitespacesAndNewlines), !t.isEmpty else { return nil }
         return t
+    }
+}
+
+/// The card's PNG for the share sheet: Save Image, Messages and the rest get an image.
+private struct SharedCardImage: Transferable {
+    let png: Data
+
+    static var transferRepresentation: some TransferRepresentation {
+        DataRepresentation(exportedContentType: .png) { $0.png }
+            .suggestedFileName("Confessional Christianity.png")
     }
 }
 

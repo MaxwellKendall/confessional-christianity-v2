@@ -16,7 +16,8 @@ Linear project: **confessional christianity** (team TKL): https://linear.app/sof
   `QuoteCard/` is the share-image renderer (TKL-842), with its own copy of the fonts in `QuoteCardFonts/`. Its snapshot
   fixtures are in `Tests/DomainKitTests/Fixtures/QuoteCard/`: re-record `native/` with `QUOTE_CARD_RECORD=1 swift test`
   after an intended visual change; regenerate `prototype/` (the approved TKL-840 design via headless Chrome) with
-  `ios/DomainKit/scripts/quote-card-prototype/render.sh`.
+  `ios/DomainKit/scripts/quote-card-prototype/render.sh`. Lord's Day feed cards share as square PNGs through it
+  (TKL-1060, `LordsDayFeedCard.quoteCardContent`/`sharePNG`); their snapshots are in `Fixtures/QuoteCard/lordsDay/`.
 - `ios/AppStoreScreenshots/`, `ios/design-assets/`: listing art.
 - `infra/`: AWS CDK (TypeScript) for accounts, the Cognito pools (see "Accounts" below and `infra/README.md`).
   `ios/App/Resources/amplify_outputs.{dev,prod}.json` are its generated, committed client configs.
@@ -52,7 +53,7 @@ Linear project: **confessional christianity** (team TKL): https://linear.app/sof
 |---|---|---|
 | web unit | `npm test` (vitest, 293 tests, incl. `scripts/**/*.test.mjs`; 60 s timeouts for the loaded build Mac) | ~1 s |
 | web build | `npm run build` (needs `.env.local`; ESLint enforced) | ~15 s |
-| DomainKit | `cd ios/DomainKit && swift test` (284 tests: 230 Swift Testing + 54 XCTest) | ~15 s |
+| DomainKit | `cd ios/DomainKit && swift test` (326 tests: 254 Swift Testing + 72 XCTest) | ~15 s |
 | iOS build | `cd ios/App && xcodegen generate && xcodebuild -scheme ConfessionalChristianity -destination 'platform=iOS Simulator,name=CC iPhone 17 Pro' -derivedDataPath ../../build/dd build` | 15+ min cold (AWS SDK), ~1 min warm |
 | infra | `cd infra && npm ci && npm test` (vitest CDK assertions, 20 tests) | ~6 s |
 | iOS UI (loop events) | `cd ios/App && xcodegen generate && xcodebuild test -scheme ConfessionalChristianity -destination 'platform=iOS Simulator,name=CC iPhone 17 Pro' -derivedDataPath ../../build/dd -only-testing:ConfessionalChristianityUITests` (not a Verify check; sends real events) | ~3 min |
