@@ -12,7 +12,7 @@ const pbxproj = readFileSync(join(root, 'ios/App/ConfessionalChristianity.xcodep
 const authService = readFileSync(join(root, 'ios/App/Sources/Auth/AuthService.swift'), 'utf8');
 
 describe('iOS Amplify auth configuration', () => {
-  test('prod config points at Studio-prod confessional client', () => {
+  test('prod config points at Studio-prod confessional client and prod AccountSyncUrl', () => {
     const prod = JSON.parse(readFileSync(join(resourcesDir, 'amplify_outputs.prod.json'), 'utf8'));
     expect(prod.version).toBe('1.4');
     expect(prod.auth).toMatchObject({
@@ -22,6 +22,9 @@ describe('iOS Amplify auth configuration', () => {
       username_attributes: ['email'],
       user_verification_types: ['email'],
     });
+    expect(prod.custom?.account_sync_url).toMatch(
+      /^https:\/\/[a-z0-9]+\.appsync-api\.us-east-1\.amazonaws\.com\/graphql$/,
+    );
   });
 
   test('dev config stays on ConfessionalChristianity-dev and distinct from prod', () => {
@@ -34,6 +37,10 @@ describe('iOS Amplify auth configuration', () => {
     });
     expect(dev.auth.user_pool_id).not.toBe(prod.auth.user_pool_id);
     expect(dev.auth.user_pool_client_id).not.toBe(prod.auth.user_pool_client_id);
+    expect(dev.custom?.account_sync_url).toMatch(
+      /^https:\/\/[a-z0-9]+\.appsync-api\.us-east-1\.amazonaws\.com\/graphql$/,
+    );
+    expect(dev.custom?.account_sync_url).not.toBe(prod.custom?.account_sync_url);
   });
 
   test('generated Xcode project bundles prod in Release and dev in Debug', () => {

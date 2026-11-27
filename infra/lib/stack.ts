@@ -13,6 +13,10 @@ export interface AccountsStackProps extends StackProps {
   stage: Stage;
   /** SES domain identity the codes are sent from (verified by MailStack before this stack's first deploy). */
   mailDomain: string;
+  /** Studio Cognito user pool ID (Studio-dev / Studio-prod) that authorizes account sync tokens. */
+  studioUserPoolId: string;
+  /** Studio confessional app client ID accepted by the sync AppSync API (appIdClientRegex). */
+  studioClientId: string;
 }
 
 /**
@@ -26,7 +30,7 @@ export interface AccountsStackProps extends StackProps {
 export class AccountsStack extends Stack {
   constructor(scope: Construct, id: string, props: AccountsStackProps) {
     super(scope, id, props);
-    const { stage, mailDomain } = props;
+    const { stage, mailDomain, studioUserPoolId, studioClientId } = props;
     const isProd = stage === "prod";
 
     const userPool = new cognito.UserPool(this, "Users", {
@@ -129,7 +133,10 @@ export class AccountsStack extends Stack {
     });
     (appClient.node.defaultChild as cognito.CfnUserPoolClient).explicitAuthFlows = ["ALLOW_USER_AUTH", "ALLOW_CUSTOM_AUTH", "ALLOW_REFRESH_TOKEN_AUTH"];
 
-    addAccountSync(this, userPool, stage);
+    const studioPool = cognito.UserPool.fromUserPoolId(this, "StudioUsers", studioUserPoolId);
+    // TKL-1071: authorize account sync against the studio pool and confessional client;
+    // dev keeps the legacy per-app pool as an additional authorizer until TKL-965 moves Debug over.
+    addAccountSync(this, { studioPool, studioClientId, extraPool: isProd ? undefined : userPool }, stage);
 
     new CfnOutput(this, "Region", { value: this.region });
     new CfnOutput(this, "UserPoolId", { value: userPool.userPoolId });

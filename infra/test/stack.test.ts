@@ -6,12 +6,21 @@ import { MailStack } from "../lib/mail.ts";
 import config from "../cdk.json" with { type: "json" };
 
 const env = { account: "111111111111", region: "us-east-1" };
-const stages = config.context.stages as Record<Stage, { mailDomain: string; hostedZone?: string; testInbox?: boolean }>;
+const stages = config.context.stages as Record<
+  Stage,
+  { mailDomain: string; hostedZone?: string; testInbox?: boolean; studioUserPoolId: string; studioClientId: string }
+>;
 
 const synth = (stage: Stage) => {
   const app = new App();
   const mail = new MailStack(app, `ConfessionalChristianityMail-${stage}`, { env, stage, ...stages[stage] });
-  const accounts = new AccountsStack(app, `ConfessionalChristianity-${stage}`, { env, stage, mailDomain: stages[stage].mailDomain });
+  const accounts = new AccountsStack(app, `ConfessionalChristianity-${stage}`, {
+    env,
+    stage,
+    mailDomain: stages[stage].mailDomain,
+    studioUserPoolId: stages[stage].studioUserPoolId,
+    studioClientId: stages[stage].studioClientId,
+  });
   return { mail: Template.fromStack(mail), accounts: Template.fromStack(accounts) };
 };
 
@@ -235,23 +244,53 @@ describe("mail", () => {
 });
 
 describe("account sync", () => {
-  it("uses only the stage user pool and exposes push and pull on a private table", () => {
-    for (const { accounts } of [dev, prod]) {
-      const pool = Object.keys(accounts.findResources("AWS::Cognito::UserPool"))[0];
-      accounts.hasResourceProperties("AWS::AppSync::GraphQLApi", {
-        AuthenticationType: "AMAZON_COGNITO_USER_POOLS",
-        UserPoolConfig: { UserPoolId: { Ref: pool }, DefaultAction: "ALLOW" },
-        AdditionalAuthenticationProviders: Match.absent(),
-      });
+  it("authorizes the studio pool and confessional client on both stages, keeping the old dev pool only on dev", () => {
+    const devPool = Object.keys(dev.accounts.findResources("AWS::Cognito::UserPool"))[0];
+    dev.accounts.hasResourceProperties("AWS::AppSync::GraphQLApi", {
+      AuthenticationType: "AMAZON_COGNITO_USER_POOLS",
+      UserPoolConfig: {
+        UserPoolId: "us-east-1_7As1IQnUY",
+        AppIdClientRegex: "^7j0hcan1l99f805snqr73eci21$",
+        DefaultAction: "ALLOW",
+      },
+      AdditionalAuthenticationProviders: [
+        {
+          AuthenticationType: "AMAZON_COGNITO_USER_POOLS",
+          UserPoolConfig: Match.objectLike({ UserPoolId: { Ref: devPool } }),
+        },
+      ],
+    });
+
+    prod.accounts.hasResourceProperties("AWS::AppSync::GraphQLApi", {
+      AuthenticationType: "AMAZON_COGNITO_USER_POOLS",
+      UserPoolConfig: {
+        UserPoolId: "us-east-1_80qmmpRpD",
+        AppIdClientRegex: "^138ua04t4vtitttt5uaq72iji2$",
+        DefaultAction: "ALLOW",
+      },
+      AdditionalAuthenticationProviders: Match.absent(),
+    });
+
+    for (const [stage, { accounts }] of [["dev", dev], ["prod", prod]] as const) {
+      const tableLogicalId = Object.keys(accounts.findResources("AWS::DynamoDB::Table"))[0];
       accounts.hasResourceProperties("AWS::DynamoDB::Table", {
         KeySchema: [{ AttributeName: "pk", KeyType: "HASH" }, { AttributeName: "sk", KeyType: "RANGE" }],
       });
       accounts.hasResourceProperties("AWS::AppSync::Resolver", { TypeName: "Mutation", FieldName: "pushSync" });
       accounts.hasResourceProperties("AWS::AppSync::Resolver", { TypeName: "Query", FieldName: "pullSync" });
+      accounts.hasOutput("AccountSyncUrl", {});
+      accounts.hasResourceProperties("AWS::Lambda::Function", {
+        FunctionName: `ConfessionalChristianity-sync-delete-${stage}`,
+        Runtime: "nodejs22.x",
+        Handler: "index.handler",
+        Environment: { Variables: { SYNC_TABLE: { Ref: tableLogicalId } } },
+      });
+      accounts.hasOutput("AccountSyncDeleteFunctionName", {});
       const schemas = Object.values(accounts.findResources("AWS::AppSync::GraphQLSchema"));
       expect(schemas).toHaveLength(1);
       const definition = (schemas[0] as { Properties: { Definition: string } }).Properties.Definition;
-      expect(definition).toContain("pushSync(changes: [SyncChangeInput!]!): [SyncPushResult!]!");
+      expect(definition).toContain("pushSync(changes: [SyncChangeInput!]!): [SyncPushResult!]! @aws_cognito_user_pools");
+      expect(definition).toContain("pullSync(table: String!, after: String = \"0\", limit: Int = 50): [SyncRecord!]! @aws_cognito_user_pools");
       expect(definition).toContain("note_id: ID");
       expect(definition).toContain("enum SyncPushStatus");
       expect(definition).toContain("enum SyncPushReason");

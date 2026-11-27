@@ -9,7 +9,7 @@ input SyncChangeInput {
   payload: String
 }
 
-type SyncRecord {
+type SyncRecord @aws_cognito_user_pools {
   table: String!
   id: ID!
   child_id: ID
@@ -33,16 +33,16 @@ enum SyncPushReason {
   CONTENTION
 }
 
-type SyncPushResult {
+type SyncPushResult @aws_cognito_user_pools {
   id: ID!
   status: SyncPushStatus!
   reason: SyncPushReason
 }
 
 type Query {
-  pullSync(table: String!, after: String = "0", limit: Int = 50): [SyncRecord!]!
+  pullSync(table: String!, after: String = "0", limit: Int = 50): [SyncRecord!]! @aws_cognito_user_pools
 }
 
 type Mutation {
-  pushSync(changes: [SyncChangeInput!]!): [SyncPushResult!]!
+  pushSync(changes: [SyncChangeInput!]!): [SyncPushResult!]! @aws_cognito_user_pools
 }

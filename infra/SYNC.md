@@ -1,6 +1,6 @@
 # Account sync
 
-Use the stage stack's `AccountSyncUrl` with a Cognito user-pool JWT from that stage. AppSync verifies the token. The resolver uses its `sub` for every ownership check and derives the stream from that subject. The client cannot supply a stream, owner or guardian.
+Use the stage stack's `AccountSyncUrl` with a Cognito user-pool JWT from the stage's studio pool (`Studio-dev` / `Studio-prod`) and `confessional` app client (dev also accepts the legacy `ConfessionalChristianity-dev` pool until TKL-965). AppSync verifies the token and `appIdClientRegex`. The resolver uses its `sub` for every ownership check and derives the stream from that subject. The client cannot supply a stream, owner or guardian.
 
 ## Rows
 

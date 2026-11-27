@@ -7,10 +7,14 @@
       "dev": {
         "mailDomain": "cc-dev-mail.barbrabell.com",
         "hostedZone": "barbrabell.com",
-        "testInbox": true
+        "testInbox": true,
+        "studioUserPoolId": "us-east-1_7As1IQnUY",
+        "studioClientId": "7j0hcan1l99f805snqr73eci21"
       },
       "prod": {
-        "mailDomain": "confessionalchristianity.com"
+        "mailDomain": "confessionalchristianity.com",
+        "studioUserPoolId": "us-east-1_80qmmpRpD",
+        "studioClientId": "138ua04t4vtitttt5uaq72iji2"
       }
     }
   }
