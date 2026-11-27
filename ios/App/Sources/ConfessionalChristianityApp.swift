@@ -8,7 +8,17 @@ struct ConfessionalChristianityApp: App {
     // DomainKit's makeSharedModelContainer) rather than SwiftData's default
     // app-private store, so a session's progress is visible to the widget's
     // next timeline refresh with no sync step.
-    private let container = makeSharedModelContainer()
+    private let container = Self.makeContainer()
+
+    private static func makeContainer() -> ModelContainer {
+        #if DEBUG
+        if UserDefaults.standard.string(forKey: "FireReminder") != nil {
+            return try! ModelContainer(for: progressSchema,
+                                       configurations: ModelConfiguration(schema: progressSchema, isStoredInMemoryOnly: true))
+        }
+        #endif
+        return makeSharedModelContainer()
+    }
     private let showsOpening = DailyOpening.claim(in: .standard)
 
     // Account session (guest by default); restored locally from the Keychain at launch.
@@ -20,6 +30,7 @@ struct ConfessionalChristianityApp: App {
         #if DEBUG
         NetworkAudit.installIfConfigured()
         #endif
+        ReminderScheduler.shared.install()
         let authService = AuthService()
         _auth = State(initialValue: authService)
         _sync = State(initialValue: SyncService(container: container, auth: authService))
