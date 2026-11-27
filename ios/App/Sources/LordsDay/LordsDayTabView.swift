@@ -57,7 +57,7 @@ struct LordsDayTabView: View {
         }
         .fullScreenCover(item: $reelStart, onDismiss: refresh) { opening in
             LordsDayReelView(reel: reel, start: opening.position, allowsNetwork: scenePhase == .active,
-                             onPage: remember, onClose: { reelStart = nil })
+                             onPage: remember, onChanged: refresh, onClose: { reelStart = nil })
         }
         .onAppear(perform: refresh)
         #if DEBUG

@@ -47,19 +47,31 @@ struct SermonCardView<Footer: View>: View {
     var hint: String?
     var allowsNetwork = false
     var readerSource: ReaderSource?
-    /// What Share sends for the cover.
-    var coverShareText: String?
+    /// What Share sends for the cover (TKL-942): its quote-card content and message.
+    var coverShare: (content: QuoteCardContent, message: String)?
+    /// The kept note whose photos the cover shows as thumbnails.
+    var photosNoteId: UUID?
+    /// Edit on kept cards (the reel only).
+    var onEdit: ((LordsDayFeedCard) -> Void)?
     /// Replaces Read and Share (the draft cover's Review button).
     let footerOverride: Footer?
     @State private var verseText: String?
-    @State private var shareImage: SermonShareImage?
+    @State private var shareSubject: ShareSubject?
+    @State private var photos: [UIImage] = []
+    @State private var openPhoto: PhotoOpening?
+    #if DEBUG
+    /// Screenshot hook (TKL-942): "share" or "photo" opens it once this page appears.
+    var debugOpens: String?
+    #endif
     @Environment(\.colorScheme) private var colorScheme
 
     init(page: SermonPage, binding: SermonCardBinding, palette: QuoteCardPalette, large: Bool = false, hint: String? = nil,
-         allowsNetwork: Bool = false, readerSource: ReaderSource? = nil, coverShareText: String? = nil,
-         @ViewBuilder footer: () -> Footer) {
+         allowsNetwork: Bool = false, readerSource: ReaderSource? = nil,
+         coverShare: (content: QuoteCardContent, message: String)? = nil, photosNoteId: UUID? = nil,
+         onEdit: ((LordsDayFeedCard) -> Void)? = nil, @ViewBuilder footer: () -> Footer) {
         self.page = page; self.binding = binding; self.palette = palette; self.large = large; self.hint = hint
-        self.allowsNetwork = allowsNetwork; self.readerSource = readerSource; self.coverShareText = coverShareText
+        self.allowsNetwork = allowsNetwork; self.readerSource = readerSource; self.coverShare = coverShare
+        self.photosNoteId = photosNoteId; self.onEdit = onEdit
         self.footerOverride = footer()
         if case .card(let card) = page {
             _verseText = State(initialValue: card.verseOsis.flatMap(bundledEsvText).flatMap(Self.nonEmpty))
@@ -95,20 +107,33 @@ struct SermonCardView<Footer: View>: View {
             guard !Task.isCancelled else { return }
             verseText = text
         }
-        .task(id: ShareRequest(verseText: verseText, dark: colorScheme == .dark, id: card?.id)) {
-            guard let card else { return }
-            let verseText = verseText, dark = colorScheme == .dark
-            let image = await Task.detached(priority: .userInitiated) { () -> SermonShareImage? in
-                guard let png = card.sharePNG(verseText: verseText, dark: dark), let preview = UIImage(data: png) else { return nil }
-                return SermonShareImage(png: png, preview: preview)
+        .task(id: card == nil ? photosNoteId : nil) {
+            // The cover's note photos stay on the device after keeping (TKL-863); read them off the main thread.
+            guard card == nil, let id = photosNoteId else { return }
+            let loaded = await Task.detached(priority: .utility) {
+                CaptureDraft.savedPages(noteId: id).compactMap(UIImage.init(data:))
             }.value
             guard !Task.isCancelled else { return }
-            shareImage = image
+            photos = loaded
+            #if DEBUG
+            if debugOpens == "photo", !loaded.isEmpty { openPhoto = PhotoOpening(index: 0) }
+            #endif
+        }
+        #if DEBUG
+        .task {
+            guard debugOpens == "share" else { return }
+            try? await Task.sleep(for: .milliseconds(600))
+            openShare()
+        }
+        #endif
+        .sheet(item: $shareSubject) { LordsDayShareSheet(subject: $0) }
+        .fullScreenCover(item: $openPhoto) { opening in
+            NotePhotosView(photos: photos, start: opening.index) { openPhoto = nil }
         }
     }
 
     private struct VerseRequest: Equatable { let osis: String?; let active: Bool }
-    private struct ShareRequest: Equatable { let verseText: String?; let dark: Bool; let id: UUID? }
+    private struct PhotoOpening: Identifiable { let index: Int; var id: Int { index } }
 
     // MARK: binding
 
@@ -146,6 +171,9 @@ struct SermonCardView<Footer: View>: View {
                     .padding(.top, 10).padding(.bottom, 12)
                 if let passage = cover.passage { Text(passage).font(.ccBody(18)) }
                 if let who = cover.who { Text(who).font(.system(size: 13)).foregroundStyle(muted).padding(.top, 6) }
+                if !photos.isEmpty {
+                    NoteThumbnails(photos: photos) { openPhoto = PhotoOpening(index: $0) }.padding(.top, 18)
+                }
             }
         case .card(let card):
             VStack(alignment: .leading, spacing: 0) {
@@ -212,11 +240,17 @@ struct SermonCardView<Footer: View>: View {
                 footerOverride
             } else {
                 HStack(spacing: 6) {
+                    // Share comes first on every page, cover included (TKL-942).
+                    shareButton
                     if let readerSource {
                         NavigationLink(value: ScriptureRoute.reader(readerSource)) { pill("Read", systemImage: "book") }
                             .accessibilityIdentifier("lordsDay.read")
                     }
-                    shareButton.accessibilityLabel("Share this card")
+                    if let onEdit, let card {
+                        Button { onEdit(card) } label: { pill("Edit", systemImage: "pencil") }
+                            .accessibilityLabel("Edit this card")
+                            .accessibilityIdentifier("lordsDay.edit")
+                    }
                 }
             }
         }
@@ -228,21 +262,22 @@ struct SermonCardView<Footer: View>: View {
     }
 
     @ViewBuilder private var shareButton: some View {
+        if card != nil || coverShare != nil {
+            Button(action: openShare) { pill("Share", systemImage: "square.and.arrow.up") }
+                .accessibilityLabel(card == nil ? "Share this sermon" : "Share this card")
+                .accessibilityIdentifier("lordsDay.share")
+        }
+    }
+
+    /// The share sheet starts in the palette on screen; the image follows the palette picked there.
+    private func openShare() {
         if let card {
-            let text = card.shareText(verseText: verseText)
-            Group {
-                if let shareImage {
-                    ShareLink(item: shareImage, message: Text(text),
-                              preview: SharePreview(card.kind.label, image: Image(uiImage: shareImage.preview))) {
-                        pill("Share", systemImage: "square.and.arrow.up")
-                    }
-                } else {
-                    ShareLink(item: text) { pill("Share", systemImage: "square.and.arrow.up") }
-                }
-            }
-            .simultaneousGesture(TapGesture().onEnded { LoopCounter.record(.cardShared(kind: card.kind)) })
-        } else if let coverShareText {
-            ShareLink(item: coverShareText) { pill("Share", systemImage: "square.and.arrow.up") }
+            shareSubject = ShareSubject(content: card.quoteCardContent(verseText: verseText), palette: p,
+                                        label: card.kind.label, message: card.shareText(verseText: verseText),
+                                        onShare: { LoopCounter.record(.cardShared(kind: card.kind)) })
+        } else if let coverShare {
+            shareSubject = ShareSubject(content: coverShare.content, palette: p, label: "The Lord's Day",
+                                        message: coverShare.message)
         }
     }
 
@@ -254,15 +289,18 @@ struct SermonCardView<Footer: View>: View {
 
 extension SermonCardView where Footer == EmptyView {
     init(page: SermonPage, binding: SermonCardBinding, palette: QuoteCardPalette, large: Bool = false, hint: String? = nil,
-         allowsNetwork: Bool = false, readerSource: ReaderSource? = nil, coverShareText: String? = nil) {
+         allowsNetwork: Bool = false, readerSource: ReaderSource? = nil,
+         coverShare: (content: QuoteCardContent, message: String)? = nil, photosNoteId: UUID? = nil,
+         onEdit: ((LordsDayFeedCard) -> Void)? = nil) {
         self.init(page: page, binding: binding, palette: palette, large: large, hint: hint, allowsNetwork: allowsNetwork,
-                  readerSource: readerSource, coverShareText: coverShareText) { EmptyView() }
+                  readerSource: readerSource, coverShare: coverShare, photosNoteId: photosNoteId, onEdit: onEdit) { EmptyView() }
     }
 }
 
 extension SermonCardView where Footer == EmptyView {
     /// Page `page` of a kept sermon.
-    init(sermon: ReelSermon, page: Int, large: Bool = false, hint: String? = nil, allowsNetwork: Bool = false) {
+    init(sermon: ReelSermon, page: Int, large: Bool = false, hint: String? = nil, allowsNetwork: Bool = false,
+         onEdit: ((LordsDayFeedCard) -> Void)? = nil) {
         let card = sermon.card(atPage: page)
         let count = page == 0 ? "\(sermon.pageCount) cards" : "\(page + 1) of \(sermon.pageCount)"
         self.init(
@@ -270,7 +308,11 @@ extension SermonCardView where Footer == EmptyView {
             binding: SermonCardBinding(title: page == 0 ? nil : sermon.title, meta: sermon.meta, count: count),
             palette: sermon.palette(atPage: page), large: large, hint: hint, allowsNetwork: allowsNetwork,
             readerSource: card.flatMap(sermon.readerSource(for:)),
-            coverShareText: page == 0 ? [sermon.title, sermon.meta].compactMap { $0 }.joined(separator: "\n") : nil
+            coverShare: page == 0
+                ? (sermon.coverQuoteCardContent, [sermon.title, sermon.meta].compactMap { $0 }.joined(separator: "\n"))
+                : nil,
+            photosNoteId: page == 0 ? sermon.id : nil,
+            onEdit: onEdit
         )
     }
 }

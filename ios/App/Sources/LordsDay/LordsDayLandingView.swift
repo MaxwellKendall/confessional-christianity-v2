@@ -595,7 +595,9 @@ private extension View {
 /// draws the landing page in that state from an in-memory store (this week's sermon is the
 /// Revelation 2:8-11 note; earlier ones are samples). `-LordsDayStackPage 4` puts the stack on that
 /// page; `-LordsDayReelAt 0:4` opens the reel at sermon 0, page 4; `-LordsDayReelBubble YES`
-/// shows the scrub bubble as if the rail were being dragged.
+/// shows the scrub bubble as if the rail were being dragged. `-LordsDayReelSheet share|edit|photo` opens the
+/// share sheet, the edit sheet or the first note photo on the reel's opening page (TKL-942); this week's
+/// cover carries two sample note photos.
 struct LordsDayLandingFixture: View {
     let scene: String
     @State private var reel = LordsDayReel(testSermonPageCounts: [])
@@ -628,7 +630,11 @@ struct LordsDayLandingFixture: View {
         }
         .overlay { FloatingTabBarView(selected: .constant(.lordsDay)) }
         .fullScreenCover(item: Binding(get: { opening.map(FixtureOpening.init) }, set: { opening = $0?.position })) { o in
-            LordsDayReelView(reel: reel, start: o.position, allowsNetwork: false, onClose: { opening = nil })
+            LordsDayReelView(reel: reel, start: o.position, allowsNetwork: false,
+                             onChanged: { reel = (try? LordsDayReel(store: LordsDayStore(context: Self.container.mainContext),
+                                                                    today: today, calendar: .current)) ?? reel },
+                             onClose: { opening = nil })
+                .modelContainer(Self.container)
         }
         .task {
             let (reel, today) = Self.make(scene)
@@ -665,10 +671,35 @@ struct LordsDayLandingFixture: View {
         }
     }
 
+    /// The fixture's store, so the reel's edit sheet saves into it.
+    @MainActor static var container = try! ModelContainer(for: progressSchema, configurations: [ModelConfiguration(schema: progressSchema, isStoredInMemoryOnly: true)])
+
+    /// Two drawn pages of sermon notes on lined paper, saved where kept notes' photos live.
+    static func samplePhotos(noteId: UUID) {
+        guard CaptureDraft.savedPageCount(noteId: noteId) == 0, let draft = try? CaptureDraft(noteId: noteId) else { return }
+        let lines = [["Rev 2:8-11  Smyrna", "- the first and the last", "- tribulation & poverty", "  (but you are rich)",
+                      "- do not fear", "- be faithful unto death"],
+                     ["crown of life", "union w/ Christ = heart", "by the Spirit", "\"I see Christ wrestling", "  there\" - M. Wilson"]]
+        for page in lines {
+            let image = UIGraphicsImageRenderer(size: CGSize(width: 600, height: 800)).image { ctx in
+                UIColor(red: 0.985, green: 0.973, blue: 0.937, alpha: 1).setFill()
+                ctx.fill(CGRect(x: 0, y: 0, width: 600, height: 800))
+                UIColor(red: 0.79, green: 0.84, blue: 0.9, alpha: 1).setFill()
+                for y in stride(from: 90.0, to: 800, by: 44) { ctx.fill(CGRect(x: 0, y: y, width: 600, height: 2)) }
+                let attrs: [NSAttributedString.Key: Any] = [.font: UIFont(name: "Noteworthy-Bold", size: 30) ?? .systemFont(ofSize: 30),
+                                                            .foregroundColor: UIColor(red: 0.12, green: 0.18, blue: 0.4, alpha: 1)]
+                for (i, line) in page.enumerated() {
+                    (line as NSString).draw(at: CGPoint(x: 40, y: 50 + Double(i) * 88), withAttributes: attrs)
+                }
+            }
+            if let jpeg = image.jpegData(compressionQuality: 0.8) { _ = try? draft.addPage(jpeg) }
+        }
+    }
+
     @MainActor static func make(_ scene: String) -> (LordsDayReel, Date) {
         let calendar = Calendar.current
-        let container = try! ModelContainer(for: progressSchema, configurations: [ModelConfiguration(schema: progressSchema, isStoredInMemoryOnly: true)])
-        let store = LordsDayStore(context: ModelContext(container))
+        container = try! ModelContainer(for: progressSchema, configurations: [ModelConfiguration(schema: progressSchema, isStoredInMemoryOnly: true)])
+        let store = LordsDayStore(context: container.mainContext)
         let thisSunday = lastSunday(onOrBefore: Date(), calendar: calendar)
         // The kept Smyrna sermon is "this week" except where the state needs it gone or a week back.
         let smyrnaWeek: Int? = switch scene {
@@ -686,6 +717,7 @@ struct LordsDayLandingFixture: View {
             let note = LordsDayNote(serviceDate: sunday(week), passageRef: "Revelation 2:8-11", sermonTitle: "To the Church at Smyrna",
                                     preacher: "Rev. [Preacher]", church: "[Church]")
             try! store.save(note)
+            Self.samplePhotos(noteId: note.id)
             try! store.appendCard(to: note, kind: .keyPoint, body: "The hatred of the world is part of our heritage with Christ.")
             try! store.appendCard(to: note, kind: .verse, body: "", verseRef: "Revelation 2:10")
             try! store.appendCard(to: note, kind: .keyPoint, body: "True union with Christ is a matter of the heart, by the Spirit.")

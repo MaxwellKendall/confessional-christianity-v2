@@ -52,7 +52,7 @@ public enum CardKind: String, Codable, CaseIterable, Sendable {
     }
 }
 
-public enum LordsDayError: Error { case invalidVerse, invalidOrder }
+public enum LordsDayError: Error { case invalidVerse, invalidOrder, emptyBody }
 
 /// Sunday selects the first card; Monday through Saturday advance and clamp.
 /// A new Sunday belongs to a new week. Calendar days, rather than seconds, handle DST.
@@ -81,9 +81,24 @@ public func todayCardIndex(serviceDate: Date, today: Date, cardCount: Int, calen
         for (index, card) in ordered.enumerated() { card.position = index; card.updatedAt = Date(); card.editedByUser = true }
         try context.save()
     }
+    /// Editing a kept card's words (TKL-942): trimmed, and never blank. A verse
+    /// card has no words to type; it changes only through `changeVerse`.
     public func editBody(of card: NoteCard, body: String) throws {
+        let body = card.kind == .verse ? body : body.trimmingCharacters(in: .whitespacesAndNewlines)
         try validate(kind: card.kind, body: body, verseRef: card.verseRef)
+        if card.kind != .verse && body.isEmpty { throw LordsDayError.emptyBody }
         card.update(kind: card.kind, body: body, verseRef: card.verseRef); try context.save()
+    }
+    /// A verse card's reference, picked in the verse picker (TKL-942). Only verse cards have one.
+    public func changeVerse(of card: NoteCard, to verseRef: String) throws {
+        guard card.kind == .verse else { throw LordsDayError.invalidVerse }
+        let ref = verseRef.trimmingCharacters(in: .whitespacesAndNewlines)
+        try validate(kind: .verse, body: "", verseRef: ref)
+        card.update(kind: .verse, body: "", verseRef: ref); try context.save()
+    }
+    /// A live kept card by id: a feed card's id is its stored card's.
+    public func card(id: UUID) throws -> NoteCard? {
+        try context.fetch(FetchDescriptor<NoteCard>()).first { $0.id == id && $0.deletedAt == nil }
     }
     public func switchKind(of card: NoteCard, to kind: CardKind, verseRef: String? = nil) throws {
         let body = kind == .verse ? "" : card.body

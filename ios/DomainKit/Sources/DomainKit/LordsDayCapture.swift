@@ -88,6 +88,15 @@ public final class CaptureDraft {
         return pages.count
     }
 
+    /// Read-only: every saved photo for `noteId`, in page order, without creating
+    /// any directory (the cover's note thumbnails, TKL-942). Unreadable pages are skipped.
+    public static func savedPages(noteId: UUID, root: URL = CaptureDraft.defaultRoot) -> [Data] {
+        let folder = root.appendingPathComponent(noteId.uuidString, isDirectory: true)
+        guard let data = try? Data(contentsOf: folder.appendingPathComponent("pages.json")),
+              let pages = try? JSONDecoder().decode([CapturePage].self, from: data) else { return [] }
+        return pages.compactMap { try? Data(contentsOf: folder.appendingPathComponent("\($0.id.uuidString).jpg")) }
+    }
+
     // MARK: The capture in progress, so a relaunch resumes it.
 
     public static func activeNoteId(root: URL = CaptureDraft.defaultRoot) throws -> UUID? {

@@ -63,6 +63,7 @@
 		A56C84960C4D791864614828 /* amplify_outputs.dev.json in Resources */ = {isa = PBXBuildFile; fileRef = E5B9751431F844A576E40DBE /* amplify_outputs.dev.json */; };
 		A5FB9081D12F27A77BBA509D /* Marcellus-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 8E695AE85593396B01EA0946 /* Marcellus-Regular.ttf */; };
 		A8520A15B4644D91821657B7 /* MarkdownText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CA73F64DC39A88E251E81D2 /* MarkdownText.swift */; };
+		A9FEF18510BAD7E9DFF4A4C3 /* LordsDaySheets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D1BDC1BE0D06422CCA468D9 /* LordsDaySheets.swift */; };
 		AB70875985CBC8610B6CC09C /* LoopCounter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD4AB7A9E7C2AD7577016708 /* LoopCounter.swift */; };
 		ABC676EECAD6EB2A5DDE8916 /* Marcellus-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 8E695AE85593396B01EA0946 /* Marcellus-Regular.ttf */; };
 		AEE99A080D3E2A0466FC17D6 /* VersePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF90EFD2FCB8FC6A14A57EEA /* VersePickerView.swift */; };
@@ -159,6 +160,7 @@
 		52EFEC9F374B7B3FE8384E73 /* CardsGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardsGenerator.swift; sourceTree = "<group>"; };
 		58912A495665984DB2EDA36E /* ClauseLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClauseLabel.swift; sourceTree = "<group>"; };
 		594EDB3EB58B121DCAEE36BE /* OnboardingDemos.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingDemos.swift; sourceTree = "<group>"; };
+		5D1BDC1BE0D06422CCA468D9 /* LordsDaySheets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LordsDaySheets.swift; sourceTree = "<group>"; };
 		5DD733ACA6D72F2D1A6C192B /* ShareCardImageUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareCardImageUITests.swift; sourceTree = "<group>"; };
 		6F0B1A13CFCB4351B4180520 /* LibraryRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryRoute.swift; sourceTree = "<group>"; };
 		72FB0289223150F84B4EF930 /* EsvClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EsvClient.swift; sourceTree = "<group>"; };
@@ -391,6 +393,7 @@
 				F1C91F026BE4FEE54E8BB42E /* LordsDayFeedView.swift */,
 				9DF1A1092E8D1DB70A6FC8FC /* LordsDayLandingView.swift */,
 				1E6A8E246B781187469CD606 /* LordsDayReelView.swift */,
+				5D1BDC1BE0D06422CCA468D9 /* LordsDaySheets.swift */,
 				F9026BA4701C493912921EF2 /* LordsDayTabView.swift */,
 				C643620A0907843D1122CAB4 /* ReviewModel.swift */,
 				7CB00260AC3C7D9B2C799DB8 /* ReviewView.swift */,
@@ -695,6 +698,7 @@
 				7F658028A04AEB6639B58A82 /* LordsDayFeedView.swift in Sources */,
 				78BFBD6D4C6FE9FD2D1B3330 /* LordsDayLandingView.swift in Sources */,
 				CCFB9421A3E4477D3D30DD60 /* LordsDayReelView.swift in Sources */,
+				A9FEF18510BAD7E9DFF4A4C3 /* LordsDaySheets.swift in Sources */,
 				C801FA2EAE0401DFF8830CAE /* LordsDayTabView.swift in Sources */,
 				A8520A15B4644D91821657B7 /* MarkdownText.swift in Sources */,
 				744A53A6115745E063B78CE1 /* MilestonesView.swift in Sources */,

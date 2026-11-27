@@ -13,7 +13,11 @@ struct LordsDayReelView: View {
     let start: ReelPosition
     var allowsNetwork = true
     var onPage: (ReelSermon, Int) -> Void = { _, _ in }
+    /// A kept card was edited or hidden (TKL-942): the owner rebuilds the reel from the store.
+    var onChanged: () -> Void = {}
     let onClose: () -> Void
+
+    @State private var editing: EditTarget?
 
     @State private var loaded: Int
     @State private var current: Int?
@@ -25,11 +29,13 @@ struct LordsDayReelView: View {
     @Environment(\.colorScheme) private var colorScheme
 
     init(reel: LordsDayReel, start: ReelPosition, allowsNetwork: Bool = true,
-         onPage: @escaping (ReelSermon, Int) -> Void = { _, _ in }, onClose: @escaping () -> Void) {
+         onPage: @escaping (ReelSermon, Int) -> Void = { _, _ in }, onChanged: @escaping () -> Void = {},
+         onClose: @escaping () -> Void) {
         self.reel = reel
         self.start = start
         self.allowsNetwork = allowsNetwork
         self.onPage = onPage
+        self.onChanged = onChanged
         self.onClose = onClose
         let loaded = reel.sermonsToLoad(loaded: min(LordsDayReel.initialSermons, reel.sermons.count), through: start.sermon)
         _loaded = State(initialValue: loaded)
@@ -74,6 +80,9 @@ struct LordsDayReelView: View {
             let pos = window.position(at: new)
             if let sermon = window.sermons[safe: pos.sermon] { onPage(sermon, pos.page) }
         }
+        .sheet(item: $editing) { target in
+            LordsDayCardEditSheet(card: target.card, passageOsis: target.passageOsis, onChanged: onChanged)
+        }
         .onChange(of: allowsNetwork, initial: true) { _, onScreen in
             if onScreen { LoopCounter.dayOpened() }
         }
@@ -102,6 +111,13 @@ struct LordsDayReelView: View {
                 DispatchQueue.main.async {
                     proxy.scrollTo(target, anchor: .top)
                     current = target
+                    #if DEBUG
+                    // Screenshot hook (TKL-942): `-LordsDayReelSheet edit` opens the edit sheet on the opening card.
+                    if UserDefaults.standard.string(forKey: "LordsDayReelSheet") == "edit",
+                       let sermon = reel.sermons[safe: start.sermon], let card = sermon.card(atPage: start.page) {
+                        editing = EditTarget(card: card, passageOsis: sermon.passageOsis)
+                    }
+                    #endif
                 }
             }
             .background(ScrubScroller(target: scrubStart == nil ? nil : current, proxy: proxy))
@@ -111,7 +127,13 @@ struct LordsDayReelView: View {
     private func page(_ index: Int) -> some View {
         let pos = window.position(at: index)
         let sermon = window.sermons[pos.sermon]
-        return SermonCardView(sermon: sermon, page: pos.page, large: true, allowsNetwork: allowsNetwork && index == flat)
+        var view = SermonCardView(sermon: sermon, page: pos.page, large: true, allowsNetwork: allowsNetwork && index == flat,
+                                  onEdit: { editing = EditTarget(card: $0, passageOsis: sermon.passageOsis) })
+        #if DEBUG
+        // Screenshot hook (TKL-942): `-LordsDayReelSheet share|photo` opens it on the opening page.
+        if index == reel.flatIndex(of: start) { view.debugOpens = UserDefaults.standard.string(forKey: "LordsDayReelSheet") }
+        #endif
+        return view
             .padding(EdgeInsets(top: safeInsets.top + 58, leading: 14, bottom: max(safeInsets.bottom, 18), trailing: 14))
             .accessibilityIdentifier("lordsDay.reel.page.\(index)")
     }
@@ -192,6 +214,13 @@ struct LordsDayReelView: View {
                 }
             }
     }
+}
+
+/// The kept card the edit sheet is open on.
+private struct EditTarget: Identifiable {
+    let card: LordsDayFeedCard
+    let passageOsis: String?
+    var id: UUID { card.id }
 }
 
 /// Keeps the pager on the scrubbed card while the rail is dragged.

@@ -307,3 +307,25 @@ public enum LordsDayLanding {
         return isSunday ? "Today" : "This week"
     }
 }
+
+extension ReelSermon {
+    /// The cover as a share image (TKL-942): the sermon's name, then the
+    /// preacher, church, passage (unless it is the name) and date.
+    public var coverQuoteCardContent: QuoteCardContent {
+        QuoteCardContent(text: title, kind: .plain, attribution: .init(
+            preacher: preacher, church: church, passage: title == passage ? nil : passage,
+            date: title == longDate ? nil : longDate))
+    }
+}
+
+/// The share sheet (TKL-942, the TKL-836 prototype): a live preview in a
+/// palette the user picks from the house set, then the system share sheet.
+public enum LordsDayShare {
+    /// The palette row, in the feed's order.
+    public static let palettes: [QuoteCardPalette] = LordsDayFeed.rotation
+
+    /// The square share image in exactly `palette` (the sheet shows what it sends). Pure and thread-safe.
+    public static func png(_ content: QuoteCardContent, palette: QuoteCardPalette) -> Data? {
+        QuoteCardRenderer.pngData(content, palette: palette, format: .square)
+    }
+}
