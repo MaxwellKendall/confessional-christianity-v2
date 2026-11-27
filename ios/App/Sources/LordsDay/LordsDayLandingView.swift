@@ -41,6 +41,7 @@ struct LordsDayLandingView: View {
     var draft: LandingDraft?
     var calendar: Calendar = .current
     var onOpenReel: (ReelPosition) -> Void = { _ in }
+    var onEditSermon: ((UUID) -> Void)? = nil
     var onJournal: () -> Void = {}
     var onCapture: () -> Void = {}
     var onType: () -> Void = {}
@@ -165,7 +166,12 @@ struct LordsDayLandingView: View {
                 onOpenReel(ReelPosition(sermon: index, page: 0))
             }
             StackFrame(under: peeking.map { sermon.palette(atPage: $0) }) {
-                SermonCardView(sermon: sermon, page: page, hint: "Tap to open the stack")
+                SermonCardView(
+                    sermon: sermon,
+                    page: page,
+                    hint: "Tap to open the stack",
+                    onEditDetails: onEditSermon.map { edit in { edit(sermon.id) } }
+                )
             }
             .contentShape(Rectangle())
             .onTapGesture { onOpenReel(ReelPosition(sermon: index, page: page)) }

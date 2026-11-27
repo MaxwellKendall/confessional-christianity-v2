@@ -105,6 +105,8 @@ public struct ReviewCard: Codable, Equatable, Identifiable, Sendable {
     public fileprivate(set) var attribution: String?
     public fileprivate(set) var decision: Decision
     public fileprivate(set) var editedByUser: Bool
+    /// True after the user redrafted this card from the notes (TKL-1085).
+    public fileprivate(set) var redrafted: Bool
     /// Immutable identity of the drafted source payload, separate from user edits,
     /// so a retry reconciles against the card it originally drafted.
     /// Nil for cards loaded from a review saved by an earlier build before `sourceKey` existed.
@@ -122,13 +124,13 @@ public struct ReviewCard: Codable, Equatable, Identifiable, Sendable {
     public var isComplete: Bool { kind == .verse ? normalizedNoteField(verseRef) != nil : normalizedNoteField(words) != nil }
 
     private enum CodingKeys: String, CodingKey {
-        case id, page, order, kind, words, verseRef, attribution, decision, editedByUser, sourceKey
+        case id, page, order, kind, words, verseRef, attribution, decision, editedByUser, redrafted, sourceKey
     }
 
-    init(id: String, page: Int, order: Int, kind: CardKind, words: String, verseRef: String?, attribution: String?, decision: Decision, editedByUser: Bool, sourceKey: String? = nil) {
+    init(id: String, page: Int, order: Int, kind: CardKind, words: String, verseRef: String?, attribution: String?, decision: Decision, editedByUser: Bool, redrafted: Bool = false, sourceKey: String? = nil) {
         self.id = id; self.page = page; self.order = order; self.kind = kind
         self.words = words; self.verseRef = verseRef; self.attribution = attribution
-        self.decision = decision; self.editedByUser = editedByUser
+        self.decision = decision; self.editedByUser = editedByUser; self.redrafted = redrafted
         self.sourceKey = sourceKey
     }
 
@@ -144,6 +146,7 @@ public struct ReviewCard: Codable, Equatable, Identifiable, Sendable {
         // Legacy review.json files without a decision default to undecided so nothing unseen is kept.
         decision = try c.decodeIfPresent(Decision.self, forKey: .decision) ?? .keep
         editedByUser = try c.decode(Bool.self, forKey: .editedByUser)
+        redrafted = try c.decodeIfPresent(Bool.self, forKey: .redrafted) ?? false
         // Preserve nil when absent on reviews saved by earlier builds: deriving from possibly-edited
         // fields would fail to reconcile against the replayed original page.
         sourceKey = try c.decodeIfPresent(String.self, forKey: .sourceKey)
@@ -534,21 +537,22 @@ public struct LordsDayReview: Codable, Equatable, Sendable {
 
     /// Swaps one card's words for a freshly drafted replacement, keeping its id,
     /// page, order and keep/remove decision (TKL-1053). A redraft is the model's
-    /// work, not the reader's, so `editedByUser` is cleared.
+    /// work, not the reader's, so `editedByUser` is cleared and `redrafted` is set.
     public mutating func replace(_ id: String, with draft: DraftCardPayload) throws {
+        guard let index = cards.firstIndex(where: { $0.id == id }) else { throw LordsDayReviewError.noSuchCard }
         guard let kind = CardKind(rawValue: draft.kind) else { throw LordsDayReviewError.noSuchCard }
         let reference = normalizedNoteField(draft.osis) ?? normalizedNoteField(draft.reference)
         if kind == .verse && reference == nil { throw LordsDayReviewError.verseNeedsReference }
         let words = kind == .verse ? "" : (draft.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         if kind != .verse && words.isEmpty { throw LordsDayReviewError.versesHaveNoWords }
-        try change(id) { card in
-            card.kind = kind
-            card.words = words
-            card.verseRef = kind == .verse ? reference : nil
-            card.attribution = kind == .quote ? draft.attribution : nil
-            card.editedByUser = false
-            return true
-        }
+        var card = cards[index]
+        card.kind = kind
+        card.words = words
+        card.verseRef = kind == .verse ? reference : nil
+        card.attribution = kind == .quote ? draft.attribution : nil
+        card.editedByUser = false
+        card.redrafted = true
+        cards[index] = card
     }
 
     public mutating func editText(_ id: String, to text: String) throws {

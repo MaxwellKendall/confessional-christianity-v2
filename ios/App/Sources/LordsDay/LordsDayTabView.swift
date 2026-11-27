@@ -27,6 +27,7 @@ struct LordsDayTabView: View {
     /// The newest note waiting on drafting or review, observed for the landing page.
     @State private var pending: ReviewModel?
     @State private var reelStart: ReelOpening?
+    @State private var editingSermonNote: LordsDayNote?
     @State private var memory = LordsDayStackMemory()
     @State private var offline = false
     @State private var now = Date()
@@ -60,7 +61,13 @@ struct LordsDayTabView: View {
         }
         .fullScreenCover(item: $reelStart, onDismiss: refresh) { opening in
             LordsDayReelView(reel: reel, start: opening.position, allowsNetwork: scenePhase == .active,
-                             onPage: remember, onClose: { reelStart = nil })
+                             onPage: remember, onDetailsUpdated: refresh, onClose: { reelStart = nil })
+        }
+        .sheet(item: $editingSermonNote) { note in
+            EditSermonDetailsSheet(initial: SermonDetailsEdit(note: note)) { edit in
+                try sync.lordsDayStore(in: context).updateDetails(edit, for: note)
+                refresh()
+            }
         }
         .onAppear(perform: refresh)
         #if DEBUG
@@ -123,6 +130,11 @@ struct LordsDayTabView: View {
             reel: reel, kind: kind, today: now, isSunday: isSunday, offline: offline,
             stackPage: thisWeek.map(memory.page(for:)) ?? 0, draft: draft, calendar: calendar,
             onOpenReel: { reelStart = ReelOpening(position: $0) },
+            onEditSermon: { noteId in
+                if let note = try? sync.lordsDayStore(in: context).note(id: noteId) {
+                    editingSermonNote = note
+                }
+            },
             onJournal: { path.append(JournalRoute.journal) },
             onCapture: { startCapture() },
             onType: { startCapture(typing: true) },

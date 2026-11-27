@@ -17,7 +17,7 @@ enum JournalTimeZoom: String, CaseIterable {
 }
 
 @MainActor @Observable final class JournalModel {
-    let journal: LordsDayJournal
+    private(set) var journal: LordsDayJournal
     var query = "" { didSet { if query != oldValue { recompute() } } }
     var filter = JournalFilter() { didSet { if filter != oldValue { recompute() } } }
     var lens: JournalLens = .time
@@ -31,6 +31,11 @@ enum JournalTimeZoom: String, CaseIterable {
     private(set) var chapterCounts = JournalChapterCounts(preached: [:], cited: [:])
 
     init(journal: LordsDayJournal) {
+        self.journal = journal
+        recompute()
+    }
+
+    func update(journal: LordsDayJournal) {
         self.journal = journal
         recompute()
     }
@@ -104,8 +109,16 @@ struct JournalView: View {
         .toolbar(.hidden, for: .navigationBar)
         .navigationDestination(item: $opened) { sermon in
             if let model {
-                JournalSermonView(journal: model.journal, list: sermon.list, whereLabel: sermon.whereLabel,
-                                  query: model.query, current: sermon.id)
+                JournalSermonView(
+                    journal: model.journal,
+                    list: sermon.list,
+                    whereLabel: sermon.whereLabel,
+                    query: model.query,
+                    current: sermon.id,
+                    onDetailsUpdated: {
+                        model.update(journal: Self.load(context: context))
+                    }
+                )
             }
         }
         .task {

@@ -745,6 +745,31 @@ final class LordsDayReviewTests: XCTestCase {
         try LordsDayReview.delete(noteId: noteId, root: root)
         XCTAssertNil(try LordsDayReview.load(noteId: noteId, root: root))
     }
+
+    func testReplaceMarksCardRedraftedClearsEditedAndPersists() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("redraft-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        var review = readyReview()
+        let id = review.cards[0].id
+        try review.editText(id, to: "User edit first")
+        XCTAssertTrue(review.card(id)!.editedByUser)
+        XCTAssertFalse(review.card(id)!.redrafted)
+
+        try review.replace(id, with: DraftCardPayload(kind: "key_point", page: 0, order: 0, text: "Freshly drafted point."))
+        let replaced = try XCTUnwrap(review.card(id))
+        XCTAssertEqual(replaced.id, id)
+        XCTAssertEqual(replaced.text, "Freshly drafted point.")
+        XCTAssertTrue(replaced.redrafted)
+        XCTAssertFalse(replaced.editedByUser, "redrafting is the model's work, not a user edit")
+
+        try review.save(root: root)
+        let reopened = try XCTUnwrap(LordsDayReview.load(noteId: noteId, root: root))
+        XCTAssertEqual(reopened.card(id)?.redrafted, true)
+        XCTAssertEqual(reopened.card(id)?.editedByUser, false)
+
+        try review.editText(id, to: "Refined after redraft")
+        XCTAssertEqual(review.card(id)?.editedByUser, true)
+    }
 }
 
 @MainActor final class LordsDayKeepTests: XCTestCase {

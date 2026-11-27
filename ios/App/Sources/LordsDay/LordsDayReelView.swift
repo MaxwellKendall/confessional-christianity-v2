@@ -6,6 +6,7 @@
 // cards, with faint marks for the sermons either side. Dragging on the rail
 // scrubs card by card across sermons, and only then a bubble names the sermon.
 import SwiftUI
+import SwiftData
 import DomainKit
 
 struct LordsDayReelView: View {
@@ -13,11 +14,15 @@ struct LordsDayReelView: View {
     let start: ReelPosition
     var allowsNetwork = true
     var onPage: (ReelSermon, Int) -> Void = { _, _ in }
+    var onDetailsUpdated: () -> Void = {}
     let onClose: () -> Void
 
+    @Environment(\.modelContext) private var context
+    @Environment(SyncService.self) private var sync
     @State private var loaded: Int
     @State private var current: Int?
     @State private var path = NavigationPath()
+    @State private var editingNote: LordsDayNote?
     @State private var scrubStart: Int?
     @State private var bubbleVisible = false
     @State private var bubbleHide: Task<Void, Never>?
@@ -25,11 +30,14 @@ struct LordsDayReelView: View {
     @Environment(\.colorScheme) private var colorScheme
 
     init(reel: LordsDayReel, start: ReelPosition, allowsNetwork: Bool = true,
-         onPage: @escaping (ReelSermon, Int) -> Void = { _, _ in }, onClose: @escaping () -> Void) {
+         onPage: @escaping (ReelSermon, Int) -> Void = { _, _ in },
+         onDetailsUpdated: @escaping () -> Void = {},
+         onClose: @escaping () -> Void) {
         self.reel = reel
         self.start = start
         self.allowsNetwork = allowsNetwork
         self.onPage = onPage
+        self.onDetailsUpdated = onDetailsUpdated
         self.onClose = onClose
         let loaded = reel.sermonsToLoad(loaded: min(LordsDayReel.initialSermons, reel.sermons.count), through: start.sermon)
         _loaded = State(initialValue: loaded)
@@ -77,6 +85,12 @@ struct LordsDayReelView: View {
         .onChange(of: allowsNetwork, initial: true) { _, onScreen in
             if onScreen { LoopCounter.dayOpened() }
         }
+        .sheet(item: $editingNote) { note in
+            EditSermonDetailsSheet(initial: SermonDetailsEdit(note: note)) { edit in
+                try sync.lordsDayStore(in: context).updateDetails(edit, for: note)
+                onDetailsUpdated()
+            }
+        }
     }
 
     // MARK: pager
@@ -111,9 +125,19 @@ struct LordsDayReelView: View {
     private func page(_ index: Int) -> some View {
         let pos = window.position(at: index)
         let sermon = window.sermons[pos.sermon]
-        return SermonCardView(sermon: sermon, page: pos.page, large: true, allowsNetwork: allowsNetwork && index == flat)
-            .padding(EdgeInsets(top: safeInsets.top + 58, leading: 14, bottom: max(safeInsets.bottom, 18), trailing: 14))
-            .accessibilityIdentifier("lordsDay.reel.page.\(index)")
+        return SermonCardView(
+            sermon: sermon,
+            page: pos.page,
+            large: true,
+            allowsNetwork: allowsNetwork && index == flat,
+            onEditDetails: pos.page == 0 ? {
+                if let note = try? sync.lordsDayStore(in: context).note(id: sermon.id) {
+                    editingNote = note
+                }
+            } : nil
+        )
+        .padding(EdgeInsets(top: safeInsets.top + 58, leading: 14, bottom: max(safeInsets.bottom, 18), trailing: 14))
+        .accessibilityIdentifier("lordsDay.reel.page.\(index)")
     }
 
     // MARK: top bar

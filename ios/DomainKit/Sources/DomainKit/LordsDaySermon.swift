@@ -113,3 +113,134 @@ public struct SermonHeading: Equatable, Sendable {
         self.init(title: note.sermonTitle, passage: note.passageRef, preacher: note.preacher, date: date)
     }
 }
+
+// MARK: Editing sermon details (TKL-1085 pass 1)
+
+public enum SermonPassageValidation: Equatable, Sendable {
+    case empty
+    case valid(canonical: String, osis: String)
+    case invalid(String)
+}
+
+private let sermonBookChapters: [String: Int] = Dictionary(uniqueKeysWithValues: BIBLE_BOOKS.map { ($0.osis, $0.chapters) })
+
+private func sermonChaptersExist(_ osis: String) -> Bool {
+    osis.split(separator: "-").allSatisfy { part in
+        let bits = part.split(separator: ".")
+        guard bits.count >= 2,
+              let maxChapter = sermonBookChapters[String(bits[0])],
+              let chapter = Int(bits[1]),
+              chapter >= 1 && chapter <= maxChapter else {
+            return false
+        }
+        if bits.count >= 3 {
+            guard let verse = Int(bits[2]), verse >= 1 else { return false }
+        }
+        return true
+    }
+}
+
+/// Validates a sermon passage on the same OSIS path as the server's
+/// `referenceToOsis` (`src/lib/lordsDay/cards.ts`): trims whitespace, allows
+/// blank (passage is optional), normalizes `Ps`/`Ps.`/`Pss` to `Psalm`, parses
+/// via `citationToOsis`, and checks that every referenced chapter exists in
+/// `BIBLE_BOOKS`. Never silently drops an invalid reference.
+public func validateSermonPassage(_ raw: String) -> SermonPassageValidation {
+    let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+    if trimmed.isEmpty { return .empty }
+    let errorMessage = "Enter a Bible reference like Romans 8:28 or Revelation 2:8-11."
+    guard trimmed.count <= 40 else { return .invalid(errorMessage) }
+    let normalized = trimmed.replacingOccurrences(
+        of: #"\bPss?\b\.?"#,
+        with: "Psalm",
+        options: [.regularExpression, .caseInsensitive]
+    )
+    guard let osis = citationToOsis(normalized), sermonChaptersExist(osis) else {
+        return .invalid(errorMessage)
+    }
+    return .valid(canonical: parseOsisBibleReference(osis), osis: osis)
+}
+
+/// Which fields of the edit sheet still match what the model read from the notes.
+public struct SermonDetailsReadFlags: Equatable, Sendable {
+    public let title: Bool
+    public let preacher: Bool
+    public let passage: Bool
+    public let church: Bool
+    public let serviceDate: Bool
+
+    public static let none = SermonDetailsReadFlags(title: false, preacher: false, passage: false, church: false, serviceDate: false)
+
+    public init(title: Bool, preacher: Bool, passage: Bool, church: Bool, serviceDate: Bool) {
+        self.title = title
+        self.preacher = preacher
+        self.passage = passage
+        self.church = church
+        self.serviceDate = serviceDate
+    }
+}
+
+extension SermonDetails {
+    public func readFlags(
+        title: String,
+        preacher: String,
+        passage: String,
+        church: String,
+        serviceDate: Date,
+        calendar: Calendar = .current
+    ) -> SermonDetailsReadFlags {
+        func matches(_ extracted: String?, _ value: String) -> Bool {
+            guard let extracted, let current = normalizedNoteField(value) else { return false }
+            return extracted.caseInsensitiveCompare(current) == .orderedSame
+        }
+        let passageMatch: Bool = {
+            guard let extracted = self.passage, let current = normalizedNoteField(passage) else { return false }
+            if extracted.caseInsensitiveCompare(current) == .orderedSame { return true }
+            if case .valid(let a, _) = validateSermonPassage(extracted),
+               case .valid(let b, _) = validateSermonPassage(current) {
+                return a == b
+            }
+            return false
+        }()
+        let dateMatch: Bool = {
+            guard let extracted = self.serviceDate else { return false }
+            let comps = calendar.dateComponents([.year, .month, .day], from: serviceDate)
+            guard let y = comps.year, let m = comps.month, let d = comps.day else { return false }
+            return String(format: "%04d-%02d-%02d", y, m, d) == extracted
+        }()
+        return SermonDetailsReadFlags(
+            title: matches(self.title, title),
+            preacher: matches(self.preacher, preacher),
+            passage: passageMatch,
+            church: matches(self.church, church),
+            serviceDate: dateMatch
+        )
+    }
+}
+
+/// The five editable fields of a sermon note.
+public struct SermonDetailsEdit: Equatable, Sendable {
+    public var title: String?
+    public var preacher: String?
+    public var passage: String?
+    public var church: String?
+    public var serviceDate: Date
+
+    public init(title: String?, preacher: String?, passage: String?, church: String?, serviceDate: Date) {
+        self.title = title
+        self.preacher = preacher
+        self.passage = passage
+        self.church = church
+        self.serviceDate = serviceDate
+    }
+
+    @MainActor public init(note: LordsDayNote) {
+        self.init(
+            title: note.sermonTitle,
+            preacher: note.preacher,
+            passage: note.passageRef,
+            church: note.church,
+            serviceDate: note.serviceDate
+        )
+    }
+}

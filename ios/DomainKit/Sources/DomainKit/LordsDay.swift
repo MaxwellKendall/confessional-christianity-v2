@@ -125,7 +125,7 @@ public enum CardKind: String, Codable, CaseIterable, Sendable {
     }
 }
 
-public enum LordsDayError: Error { case invalidVerse, invalidOrder }
+public enum LordsDayError: Error, Equatable { case invalidVerse, invalidOrder, invalidPassage }
 
 /// Sunday selects the first card; Monday through Saturday advance and clamp.
 /// A new Sunday belongs to a new week. Calendar days, rather than seconds, handle DST.
@@ -179,6 +179,27 @@ public func todayCardIndex(serviceDate: Date, today: Date, cardCount: Int, calen
         mutate(note)
         note.updatedAt = stampedNow(after: note.updatedAt)
         try save(note)
+    }
+
+    /// Saves edited sermon details from the focused sheet (TKL-1085 pass 1),
+    /// validating the passage on the server's OSIS path and syncing the note.
+    public func updateDetails(_ edit: SermonDetailsEdit, for note: LordsDayNote) throws {
+        let canonicalPassage: String?
+        if let raw = normalizedNoteField(edit.passage) {
+            guard case .valid(let canonical, _) = validateSermonPassage(raw) else {
+                throw LordsDayError.invalidPassage
+            }
+            canonicalPassage = canonical
+        } else {
+            canonicalPassage = nil
+        }
+        try update(note) { note in
+            note.sermonTitle = normalizedNoteField(edit.title)
+            note.preacher = normalizedNoteField(edit.preacher)
+            note.passageRef = canonicalPassage
+            note.church = normalizedNoteField(edit.church)
+            note.serviceDate = SyncTimestamp.truncate(edit.serviceDate)
+        }
     }
 
     public func removeNote(_ note: LordsDayNote) throws {

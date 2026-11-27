@@ -188,3 +188,97 @@ private func day(_ iso: String) -> Date {
         #expect(plain.cards[0].attributionLine == "From your notes on Revelation 2:8-11")
     }
 }
+
+@Suite struct SermonPassageValidationTests {
+    @Test func emptyInputIsAllowedBecausePassageIsOptional() {
+        #expect(validateSermonPassage("") == .empty)
+        #expect(validateSermonPassage("   \n\t ") == .empty)
+    }
+
+    @Test func validReferencesMatchServerOsisPath() {
+        #expect(validateSermonPassage("Revelation 2:8-11") == .valid(canonical: "Revelation 2:8-11", osis: "Rev.2.8-Rev.2.11"))
+        #expect(validateSermonPassage("Revelation 2:8–11") == .valid(canonical: "Revelation 2:8-11", osis: "Rev.2.8-Rev.2.11"))
+        #expect(validateSermonPassage("Romans 8:28") == .valid(canonical: "Romans 8:28", osis: "Rom.8.28"))
+        #expect(validateSermonPassage("Psalm 86:5") == .valid(canonical: "Psalms 86:5", osis: "Ps.86.5"))
+        #expect(validateSermonPassage("Ps. 23:1") == .valid(canonical: "Psalms 23:1", osis: "Ps.23.1"))
+        #expect(validateSermonPassage("Pss 119:105") == .valid(canonical: "Psalms 119:105", osis: "Ps.119.105"))
+        #expect(validateSermonPassage("Jude 4") == .valid(canonical: "Jude 1:4", osis: "Jude.1.4"))
+        #expect(validateSermonPassage("Hebrews 8-10") == .valid(canonical: "Hebrews 8-10", osis: "Heb.8-Heb.10"))
+        #expect(validateSermonPassage("1 Corinthians 13:4-7") == .valid(canonical: "1 Corinthians 13:4-7", osis: "1Cor.13.4-1Cor.13.7"))
+    }
+
+    @Test func invalidReferencesProduceAnErrorInsteadOfSilentlyDropping() {
+        for bad in ["Not a book 1:1", "Romans 99:1", "Jude 2:1", "Psalm 151:1", "Genesis 0:1", "Romans", "hello", String(repeating: "Romans 8:28 ", count: 5)] {
+            if case .invalid(let msg) = validateSermonPassage(bad) {
+                #expect(!msg.isEmpty)
+            } else {
+                Issue.record("Expected invalid for \(bad)")
+            }
+        }
+    }
+}
+
+@Suite struct SermonDetailsReadFlagsTests {
+    @Test func marksOnlyFieldsReadFromNotesThatStillMatch() {
+        let extracted = SermonDetails(title: "To the Church at Smyrna", preacher: "Rev. Ross Hodges", passage: "Revelation 2:8-11", church: nil, serviceDate: "2026-11-22")
+        let flags = extracted.readFlags(
+            title: "To the Church at Smyrna",
+            preacher: "Rev. Other",
+            passage: "Revelation 2:8–11",
+            church: "Grace Presbyterian",
+            serviceDate: day("2026-11-22"),
+            calendar: utc
+        )
+        #expect(flags.title)
+        #expect(!flags.preacher)
+        #expect(flags.passage)
+        #expect(!flags.church)
+        #expect(flags.serviceDate)
+    }
+}
+
+@Suite @MainActor struct UpdateSermonDetailsTests {
+    @Test func updatesAllFieldsCanonicalizesPassageAndEnqueuesSync() throws {
+        let container = try ModelContainer(for: progressSchema, configurations: ModelConfiguration(schema: progressSchema, isStoredInMemoryOnly: true))
+        var localWrites = 0
+        let store = LordsDayStore(context: container.mainContext, syncSubject: "sub-1", onLocalWrite: { localWrites += 1 })
+        let note = LordsDayNote(serviceDate: day("2026-11-15"), sermonTitle: "Old")
+        try store.save(note)
+        let before = note.updatedAt
+
+        try store.updateDetails(SermonDetailsEdit(
+            title: "  To the Church at Smyrna  ",
+            preacher: "Rev. Ross Hodges",
+            passage: "Revelation 2:8–11",
+            church: "Grace Presbyterian",
+            serviceDate: day("2026-11-22")
+        ), for: note)
+
+        #expect(note.sermonTitle == "To the Church at Smyrna")
+        #expect(note.preacher == "Rev. Ross Hodges")
+        #expect(note.passageRef == "Revelation 2:8-11")
+        #expect(note.church == "Grace Presbyterian")
+        #expect(note.serviceDate == day("2026-11-22"))
+        #expect(note.updatedAt > before)
+        #expect(localWrites == 2)
+    }
+
+    @Test func rejectsInvalidPassageWithoutModifyingTheNote() throws {
+        let container = try ModelContainer(for: progressSchema, configurations: ModelConfiguration(schema: progressSchema, isStoredInMemoryOnly: true))
+        let store = LordsDayStore(context: container.mainContext)
+        let note = LordsDayNote(serviceDate: day("2026-11-15"), passageRef: "Romans 8:28", sermonTitle: "Kept")
+        try store.save(note)
+
+        #expect(throws: LordsDayError.invalidPassage) {
+            try store.updateDetails(SermonDetailsEdit(
+                title: "Changed",
+                preacher: nil,
+                passage: "Romans 99:1",
+                church: nil,
+                serviceDate: day("2026-11-22")
+            ), for: note)
+        }
+        #expect(note.sermonTitle == "Kept")
+        #expect(note.passageRef == "Romans 8:28")
+    }
+}

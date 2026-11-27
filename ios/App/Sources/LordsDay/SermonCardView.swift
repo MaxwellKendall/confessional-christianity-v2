@@ -49,6 +49,8 @@ struct SermonCardView<Footer: View>: View {
     var readerSource: ReaderSource?
     /// What Share sends for the cover.
     var coverShareText: String?
+    /// Opens the focused details sheet for a kept sermon's cover card (TKL-1085).
+    var onEditDetails: (() -> Void)?
     /// Replaces Read and Share (the draft cover's Review button).
     let footerOverride: Footer?
     @State private var verseText: String?
@@ -57,9 +59,11 @@ struct SermonCardView<Footer: View>: View {
 
     init(page: SermonPage, binding: SermonCardBinding, palette: QuoteCardPalette, large: Bool = false, hint: String? = nil,
          allowsNetwork: Bool = false, readerSource: ReaderSource? = nil, coverShareText: String? = nil,
+         onEditDetails: (() -> Void)? = nil,
          @ViewBuilder footer: () -> Footer) {
         self.page = page; self.binding = binding; self.palette = palette; self.large = large; self.hint = hint
         self.allowsNetwork = allowsNetwork; self.readerSource = readerSource; self.coverShareText = coverShareText
+        self.onEditDetails = onEditDetails
         self.footerOverride = footer()
         if case .card(let card) = page {
             _verseText = State(initialValue: card.verseOsis.flatMap(bundledEsvText).flatMap(Self.nonEmpty))
@@ -216,6 +220,12 @@ struct SermonCardView<Footer: View>: View {
                         NavigationLink(value: ScriptureRoute.reader(readerSource)) { pill("Read", systemImage: "book") }
                             .accessibilityIdentifier("lordsDay.read")
                     }
+                    if card == nil, let onEditDetails {
+                        Button(action: onEditDetails) { pill("Edit", systemImage: "pencil") }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("Edit sermon details")
+                            .accessibilityIdentifier("lordsDay.cover.editDetails")
+                    }
                     shareButton.accessibilityLabel("Share this card")
                 }
             }
@@ -254,15 +264,17 @@ struct SermonCardView<Footer: View>: View {
 
 extension SermonCardView where Footer == EmptyView {
     init(page: SermonPage, binding: SermonCardBinding, palette: QuoteCardPalette, large: Bool = false, hint: String? = nil,
-         allowsNetwork: Bool = false, readerSource: ReaderSource? = nil, coverShareText: String? = nil) {
+         allowsNetwork: Bool = false, readerSource: ReaderSource? = nil, coverShareText: String? = nil,
+         onEditDetails: (() -> Void)? = nil) {
         self.init(page: page, binding: binding, palette: palette, large: large, hint: hint, allowsNetwork: allowsNetwork,
-                  readerSource: readerSource, coverShareText: coverShareText) { EmptyView() }
+                  readerSource: readerSource, coverShareText: coverShareText, onEditDetails: onEditDetails) { EmptyView() }
     }
 }
 
 extension SermonCardView where Footer == EmptyView {
     /// Page `page` of a kept sermon.
-    init(sermon: ReelSermon, page: Int, large: Bool = false, hint: String? = nil, allowsNetwork: Bool = false) {
+    init(sermon: ReelSermon, page: Int, large: Bool = false, hint: String? = nil, allowsNetwork: Bool = false,
+         onEditDetails: (() -> Void)? = nil) {
         let card = sermon.card(atPage: page)
         let count = page == 0 ? "\(sermon.pageCount) cards" : "\(page + 1) of \(sermon.pageCount)"
         self.init(
@@ -270,7 +282,8 @@ extension SermonCardView where Footer == EmptyView {
             binding: SermonCardBinding(title: page == 0 ? nil : sermon.title, meta: sermon.meta, count: count),
             palette: sermon.palette(atPage: page), large: large, hint: hint, allowsNetwork: allowsNetwork,
             readerSource: card.flatMap(sermon.readerSource(for:)),
-            coverShareText: page == 0 ? [sermon.title, sermon.meta].compactMap { $0 }.joined(separator: "\n") : nil
+            coverShareText: page == 0 ? [sermon.title, sermon.meta].compactMap { $0 }.joined(separator: "\n") : nil,
+            onEditDetails: page == 0 ? onEditDetails : nil
         )
     }
 }

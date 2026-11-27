@@ -3,6 +3,7 @@
 // Previous and next walk the list as filtered when it was opened, so you never
 // lose your place. Read-only; the fair copy face is TKL-1058.
 import SwiftUI
+import SwiftData
 import DomainKit
 
 struct JournalSermonView: View {
@@ -12,6 +13,10 @@ struct JournalSermonView: View {
     let whereLabel: String
     let query: String
     @State var current: UUID
+    var onDetailsUpdated: () -> Void = {}
+    @State private var editingNote: LordsDayNote?
+    @Environment(\.modelContext) private var context
+    @Environment(SyncService.self) private var sync
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var scheme
 
@@ -36,6 +41,12 @@ struct JournalSermonView: View {
         .background(Color.ccPaper.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
         .hidesFloatingTabBar()
+        .sheet(item: $editingNote) { note in
+            EditSermonDetailsSheet(initial: SermonDetailsEdit(note: note)) { edit in
+                try sync.lordsDayStore(in: context).updateDetails(edit, for: note)
+                onDetailsUpdated()
+            }
+        }
     }
 
     private func topBar(position: Int, of count: Int) -> some View {
@@ -54,7 +65,18 @@ struct JournalSermonView: View {
                 .lineLimit(1)
                 .frame(maxWidth: .infinity)
                 .accessibilityIdentifier("journal.sermon.where")
-            Color.clear.frame(width: 70, height: 1)
+            Button {
+                if let note = try? sync.lordsDayStore(in: context).note(id: current) {
+                    editingNote = note
+                }
+            } label: {
+                Text("Edit")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(Color.ccChapel)
+            }
+            .frame(minWidth: 70, alignment: .trailing)
+            .accessibilityLabel("Edit sermon details")
+            .accessibilityIdentifier("journal.sermon.editDetails")
         }
         .padding(.horizontal, ChapelSpace.gutter)
         .padding(.top, 8)

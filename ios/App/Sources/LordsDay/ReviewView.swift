@@ -1,11 +1,9 @@
-// Reviewing the drafted cards before the week is kept (TKL-863, the review
-// screen of the approved TKL-836 v2 prototype). Cards fill in one at a time as
-// the generator reads each page, with a progress line and a placeholder card
-// where the next ones will land; nothing blocks, and Close leaves them
-// arriving. Each card can be kept or removed, switched between Key point,
-// Quote and Verse, and have its words (and a quote's attribution) edited.
-// Verse goes through the verse picker, so a Verse card only ever holds a
-// reference. "Add N cards to my week" keeps the kept ones, in order.
+// Reviewing the drafted cards before the week is kept (TKL-863, redesigned to
+// match the approved TKL-1062 prototype in TKL-1085 pass 1). Sermon details
+// edit in a focused sheet (never inline fields competing with the keyboard and
+// card pager); cards fill in one at a time in a horizontal pager with each
+// card's action row (Remove / Undo, Redraft with shimmer, in-place Edit with
+// Save / Cancel) inside the card above "Keep these N cards".
 import SwiftUI
 import SwiftData
 import DomainKit
@@ -17,46 +15,53 @@ struct ReviewView: View {
     #if DEBUG
     /// Screenshot hook: the card the pager opens at.
     var startAt: String?
+    /// Screenshot hook: open the details sheet focused on this field on appear.
+    var fixtureOpenDetails: EditSermonDetailsSheet.Field?
+    /// Screenshot hook: open this card in in-place edit mode on appear.
+    var fixtureEditCard: String?
     #endif
 
     @Environment(\.colorScheme) private var colorScheme
     @Environment(AuthService.self) private var auth
     @State private var current: String?
-    @State private var editing: ReviewCard?
-    @State private var pickingVerseFor: ReviewCard?
+    @State private var detailsSheet: DetailsSheetRequest?
+    @State private var editingCardId: String?
+    @State private var editKind: CardKind = .keyPoint
+    @State private var editWords = ""
+    @State private var editAttribution = ""
+    @State private var editInitialAttribution = ""
+    @State private var editVerseRef = ""
+    @State private var pickingVerseForId: String?
     @State private var showsSignIn = false
     @State private var finishFailed = false
 
-    private var review: LordsDayReview { model.review }
-    private var dark: Bool { colorScheme == .dark }
-    private var paper: Color { Color(hex: dark ? 0x121513 : 0xf5f5f1) }
-    private var ink: Color { Color(hex: dark ? 0xebece6 : 0x1c1f1c) }
-    private var ink2: Color { Color(hex: dark ? 0xaeb4ac : 0x545a53) }
-    private var fill: Color { Color(hex: dark ? 0x232823 : 0xecede7) }
-    private var gilt: Color { Color(hex: dark ? 0xd3a654 : 0xa67a2c) }
-    private var chapel: Color { Color(hex: dark ? 0xa8c6b6 : 0x2e4a3e) }
-    private var onChapel: Color { Color(hex: dark ? 0x102019 : 0xf2f4ef) }
-    private var danger: Color { Color(hex: dark ? 0xec8a7c : 0x9b3328) }
-    private var dangerFill: Color { Color(hex: dark ? 0x2c1b18 : 0xf6e9e6) }
-
-    private var currentCard: ReviewCard? {
-        review.cards.first { $0.id == current } ?? (current == Self.placeholderId ? nil : review.cards.first)
+    private struct DetailsSheetRequest: Identifiable {
+        let id = UUID()
+        let focus: EditSermonDetailsSheet.Field?
     }
 
+    private var review: LordsDayReview { model.review }
+    private var dark: Bool { colorScheme == .dark }
     private static let placeholderId = "drafting"
 
     var body: some View {
         VStack(spacing: 0) {
-            header
+            topBar
+            if editingCardId == nil {
+                sermonDetailsCard
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+            if review.isDrafting {
+                draftingBar
+            }
             pager
             dots
-            if let card = currentCard { controls(for: card) } else { Spacer(minLength: 0) }
-            Spacer(minLength: 0)
             notices
             footer
         }
-        .foregroundStyle(ink)
-        .background(paper.ignoresSafeArea())
+        .animation(.easeOut(duration: 0.2), value: editingCardId != nil)
+        .foregroundStyle(.ccInk)
+        .background(Color.ccPaper.ignoresSafeArea())
         .onAppear {
             if auth.phase.isSignedIn && model.failure == .accountNeeded {
                 model.retry()
@@ -64,7 +69,22 @@ struct ReviewView: View {
                 model.startIfNeeded()
             }
             #if DEBUG
-            if let startAt { DispatchQueue.main.asyncAfter(deadline: .now() + 2) { current = startAt } }
+            if let startAt {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { current = startAt }
+            }
+            if let fixtureOpenDetails {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                    detailsSheet = DetailsSheetRequest(focus: fixtureOpenDetails)
+                }
+            }
+            if let fixtureEditCard {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+                    if let card = model.review.card(fixtureEditCard) {
+                        current = card.id
+                        beginEdit(card)
+                    }
+                }
+            }
             #endif
         }
         .onChange(of: auth.phase.isSignedIn) { _, signedIn in
@@ -83,93 +103,163 @@ struct ReviewView: View {
         .sheet(isPresented: $showsSignIn, onDismiss: { auth.cancelCode() }) {
             SignInSheet()
         }
-        .sheet(item: $editing) { card in
-            EditCardSheet(card: card, preacher: model.preacher) { words, attribution in
-                try? model.edit(card.id, words: words, attribution: attribution)
+        .sheet(item: $detailsSheet) { request in
+            EditSermonDetailsSheet(
+                initial: model.detailsEdit,
+                readFromNotes: model.review.sermon,
+                initialFocus: request.focus
+            ) { edit in
+                try model.updateDetails(edit)
             }
         }
-        .sheet(item: $pickingVerseFor) { card in
-            VersePickerView(startOsis: card.verseRef ?? model.passage.flatMap(citationToOsis)) { osis in
-                try? model.chooseVerse(card.id, osis: osis)
+        .sheet(isPresented: Binding(
+            get: { pickingVerseForId != nil },
+            set: { if !$0 { pickingVerseForId = nil } }
+        )) {
+            let startOsis = editVerseRef.isEmpty
+                ? model.passage.flatMap(citationToOsis)
+                : (ReaderChapter.chapterOSIS(for: editVerseRef) != nil ? editVerseRef : citationToOsis(editVerseRef))
+            VersePickerView(startOsis: startOsis) { osis in
+                editVerseRef = parseOsisBibleReference(osis)
+                editKind = .verse
             }
         }
     }
 
-    // MARK: Header
+    // MARK: Top bar & sermon details
 
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                Button("Close", action: onClose)
-                    .font(.system(size: 16))
-                    .foregroundStyle(chapel)
-                    .accessibilityIdentifier("review.close")
-                Spacer()
-                Text("Your week, from your notes")
-                    .font(.ccDisplay(10.5))
-                    .tracking(10.5 * 0.16)
-                    .textCase(.uppercase)
-                    .foregroundStyle(ink2)
-                Spacer()
-                Color.clear.frame(width: 44, height: 1)
+    private var topBar: some View {
+        HStack(alignment: .center) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("REVIEW").chapelCaps()
+                Text("This week's sermon")
+                    .font(.ccDisplay(21, semibold: true))
+                    .foregroundStyle(.ccInk)
             }
-            .padding(.bottom, 6)
-            sermonFields
-            Text(subtitle)
-                .font(.system(size: 14))
-                .foregroundStyle(ink2)
-                .fixedSize(horizontal: false, vertical: true)
-            if review.isDrafting {
-                ProgressLine(value: review.progress, track: fill, bar: gilt)
-                    .padding(.top, 6)
-                    .accessibilityLabel("Reading your notes")
-                    .accessibilityValue("\(Int(review.progress * 100)) percent")
+            Spacer()
+            Button(action: onClose) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(.ccInk)
+                    .frame(width: 36, height: 36)
+                    .background(Color.ccFill, in: Circle())
             }
+            .accessibilityLabel("Close")
+            .accessibilityIdentifier("review.close")
         }
-        .padding(.horizontal, 20)
-        .padding(.top, 12)
-        .padding(.bottom, 10)
+        .padding(.horizontal, ChapelSpace.gutter)
+        .padding(.top, 10)
+        .padding(.bottom, 8)
     }
 
-    /// The sermon, as the notes named it (TKL-1061), each field edited in place. An empty
-    /// title shows what the sermon is otherwise called: its passage, else its date.
-    private var sermonFields: some View {
-        let date = model.serviceDate.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day())
-        let fallback = SermonHeading(title: nil, passage: model.passage, preacher: nil, date: date).headline
-        return VStack(alignment: .leading, spacing: 4) {
-            TextField("Sermon title", text: $model.titleText, prompt: Text(fallback).foregroundStyle(ink.opacity(0.55)), axis: .vertical)
-                .font(.ccDisplay(23, semibold: true))
-                .lineLimit(1...2)
-                .submitLabel(.done)
-                .accessibilityLabel("Sermon title")
-                .accessibilityIdentifier("review.sermon.title")
-            HStack(spacing: 6) {
-                TextField("Preacher", text: $model.preacherText, prompt: Text("Preacher").foregroundStyle(ink2.opacity(0.6)))
-                    .fixedSize()
-                    .accessibilityIdentifier("review.sermon.preacher")
-                Text("·").foregroundStyle(ink2.opacity(0.6))
-                TextField("Passage", text: $model.passageText, prompt: Text("Passage").foregroundStyle(ink2.opacity(0.6)))
-                    .accessibilityIdentifier("review.sermon.passage")
+    private var sermonDetailsCard: some View {
+        let dateString = model.serviceDate.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day())
+        let heading = SermonHeading(title: model.title, passage: model.passage, preacher: model.preacher, date: dateString)
+        let flags = model.review.sermon?.readFlags(
+            title: model.title ?? "",
+            preacher: model.preacher ?? "",
+            passage: model.passage ?? "",
+            church: model.church ?? "",
+            serviceDate: model.serviceDate
+        ) ?? .none
+        let anyReadFromNotes = flags.title || flags.preacher || flags.passage || flags.church || flags.serviceDate
+        let metaParts = [model.passage, model.preacher, model.church].compactMap { $0 }
+
+        return VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .top, spacing: 10) {
+                Button { openDetails(.title) } label: {
+                    VStack(alignment: .leading, spacing: 3) {
+                        HStack(spacing: 6) {
+                            Text(heading.headline)
+                                .font(.ccDisplay(17, semibold: true))
+                                .foregroundStyle(model.title == nil ? .ccInk2 : .ccInk)
+                                .lineLimit(2)
+                                .multilineTextAlignment(.leading)
+                                .accessibilityIdentifier("review.sermon.title")
+                        }
+                        if anyReadFromNotes {
+                            Text("read from your notes")
+                                .font(.ccUI(11))
+                                .foregroundStyle(.ccGilt)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+
+                Button { openDetails(nil) } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "pencil")
+                            .font(.system(size: 12, weight: .semibold))
+                        Text("Edit details")
+                            .font(.ccUI(13, weight: .semibold))
+                    }
+                    .foregroundStyle(.ccChapel)
+                    .padding(.horizontal, 10)
+                    .frame(height: 30)
+                    .background(Color.ccFill, in: Capsule())
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("review.sermon.editDetails")
             }
-            .font(.system(size: 14))
-            .foregroundStyle(ink2)
-            .lineLimit(1)
+
+            Button { openDetails(model.passage == nil ? .passage : .preacher) } label: {
+                HStack(spacing: 6) {
+                    if metaParts.isEmpty {
+                        Text("Add passage, preacher or church · \(dateString)")
+                            .font(.ccUI(13))
+                            .foregroundStyle(.ccInk3)
+                    } else {
+                        Text((metaParts + [dateString]).joined(separator: " · "))
+                            .font(.ccUI(13))
+                            .foregroundStyle(.ccInk2)
+                            .accessibilityIdentifier("review.sermon.meta")
+                    }
+                    Spacer(minLength: 0)
+                }
+                .lineLimit(2)
+                .multilineTextAlignment(.leading)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
         }
-        .textInputAutocapitalization(.words)
-        .autocorrectionDisabled()
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .background(Color.ccSurface, in: RoundedRectangle(cornerRadius: ChapelRadius.card, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: ChapelRadius.card, style: .continuous)
+                .strokeBorder(Color.ccLine, lineWidth: 1)
+        )
+        .padding(.horizontal, ChapelSpace.gutter)
+        .padding(.bottom, 4)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("review.sermon.card")
     }
 
-    private var subtitle: String {
+    private func openDetails(_ focus: EditSermonDetailsSheet.Field?) {
+        editingCardId = nil
+        detailsSheet = DetailsSheetRequest(focus: focus)
+    }
+
+    private var draftingBar: some View {
         let count = review.cards.count
-        if review.isDrafting {
-            // Real units: which page the model is on, and what it has found (TKL-1053).
-            let read = review.transcribedPageCount
-            let where_ = review.pageCount > 1 && read > 0 ? "Page \(min(read + 1, review.pageCount)) of \(review.pageCount)" : "Reading your notes"
-            let so = count == 0 ? "" : " · \(count) card\(count == 1 ? "" : "s") so far"
-            return "\(where_)\(so). You can close this; they keep coming."
+        let read = review.transcribedPageCount
+        let where_ = review.pageCount > 1 && read > 0
+            ? "Page \(min(read + 1, review.pageCount)) of \(review.pageCount)"
+            : "Reading your notes"
+        let so = count == 0 ? "" : " · \(count) card\(count == 1 ? "" : "s") so far"
+        return VStack(alignment: .leading, spacing: 6) {
+            Text("\(where_)\(so). You can close this; they keep coming.")
+                .font(.ccUI(13))
+                .foregroundStyle(.ccInk2)
+            ProgressLine(value: review.progress)
+                .accessibilityLabel("Reading your notes")
+                .accessibilityValue("\(Int(review.progress * 100)) percent")
         }
-        if count == 0 { return "No cards yet." }
-        return "Swipe through. Change the kind, edit the words, ask again, or remove."
+        .padding(.horizontal, ChapelSpace.gutter)
+        .padding(.top, 4)
+        .padding(.bottom, 4)
     }
 
     // MARK: Pager
@@ -179,38 +269,90 @@ struct ReviewView: View {
     }
 
     private var pager: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
+        let total = review.cards.count
+        return ScrollView(.horizontal, showsIndicators: false) {
             LazyHStack(spacing: 12) {
-                ForEach(review.cards) { card in
-                    ReviewCardView(card: card, palette: palette(for: card), preacher: model.preacher)
-                        .containerRelativeFrame(.horizontal)
-                        .id(card.id)
-                        .accessibilityIdentifier("review.card.\(card.id)")
-                        .transition(.opacity.combined(with: .offset(y: 10)))
+                ForEach(Array(review.cards.enumerated()), id: \.element.id) { index, card in
+                    let isEditing = editingCardId == card.id
+                    ReviewCardView(
+                        card: card,
+                        position: index + 1,
+                        total: total,
+                        palette: palette(for: card, index: index),
+                        preacher: model.preacher,
+                        isRedrafting: model.isRedrafting(card.id),
+                        canRedraft: model.canRedraft(card.id),
+                        isEditing: isEditing,
+                        editKind: $editKind,
+                        editWords: $editWords,
+                        editAttribution: $editAttribution,
+                        editVerseRef: $editVerseRef,
+                        onRemove: { model.remove(card.id) },
+                        onUndo: { model.keep(card.id) },
+                        onRedraft: {
+                            if editingCardId == card.id { editingCardId = nil }
+                            model.redraft(card.id)
+                        },
+                        onEdit: { beginEdit(card) },
+                        onCancelEdit: { editingCardId = nil },
+                        onSaveEdit: { saveEdit(for: card) },
+                        onPickVerse: { pickingVerseForId = card.id }
+                    )
+                    .containerRelativeFrame(.horizontal)
+                    .id(card.id)
+                    .accessibilityIdentifier("review.card.\(card.id)")
                 }
                 if review.isDrafting {
                     DraftingCard(
-                        fill: fill,
-                        ink2: ink2,
-                        accent: chapel,
                         cardsSoFar: review.cards.count,
                         transcription: review.newestTranscription
                     )
-                        .containerRelativeFrame(.horizontal)
-                        .id(Self.placeholderId)
+                    .containerRelativeFrame(.horizontal)
+                    .id(Self.placeholderId)
                 }
             }
             .scrollTargetLayout()
-            .animation(.easeOut(duration: 0.35), value: review.cards.map(\.id))
+            .animation(.easeOut(duration: 0.3), value: review.cards.map(\.id))
         }
-        .contentMargins(.horizontal, 32, for: .scrollContent)
+        .contentMargins(.horizontal, ChapelSpace.gutter, for: .scrollContent)
         .scrollTargetBehavior(.viewAligned)
         .scrollPosition(id: $current)
-        .frame(maxHeight: 440)
-        .frame(minHeight: 300)
+        .frame(maxHeight: .infinity)
+        .padding(.top, 8)
+        .padding(.bottom, 6)
         .overlay {
             if review.cards.isEmpty && !review.isDrafting { emptyState }
         }
+    }
+
+    private func beginEdit(_ card: ReviewCard) {
+        editKind = card.kind
+        editWords = card.words
+        let initialAttr = card.attribution ?? model.preacher ?? ""
+        editAttribution = initialAttr
+        editInitialAttribution = initialAttr
+        if let ref = card.verseRef {
+            editVerseRef = ReaderChapter.chapterOSIS(for: ref) != nil ? parseOsisBibleReference(ref) : ref
+        } else {
+            editVerseRef = ""
+        }
+        editingCardId = card.id
+    }
+
+    private func saveEdit(for card: ReviewCard) {
+        if editKind == .verse {
+            guard case .valid(_, let osis) = validateSermonPassage(editVerseRef) else { return }
+            try? model.chooseVerse(card.id, osis: osis)
+        } else {
+            let trimmed = editWords.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else { return }
+            if card.kind != editKind {
+                try? model.setKind(card.id, to: editKind)
+            }
+            let attr: String? = (editKind == .quote && editAttribution != editInitialAttribution) ? editAttribution : nil
+            try? model.edit(card.id, words: trimmed, attribution: attr)
+        }
+        editingCardId = nil
     }
 
     private var emptyState: some View {
@@ -218,16 +360,15 @@ struct ReviewView: View {
             Text(review.phase == .notStarted ? "Your notes are saved." : "No cards came back from these notes.")
                 .font(.ccBody(19))
             Text(review.phase == .notStarted ? "Cards are drafted from them when you try again." : "Try again, or retake the photos with the whole page in frame.")
-                .font(.system(size: 14))
-                .foregroundStyle(ink2)
+                .font(.ccUI(14))
+                .foregroundStyle(.ccInk2)
         }
         .multilineTextAlignment(.center)
         .padding(32)
     }
 
-    private func palette(for card: ReviewCard) -> QuoteCardPalette {
-        let index = review.cards.firstIndex(of: card) ?? 0
-        return LordsDayFeed.palette(LordsDayFeed.rotation[index % LordsDayFeed.rotation.count], dark: dark)
+    private func palette(for card: ReviewCard, index: Int) -> QuoteCardPalette {
+        LordsDayFeed.palette(LordsDayFeed.rotation[index % LordsDayFeed.rotation.count], dark: dark)
     }
 
     private var dots: some View {
@@ -235,94 +376,13 @@ struct ReviewView: View {
             ForEach(pagerIds, id: \.self) { id in
                 let on = id == (current ?? pagerIds.first)
                 RoundedRectangle(cornerRadius: 3)
-                    .fill(on ? ink : ink.opacity(0.2))
+                    .fill(on ? Color.ccInk : Color.ccInk.opacity(0.2))
                     .frame(width: on ? 16 : 6, height: 6)
             }
         }
-        .padding(.top, 12)
+        .padding(.bottom, 8)
         .animation(.easeOut(duration: 0.2), value: current)
         .accessibilityHidden(true)
-    }
-
-    // MARK: Controls for the current card
-
-    private func controls(for card: ReviewCard) -> some View {
-        VStack(spacing: 10) {
-            HStack(spacing: 6) {
-                ForEach(CardKind.allCases, id: \.self) { kind in
-                    Button {
-                        if kind == .verse { pickingVerseFor = card } else { try? model.setKind(card.id, to: kind) }
-                    } label: {
-                        Text(kind.label)
-                            .font(.system(size: 13.5, weight: card.kind == kind ? .semibold : .regular))
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 7)
-                            .background(card.kind == kind ? ink : fill, in: Capsule())
-                            .foregroundStyle(card.kind == kind ? paper : ink2)
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityAddTraits(card.kind == kind ? .isSelected : [])
-                    .accessibilityHint(kind == .verse ? "Opens the Bible to pick the verse" : "")
-                }
-            }
-            // Cards arrive kept, so there is no Keep to press. Editing is the
-            // call to action; removing is deliberate, quiet and reversible.
-            HStack(spacing: 10) {
-                if card.isRemoved {
-                    Button { model.keep(card.id) } label: {
-                        Label("Keep this card", systemImage: "arrow.uturn.backward")
-                            .font(.system(size: 15, weight: .semibold))
-                            .padding(.vertical, 10)
-                            .padding(.horizontal, 18)
-                            .background(chapel.opacity(0.14), in: Capsule())
-                            .foregroundStyle(chapel)
-                    }
-                    .accessibilityIdentifier("review.keep")
-                } else {
-                    Button {
-                        if card.kind == .verse { pickingVerseFor = card } else { editing = card }
-                    } label: {
-                        Label(
-                            card.kind == .verse ? "Change verse" : "Edit",
-                            systemImage: card.kind == .verse ? "book" : "pencil"
-                        )
-                        .font(.system(size: 15, weight: .semibold))
-                        .padding(.vertical, 10)
-                        .padding(.horizontal, 20)
-                        .background(chapel, in: Capsule())
-                        .foregroundStyle(onChapel)
-                    }
-                    .accessibilityIdentifier("review.edit")
-
-                    if model.canRedraft(card.id) {
-                        Button { model.redraft(card.id) } label: {
-                            Label("Try again", systemImage: "arrow.triangle.2.circlepath")
-                                .font(.system(size: 15))
-                                .padding(.vertical, 10)
-                                .padding(.horizontal, 14)
-                                .foregroundStyle(chapel)
-                                .opacity(model.redrafting == card.id ? 0.4 : 1)
-                        }
-                        .disabled(model.redrafting != nil)
-                        .accessibilityIdentifier("review.redraft")
-                        .accessibilityHint("Asks for another card in this one's place")
-                    }
-
-                    Button { model.remove(card.id) } label: {
-                        Label("Remove", systemImage: "xmark")
-                            .font(.system(size: 15))
-                            .padding(.vertical, 10)
-                            .padding(.horizontal, 14)
-                            .foregroundStyle(ink2)
-                    }
-                    .accessibilityIdentifier("review.remove")
-                }
-            }
-            .buttonStyle(.plain)
-            .labelStyle(.titleAndIcon)
-            .padding(.horizontal, 4)
-        }
-        .padding(.top, 14)
     }
 
     // MARK: Notices and footer
@@ -410,7 +470,8 @@ struct ReviewView: View {
                 note("Couldn't save on this iPhone. Your changes are still on screen; try again.", actionTitle: nil) {}
             }
         }
-        .padding(.horizontal, 20)
+        .padding(.horizontal, ChapelSpace.gutter)
+        .padding(.bottom, 6)
     }
 
     private var failureMessage: String? {
@@ -434,36 +495,36 @@ struct ReviewView: View {
         action: @escaping () -> Void
     ) -> some View {
         HStack(alignment: .center, spacing: 10) {
-            Text(text).font(.system(size: 14)).fixedSize(horizontal: false, vertical: true)
+            Text(text).font(.ccUI(13.5)).fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
             VStack(alignment: .trailing, spacing: 6) {
                 if let actionTitle {
                     Button(actionTitle, action: action)
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(.ccUI(13.5, weight: .semibold))
                         .accessibilityIdentifier(actionId ?? actionTitle)
                 }
                 if let secondaryTitle, let secondaryAction {
                     Button(secondaryTitle, action: secondaryAction)
-                        .font(.system(size: 13, weight: .medium))
+                        .font(.ccUI(13, weight: .medium))
                         .accessibilityIdentifier(secondaryId ?? secondaryTitle)
                 }
             }
         }
-        .foregroundStyle(danger)
+        .foregroundStyle(.ccDanger)
         .padding(.horizontal, 14)
-        .padding(.vertical, 12)
-        .background(dangerFill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .padding(.vertical, 10)
+        .background(Color.ccDangerFill, in: RoundedRectangle(cornerRadius: ChapelRadius.card, style: .continuous))
     }
 
     private var footer: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: 8) {
             if let index = review.blockingCardIndex {
                 Button {
                     current = review.cards[index].id
                 } label: {
                     Text("Card \(index + 1) has no words. Edit it or remove it.")
-                        .font(.system(size: 13))
-                        .foregroundStyle(danger)
+                        .font(.ccUI(13))
+                        .foregroundStyle(.ccDanger)
                 }
                 .buttonStyle(.plain)
             } else if !review.isDrafting, !review.unhandledUnreadPages.isEmpty {
@@ -473,10 +534,11 @@ struct ReviewView: View {
                         ? "Retry or skip \(n) unread page\(n == 1 ? "" : "s") to finish."
                         : "Keep what's here to finish without \(n) unfinished page\(n == 1 ? "" : "s")."
                 )
-                    .font(.system(size: 13))
-                    .foregroundStyle(ink2)
-                    .accessibilityIdentifier("review.unreadHint")
+                .font(.ccUI(13))
+                .foregroundStyle(.ccInk2)
+                .accessibilityIdentifier("review.unreadHint")
             }
+
             Button {
                 do {
                     try model.finish()
@@ -486,25 +548,31 @@ struct ReviewView: View {
                 }
             } label: {
                 Text(finishLabel)
-                    .font(.system(size: 16, weight: .semibold))
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 15)
-                    .background(chapel, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    .foregroundStyle(onChapel)
             }
-            .disabled(!review.canFinish)
-            .opacity(review.canFinish ? 1 : 0.4)
+            .buttonStyle(ChapelPrimaryButtonStyle())
+            .disabled(!review.canFinish || editingCardId != nil)
+            .opacity(review.canFinish && editingCardId == nil ? 1 : 0.4)
             .accessibilityIdentifier("review.finish")
+
+            if review.blockingCardIndex == nil && review.unhandledUnreadPages.isEmpty && editingCardId == nil {
+                Text("Edit a card's words, or Redraft it for another from the same notes.")
+                    .font(.ccUI(12.5))
+                    .foregroundStyle(.ccInk3)
+                    .multilineTextAlignment(.center)
+            }
         }
-        .padding(.horizontal, 20)
-        .padding(.top, 10)
+        .padding(.horizontal, ChapelSpace.gutter)
+        .padding(.top, 12)
         .padding(.bottom, 12)
+        .background(Color.ccSurface)
+        .overlay(alignment: .top) { Rectangle().fill(Color.ccLine).frame(height: 1) }
     }
 
     private var finishLabel: String {
         if review.isDrafting { return "Reading your notes…" }
         let count = review.keptCount
-        return "Add \(count) card\(count == 1 ? "" : "s") to my week"
+        if count == 1 { return "Keep this card" }
+        return "Keep these \(count) cards"
     }
 }
 
@@ -512,91 +580,312 @@ struct ReviewView: View {
 
 private struct ReviewCardView: View {
     let card: ReviewCard
+    let position: Int
+    let total: Int
     let palette: QuoteCardPalette
     let preacher: String?
-    @State private var verseText: String?
+    let isRedrafting: Bool
+    let canRedraft: Bool
+    let isEditing: Bool
+    @Binding var editKind: CardKind
+    @Binding var editWords: String
+    @Binding var editAttribution: String
+    @Binding var editVerseRef: String
+    let onRemove: () -> Void
+    let onUndo: () -> Void
+    let onRedraft: () -> Void
+    let onEdit: () -> Void
+    let onCancelEdit: () -> Void
+    let onSaveEdit: () -> Void
+    let onPickVerse: () -> Void
 
+    @State private var verseText: String?
+    @FocusState private var editFocused: Bool
+
+    private var field: Color { Color(hex: palette.field) }
+    private var ink: Color { Color(hex: palette.ink) }
     private var accent: Color { Color(hex: palette.accent) }
     private var muted: Color { Color(hex: palette.muted) }
+    private var frame: Color { Color(hex: palette.frame) }
+
+    private var canSaveEdit: Bool {
+        if editKind == .verse {
+            if case .valid = validateSermonPassage(editVerseRef) { return true }
+            return false
+        }
+        return !editWords.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    private var verseEditError: String? {
+        guard editKind == .verse else { return nil }
+        let trimmed = editVerseRef.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        if case .invalid(let msg) = validateSermonPassage(trimmed) { return msg }
+        return nil
+    }
 
     var body: some View {
-        ZStack(alignment: .topLeading) {
-            Color(hex: palette.field)
-            VStack(alignment: .leading, spacing: 0) {
-                Spacer(minLength: 0)
-                Text(card.kind.label)
-                    .font(.ccDisplay(10.5))
-                    .tracking(10.5 * 0.2)
-                    .textCase(.uppercase)
-                    .foregroundStyle(accent)
-                    .padding(.bottom, 18)
-                // A long passage must never trail off (TKL-1053). When the words fit
-                // they render as before; when they don't, the card scrolls them.
-                ViewThatFits(in: .vertical) {
-                    content
-                    ScrollView(.vertical, showsIndicators: false) {
-                        content.frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    .scrollBounceBehavior(.basedOnSize)
-                }
-                Spacer(minLength: 0)
-            }
-            .padding(EdgeInsets(top: 34, leading: 26, bottom: 48, trailing: 26))
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-
-            Text(source)
-                .font(.system(size: 12))
-                .foregroundStyle(muted)
-                .lineLimit(2)
-                .padding(.horizontal, 26)
-                .padding(.bottom, 20)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
-
-            if let badge = statusBadge {
-                Text(badge)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(muted)
-                    .padding(16)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-            }
+        VStack(alignment: .leading, spacing: 0) {
+            topMeta
+            cardBody
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+                .padding(.horizontal, 18)
+                .padding(.vertical, 12)
+            Rectangle().fill(frame).frame(height: 1)
+            actionRow
         }
-        .foregroundStyle(Color(hex: palette.ink))
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .opacity(card.isRemoved ? 0.35 : 1)
-        .scaleEffect(card.isRemoved ? 0.96 : 1)
+        .foregroundStyle(ink)
+        .background(field)
+        .clipShape(RoundedRectangle(cornerRadius: ChapelRadius.card, style: .continuous))
+        .opacity(card.isRemoved ? 0.45 : 1)
         .animation(.easeOut(duration: 0.2), value: card.decision)
-        .accessibilityElement(children: .combine)
         .task(id: card.verseRef) {
             verseText = nil
             guard card.kind == .verse, let ref = card.verseRef, let osis = osis(ref) else { return }
             if let bundled = bundledEsvText(for: osis), !bundled.isEmpty { verseText = bundled; return }
             verseText = await EsvClient.shared.text(for: osis)
         }
+        .onChange(of: isEditing) { _, active in
+            if active {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { editFocused = true }
+            } else {
+                editFocused = false
+            }
+        }
     }
 
-    @ViewBuilder private var content: some View {
+    private var topMeta: some View {
+        HStack(spacing: 6) {
+            Text("\(position) of \(total)")
+                .foregroundStyle(muted)
+            if card.isRemoved {
+                Text("· removed").foregroundStyle(muted)
+            } else {
+                if card.redrafted {
+                    Text("· redrafted").foregroundStyle(accent)
+                        .accessibilityIdentifier("review.badge.redrafted")
+                }
+                if card.editedByUser {
+                    Text("· edited").foregroundStyle(accent)
+                        .accessibilityIdentifier("review.badge.edited")
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .font(.ccUI(12, weight: .medium))
+        .padding(.horizontal, 18)
+        .padding(.top, 14)
+        .padding(.bottom, 4)
+    }
+
+    @ViewBuilder private var cardBody: some View {
+        if isRedrafting {
+            RedraftShimmerBody(kindLabel: card.kind.label, ink: ink, accent: accent, muted: muted)
+        } else if isEditing {
+            inPlaceEditor
+        } else {
+            VStack(alignment: .leading, spacing: 0) {
+                Spacer(minLength: 0)
+                kindLabel(card.kind).padding(.bottom, 14)
+                ViewThatFits(in: .vertical) {
+                    displayContent
+                    ScrollView(.vertical, showsIndicators: false) {
+                        displayContent.frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .scrollBounceBehavior(.basedOnSize)
+                }
+                Text(source)
+                    .font(.ccUI(12.5))
+                    .foregroundStyle(muted)
+                    .lineLimit(2)
+                    .padding(.top, 12)
+                Spacer(minLength: 0)
+            }
+        }
+    }
+
+    private var inPlaceEditor: some View {
+        ScrollView(.vertical, showsIndicators: false) {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 6) {
+                    ForEach(CardKind.allCases, id: \.self) { kind in
+                        Button {
+                            editKind = kind
+                        } label: {
+                            Text(kind.label)
+                                .font(.ccUI(12, weight: editKind == kind ? .semibold : .regular))
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 5)
+                                .background(editKind == kind ? ink : ink.opacity(0.10), in: Capsule())
+                                .foregroundStyle(editKind == kind ? field : ink)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+
+                if editKind == .verse {
+                    Text("Reference")
+                        .font(.ccUI(11.5, weight: .medium))
+                        .foregroundStyle(muted)
+                    TextField("e.g. Revelation 2:10", text: $editVerseRef)
+                        .font(.ccUI(16))
+                        .foregroundStyle(ink)
+                        .textInputAutocapitalization(.words)
+                        .autocorrectionDisabled()
+                        .focused($editFocused)
+                        .padding(10)
+                        .background(ink.opacity(0.08), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(frame, lineWidth: 1))
+                        .accessibilityIdentifier("review.edit.verseRef")
+                    if let verseEditError {
+                        Text(verseEditError)
+                            .font(.ccUI(12))
+                            .foregroundStyle(.ccDanger)
+                    }
+                    Button(action: onPickVerse) {
+                        Label("Pick in Bible", systemImage: "book")
+                            .font(.ccUI(13, weight: .semibold))
+                            .foregroundStyle(accent)
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.top, 2)
+                } else {
+                    Text("Text")
+                        .font(.ccUI(11.5, weight: .medium))
+                        .foregroundStyle(muted)
+                    TextField("Card words", text: $editWords, axis: .vertical)
+                        .font(.ccBody(17))
+                        .lineSpacing(3)
+                        .lineLimit(3...6)
+                        .foregroundStyle(ink)
+                        .focused($editFocused)
+                        .padding(10)
+                        .background(ink.opacity(0.08), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(frame, lineWidth: 1))
+                        .accessibilityIdentifier("review.edit.words")
+
+                    if editKind == .quote {
+                        Text("Who said it")
+                            .font(.ccUI(11.5, weight: .medium))
+                            .foregroundStyle(muted)
+                        TextField("Preacher or author", text: $editAttribution)
+                            .font(.ccUI(15))
+                            .foregroundStyle(ink)
+                            .textInputAutocapitalization(.words)
+                            .padding(10)
+                            .background(ink.opacity(0.08), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(frame, lineWidth: 1))
+                            .accessibilityIdentifier("review.edit.attribution")
+                    }
+                }
+            }
+        }
+    }
+
+    private func kindLabel(_ kind: CardKind) -> some View {
+        HStack(spacing: 8) {
+            Rectangle().fill(accent).frame(width: 18, height: 1)
+            Text(kind.label)
+                .font(.ccDisplay(10.5))
+                .tracking(10.5 * 0.22)
+                .textCase(.uppercase)
+                .foregroundStyle(accent)
+            Rectangle().fill(accent).frame(width: 18, height: 1)
+        }
+    }
+
+    @ViewBuilder private var displayContent: some View {
         switch card.kind {
         case .keyPoint, .quote:
             Text(card.text.isEmpty ? "No words yet. Tap Edit." : card.text)
-                .font(.ccBody(22))
-                .lineSpacing(5)
+                .font(.ccBody(20))
+                .lineSpacing(4)
                 .opacity(card.text.isEmpty ? 0.6 : 1)
         case .verse:
             let reference = card.verseRef.map { ref in osis(ref).map(parseOsisBibleReference) ?? ref } ?? ""
             if let verseText = verseText?.trimmingCharacters(in: .whitespacesAndNewlines), !verseText.isEmpty {
                 Text(verseText)
-                    .font(.ccBody(21))
-                    .lineSpacing(5)
+                    .font(.ccBody(19))
+                    .lineSpacing(4)
                 Text(reference)
-                    .font(.ccDisplay(12))
-                    .tracking(12 * 0.18)
+                    .font(.ccDisplay(11.5))
+                    .tracking(11.5 * 0.16)
                     .textCase(.uppercase)
                     .foregroundStyle(accent)
-                    .padding(.top, 16)
+                    .padding(.top, 12)
             } else {
-                Text(reference).font(.ccBody(28))
+                Text(reference).font(.ccBody(24))
             }
         }
+    }
+
+    private var actionRow: some View {
+        HStack(spacing: 6) {
+            if card.isRemoved {
+                Button(action: onUndo) {
+                    compactPill("Undo", systemImage: "arrow.uturn.backward")
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("review.keep")
+                Spacer(minLength: 0)
+            } else if isEditing {
+                Button(action: onCancelEdit) {
+                    compactPill("Cancel", systemImage: nil)
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("review.edit.cancel")
+                Spacer(minLength: 0)
+                Button(action: onSaveEdit) {
+                    compactPill("Save", systemImage: nil, solid: true)
+                }
+                .buttonStyle(.plain)
+                .disabled(!canSaveEdit)
+                .opacity(canSaveEdit ? 1 : 0.4)
+                .accessibilityIdentifier("review.edit.save")
+            } else if isRedrafting {
+                Spacer(minLength: 0)
+            } else {
+                Button(action: onRemove) {
+                    compactPill("Remove", systemImage: nil)
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("review.remove")
+                Spacer(minLength: 4)
+                if canRedraft {
+                    Button(action: onRedraft) {
+                        compactPill("Redraft", systemImage: "arrow.triangle.2.circlepath")
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("review.redraft")
+                    .accessibilityHint("Asks for another card in this one's place")
+                }
+                Button(action: onEdit) {
+                    compactPill("Edit", systemImage: "pencil", solid: true)
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("review.edit")
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .frame(minHeight: 54)
+    }
+
+    private func compactPill(_ title: String, systemImage: String?, solid: Bool = false) -> some View {
+        HStack(spacing: 5) {
+            if let systemImage {
+                Image(systemName: systemImage).font(.system(size: 12, weight: .semibold))
+            }
+            Text(title)
+                .font(.ccUI(13, weight: .semibold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.85)
+        }
+        .foregroundStyle(solid ? field : ink)
+        .padding(.horizontal, 11)
+        .frame(height: 32)
+        .background(solid ? ink : ink.opacity(0.10), in: Capsule())
+        .contentShape(Capsule())
     }
 
     private var source: String {
@@ -609,42 +898,64 @@ private struct ReviewCardView: View {
         }
     }
 
-    private var statusBadge: String? {
-        switch card.decision {
-        case .remove: "Removed"
-        case .keep: card.editedByUser ? "Kept · Edited" : "Kept"
-        case .undecided: card.editedByUser ? "Edited" : nil
-        }
-    }
-
     private func osis(_ ref: String) -> String? {
         ReaderChapter.chapterOSIS(for: ref) != nil ? ref : citationToOsis(ref)
     }
 }
 
+/// Shimmer placeholder inside a card while it redrafts; sibling cards stay interactive.
+private struct RedraftShimmerBody: View {
+    let kindLabel: String
+    let ink: Color
+    let accent: Color
+    let muted: Color
+    @State private var pulse = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Spacer(minLength: 0)
+            Text(kindLabel)
+                .font(.ccDisplay(10.5))
+                .tracking(10.5 * 0.22)
+                .textCase(.uppercase)
+                .foregroundStyle(accent)
+            ForEach([0.90, 0.75, 0.55], id: \.self) { fraction in
+                GeometryReader { geo in
+                    Capsule()
+                        .fill(ink.opacity(pulse ? 0.18 : 0.08))
+                        .frame(width: geo.size.width * fraction)
+                }
+                .frame(height: 15)
+            }
+            Text("Redrafting from your notes…")
+                .font(.ccUI(13))
+                .foregroundStyle(muted)
+                .padding(.top, 6)
+            Spacer(minLength: 0)
+        }
+        .onAppear {
+            guard !reduceMotion else { return }
+            withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) { pulse = true }
+        }
+    }
+}
+
 /// Where the next cards will land while the generator is still reading.
 private struct DraftingCard: View {
-    let fill: Color
-    let ink2: Color
-    let accent: Color
     let cardsSoFar: Int
-    /// The model's transcription of the page it has just read, once there is one.
     let transcription: String?
     @State private var pulse = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        RoundedRectangle(cornerRadius: 14, style: .continuous)
-            .fill(fill)
+        RoundedRectangle(cornerRadius: ChapelRadius.card, style: .continuous)
+            .fill(Color.ccFill)
             .overlay {
                 VStack(alignment: .leading, spacing: 12) {
                     if let transcription, !transcription.isEmpty {
-                        // The writer's own words, as the model read them (TKL-1053).
                         Text("Read from your notes")
-                            .font(.ccDisplay(10.5))
-                            .tracking(10.5 * 0.2)
-                            .textCase(.uppercase)
-                            .foregroundStyle(accent)
+                            .chapelCaps(color: .ccChapel)
                         ScrollView(.vertical, showsIndicators: false) {
                             Text(transcription)
                                 .font(.ccBody(17))
@@ -655,39 +966,36 @@ private struct DraftingCard: View {
                     } else {
                         ForEach([0.4, 0.95, 0.85, 0.6], id: \.self) { width in
                             RoundedRectangle(cornerRadius: 5)
-                                .fill(ink2.opacity(pulse ? 0.16 : 0.08))
+                                .fill(Color.ccInk2.opacity(pulse ? 0.16 : 0.08))
                                 .containerRelativeFrame(.horizontal) { length, _ in length * width * 0.75 }
                                 .frame(height: width == 0.4 ? 10 : 18)
                         }
                     }
                     Text(cardsSoFar == 0 ? "Reading your notes…" : "More cards on the way…")
-                        .font(.system(size: 13))
-                        .foregroundStyle(ink2)
+                        .font(.ccUI(13))
+                        .foregroundStyle(.ccInk2)
                         .padding(.top, 8)
                 }
-                .padding(26)
+                .padding(24)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .accessibilityElement(children: .combine)
             .onAppear {
                 guard !reduceMotion else { return }
                 withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) { pulse = true }
             }
-            .accessibilityElement()
+            .accessibilityElement(children: .combine)
             .accessibilityLabel("More cards on the way")
     }
 }
 
 private struct ProgressLine: View {
     let value: Double
-    let track: Color
-    let bar: Color
 
     var body: some View {
         GeometryReader { geometry in
             ZStack(alignment: .leading) {
-                Capsule().fill(track)
-                Capsule().fill(bar).frame(width: max(8, geometry.size.width * value))
+                Capsule().fill(Color.ccFill)
+                Capsule().fill(Color.ccGilt).frame(width: max(8, geometry.size.width * value))
             }
         }
         .frame(height: 3)
@@ -695,83 +1003,11 @@ private struct ProgressLine: View {
     }
 }
 
-// MARK: Editing
-
-private struct EditCardSheet: View {
-    let card: ReviewCard
-    let preacher: String?
-    let save: (String, String?) -> Void
-
-    @Environment(\.dismiss) private var dismiss
-    @State private var words: String
-    @State private var attribution: String
-    private let initialAttribution: String
-
-    init(card: ReviewCard, preacher: String?, save: @escaping (String, String?) -> Void) {
-        self.card = card
-        self.preacher = preacher
-        self.save = save
-        _words = State(initialValue: card.text)
-        initialAttribution = card.attribution ?? preacher ?? ""
-        _attribution = State(initialValue: initialAttribution)
-    }
-
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    TextEditor(text: $words)
-                        .font(.ccBody(18))
-                        .frame(minHeight: 140)
-                } header: {
-                    Text(card.kind.label)
-                } footer: {
-                    Text("Drafted from your photo. Change the words; they're yours.")
-                }
-                if card.kind == .quote {
-                    Section {
-                        HStack {
-                            TextField("Who said it", text: $attribution)
-                                .textInputAutocapitalization(.words)
-                            if !attribution.isEmpty {
-                                Button { attribution = "" } label: { Image(systemName: "xmark.circle.fill") }
-                                    .buttonStyle(.plain)
-                                    .foregroundStyle(.secondary)
-                                    .accessibilityLabel("Clear attribution")
-                            }
-                        }
-                    } header: {
-                        Text("Attribution")
-                    } footer: {
-                        Text("Leave it empty to name no one.")
-                    }
-                }
-            }
-            .navigationTitle("Edit card")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
-                        // An untouched attribution stays as drafted (nil still means "the preacher").
-                        save(words, card.kind == .quote && attribution != initialAttribution ? attribution : nil)
-                        dismiss()
-                    }
-                    .disabled(words.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                }
-            }
-        }
-        .presentationDetents([.medium, .large])
-    }
-}
-
 #if DEBUG
 /// Screenshot hook: `-LordsDayReviewFixture filling|complete|smyrna`, optionally
-/// `-LordsDayReviewCard p0-1` (or `drafting`) to open at that card. Replays sample
-/// drafts into a throwaway folder and an in-memory store; `filling` stops
-/// after two pages and stays mid-fill. `smyrna` drafts the Revelation 2:8-11 note
-/// from a note with no sermon fields, so its title, preacher and passage come from the
-/// drafted `sermon` event (TKL-1061).
+/// `-LordsDayReviewCard p0-1` (or `drafting`), `-LordsDayReviewOpenDetails title|preacher|passage|church`,
+/// `-LordsDayReviewApplyDetails "Title|Preacher|Passage|Church"`, `-LordsDayReviewEditCard p0-0`,
+/// `-LordsDayReviewRedrafting p0-0`.
 struct LordsDayReviewFixture: View {
     let scene: String
     @Environment(\.modelContext) private var appContext
@@ -788,18 +1024,43 @@ struct LordsDayReviewFixture: View {
     }
 
     var body: some View {
+        let d = UserDefaults.standard
+        let openDetails = d.string(forKey: "LordsDayReviewOpenDetails")
+            .flatMap(EditSermonDetailsSheet.Field.init(rawValue:))
         ZStack {
             if finished {
                 RootView()
             } else if let model {
-                ReviewView(model: model, onClose: {}, onFinish: {
-                    if persistsToAppStore { finished = true }
-                }, startAt: UserDefaults.standard.string(forKey: "LordsDayReviewCard"))
-                    .onChange(of: model.review.canFinish) { _, ready in
-                        guard ready, autoKeep else { return }
-                        try? model.finish()
+                ReviewView(
+                    model: model,
+                    onClose: {},
+                    onFinish: {
                         if persistsToAppStore { finished = true }
+                    },
+                    startAt: d.string(forKey: "LordsDayReviewCard"),
+                    fixtureOpenDetails: openDetails,
+                    fixtureEditCard: d.string(forKey: "LordsDayReviewEditCard")
+                )
+                .onChange(of: model.review.canFinish) { _, ready in
+                    if ready, let apply = d.string(forKey: "LordsDayReviewApplyDetails") {
+                        let parts = apply.split(separator: "|", omittingEmptySubsequences: false).map(String.init)
+                        if parts.count >= 4 {
+                            try? model.updateDetails(SermonDetailsEdit(
+                                title: parts[0],
+                                preacher: parts[1],
+                                passage: parts[2],
+                                church: parts[3],
+                                serviceDate: model.serviceDate
+                            ))
+                        }
                     }
+                    if ready, let redraftId = d.string(forKey: "LordsDayReviewRedrafting") {
+                        model.setFixtureRedrafting(redraftId)
+                    }
+                    guard ready, autoKeep else { return }
+                    try? model.finish()
+                    if persistsToAppStore { finished = true }
+                }
             }
         }
         .task(id: persistsToAppStore ? sync.activeSubject : "in-memory") {
