@@ -573,12 +573,12 @@ enum SyncMetaStore {
 public enum ChildProgressSyncAdapters {
     /// All four child & catechism progress adapters, in dependency order:
     /// `children`, `catechism_assignments`, `catechism_pacing`, `catechism_milestones`.
-    public static func all() -> [any SyncTableAdapter] {
+    public static func all(subject: String? = nil) -> [any SyncTableAdapter] {
         [
             ChildrenSyncAdapter(),
             CatechismAssignmentsSyncAdapter(),
             CatechismPacingSyncAdapter(),
-            CatechismMilestonesSyncAdapter(),
+            CatechismMilestonesSyncAdapter(subject: subject),
         ]
     }
 }
@@ -597,8 +597,8 @@ public enum LordsDaySyncAdapters {
 @MainActor
 public enum AccountSyncAdapters {
     /// Every synced table in dependency order.
-    public static func all() -> [any SyncTableAdapter] {
-        ChildProgressSyncAdapters.all() + LordsDaySyncAdapters.all()
+    public static func all(subject: String? = nil) -> [any SyncTableAdapter] {
+        ChildProgressSyncAdapters.all(subject: subject) + LordsDaySyncAdapters.all()
     }
 }
 
@@ -941,6 +941,12 @@ final class CatechismPacingSyncAdapter: SyncTableAdapter {
 @MainActor
 final class CatechismMilestonesSyncAdapter: SyncTableAdapter {
     let table = SyncTable.catechismMilestones
+    let mergesLiveRecords = true
+    private let subject: String?
+
+    init(subject: String? = nil) {
+        self.subject = subject
+    }
 
     func localUpdatedAt(id: String, in context: ModelContext) throws -> Date? {
         try SyncMetaStore.meta(table: table, rowId: id, in: context)?.updatedAt
@@ -964,22 +970,67 @@ final class CatechismMilestonesSyncAdapter: SyncTableAdapter {
             updatedAt: record.updatedAt,
             in: context
         )
-        var milestones = track.milestones
-        milestones[String(payload.question)] = MilestoneRecord(
+        let incoming = MilestoneRecord(
             state: payload.state,
             introducedAt: introducedAt,
             reviewCount: payload.review_count
         )
+        var milestones = track.milestones
+        let key = String(payload.question)
+        let existingMeta = try SyncMetaStore.meta(table: table, rowId: record.id, in: context)
+        let finalMilestone: MilestoneRecord
+        let needsUpgradePush: Bool
+        let resolvedUpdatedAt: Date
+        if let existing = milestones[key] {
+            let localUpdatedAt = existingMeta?.updatedAt ?? track.updatedAt
+            finalMilestone = MilestoneRecord.merged(
+                local: existing,
+                remote: incoming,
+                localUpdatedAt: localUpdatedAt,
+                remoteUpdatedAt: record.updatedAt
+            )
+            needsUpgradePush = finalMilestone != incoming
+            if needsUpgradePush {
+                resolvedUpdatedAt = localUpdatedAt > record.updatedAt
+                    ? localUpdatedAt
+                    : SyncTimestamp.truncate(record.updatedAt.addingTimeInterval(0.001))
+            } else {
+                resolvedUpdatedAt = max(localUpdatedAt, record.updatedAt)
+            }
+        } else {
+            finalMilestone = incoming
+            needsUpgradePush = false
+            resolvedUpdatedAt = record.updatedAt
+        }
+        milestones[key] = finalMilestone
         track.milestones = milestones
-        track.updatedAt = max(track.updatedAt, record.updatedAt)
+        track.updatedAt = max(track.updatedAt, resolvedUpdatedAt)
 
         let naturalKey = SyncTable.milestoneNaturalKey(
             childId: childId, catechismId: catechismId, question: payload.question
         )
         try SyncMetaStore.upsert(
             table: table, rowId: record.id, childId: rawChildId, naturalKey: naturalKey,
-            updatedAt: record.updatedAt, in: context
+            updatedAt: resolvedUpdatedAt, in: context
         )
+        if needsUpgradePush, let subject {
+            let upgradedPayload = try JSONEncoder().encode(CatechismMilestoneSyncPayload(
+                catechism_slug: payload.catechism_slug,
+                question: payload.question,
+                state: finalMilestone.state,
+                introduced_at: SyncTimestamp.format(finalMilestone.introducedAt),
+                review_count: finalMilestone.reviewCount
+            ))
+            try SyncMetaStore.enqueueOutbox(
+                subject: subject,
+                table: table,
+                rowId: record.id,
+                childId: rawChildId,
+                payload: upgradedPayload,
+                updatedAt: resolvedUpdatedAt,
+                in: context
+            )
+        }
     }
 
     func remove(id: String, in context: ModelContext) throws {
@@ -1048,5 +1099,381 @@ private func deleteTrackIfOrphaned(naturalKey: String, in context: ModelContext)
     if let track = try context.fetch(FetchDescriptor(predicate: predicate)).first,
        track.milestones.isEmpty {
         context.delete(track)
+    }
+}
+
+// MARK: - Guest data union merge & sign-out clear (TKL-1070)
+
+/// Summary of local guest data on this device, shown on the "Keep what's on
+/// this phone in your account" confirmation screen (TKL-833 / TKL-1070).
+public struct GuestDataSummary: Equatable, Sendable {
+    public struct Row: Equatable, Identifiable, Sendable {
+        public let id: String
+        public let label: String
+        public let value: String
+
+        public init(id: String, label: String, value: String) {
+            self.id = id
+            self.label = label
+            self.value = value
+        }
+    }
+
+    public struct TrackHighlight: Equatable, Sendable {
+        public let currentQuestion: Int
+        public let totalQuestions: Int
+
+        public init(currentQuestion: Int, totalQuestions: Int) {
+            self.currentQuestion = currentQuestion
+            self.totalQuestions = totalQuestions
+        }
+    }
+
+    public let childCount: Int
+    public let trackCount: Int
+    public let milestoneCount: Int
+    public let singleTrack: TrackHighlight?
+    public let noteCount: Int
+    public let cardCount: Int
+
+    public static let empty = GuestDataSummary(
+        childCount: 0, trackCount: 0, milestoneCount: 0, singleTrack: nil, noteCount: 0, cardCount: 0
+    )
+
+    public init(
+        childCount: Int,
+        trackCount: Int,
+        milestoneCount: Int,
+        singleTrack: TrackHighlight? = nil,
+        noteCount: Int,
+        cardCount: Int
+    ) {
+        self.childCount = childCount
+        self.trackCount = trackCount
+        self.milestoneCount = milestoneCount
+        self.singleTrack = singleTrack
+        self.noteCount = noteCount
+        self.cardCount = cardCount
+    }
+
+    public var hasData: Bool {
+        childCount > 0 || trackCount > 0 || noteCount > 0 || cardCount > 0
+    }
+
+    public var rows: [Row] {
+        var out: [Row] = []
+        if childCount > 0 {
+            out.append(Row(id: "children", label: "Children", value: "\(childCount)"))
+        }
+        if trackCount > 0 {
+            let value: String
+            if let single = singleTrack {
+                value = "Q. \(single.currentQuestion) of \(single.totalQuestions)"
+            } else {
+                value = "\(trackCount) \(trackCount == 1 ? "track" : "tracks")"
+            }
+            out.append(Row(id: "catechism", label: "Catechism progress", value: value))
+        }
+        if noteCount > 0 {
+            let value: String
+            if cardCount > 0 {
+                value = "\(noteCount) \(noteCount == 1 ? "sermon" : "sermons") · \(cardCount) \(cardCount == 1 ? "card" : "cards")"
+            } else {
+                value = "\(noteCount) \(noteCount == 1 ? "sermon" : "sermons")"
+            }
+            out.append(Row(id: "lords_day", label: "Lord’s Day notes", value: value))
+        }
+        return out
+    }
+}
+
+/// First sign-in merge for local guest data (TKL-1070 / TKL-824).
+/// Enqueues every local guest row (children, catechism assignments, pacing and
+/// milestones, live Lord's Day notes and cards) into the signed-in subject's
+/// outbox in parent-before-child order. Photos stay strictly local.
+@MainActor
+public enum GuestDataMerge {
+    public static func summary(in context: ModelContext) throws -> GuestDataSummary {
+        let children = try context.fetch(FetchDescriptor<LocalChild>())
+        let childIds = Set(children.map(\.id))
+        let tracks = try context.fetch(FetchDescriptor<ChildCatechismTrack>())
+            .filter { childIds.contains($0.childId) }
+        let milestoneCount = tracks.reduce(0) { $0 + $1.milestones.count }
+        let singleTrack: GuestDataSummary.TrackHighlight?
+        if tracks.count == 1, let track = tracks.first {
+            let total = programForContentId(track.catechismId)?.totalQuestions ?? PROGRAMS[0].totalQuestions
+            let clamped = min(max(track.currentQuestion, 1), total)
+            singleTrack = GuestDataSummary.TrackHighlight(currentQuestion: clamped, totalQuestions: total)
+        } else {
+            singleTrack = nil
+        }
+
+        let liveNotes = try context.fetch(FetchDescriptor<LordsDayNote>())
+            .filter { $0.deletedAt == nil }
+        let liveNoteIds = Set(liveNotes.map(\.id))
+        let liveCards = try context.fetch(FetchDescriptor<NoteCard>())
+            .filter { $0.deletedAt == nil && liveNoteIds.contains($0.noteId) }
+
+        return GuestDataSummary(
+            childCount: children.count,
+            trackCount: tracks.count,
+            milestoneCount: milestoneCount,
+            singleTrack: singleTrack,
+            noteCount: liveNotes.count,
+            cardCount: liveCards.count
+        )
+    }
+
+    /// Atomically enqueues every local guest row into `subject`'s outbox and
+    /// records its `SyncRowMeta`. Idempotent: skips any `(table, rowId)` already
+    /// queued for `subject`. Returns the number of newly queued outbox entries.
+    @discardableResult
+    public static func enqueueGuestData(for subject: String, in context: ModelContext) throws -> Int {
+        do {
+            let existingOutbox = try context.fetch(FetchDescriptor<SyncOutboxEntry>())
+                .filter { $0.subject == subject }
+            var alreadyQueued = Set(existingOutbox.map { "\($0.table):\($0.rowId.lowercased())" })
+            var enqueued = 0
+
+            func enqueueIfNeeded(
+                table: String,
+                rowId: String,
+                childId: String? = nil,
+                noteId: String? = nil,
+                payload: Data,
+                updatedAt: Date
+            ) throws {
+                let key = "\(table):\(rowId.lowercased())"
+                guard !alreadyQueued.contains(key) else { return }
+                try SyncMetaStore.enqueueOutbox(
+                    subject: subject,
+                    table: table,
+                    rowId: rowId,
+                    childId: childId,
+                    noteId: noteId,
+                    payload: payload,
+                    updatedAt: updatedAt,
+                    in: context
+                )
+                alreadyQueued.insert(key)
+                enqueued += 1
+            }
+
+            // 1. Children (parent rows first).
+            let children = try context.fetch(FetchDescriptor<LocalChild>(
+                sortBy: [SortDescriptor(\.createdAt)]
+            )).sorted { ($0.createdAt, $0.id.uuidString) < ($1.createdAt, $1.id.uuidString) }
+            let childIds = Set(children.map(\.id))
+
+            for child in children {
+                let cid = child.id.uuidString.lowercased()
+                let updatedAt = SyncTimestamp.truncate(child.updatedAt)
+                let createdAt = SyncTimestamp.truncate(child.createdAt)
+                let payload = try JSONEncoder().encode(ChildSyncPayload(
+                    name: child.name,
+                    age: child.age,
+                    created_at: SyncTimestamp.format(createdAt),
+                    active_catechism_id: child.activeCatechismId
+                ))
+                try SyncMetaStore.upsert(
+                    table: SyncTable.children, rowId: cid, childId: cid, naturalKey: cid,
+                    updatedAt: updatedAt, in: context
+                )
+                try enqueueIfNeeded(
+                    table: SyncTable.children, rowId: cid, childId: cid,
+                    payload: payload, updatedAt: updatedAt
+                )
+            }
+
+            // 2. Catechism assignments, pacing, and milestones (for existing children).
+            let tracks = try context.fetch(FetchDescriptor<ChildCatechismTrack>())
+                .filter { childIds.contains($0.childId) }
+                .sorted { ($0.childId.uuidString, $0.catechismId) < ($1.childId.uuidString, $1.catechismId) }
+
+            for track in tracks {
+                let cid = track.childId.uuidString.lowercased()
+                let slug = SyncTable.catechismSlug(forContentId: track.catechismId)
+                let trackUpdatedAt = SyncTimestamp.truncate(track.updatedAt)
+                let startedAt = SyncTimestamp.truncate(track.startedAt)
+
+                let assignNat = SyncTable.assignmentNaturalKey(childId: track.childId, catechismId: track.catechismId)
+                let assignRowId = try SyncMetaStore.resolvedRowId(
+                    table: SyncTable.catechismAssignments, naturalKey: assignNat, in: context
+                )
+                let assignPayload = try JSONEncoder().encode(CatechismAssignmentSyncPayload(
+                    catechism_slug: slug,
+                    started_at: SyncTimestamp.format(startedAt),
+                    started_at_question: track.startedAtQuestion
+                ))
+                try SyncMetaStore.upsert(
+                    table: SyncTable.catechismAssignments, rowId: assignRowId, childId: cid,
+                    naturalKey: assignNat, updatedAt: trackUpdatedAt, in: context
+                )
+                try enqueueIfNeeded(
+                    table: SyncTable.catechismAssignments, rowId: assignRowId, childId: cid,
+                    payload: assignPayload, updatedAt: trackUpdatedAt
+                )
+
+                let pacingNat = SyncTable.pacingNaturalKey(childId: track.childId, catechismId: track.catechismId)
+                let pacingRowId = try SyncMetaStore.resolvedRowId(
+                    table: SyncTable.catechismPacing, naturalKey: pacingNat, in: context
+                )
+                let pacingPayload = try JSONEncoder().encode(CatechismPacingSyncPayload(
+                    catechism_slug: slug,
+                    current_question: track.currentQuestion
+                ))
+                try SyncMetaStore.upsert(
+                    table: SyncTable.catechismPacing, rowId: pacingRowId, childId: cid,
+                    naturalKey: pacingNat, updatedAt: trackUpdatedAt, in: context
+                )
+                try enqueueIfNeeded(
+                    table: SyncTable.catechismPacing, rowId: pacingRowId, childId: cid,
+                    payload: pacingPayload, updatedAt: trackUpdatedAt
+                )
+
+                let milestones = track.milestones
+                for question in milestones.keys.compactMap(Int.init).sorted() {
+                    guard let record = milestones[String(question)] else { continue }
+                    let msNat = SyncTable.milestoneNaturalKey(
+                        childId: track.childId, catechismId: track.catechismId, question: question
+                    )
+                    let msRowId = try SyncMetaStore.resolvedRowId(
+                        table: SyncTable.catechismMilestones, naturalKey: msNat, in: context
+                    )
+                    let introAt = SyncTimestamp.truncate(record.introducedAt)
+                    let msUpdatedAt = max(trackUpdatedAt, introAt)
+                    let msPayload = try JSONEncoder().encode(CatechismMilestoneSyncPayload(
+                        catechism_slug: slug,
+                        question: question,
+                        state: record.state,
+                        introduced_at: SyncTimestamp.format(introAt),
+                        review_count: record.reviewCount
+                    ))
+                    try SyncMetaStore.upsert(
+                        table: SyncTable.catechismMilestones, rowId: msRowId, childId: cid,
+                        naturalKey: msNat, updatedAt: msUpdatedAt, in: context
+                    )
+                    try enqueueIfNeeded(
+                        table: SyncTable.catechismMilestones, rowId: msRowId, childId: cid,
+                        payload: msPayload, updatedAt: msUpdatedAt
+                    )
+                }
+            }
+
+            // 3. Live Lord's Day notes (parent rows before cards; photos stay local).
+            let notes = try context.fetch(FetchDescriptor<LordsDayNote>())
+                .filter { $0.deletedAt == nil }
+                .sorted { ($0.createdAt, $0.id.uuidString) < ($1.createdAt, $1.id.uuidString) }
+            let liveNoteIds = Set(notes.map(\.id))
+
+            for note in notes {
+                let nid = note.id.uuidString.lowercased()
+                let updatedAt = SyncTimestamp.truncate(note.updatedAt)
+                let serviceDate = SyncTimestamp.truncate(note.serviceDate)
+                let createdAt = SyncTimestamp.truncate(note.createdAt)
+                let payload = try JSONEncoder().encode(LordsDayNoteSyncPayload(
+                    service_date: SyncTimestamp.format(serviceDate),
+                    passage_ref: note.passageRef,
+                    sermon_title: note.sermonTitle,
+                    preacher: note.preacher,
+                    church: note.church,
+                    extracted_text: note.extractedText,
+                    created_at: SyncTimestamp.format(createdAt)
+                ))
+                try SyncMetaStore.upsert(
+                    table: SyncTable.lordsDayNotes, rowId: nid, childId: "", naturalKey: nid,
+                    updatedAt: updatedAt, in: context
+                )
+                try enqueueIfNeeded(
+                    table: SyncTable.lordsDayNotes, rowId: nid, noteId: nid,
+                    payload: payload, updatedAt: updatedAt
+                )
+            }
+
+            // 4. Live NoteCards for live notes, preserving exact IDs and order.
+            let cards = try context.fetch(FetchDescriptor<NoteCard>())
+                .filter { $0.deletedAt == nil && liveNoteIds.contains($0.noteId) }
+                .sorted(by: NoteCard.ordered)
+
+            for card in cards {
+                if card.kind == .verse, (card.verseRef?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true) {
+                    continue
+                }
+                let cid = card.id.uuidString.lowercased()
+                let nid = card.noteId.uuidString.lowercased()
+                let updatedAt = SyncTimestamp.truncate(card.updatedAt)
+                let createdAt = SyncTimestamp.truncate(card.createdAt)
+                let body = card.kind == .verse ? "" : card.body
+                let payload = try JSONEncoder().encode(NoteCardSyncPayload(
+                    kind: card.kind.rawValue,
+                    body: body,
+                    verse_ref: card.verseRef,
+                    attribution: card.attribution,
+                    palette: card.palette,
+                    position: max(0, card.position),
+                    edited_by_user: card.editedByUser,
+                    created_at: SyncTimestamp.format(createdAt)
+                ))
+                try SyncMetaStore.upsert(
+                    table: SyncTable.noteCards, rowId: cid, childId: "", naturalKey: nid,
+                    updatedAt: updatedAt, in: context
+                )
+                try enqueueIfNeeded(
+                    table: SyncTable.noteCards, rowId: cid, noteId: nid,
+                    payload: payload, updatedAt: updatedAt
+                )
+            }
+
+            try context.save()
+            return enqueued
+        } catch {
+            context.rollback()
+            throw error
+        }
+    }
+}
+
+/// Sign-out cleanup (TKL-1070 / TKL-833): clears all synced account data and
+/// sync bookkeeping from the local SwiftData store back to a clean empty guest
+/// state so signing into a different account never uploads the prior account's
+/// data.
+@MainActor
+public enum AccountDataCleanup {
+    public static func clearSyncedData(for subject: String? = nil, in context: ModelContext) throws {
+        do {
+            for child in try context.fetch(FetchDescriptor<LocalChild>()) {
+                context.delete(child)
+            }
+            for track in try context.fetch(FetchDescriptor<ChildCatechismTrack>()) {
+                context.delete(track)
+            }
+            for legacy in try context.fetch(FetchDescriptor<LocalCatechismTrack>()) {
+                context.delete(legacy)
+            }
+            for settings in try context.fetch(FetchDescriptor<ProgressSettings>()) {
+                settings.activeChildId = nil
+                settings.activeCatechismId = nil
+            }
+            for note in try context.fetch(FetchDescriptor<LordsDayNote>()) {
+                context.delete(note)
+            }
+            for card in try context.fetch(FetchDescriptor<NoteCard>()) {
+                context.delete(card)
+            }
+            for entry in try context.fetch(FetchDescriptor<SyncOutboxEntry>()) {
+                context.delete(entry)
+            }
+            for cursor in try context.fetch(FetchDescriptor<SyncCursorRecord>()) {
+                context.delete(cursor)
+            }
+            for meta in try context.fetch(FetchDescriptor<SyncRowMeta>()) {
+                context.delete(meta)
+            }
+            _ = subject
+            try context.save()
+        } catch {
+            context.rollback()
+            throw error
+        }
     }
 }

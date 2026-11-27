@@ -39,6 +39,15 @@ final class ReviewModel {
 
     static var activeSessionIds: Set<UUID> { Set(sessions.keys) }
 
+    /// Stops any in-flight review drafting streams and clears cached sessions (called on sign-out).
+    static func cancelAllSessions() {
+        for model in sessions.values {
+            model.task?.cancel()
+            model.task = nil
+        }
+        sessions.removeAll()
+    }
+
     static func session(
         for note: LordsDayNote,
         context: ModelContext,

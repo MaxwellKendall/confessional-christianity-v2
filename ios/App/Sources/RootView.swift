@@ -23,6 +23,7 @@ struct RootView: View {
     @Query private var sermons: [LordsDayNote]
     @AppStorage("didCompleteOnboarding") private var didCompleteOnboarding = false
     @State private var showsSignIn = false
+    @State private var showsGuestMerge = false
     @State private var startsCapture = false
     @State private var selected: RootTab = RootView.initialTab
     @State private var todayPath = NavigationPath()
@@ -58,8 +59,23 @@ struct RootView: View {
                 tabs
             }
         }
-        .sheet(isPresented: $showsSignIn, onDismiss: { auth.cancelCode() }) {
+        .sheet(isPresented: $showsSignIn, onDismiss: {
+            auth.cancelCode()
+            if sync.pendingGuestMerge != nil && !sync.isSettingsPresenting {
+                showsGuestMerge = true
+            }
+        }) {
             OnboardingSignInView()
+        }
+        .fullScreenCover(isPresented: $showsGuestMerge) {
+            GuestDataMergeHostView(onDone: { showsGuestMerge = false })
+        }
+        .onChange(of: sync.pendingGuestMerge, initial: true) { _, pending in
+            if pending == nil {
+                showsGuestMerge = false
+            } else if !showsSignIn && !sync.isSettingsPresenting {
+                showsGuestMerge = true
+            }
         }
         .onChange(of: hasLocalHistory, initial: true) { _, hasHistory in
             if hasHistory { didCompleteOnboarding = true }

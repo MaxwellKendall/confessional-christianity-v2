@@ -49,6 +49,8 @@ struct ConfessionalChristianityApp: App {
                     LordsDayLandingFixture(scene: scene)
                 } else if let scene = UserDefaults.standard.string(forKey: "LordsDayFeedFixture") {
                     LordsDayFeedFixture(scene: scene)
+                } else if let scene = UserDefaults.standard.string(forKey: "GuestMergeFixture") {
+                    GuestDataMergeFixture(scene: scene)
                 } else if let spec = UserDefaults.standard.string(forKey: "LibraryEntry"),
                           let colon = spec.firstIndex(of: ":") {
                     LibraryEntryFixture(slug: String(spec[..<colon]), entryId: String(spec[spec.index(after: colon)...]))

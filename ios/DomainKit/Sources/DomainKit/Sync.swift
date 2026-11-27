@@ -121,12 +121,19 @@ public protocol SyncTableAdapter: AnyObject {
     func remove(id: String, in context: ModelContext) throws
     /// Remove with full tombstone metadata (e.g. `updatedAt` / `deletedAt`) for soft-deleted tables.
     func remove(_ record: SyncRecord, in context: ModelContext) throws
+    /// When true, live (non-deleted) incoming records are always passed to
+    /// `apply(_:in:)` so the adapter can merge (e.g. unioning milestones so the
+    /// more advanced state wins) instead of LWW short-circuiting. Tombstones
+    /// (`record.isDeleted`) still follow LWW.
+    var mergesLiveRecords: Bool { get }
 }
 
 public extension SyncTableAdapter {
     func remove(_ record: SyncRecord, in context: ModelContext) throws {
         try remove(id: record.id, in: context)
     }
+
+    var mergesLiveRecords: Bool { false }
 }
 
 public enum SyncError: Error, Equatable {
@@ -260,6 +267,19 @@ public final class SyncEngine: SyncRunning {
         isInvalidated = true
     }
 
+    /// True when this store already holds cursors or outbox entries for `subject`,
+    /// meaning this device previously synced as `subject` (e.g. upgrading from an
+    /// earlier build before a separate last-synced-subject marker existed).
+    public static func hasSyncedState(for subject: String, in context: ModelContext) throws -> Bool {
+        let prefix = "\(subject)::"
+        let cursors = try context.fetch(FetchDescriptor<SyncCursorRecord>())
+        if cursors.contains(where: { $0.table.hasPrefix(prefix) }) {
+            return true
+        }
+        let entries = try context.fetch(FetchDescriptor<SyncOutboxEntry>())
+        return entries.contains(where: { $0.subject == subject })
+    }
+
     /// Deletes every persisted outbox entry and pull cursor owned by `subject`.
     /// Called on sign-out so a later sign-in (same or other account) never sees
     /// the previous session's cursors or outbox.
@@ -311,12 +331,29 @@ public final class SyncEngine: SyncRunning {
     // MARK: Sync
 
     /// Push, then pull. A push failure stops the run (the outbox is kept and
-    /// the next run retries); the caller's scheduler backs off.
+    /// the next run retries); the caller's scheduler backs off. If pull merges
+    /// a live conflict (e.g. a more advanced local milestone) and queues an
+    /// upgraded row, pushes it immediately so both sides converge.
     public func sync() async throws {
         try checkActive()
         try await push()
         try checkActive()
         try await pull()
+        if !(try outbox().isEmpty) {
+            try checkActive()
+            try await push()
+        }
+    }
+
+    /// Initial guest-data union sync (TKL-1070): pulls existing account rows
+    /// first (resolving same-ID rows by LWW and unioning milestones so the more
+    /// advanced state wins without letting a less-advanced guest row overwrite
+    /// the server), then pushes all surviving outbox entries.
+    public func mergeSync() async throws {
+        try checkActive()
+        try await pull()
+        try checkActive()
+        try await push()
     }
 
     /// Sends the outbox in order, in batches; removes an entry only once the
@@ -376,6 +413,13 @@ public final class SyncEngine: SyncRunning {
     private func apply(_ record: SyncRecord, to adapter: any SyncTableAdapter) throws {
         let lowerId = record.id.lowercased()
         let queued = try outbox().filter { $0.table == record.table && $0.rowId.lowercased() == lowerId }
+        if !record.isDeleted && adapter.mergesLiveRecords {
+            for entry in queued {
+                context.delete(entry)
+            }
+            try adapter.apply(record, in: context)
+            return
+        }
         let localTimes = [try adapter.localUpdatedAt(id: record.id, in: context)].compactMap { $0 } + queued.map(\.updatedAt)
         if let localLatest = localTimes.max(), localLatest >= record.updatedAt {
             return

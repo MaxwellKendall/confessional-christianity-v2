@@ -16,6 +16,8 @@ struct SettingsView: View {
     @Query private var observedSettings: [ProgressSettings]
     @State private var showsAddChild = false
     @State private var showsSignIn = false
+    @State private var showsSignOutConfirm = false
+    @State private var showsGuestMerge = false
     @State private var showsAbout = false
     /// The daily catechism reminder's time, nil when none is set.
     @State private var practiceReminder: DateComponents?
@@ -68,8 +70,34 @@ struct SettingsView: View {
         .presentationCornerRadius(ChapelRadius.sheet)
         .presentationBackground(.ccSurface)
         .task { practiceReminder = await PracticeReminderScheduler.scheduledTime() }
+        .onAppear { sync.isSettingsPresenting = true }
+        .onDisappear { sync.isSettingsPresenting = false }
         .sheet(isPresented: $showsAddChild) { AddChildView() }
-        .sheet(isPresented: $showsSignIn, onDismiss: { auth.cancelCode() }) { SignInSheet() }
+        .sheet(isPresented: $showsSignIn, onDismiss: {
+            auth.cancelCode()
+            if sync.pendingGuestMerge != nil {
+                showsGuestMerge = true
+            }
+        }) { SignInSheet() }
+        .sheet(isPresented: $showsSignOutConfirm) {
+            SignOutConfirmationSheet(
+                onConfirm: {
+                    showsSignOutConfirm = false
+                    confirmSignOut()
+                },
+                onCancel: { showsSignOutConfirm = false }
+            )
+        }
+        .fullScreenCover(isPresented: $showsGuestMerge) {
+            GuestDataMergeHostView(onDone: { showsGuestMerge = false })
+        }
+        .onChange(of: sync.pendingGuestMerge, initial: true) { _, pending in
+            if pending == nil {
+                showsGuestMerge = false
+            } else if !showsSignIn {
+                showsGuestMerge = true
+            }
+        }
         #if DEBUG
         // Screenshot hook: `-OpenSignIn YES` opens the sheet with Settings.
         .onChange(of: auth.phase, initial: true) { _, phase in
@@ -78,8 +106,11 @@ struct SettingsView: View {
             if phase == .guest && defaults.bool(forKey: "OpenSignIn") {
                 showsSignIn = true
             }
+            if phase.isSignedIn && defaults.bool(forKey: "OpenSignOutConfirm") {
+                showsSignOutConfirm = true
+            }
             if phase.isSignedIn && defaults.bool(forKey: "SettingsAutoSignOut") {
-                signOut()
+                confirmSignOut()
             }
         }
         #endif
@@ -106,7 +137,7 @@ struct SettingsView: View {
                         .accessibilityIdentifier("settings.lastSynced")
                 }
             }
-            Button("Sign out", action: signOut)
+            Button("Sign out") { showsSignOutConfirm = true }
                 .buttonStyle(ChapelQuietButtonStyle())
                 .padding(.top, ChapelSpace.m)
                 .accessibilityIdentifier("settings.signOut")
@@ -193,8 +224,8 @@ struct SettingsView: View {
         return formatter.string(from: date)
     }
 
-    private func signOut() {
-        sync.willSignOut()
+    private func confirmSignOut() {
+        sync.signOutAndClearLocalData()
         Task { await auth.signOut() }
     }
 }

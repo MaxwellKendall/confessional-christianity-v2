@@ -595,7 +595,7 @@ struct LordsDayFeedFixture: View {
 
     @MainActor static func makeFeed(_ scene: String, today: Date = Date(), container: ModelContainer? = nil) -> LordsDayFeed {
         let container = container ?? (try! ModelContainer(for: progressSchema, configurations: [ModelConfiguration(schema: progressSchema, isStoredInMemoryOnly: true)]))
-        let store = LordsDayStore(context: ModelContext(container))
+        let store = LordsDayStore(context: container.mainContext)
         let calendar = Calendar.current
         let weekday = calendar.component(.weekday, from: today) // 1 = Sunday
         let sunday = calendar.date(byAdding: .day, value: -(weekday - 1), to: calendar.startOfDay(for: today))!

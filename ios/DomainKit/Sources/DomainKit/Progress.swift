@@ -12,6 +12,41 @@ public struct MilestoneRecord: Codable, Equatable, Sendable {
         self.introducedAt = introducedAt
         self.reviewCount = reviewCount
     }
+
+    /// Progression rank for union merges: introduced < reviewing < mastered.
+    public var stateRank: Int {
+        switch state {
+        case "introduced": 1
+        case "reviewing": 2
+        case "mastered": 3
+        default: 0
+        }
+    }
+
+    /// Union merge of two live milestones for the same question: the more
+    /// advanced state wins (`mastered` > `reviewing` > `introduced`); equal
+    /// states keep the higher review count (and newer write on tie);
+    /// `introducedAt` keeps the earlier introduction instant.
+    public static func merged(
+        local: MilestoneRecord,
+        remote: MilestoneRecord,
+        localUpdatedAt: Date,
+        remoteUpdatedAt: Date
+    ) -> MilestoneRecord {
+        let winningState: String
+        if local.stateRank != remote.stateRank {
+            winningState = local.stateRank > remote.stateRank ? local.state : remote.state
+        } else if local.reviewCount != remote.reviewCount {
+            winningState = local.reviewCount > remote.reviewCount ? local.state : remote.state
+        } else {
+            winningState = remoteUpdatedAt > localUpdatedAt ? remote.state : local.state
+        }
+        return MilestoneRecord(
+            state: winningState,
+            introducedAt: min(local.introducedAt, remote.introducedAt),
+            reviewCount: max(local.reviewCount, remote.reviewCount)
+        )
+    }
 }
 
 // Retain the shipped entity so SwiftData can open every older store shape.

@@ -14,6 +14,7 @@
 		14F7975F68D4AEC8E0E0AD6A /* SermonCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2C0E1A34CAA850FC9DAEC57 /* SermonCardView.swift */; };
 		1759D64CAD6C6F870DE4716A /* JumpToQuestionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 943068F9BE1D5E9C1869664E /* JumpToQuestionView.swift */; };
 		1B75F3CE1BEB367636F4159E /* PrayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A18960952FB0E4DF82B9E736 /* PrayerView.swift */; };
+		1EC4ED6F3917ED6EFB7361DD /* GuestDataMergeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67FA73BDA3C0F54F277F6D36 /* GuestDataMergeView.swift */; };
 		1EF79ED90ACDDF6E3CCA99C5 /* LordsDaySkeletonUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C4B68D1D371A1DA4EFC1936 /* LordsDaySkeletonUITests.swift */; };
 		201B7050D78A373293882C3A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 323DE6E62344832D8ECF9AD4 /* SettingsView.swift */; };
 		245590EE79D47D4EDB15C19D /* OnboardingSignInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32FF271F04742E0BB93E44AE /* OnboardingSignInView.swift */; };
@@ -162,6 +163,7 @@
 		58912A495665984DB2EDA36E /* ClauseLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClauseLabel.swift; sourceTree = "<group>"; };
 		594EDB3EB58B121DCAEE36BE /* OnboardingDemos.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingDemos.swift; sourceTree = "<group>"; };
 		5DD733ACA6D72F2D1A6C192B /* ShareCardImageUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareCardImageUITests.swift; sourceTree = "<group>"; };
+		67FA73BDA3C0F54F277F6D36 /* GuestDataMergeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuestDataMergeView.swift; sourceTree = "<group>"; };
 		6F0B1A13CFCB4351B4180520 /* LibraryRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryRoute.swift; sourceTree = "<group>"; };
 		72FB0289223150F84B4EF930 /* EsvClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EsvClient.swift; sourceTree = "<group>"; };
 		786FDD2AB314C8BC32806E54 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
@@ -408,6 +410,7 @@
 		9B69635097FA5AE7C1019F93 /* Settings */ = {
 			isa = PBXGroup;
 			children = (
+				67FA73BDA3C0F54F277F6D36 /* GuestDataMergeView.swift */,
 				323DE6E62344832D8ECF9AD4 /* SettingsView.swift */,
 				AB7F70EE071B78E71DA8082E /* SignInSheet.swift */,
 			);
@@ -697,6 +700,7 @@
 				28CBE251D286E2BEE5825C57 /* EsvClient.swift in Sources */,
 				30DF48B35840FA30269AA83C /* FloatingTabBarView.swift in Sources */,
 				DE6921043A9DF51BC51CDB04 /* FlowLayout.swift in Sources */,
+				1EC4ED6F3917ED6EFB7361DD /* GuestDataMergeView.swift in Sources */,
 				CCA59BAED520814729154AF4 /* HidesFloatingTabBar.swift in Sources */,
 				5F0AE0B4CA8FD0DDD6ADC7BA /* JournalSermonView.swift in Sources */,
 				7E731B6ED4D8DE981A37AEBE /* JournalView.swift in Sources */,
