@@ -252,6 +252,7 @@ describe("account sync", () => {
       expect(schemas).toHaveLength(1);
       const definition = (schemas[0] as { Properties: { Definition: string } }).Properties.Definition;
       expect(definition).toContain("pushSync(changes: [SyncChangeInput!]!): [SyncPushResult!]!");
+      expect(definition).toContain("note_id: ID");
       expect(definition).toContain("enum SyncPushStatus");
       expect(definition).toContain("enum SyncPushReason");
     }

@@ -2,7 +2,8 @@ input SyncChangeInput {
   id: ID!
   table: String!
   row_id: ID!
-  child_id: ID!
+  child_id: ID
+  note_id: ID
   updated_at: AWSDateTime!
   deleted_at: AWSDateTime
   payload: String
@@ -11,7 +12,8 @@ input SyncChangeInput {
 type SyncRecord {
   table: String!
   id: ID!
-  child_id: ID!
+  child_id: ID
+  note_id: ID
   updated_at: AWSDateTime!
   deleted_at: AWSDateTime
   payload: String

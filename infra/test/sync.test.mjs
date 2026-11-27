@@ -270,3 +270,279 @@ it("still rejects malformed batch requests at the top level", async () => {
   }));
   await expect(push(owner, ...tooMany)).rejects.toThrow("Expected at most 20 changes");
 });
+
+// TKL-1069 / TKL-905: private Lord's Day notes and cards
+
+const noteId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+const secondNoteId = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+const cardId = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
+const secondCardId = "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
+const thirdCardId = "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee";
+
+const notePayload = {
+  service_date: "2026-11-22T05:00:00.000Z",
+  passage_ref: "Romans 8:28-30",
+  sermon_title: "The Golden Chain",
+  preacher: "Rev. Smith",
+  church: "Grace Presbyterian",
+  extracted_text: "All things work together for good.",
+  created_at: stamp,
+};
+
+const noteChange = {
+  id: operation,
+  table: "lords_day_notes",
+  row_id: noteId,
+  note_id: noteId,
+  updated_at: stamp,
+  payload: JSON.stringify(notePayload),
+};
+
+const keyPointCard = {
+  id: secondOperation,
+  table: "note_cards",
+  row_id: cardId,
+  note_id: noteId,
+  updated_at: stamp,
+  payload: JSON.stringify({
+    kind: "key_point",
+    body: "God's purpose decides what is good.",
+    verse_ref: null,
+    attribution: null,
+    palette: "chapel",
+    position: 0,
+    edited_by_user: false,
+    created_at: stamp,
+  }),
+};
+
+const quoteCard = {
+  id: thirdOperation,
+  table: "note_cards",
+  row_id: secondCardId,
+  note_id: noteId,
+  updated_at: stamp,
+  payload: JSON.stringify({
+    kind: "quote",
+    body: "No weak link in the golden chain.",
+    verse_ref: null,
+    attribution: "Rev. Smith",
+    palette: "gilt",
+    position: 1,
+    edited_by_user: true,
+    created_at: stamp,
+  }),
+};
+
+const verseCard = {
+  id: "99999999-9999-4999-8999-999999999998",
+  table: "note_cards",
+  row_id: thirdCardId,
+  note_id: noteId,
+  updated_at: stamp,
+  payload: JSON.stringify({
+    kind: "verse",
+    body: "",
+    verse_ref: "Rom.8.28",
+    attribution: null,
+    palette: "moss",
+    position: 2,
+    edited_by_user: false,
+    created_at: stamp,
+  }),
+};
+
+it("round-trips private Lord's Day notes and cards preserving all fields and enforcing card validation", async () => {
+  const { push, pull } = fixture();
+
+  // Creating a note and its three card kinds in one batch preserves order and all fields.
+  await expect(push(owner, noteChange, keyPointCard, quoteCard, verseCard)).resolves.toEqual([
+    accepted(operation),
+    accepted(secondOperation),
+    accepted(thirdOperation),
+    accepted(verseCard.id),
+  ]);
+
+  const notes = await pull(owner, "lords_day_notes");
+  expect(notes).toHaveLength(1);
+  expect(notes[0]).toMatchObject({
+    table: "lords_day_notes",
+    id: noteId,
+    child_id: null,
+    note_id: noteId,
+    updated_at: stamp,
+    deleted_at: null,
+    change_id: "1",
+  });
+  expect(JSON.parse(notes[0].payload)).toEqual(notePayload);
+
+  const cards = await pull(owner, "note_cards");
+  expect(cards).toHaveLength(3);
+  expect(cards.map(c => c.id)).toEqual([cardId, secondCardId, thirdCardId]);
+  expect(cards.map(c => c.change_id)).toEqual(["2", "3", "4"]);
+  expect(cards.every(c => c.note_id === noteId && c.child_id === null)).toBe(true);
+  expect(JSON.parse(cards[0].payload)).toMatchObject({
+    kind: "key_point", body: "God's purpose decides what is good.", palette: "chapel", position: 0, edited_by_user: false,
+  });
+  expect(JSON.parse(cards[1].payload)).toMatchObject({
+    kind: "quote", attribution: "Rev. Smith", palette: "gilt", position: 1, edited_by_user: true,
+  });
+  expect(JSON.parse(cards[2].payload)).toMatchObject({
+    kind: "verse", body: "", verse_ref: "Rom.8.28", palette: "moss", position: 2, edited_by_user: false,
+  });
+
+  // Card kind must be strictly key_point, quote or verse; verse must have verse_ref and no body.
+  await expect(push(owner,
+    { ...keyPointCard, id: operation, updated_at: later, payload: JSON.stringify({ kind: "summary", body: "x", position: 0, edited_by_user: false, created_at: stamp }) },
+    { ...verseCard, id: secondOperation, updated_at: later, payload: JSON.stringify({ kind: "verse", body: "words not allowed", verse_ref: "Rom.8.28", position: 2, edited_by_user: false, created_at: stamp }) },
+    { ...verseCard, id: thirdOperation, updated_at: later, payload: JSON.stringify({ kind: "verse", body: "", verse_ref: "  ", position: 2, edited_by_user: false, created_at: stamp }) },
+  )).resolves.toEqual([
+    rejected("INVALID_INPUT", operation),
+    rejected("INVALID_INPUT", secondOperation),
+    rejected("INVALID_INPUT", thirdOperation),
+  ]);
+
+  // Photos and disallowed fields are rejected; multi-page extracted_text up to 64 KiB is accepted.
+  const longText = "a".repeat(8000);
+  await expect(push(owner,
+    { ...noteChange, id: operation, updated_at: later, payload: JSON.stringify({ ...notePayload, photo: "base64..." }) },
+    { ...noteChange, id: secondOperation, updated_at: later, payload: JSON.stringify({ ...notePayload, extracted_text: longText }) },
+    { ...noteChange, id: thirdOperation, updated_at: later, payload: JSON.stringify({ ...notePayload, extracted_text: "x".repeat(70000) }) },
+  )).resolves.toEqual([
+    rejected("INVALID_INPUT", operation),
+    accepted(secondOperation),
+    rejected("INVALID_INPUT", thirdOperation),
+  ]);
+
+  // Envelope validation: child_id disallowed on note tables, note_id disallowed on child tables, note row_id === note_id.
+  await expect(push(owner,
+    { ...noteChange, id: operation, child_id: child, updated_at: later },
+    { ...noteChange, id: secondOperation, row_id: secondNoteId, note_id: noteId, updated_at: later },
+    { ...profile, id: thirdOperation, note_id: noteId },
+  )).resolves.toEqual([
+    rejected("INVALID_INPUT", operation),
+    rejected("INVALID_INPUT", secondOperation),
+    rejected("INVALID_INPUT", thirdOperation),
+  ]);
+});
+
+it("scopes Lord's Day notes and cards strictly to the verified Cognito subject and rejects forged ownership or parent IDs", async () => {
+  const { push, pull } = fixture();
+
+  // Unauthenticated caller rejected.
+  await expect(push(undefined, noteChange)).rejects.toThrow("Not authorized");
+
+  // Card write without an existing owned parent note is rejected.
+  await expect(push(owner, keyPointCard)).resolves.toEqual([rejected("UNAUTHORIZED", secondOperation)]);
+
+  // Forged ownership attributes are rejected.
+  await expect(push(owner, { ...noteChange, owner_sub: stranger })).resolves.toEqual([rejected("INVALID_INPUT")]);
+  await expect(push(owner, { ...noteChange, payload: JSON.stringify({ ...notePayload, user_id: stranger }) }))
+    .resolves.toEqual([rejected("INVALID_INPUT")]);
+  await expect(push(owner, { ...keyPointCard, payload: JSON.stringify({ kind: "key_point", body: "x", position: 0, owner_sub: stranger }) }))
+    .resolves.toEqual([rejected("INVALID_INPUT", secondOperation)]);
+
+  // Owner creates note and card.
+  await expect(push(owner, noteChange, keyPointCard)).resolves.toEqual([accepted(operation), accepted(secondOperation)]);
+
+  // Unrelated account cannot list/read, update, attach cards to, or delete owner's note or card.
+  await expect(pull(stranger, "lords_day_notes")).resolves.toEqual([]);
+  await expect(pull(stranger, "note_cards")).resolves.toEqual([]);
+  await expect(push(stranger,
+    { ...noteChange, id: operation, updated_at: later },
+    { ...noteChange, id: secondOperation, payload: null, updated_at: later, deleted_at: later },
+    { ...keyPointCard, id: thirdOperation, updated_at: later },
+    { ...keyPointCard, id: "99999999-9999-4999-8999-999999999991", row_id: secondCardId, updated_at: later },
+    { ...keyPointCard, id: "99999999-9999-4999-8999-999999999992", payload: null, updated_at: later, deleted_at: later },
+  )).resolves.toEqual([
+    rejected("UNAUTHORIZED", operation),
+    rejected("UNAUTHORIZED", secondOperation),
+    rejected("UNAUTHORIZED", thirdOperation),
+    rejected("UNAUTHORIZED", "99999999-9999-4999-8999-999999999991"),
+    rejected("UNAUTHORIZED", "99999999-9999-4999-8999-999999999992"),
+  ]);
+
+  // Owner cannot re-parent an existing card UUID onto a different note (even one they own).
+  const secondNote = { ...noteChange, id: operation, row_id: secondNoteId, note_id: secondNoteId };
+  await expect(push(owner, secondNote)).resolves.toEqual([accepted(operation)]);
+  await expect(push(owner, { ...keyPointCard, id: secondOperation, note_id: secondNoteId, updated_at: later }))
+    .resolves.toEqual([rejected("UNAUTHORIZED", secondOperation)]);
+
+  // Stranger's own note stays isolated from owner.
+  const strangerNoteId = "ffffffff-ffff-4fff-8fff-ffffffffffff";
+  await expect(push(stranger, { ...noteChange, id: operation, row_id: strangerNoteId, note_id: strangerNoteId }))
+    .resolves.toEqual([accepted(operation)]);
+  expect((await pull(owner, "lords_day_notes")).map(n => n.id)).toEqual([noteId, secondNoteId]);
+  expect((await pull(stranger, "lords_day_notes")).map(n => n.id)).toEqual([strangerNoteId]);
+});
+
+it("handles stale writes, soft deletes, replay, ordering and server-assigned change_id paging for notes and cards", async () => {
+  const { push, pull } = fixture();
+  const secondNote = { ...noteChange, id: secondOperation, row_id: secondNoteId, note_id: secondNoteId };
+
+  await expect(push(owner, noteChange, secondNote, keyPointCard, quoteCard)).resolves.toEqual([
+    accepted(operation), accepted(secondOperation), accepted(secondOperation), accepted(thirdOperation),
+  ]);
+
+  // Replay and stale writes are acknowledged without advancing change_id.
+  await expect(push(owner,
+    noteChange,
+    { ...noteChange, id: secondOperation, updated_at: "2025-01-01T00:00:00.000Z" },
+    { ...keyPointCard, id: thirdOperation, updated_at: "2025-01-01T00:00:00.000Z" },
+  )).resolves.toEqual([accepted(operation), accepted(secondOperation), accepted(thirdOperation)]);
+
+  // Paging strictly after change_id across both tables.
+  const [n1] = await pull(owner, "lords_day_notes", "0", 1);
+  const [n2] = await pull(owner, "lords_day_notes", n1.change_id, 1);
+  expect([n1.id, n2.id]).toEqual([noteId, secondNoteId]);
+  expect([n1.change_id, n2.change_id]).toEqual(["1", "2"]);
+  await expect(pull(owner, "lords_day_notes", n2.change_id)).resolves.toEqual([]);
+
+  const [c1] = await pull(owner, "note_cards", "0", 1);
+  const [c2] = await pull(owner, "note_cards", c1.change_id, 1);
+  expect([c1.id, c2.id]).toEqual([cardId, secondCardId]);
+  expect([c1.change_id, c2.change_id]).toEqual(["3", "4"]);
+  await expect(pull(owner, "note_cards", c2.change_id)).resolves.toEqual([]);
+
+  // Soft deletes travel as tombstones with payload: null; tombstone with payload is rejected.
+  await expect(push(owner,
+    { ...keyPointCard, id: operation, payload: JSON.stringify({ kind: "key_point", body: "x", position: 0 }), updated_at: later, deleted_at: later },
+    { ...keyPointCard, id: secondOperation, payload: null, updated_at: later, deleted_at: later },
+    { ...noteChange, id: thirdOperation, payload: null, updated_at: later, deleted_at: later },
+  )).resolves.toEqual([
+    rejected("INVALID_INPUT", operation),
+    accepted(secondOperation),
+    accepted(thirdOperation),
+  ]);
+
+  await expect(pull(owner, "note_cards", c2.change_id)).resolves.toMatchObject([
+    { id: cardId, note_id: noteId, deleted_at: later, payload: null, change_id: "5" },
+  ]);
+  await expect(pull(owner, "lords_day_notes", n2.change_id)).resolves.toMatchObject([
+    { id: noteId, note_id: noteId, deleted_at: later, payload: null, change_id: "6" },
+  ]);
+});
+
+it("records ownership and row catalog entries for account deletion and blocks retired notes and disabled accounts", async () => {
+  const { db, push, pull } = fixture();
+  await expect(push(owner, noteChange, keyPointCard)).resolves.toEqual([accepted(operation), accepted(secondOperation)]);
+
+  // Account deletion index and note row catalog entries exist.
+  await expect(db.get(`account#${owner}`, `owned_note#${noteId}`)).resolves.toBeDefined();
+  await expect(db.get(`note#${noteId}`, `row#lords_day_notes#${noteId}`)).resolves.toBeDefined();
+  await expect(db.get(`note#${noteId}`, `row#note_cards#${cardId}`)).resolves.toBeDefined();
+
+  // Retiring note access invalidates writes and hides both note and card from pull.
+  const access = await db.get(`note#${noteId}`, "access");
+  await db.commit([{ pk: `note#${noteId}`, sk: "access", expected: access.version, value: { version: "retired", retired: true } }]);
+  await expect(pull(owner, "lords_day_notes")).resolves.toEqual([]);
+  await expect(pull(owner, "note_cards")).resolves.toEqual([]);
+  await expect(push(owner, { ...noteChange, updated_at: later })).resolves.toEqual([rejected("UNAUTHORIZED")]);
+  await expect(push(owner, { ...keyPointCard, updated_at: later })).resolves.toEqual([rejected("UNAUTHORIZED", secondOperation)]);
+
+  // Disabling the account blocks push and pull for both tables.
+  await db.commit([{ pk: `account#${owner}`, sk: "disabled", value: { version: "disabled" } }]);
+  await expect(pull(owner, "lords_day_notes")).rejects.toThrow("Not authorized");
+  await expect(pull(owner, "note_cards")).rejects.toThrow("Not authorized");
+  await expect(push(owner, { ...noteChange, row_id: secondNoteId, note_id: secondNoteId })).rejects.toThrow("Not authorized");
+});

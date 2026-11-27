@@ -33,16 +33,18 @@ public struct SyncRecord: Equatable, Sendable {
     public var table: String
     public var id: String
     public var childId: String?
+    public var noteId: String?
     public var payload: Data?
     public var updatedAt: Date
     public var deletedAt: Date?
     public var changeId: Int64
 
-    public init(table: String, id: String, childId: String? = nil, payload: Data?, updatedAt: Date,
-                deletedAt: Date? = nil, changeId: Int64 = 0) {
+    public init(table: String, id: String, childId: String? = nil, noteId: String? = nil, payload: Data?,
+                updatedAt: Date, deletedAt: Date? = nil, changeId: Int64 = 0) {
         self.table = table
         self.id = id
         self.childId = childId
+        self.noteId = noteId
         self.payload = payload
         self.updatedAt = updatedAt
         self.deletedAt = deletedAt
@@ -59,16 +61,18 @@ public struct SyncChange: Equatable, Sendable {
     public var table: String
     public var rowId: String
     public var childId: String?
+    public var noteId: String?
     public var payload: Data?
     public var updatedAt: Date
     public var deletedAt: Date?
 
-    public init(id: UUID, table: String, rowId: String, childId: String? = nil, payload: Data?,
-                updatedAt: Date, deletedAt: Date? = nil) {
+    public init(id: UUID, table: String, rowId: String, childId: String? = nil, noteId: String? = nil,
+                payload: Data?, updatedAt: Date, deletedAt: Date? = nil) {
         self.id = id
         self.table = table
         self.rowId = rowId
         self.childId = childId
+        self.noteId = noteId
         self.payload = payload
         self.updatedAt = updatedAt
         self.deletedAt = deletedAt
@@ -115,6 +119,14 @@ public protocol SyncTableAdapter: AnyObject {
     func apply(_ record: SyncRecord, in context: ModelContext) throws
     /// Remove the local row (a server soft delete won).
     func remove(id: String, in context: ModelContext) throws
+    /// Remove with full tombstone metadata (e.g. `updatedAt` / `deletedAt`) for soft-deleted tables.
+    func remove(_ record: SyncRecord, in context: ModelContext) throws
+}
+
+public extension SyncTableAdapter {
+    func remove(_ record: SyncRecord, in context: ModelContext) throws {
+        try remove(id: record.id, in: context)
+    }
 }
 
 public enum SyncError: Error, Equatable {
@@ -135,26 +147,30 @@ public final class SyncOutboxEntry {
     public var rowId: String
     /// Stable child UUID for child-scoped tables (`child_id` in AppSync).
     public var childId: String?
+    /// Stable note UUID for Lord's Day tables (`note_id` in AppSync).
+    public var noteId: String?
     public var payload: Data?
     public var updatedAt: Date
     public var deletedAt: Date?
 
     public init(entryId: UUID = UUID(), sequence: Int, subject: String? = nil, table: String,
-                rowId: String, childId: String? = nil, payload: Data?, updatedAt: Date, deletedAt: Date?) {
+                rowId: String, childId: String? = nil, noteId: String? = nil, payload: Data?,
+                updatedAt: Date, deletedAt: Date?) {
         self.entryId = entryId
         self.sequence = sequence
         self.subject = subject
         self.table = table
         self.rowId = rowId
         self.childId = childId
+        self.noteId = noteId
         self.payload = payload
         self.updatedAt = updatedAt
         self.deletedAt = deletedAt
     }
 
     var change: SyncChange {
-        SyncChange(id: entryId, table: table, rowId: rowId, childId: childId, payload: payload,
-                   updatedAt: updatedAt, deletedAt: deletedAt)
+        SyncChange(id: entryId, table: table, rowId: rowId, childId: childId, noteId: noteId,
+                   payload: payload, updatedAt: updatedAt, deletedAt: deletedAt)
     }
 }
 
@@ -273,11 +289,11 @@ public final class SyncEngine: SyncRunning {
     /// `deletedAt` (and usually a nil payload) after removing the local row.
     /// Throws if the save fails; both the entry and the unsaved row change are
     /// rolled back, so the caller must not report the write as saved.
-    public func recordLocalWrite(table: String, id: String, childId: String? = nil, payload: Data?,
-                                 updatedAt: Date, deletedAt: Date? = nil) throws {
+    public func recordLocalWrite(table: String, id: String, childId: String? = nil, noteId: String? = nil,
+                                 payload: Data?, updatedAt: Date, deletedAt: Date? = nil) throws {
         try commit {
             let entry = SyncOutboxEntry(sequence: try nextSequence(), subject: subject, table: table,
-                                        rowId: id, childId: childId, payload: payload,
+                                        rowId: id, childId: childId, noteId: noteId, payload: payload,
                                         updatedAt: updatedAt, deletedAt: deletedAt)
             context.insert(entry)
         }
@@ -365,7 +381,7 @@ public final class SyncEngine: SyncRunning {
             return
         }
         if record.isDeleted {
-            try adapter.remove(id: record.id, in: context)
+            try adapter.remove(record, in: context)
         } else {
             try adapter.apply(record, in: context)
         }

@@ -17,6 +17,7 @@ final class NetworkConnectivity: @unchecked Sendable {
     private let lock = NSLock()
     private var status: NWPath.Status?
     private var waiters: [CheckedContinuation<Bool, Never>] = []
+    private var listeners: [UUID: AsyncStream<Bool>.Continuation] = [:]
 
     private init() {
         monitor.pathUpdateHandler = { [weak self] path in
@@ -25,15 +26,26 @@ final class NetworkConnectivity: @unchecked Sendable {
         monitor.start(queue: queue)
     }
 
+    private func effectiveOnline(_ pathStatus: NWPath.Status) -> Bool {
+        #if DEBUG
+        if UserDefaults.standard.bool(forKey: "OfflineMode") { return false }
+        #endif
+        return pathStatus == .satisfied
+    }
+
     private func handleUpdate(_ newStatus: NWPath.Status) {
-        let pending: [CheckedContinuation<Bool, Never>] = lock.withLock {
+        let (pending, activeListeners, shouldNotify): ([CheckedContinuation<Bool, Never>], [AsyncStream<Bool>.Continuation], Bool) = lock.withLock {
+            let changed = status == nil || (status == .satisfied) != (newStatus == .satisfied)
             status = newStatus
             let copy = waiters
             waiters = []
-            return copy
+            return (copy, Array(listeners.values), changed)
         }
-        let online = newStatus == .satisfied
+        let online = effectiveOnline(newStatus)
         for waiter in pending { waiter.resume(returning: online) }
+        if shouldNotify {
+            for listener in activeListeners { listener.yield(online) }
+        }
     }
 
     private func currentStatus() -> NWPath.Status? {
@@ -42,7 +54,7 @@ final class NetworkConnectivity: @unchecked Sendable {
 
     private func enqueueWaiter(_ continuation: CheckedContinuation<Bool, Never>) {
         let resolved: Bool? = lock.withLock {
-            if let status { return status == .satisfied }
+            if let status { return effectiveOnline(status) }
             waiters.append(continuation)
             return nil
         }
@@ -58,6 +70,23 @@ final class NetworkConnectivity: @unchecked Sendable {
         }
         return await withCheckedContinuation { continuation in
             enqueueWaiter(continuation)
+        }
+    }
+
+    /// Emits the current connectivity state (once known) and each subsequent offline/online transition.
+    func onlineUpdates() -> AsyncStream<Bool> {
+        let id = UUID()
+        return AsyncStream { continuation in
+            let current: Bool? = lock.withLock {
+                listeners[id] = continuation
+                return status.map { effectiveOnline($0) }
+            }
+            if let current {
+                continuation.yield(current)
+            }
+            continuation.onTermination = { [weak self] _ in
+                self?.lock.withLock { _ = self?.listeners.removeValue(forKey: id) }
+            }
         }
     }
 }

@@ -16,6 +16,9 @@ struct LordsDayTabView: View {
     @Binding var startsCapture: Bool
     @Environment(\.modelContext) private var context
     @Environment(AuthService.self) private var auth
+    @Environment(SyncService.self) private var sync
+    @Query private var observedNotes: [LordsDayNote]
+    @Query private var observedCards: [NoteCard]
     @State private var capture: CaptureModel?
     @State private var capturesTyping = false
     @State private var status = CaptureStatus()
@@ -77,9 +80,26 @@ struct LordsDayTabView: View {
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { refresh() }
         }
+        .onChange(of: sync.lastSyncedAt) { _, _ in
+            refresh()
+        }
+        .onChange(of: observedNotes.map(\.updatedAt)) { _, _ in
+            refresh()
+        }
+        .onChange(of: observedCards.map(\.updatedAt)) { _, _ in
+            refresh()
+        }
         .onChange(of: pending?.review.phase) { _, phase in
             // Drafting finished while the landing page was showing it.
             if phase != .drafting { refresh() }
+        }
+        .task {
+            for await online in NetworkConnectivity.shared.onlineUpdates() {
+                offline = !online
+                if online, let pending, pending.review.retryWhenOnline, pending.review.canRetry {
+                    pending.retry()
+                }
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.significantTimeChangeNotification)) { _ in
             refresh()
@@ -107,7 +127,11 @@ struct LordsDayTabView: View {
             onCapture: { startCapture() },
             onType: { startCapture(typing: true) },
             onOpenReview: openPendingReview,
-            onRetry: { pending?.retry() }
+            onRetry: { pending?.retry() },
+            onRefresh: {
+                await sync.refresh()
+                refresh()
+            }
         )
     }
 
@@ -127,9 +151,13 @@ struct LordsDayTabView: View {
         ref.contains(".") ? parseOsisBibleReference(ref) : ref
     }
 
+    private func makeStoreProvider() -> @MainActor () -> LordsDayStore {
+        { [sync, context] in sync.lordsDayStore(in: context) }
+    }
+
     private func startCapture(typing: Bool = false) {
         capturesTyping = typing
-        capture = CaptureModel(context: context)
+        capture = CaptureModel(context: context, storeProvider: makeStoreProvider())
     }
 
     private func remember(_ sermon: ReelSermon, _ page: Int) {
@@ -150,8 +178,8 @@ struct LordsDayTabView: View {
         refresh()
         guard let id = draftAfterCapture else { return }
         draftAfterCapture = nil
-        guard let note = try? LordsDayStore(context: context).note(id: id) else { return }
-        let model = ReviewModel.session(for: note, context: context, generator: makeGenerator())
+        guard let note = try? sync.lordsDayStore(in: context).note(id: id) else { return }
+        let model = ReviewModel.session(for: note, context: context, storeProvider: makeStoreProvider(), generator: makeGenerator())
         model.startIfNeeded()
         pending = model
     }
@@ -163,22 +191,28 @@ struct LordsDayTabView: View {
     }
 
     private func openReview(noteId: UUID) {
-        guard let note = try? LordsDayStore(context: context).note(id: noteId) else { return }
-        review = ReviewModel.session(for: note, context: context, generator: makeGenerator())
+        guard let note = try? sync.lordsDayStore(in: context).note(id: noteId) else { return }
+        review = ReviewModel.session(for: note, context: context, storeProvider: makeStoreProvider(), generator: makeGenerator())
     }
 
     private func refresh() {
         now = Date()
         status = CaptureStatus(context: context, now: now, calendar: calendar)
-        let store = LordsDayStore(context: context)
+        let store = sync.lordsDayStore(in: context)
         reel = (try? LordsDayReel(store: store, today: now, calendar: calendar)) ?? LordsDayReel(testSermonPageCounts: [])
         memory = LordsDayStackMemory(stored: UserDefaults.standard.dictionary(forKey: Self.memoryKey) as? [String: Int] ?? [:])
         if let first = status.pendingReviews.first, let note = try? store.note(id: first.id) {
-            pending = ReviewModel.session(for: note, context: context, generator: makeGenerator())
+            pending = ReviewModel.session(for: note, context: context, storeProvider: makeStoreProvider(), generator: makeGenerator())
         } else {
             pending = nil
         }
-        Task { offline = !(await NetworkConnectivity.shared.isOnline()) }
+        Task {
+            let online = await NetworkConnectivity.shared.isOnline()
+            offline = !online
+            if online, let pending, pending.review.retryWhenOnline, pending.review.canRetry {
+                pending.retry()
+            }
+        }
     }
 }
 

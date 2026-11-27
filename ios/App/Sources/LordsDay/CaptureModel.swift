@@ -25,6 +25,7 @@ final class CaptureModel {
     var typedText: String { didSet { if oldValue != typedText { write { $0.extractedText = normalizedNoteField(self.typedText) } } } }
 
     private let context: ModelContext
+    private let storeProvider: @MainActor () -> LordsDayStore
     private let root: URL
     private let draft: CaptureDraft
     private let note: LordsDayNote
@@ -37,8 +38,14 @@ final class CaptureModel {
     var hasContent: Bool { canFinish || isPersisted }
 
     /// Resumes the capture in progress, if the app was closed during one; otherwise starts a new note.
-    init(context: ModelContext, root: URL = CaptureDraft.defaultRoot, now: Date = Date()) {
+    init(
+        context: ModelContext,
+        storeProvider: (@MainActor () -> LordsDayStore)? = nil,
+        root: URL = CaptureDraft.defaultRoot,
+        now: Date = Date()
+    ) {
         self.context = context
+        self.storeProvider = storeProvider ?? { LordsDayStore(context: context) }
         self.root = root
         let activeId = try? CaptureDraft.activeNoteId(root: root)
         let resumed = activeId.flatMap { id in
@@ -110,8 +117,7 @@ final class CaptureModel {
         try? draft.discard()
         try? CaptureDraft.setActive(nil, root: root)
         if isPersisted {
-            context.delete(note)
-            try? context.save()
+            try? storeProvider().removeNote(note)
         }
     }
 
@@ -134,9 +140,9 @@ final class CaptureModel {
 
     private func persistNote() {
         do {
-            note.updatedAt = Date()
-            if !isPersisted { context.insert(note); isPersisted = true }
-            try context.save()
+            note.updatedAt = SyncTimestamp.truncate(Date())
+            isPersisted = true
+            try storeProvider().save(note)
             saveState = .saved
         } catch {
             saveState = .failed

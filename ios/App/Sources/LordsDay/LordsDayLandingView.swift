@@ -46,6 +46,7 @@ struct LordsDayLandingView: View {
     var onType: () -> Void = {}
     var onOpenReview: () -> Void = {}
     var onRetry: () -> Void = {}
+    var onRefresh: (@MainActor () async -> Void)? = nil
 
     private var thisWeek: ReelSermon? { reel.thisWeek(today: today, calendar: calendar) }
     private var earlier: [ReelSermon] { reel.earlier(today: today, calendar: calendar) }
@@ -60,6 +61,9 @@ struct LordsDayLandingView: View {
             .padding(.bottom, 120)
             .frame(maxWidth: 704)
             .frame(maxWidth: .infinity)
+        }
+        .refreshable {
+            await onRefresh?()
         }
         .scrollIndicators(.hidden)
         .background(Color.ccPaper)

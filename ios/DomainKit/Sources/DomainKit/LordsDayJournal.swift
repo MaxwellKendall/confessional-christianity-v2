@@ -341,6 +341,6 @@ extension LordsDayStore {
     /// Kept cards of every live note, by note, in order.
     func allKeptCards() throws -> [UUID: [NoteCard]] {
         try Dictionary(grouping: allCards().filter { $0.deletedAt == nil }, by: \.noteId)
-            .mapValues { $0.sorted { $0.position < $1.position } }
+            .mapValues { $0.sorted(by: NoteCard.ordered) }
     }
 }

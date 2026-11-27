@@ -29,6 +29,7 @@ final class ReviewModel {
 
     @ObservationIgnored private let note: LordsDayNote
     @ObservationIgnored private let context: ModelContext
+    @ObservationIgnored private var storeProvider: @MainActor () -> LordsDayStore
     @ObservationIgnored private let root: URL
     @ObservationIgnored private let generator: CardsGenerator
     @ObservationIgnored private var task: Task<Void, Never>?
@@ -38,10 +39,19 @@ final class ReviewModel {
 
     static var activeSessionIds: Set<UUID> { Set(sessions.keys) }
 
-    static func session(for note: LordsDayNote, context: ModelContext, generator: CardsGenerator = LiveCardsGenerator(),
-                        root: URL = CaptureDraft.defaultRoot) -> ReviewModel {
-        if let existing = sessions[note.id] { return existing }
-        let model = ReviewModel(note: note, context: context, generator: generator, root: root)
+    static func session(
+        for note: LordsDayNote,
+        context: ModelContext,
+        storeProvider: (@MainActor () -> LordsDayStore)? = nil,
+        generator: CardsGenerator = LiveCardsGenerator(),
+        root: URL = CaptureDraft.defaultRoot
+    ) -> ReviewModel {
+        let resolvedProvider = storeProvider ?? { LordsDayStore(context: context) }
+        if let existing = sessions[note.id] {
+            existing.storeProvider = resolvedProvider
+            return existing
+        }
+        let model = ReviewModel(note: note, context: context, storeProvider: resolvedProvider, generator: generator, root: root)
         sessions[note.id] = model
         return model
     }
@@ -55,10 +65,17 @@ final class ReviewModel {
         return pages > 0 || normalizedNoteField(note.extractedText) != nil
     }
 
-    private init(note: LordsDayNote, context: ModelContext, generator: CardsGenerator, root: URL) {
+    private init(
+        note: LordsDayNote,
+        context: ModelContext,
+        storeProvider: @escaping @MainActor () -> LordsDayStore,
+        generator: CardsGenerator,
+        root: URL
+    ) {
         self.note = note
         self.noteId = note.id
         self.context = context
+        self.storeProvider = storeProvider
         self.generator = generator
         self.root = root
         titleText = note.sermonTitle ?? ""
@@ -111,7 +128,11 @@ final class ReviewModel {
                 }
             } catch {
                 if Task.isCancelled { return }
-                self?.failure = (error as? CardsGeneratorError) ?? .failed
+                let genError = (error as? CardsGeneratorError) ?? .failed
+                self?.failure = genError
+                if genError == .offline {
+                    self?.review.markWaitingForNetwork()
+                }
             }
             guard let self, !Task.isCancelled else { return }
             self.review.interrupt()
@@ -196,7 +217,7 @@ final class ReviewModel {
         guard review.unhandledUnreadPages.isEmpty else { throw LordsDayReviewError.unreadPagesRemaining }
         guard review.canFinish else { throw LordsDayReviewError.nothingToKeep }
         let kept = review.keptCards()
-        try LordsDayStore(context: context).keepCards(kept, for: note)
+        try storeProvider().keepCards(kept, for: note)
         LoopCounter.record(.sermonKept(cardCount: kept.count))
         task?.cancel()
         try? LordsDayReview.delete(noteId: noteId, root: root)
@@ -219,13 +240,13 @@ final class ReviewModel {
 
     private func writeNote(_ change: (LordsDayNote) -> Void) {
         change(note)
-        note.updatedAt = Date()
+        note.updatedAt = SyncTimestamp.truncate(Date())
         saveNote()
     }
 
     private func saveNote() {
         do {
-            try context.save()
+            try storeProvider().save(note)
             saveFailed = false
         } catch {
             saveFailed = true

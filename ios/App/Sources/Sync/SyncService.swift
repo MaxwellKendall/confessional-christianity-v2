@@ -28,6 +28,7 @@ final class SyncService {
 
     @ObservationIgnored private var engine: SyncEngine?
     @ObservationIgnored private var scheduler: SyncScheduler?
+    @ObservationIgnored private var connectivityTask: Task<Void, Never>?
 
     init(container: ModelContainer, auth: AuthService, bundle: Bundle = .main) {
         self.container = container
@@ -43,6 +44,20 @@ final class SyncService {
             return LocalProgressStore(context: context)
         }
         return LocalProgressStore(
+            context: context,
+            syncSubject: subject,
+            onLocalWrite: { [weak self] in self?.localWriteOccurred() }
+        )
+    }
+
+    /// Returns a `LordsDayStore` bound to the active signed-in Cognito subject
+    /// (atomically queueing sync outbox entries and scheduling debounced sync), or a
+    /// strictly local store when signed out.
+    func lordsDayStore(in context: ModelContext) -> LordsDayStore {
+        guard let subject = activeSubject else {
+            return LordsDayStore(context: context)
+        }
+        return LordsDayStore(
             context: context,
             syncSubject: subject,
             onLocalWrite: { [weak self] in self?.localWriteOccurred() }
@@ -79,7 +94,7 @@ final class SyncService {
         let engine = SyncEngine(
             context: container.mainContext,
             transport: transport,
-            tables: ChildProgressSyncAdapters.all(),
+            tables: AccountSyncAdapters.all(),
             subject: nextSubject,
             pushBatchSize: AppSyncTransport.maxPushBatchSize,
             pullPageSize: 50
@@ -98,6 +113,18 @@ final class SyncService {
         }
         self.engine = engine
         self.scheduler = scheduler
+        connectivityTask = Task { [weak self] in
+            var wasOffline = false
+            for await online in NetworkConnectivity.shared.onlineUpdates() {
+                guard !Task.isCancelled, let self else { return }
+                if !online {
+                    wasOffline = true
+                } else if wasOffline {
+                    wasOffline = false
+                    self.appDidBecomeActive()
+                }
+            }
+        }
         appDidBecomeActive()
     }
 
@@ -140,6 +167,8 @@ final class SyncService {
     // MARK: - Private
 
     private func stopAndClear(subject: String) {
+        connectivityTask?.cancel()
+        connectivityTask = nil
         scheduler?.stop()
         engine?.invalidate()
         scheduler = nil

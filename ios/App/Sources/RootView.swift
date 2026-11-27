@@ -171,21 +171,33 @@ struct RootView: View {
         _ = LordsDayFeedFixture.makeFeed("key_point", container: modelContext.container)
     }
 
-    /// Two-simulator sync proof hook (TKL-1068): `-SyncTestAddChild "Samuel:1"`
-    /// adds that child on WSC and advances N questions through `sync.progressStore`
-    /// once signed in, if a child with that name does not already exist locally.
+    /// Two-simulator sync proof hooks (TKL-1068, TKL-1069):
+    /// - `-SyncTestAddChild "Samuel:1"` adds that child on WSC and advances N questions once signed in.
+    /// - `-SyncTestEditLatestNoteTitle "<title>"` updates the latest live sermon note's title through `sync.lordsDayStore`.
     private func runSyncTestActionIfConfigured() {
-        guard let spec = UserDefaults.standard.string(forKey: "SyncTestAddChild") else { return }
-        let bits = spec.split(separator: ":").map(String.init)
-        guard let name = bits.first, !name.isEmpty else { return }
-        let advances = Int(bits.dropFirst().first ?? "1") ?? 1
-        let store = sync.progressStore(in: modelContext)
-        guard !store.todayChildren().contains(where: { $0.name == name }) else { return }
-        guard let child = try? store.addChild(name: name) else { return }
-        try? store.selectChild(childId: child.id)
-        _ = store.resumeOrStartTrack(childId: child.id, catechismId: "WSC")
-        for _ in 0..<max(0, advances) {
-            _ = store.advanceQuestion(childId: child.id, catechismId: "WSC", totalQuestions: PROGRAMS[0].totalQuestions)
+        if let spec = UserDefaults.standard.string(forKey: "SyncTestAddChild") {
+            let bits = spec.split(separator: ":").map(String.init)
+            if let name = bits.first, !name.isEmpty {
+                let advances = Int(bits.dropFirst().first ?? "1") ?? 1
+                let store = sync.progressStore(in: modelContext)
+                if !store.todayChildren().contains(where: { $0.name == name }),
+                   let child = try? store.addChild(name: name) {
+                    try? store.selectChild(childId: child.id)
+                    _ = store.resumeOrStartTrack(childId: child.id, catechismId: "WSC")
+                    for _ in 0..<max(0, advances) {
+                        _ = store.advanceQuestion(childId: child.id, catechismId: "WSC", totalQuestions: PROGRAMS[0].totalQuestions)
+                    }
+                }
+            }
+        }
+        if let newTitle = UserDefaults.standard.string(forKey: "SyncTestEditLatestNoteTitle"), !newTitle.isEmpty {
+            let store = sync.lordsDayStore(in: modelContext)
+            if let latest = try? modelContext.fetch(FetchDescriptor<LordsDayNote>())
+                .filter({ $0.deletedAt == nil })
+                .max(by: { $0.updatedAt < $1.updatedAt }),
+               latest.sermonTitle != newTitle {
+                try? store.update(latest) { $0.sermonTitle = newTitle }
+            }
         }
     }
     #endif

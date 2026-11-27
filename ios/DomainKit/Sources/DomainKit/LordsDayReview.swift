@@ -212,6 +212,9 @@ public struct LordsDayReview: Codable, Equatable, Sendable {
     public private(set) var replayUnavailablePages: Set<Int> = []
     /// Unread pages the user explicitly chose to skip so the already-read cards can be finished.
     public private(set) var skippedPages: Set<Int> = []
+    /// Set when drafting failed because the device was offline; persisted so the generator
+    /// automatically retries when connectivity returns (even after an app kill, TKL-1069).
+    public private(set) var retryWhenOnline: Bool = false
     /// What each note page said about the sermon (TKL-1061), persisted so a resumed review still has it.
     private var pageSermons: [Int: SermonDetails] = [:]
     /// The note page each page of the request in flight stands for (a retry sends only some).
@@ -231,7 +234,7 @@ public struct LordsDayReview: Codable, Equatable, Sendable {
     private var pageText: [PageTranscription] = []
 
     private enum CodingKeys: String, CodingKey {
-        case noteId, pageCount, phase, cards, readPages, failedPages, replayUnavailablePages, skippedPages, requestPages, pageGenerationIds
+        case noteId, pageCount, phase, cards, readPages, failedPages, replayUnavailablePages, skippedPages, retryWhenOnline, requestPages, pageGenerationIds
         case pageSermons = "sermon"
     }
 
@@ -250,6 +253,7 @@ public struct LordsDayReview: Codable, Equatable, Sendable {
         failedPages = try c.decode(Set<Int>.self, forKey: .failedPages)
         replayUnavailablePages = try c.decodeIfPresent(Set<Int>.self, forKey: .replayUnavailablePages) ?? []
         skippedPages = try c.decodeIfPresent(Set<Int>.self, forKey: .skippedPages) ?? []
+        retryWhenOnline = try c.decodeIfPresent(Bool.self, forKey: .retryWhenOnline) ?? false
         requestPages = try c.decode([Int].self, forKey: .requestPages)
         pageGenerationIds = try c.decodeIfPresent([Int: String].self, forKey: .pageGenerationIds) ?? [:]
         // Reviews saved before TKL-1061 have no sermon.
@@ -313,11 +317,17 @@ public struct LordsDayReview: Codable, Equatable, Sendable {
         skippedPages.formUnion(unreadPages)
     }
 
+    /// Marks that drafting failed because the device was offline, so it retries once connectivity returns.
+    public mutating func markWaitingForNetwork() {
+        retryWhenOnline = true
+    }
+
     /// Starts a run for every retryable unread page and returns those note pages, in order.
     public mutating func begin() -> [Int] {
         requestPages = retryablePages
         failedPages.subtract(requestPages)
         skippedPages.subtract(requestPages)
+        retryWhenOnline = false
         clearInFlightPageTracking()
         phase = .drafting
         return requestPages

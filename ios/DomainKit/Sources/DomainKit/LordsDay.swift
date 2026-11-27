@@ -19,10 +19,34 @@ public enum CardKind: String, Codable, CaseIterable, Sendable {
     public var deletedAt: Date?
 
     public init(id: UUID = UUID(), userId: UUID? = nil, serviceDate: Date, passageRef: String? = nil, sermonTitle: String? = nil, preacher: String? = nil, church: String? = nil, extractedText: String? = nil, createdAt: Date = Date(), updatedAt: Date = Date(), deletedAt: Date? = nil) {
-        self.id = id; self.userId = userId; self.serviceDate = serviceDate
+        self.id = id; self.userId = userId; self.serviceDate = SyncTimestamp.truncate(serviceDate)
         self.passageRef = passageRef; self.sermonTitle = sermonTitle; self.preacher = preacher
-        self.church = church; self.extractedText = extractedText; self.createdAt = createdAt
-        self.updatedAt = updatedAt; self.deletedAt = deletedAt
+        self.church = church; self.extractedText = extractedText
+        self.createdAt = SyncTimestamp.truncate(createdAt)
+        self.updatedAt = SyncTimestamp.truncate(updatedAt)
+        self.deletedAt = deletedAt.map(SyncTimestamp.truncate)
+    }
+
+    func applySynced(
+        serviceDate: Date,
+        passageRef: String?,
+        sermonTitle: String?,
+        preacher: String?,
+        church: String?,
+        extractedText: String?,
+        createdAt: Date,
+        updatedAt: Date,
+        deletedAt: Date?
+    ) {
+        self.serviceDate = serviceDate
+        self.passageRef = passageRef
+        self.sermonTitle = sermonTitle
+        self.preacher = preacher
+        self.church = church
+        self.extractedText = extractedText
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+        self.deletedAt = deletedAt
     }
 }
 
@@ -41,14 +65,63 @@ public enum CardKind: String, Codable, CaseIterable, Sendable {
     public var updatedAt: Date
     public var deletedAt: Date?
 
-    fileprivate init(noteId: UUID, userId: UUID?, kind: CardKind, body: String, verseRef: String?, position: Int, attribution: String? = nil, editedByUser: Bool = false) {
+    fileprivate init(noteId: UUID, userId: UUID?, kind: CardKind, body: String, verseRef: String?, position: Int, attribution: String? = nil, palette: String? = nil, editedByUser: Bool = false, now: Date = Date()) {
+        let stamped = SyncTimestamp.truncate(now)
         self.id = UUID(); self.noteId = noteId; self.userId = userId; self.kind = kind
         self.body = body; self.verseRef = verseRef; self.position = position; self.attribution = attribution
-        self.editedByUser = editedByUser; self.createdAt = Date(); self.updatedAt = Date()
+        self.palette = palette; self.editedByUser = editedByUser; self.createdAt = stamped; self.updatedAt = stamped
     }
-    fileprivate func update(kind: CardKind, body: String, verseRef: String?) {
+
+    init(
+        id: UUID,
+        noteId: UUID,
+        userId: UUID? = nil,
+        kind: CardKind,
+        body: String,
+        verseRef: String?,
+        attribution: String?,
+        palette: String?,
+        position: Int,
+        editedByUser: Bool,
+        createdAt: Date,
+        updatedAt: Date,
+        deletedAt: Date?
+    ) {
+        self.id = id; self.noteId = noteId; self.userId = userId; self.kind = kind
+        self.body = body; self.verseRef = verseRef; self.attribution = attribution
+        self.palette = palette; self.position = position; self.editedByUser = editedByUser
+        self.createdAt = createdAt; self.updatedAt = updatedAt; self.deletedAt = deletedAt
+    }
+
+    func applySynced(
+        noteId: UUID,
+        kind: CardKind,
+        body: String,
+        verseRef: String?,
+        attribution: String?,
+        palette: String?,
+        position: Int,
+        editedByUser: Bool,
+        createdAt: Date,
+        updatedAt: Date,
+        deletedAt: Date?
+    ) {
+        self.noteId = noteId; self.kind = kind; self.body = body; self.verseRef = verseRef
+        self.attribution = attribution; self.palette = palette; self.position = position
+        self.editedByUser = editedByUser; self.createdAt = createdAt; self.updatedAt = updatedAt
+        self.deletedAt = deletedAt
+    }
+
+    fileprivate func update(kind: CardKind, body: String, verseRef: String?, updatedAt: Date) {
         self.kind = kind; self.body = body; self.verseRef = verseRef
-        editedByUser = true; updatedAt = Date()
+        editedByUser = true; self.updatedAt = updatedAt
+    }
+
+    /// Deterministic ordering across devices even when two devices append at the same position offline.
+    public static func ordered(_ lhs: NoteCard, before rhs: NoteCard) -> Bool {
+        if lhs.position != rhs.position { return lhs.position < rhs.position }
+        if lhs.createdAt != rhs.createdAt { return lhs.createdAt < rhs.createdAt }
+        return lhs.id.uuidString.lowercased() < rhs.id.uuidString.lowercased()
     }
 }
 
@@ -65,50 +138,251 @@ public func todayCardIndex(serviceDate: Date, today: Date, cardCount: Int, calen
 
 @MainActor public final class LordsDayStore {
     private let context: ModelContext
-    public init(context: ModelContext) { self.context = context }
-    public func save(_ note: LordsDayNote) throws { context.insert(note); try context.save() }
+    private let syncSubject: String?
+    private let onLocalWrite: (@MainActor () -> Void)?
+    private let now: () -> Date
+
+    public init(
+        context: ModelContext,
+        syncSubject: String? = nil,
+        onLocalWrite: (@MainActor () -> Void)? = nil,
+        now: @escaping () -> Date = Date.init
+    ) {
+        self.context = context
+        self.syncSubject = syncSubject
+        self.onLocalWrite = onLocalWrite
+        self.now = now
+    }
+
+    private func stampedNow(after previous: Date? = nil) -> Date {
+        let current = SyncTimestamp.truncate(now())
+        if let previous {
+            let truncatedPrev = SyncTimestamp.truncate(previous)
+            if current <= truncatedPrev {
+                return SyncTimestamp.truncate(truncatedPrev.addingTimeInterval(0.001))
+            }
+        }
+        return current
+    }
+
+    public func save(_ note: LordsDayNote) throws {
+        note.serviceDate = SyncTimestamp.truncate(note.serviceDate)
+        note.createdAt = SyncTimestamp.truncate(note.createdAt)
+        note.updatedAt = SyncTimestamp.truncate(note.updatedAt)
+        context.insert(note)
+        try enqueueNoteUpsert(note)
+        try context.save()
+        if syncSubject != nil { onLocalWrite?() }
+    }
+
+    public func update(_ note: LordsDayNote, _ mutate: (LordsDayNote) -> Void) throws {
+        mutate(note)
+        note.updatedAt = stampedNow(after: note.updatedAt)
+        try save(note)
+    }
+
+    public func removeNote(_ note: LordsDayNote) throws {
+        let ts = stampedNow(after: note.updatedAt)
+        for card in try cards(for: note) {
+            let cardTs = stampedNow(after: max(card.updatedAt, ts))
+            card.deletedAt = cardTs
+            card.updatedAt = cardTs
+            try enqueueCardTombstone(card, deletedAt: cardTs)
+        }
+        note.deletedAt = ts
+        note.updatedAt = ts
+        try enqueueNoteTombstone(note, deletedAt: ts)
+        try context.save()
+        if syncSubject != nil { onLocalWrite?() }
+    }
+
     public func cards(for note: LordsDayNote) throws -> [NoteCard] {
-        try context.fetch(FetchDescriptor<NoteCard>()).filter { $0.noteId == note.id && $0.deletedAt == nil }.sorted { $0.position < $1.position }
+        try context.fetch(FetchDescriptor<NoteCard>())
+            .filter { $0.noteId == note.id && $0.deletedAt == nil }
+            .sorted(by: NoteCard.ordered)
     }
-    @discardableResult public func appendCard(to note: LordsDayNote, kind: CardKind, body: String, verseRef: String? = nil) throws -> NoteCard {
+
+    @discardableResult public func appendCard(
+        to note: LordsDayNote,
+        kind: CardKind,
+        body: String,
+        verseRef: String? = nil,
+        attribution: String? = nil,
+        palette: String? = nil,
+        editedByUser: Bool = false
+    ) throws -> NoteCard {
         try validate(kind: kind, body: body, verseRef: verseRef)
-        let card = NoteCard(noteId: note.id, userId: note.userId, kind: kind, body: body, verseRef: verseRef, position: (try cards(for: note).map(\.position).max() ?? -1) + 1)
-        context.insert(card); try context.save(); return card
+        let ts = SyncTimestamp.truncate(now())
+        let card = NoteCard(
+            noteId: note.id, userId: note.userId, kind: kind, body: body, verseRef: verseRef,
+            position: (try cards(for: note).map(\.position).max() ?? -1) + 1,
+            attribution: attribution, palette: palette, editedByUser: editedByUser, now: ts
+        )
+        context.insert(card)
+        try enqueueCardUpsert(card)
+        try context.save()
+        if syncSubject != nil { onLocalWrite?() }
+        return card
     }
+
+    public func saveCard(_ card: NoteCard) throws {
+        try validate(kind: card.kind, body: card.body, verseRef: card.verseRef)
+        card.updatedAt = stampedNow(after: card.updatedAt)
+        try enqueueCardUpsert(card)
+        try context.save()
+        if syncSubject != nil { onLocalWrite?() }
+    }
+
     public func reorderCards(for note: LordsDayNote, cards ordered: [NoteCard]) throws {
         let existing = try cards(for: note)
         guard ordered.count == existing.count, Set(ordered.map(\.id)) == Set(existing.map(\.id)) else { throw LordsDayError.invalidOrder }
-        for (index, card) in ordered.enumerated() { card.position = index; card.updatedAt = Date(); card.editedByUser = true }
+        for (index, card) in ordered.enumerated() {
+            let ts = stampedNow(after: card.updatedAt)
+            card.position = index
+            card.updatedAt = ts
+            card.editedByUser = true
+            try enqueueCardUpsert(card)
+        }
         try context.save()
+        if syncSubject != nil { onLocalWrite?() }
     }
+
     public func editBody(of card: NoteCard, body: String) throws {
         try validate(kind: card.kind, body: body, verseRef: card.verseRef)
-        card.update(kind: card.kind, body: body, verseRef: card.verseRef); try context.save()
+        let ts = stampedNow(after: card.updatedAt)
+        card.update(kind: card.kind, body: body, verseRef: card.verseRef, updatedAt: ts)
+        try enqueueCardUpsert(card)
+        try context.save()
+        if syncSubject != nil { onLocalWrite?() }
     }
+
     public func switchKind(of card: NoteCard, to kind: CardKind, verseRef: String? = nil) throws {
         let body = kind == .verse ? "" : card.body
         try validate(kind: kind, body: body, verseRef: verseRef)
-        card.update(kind: kind, body: body, verseRef: kind == .verse ? verseRef : nil); try context.save()
+        let ts = stampedNow(after: card.updatedAt)
+        card.update(kind: kind, body: body, verseRef: kind == .verse ? verseRef : nil, updatedAt: ts)
+        try enqueueCardUpsert(card)
+        try context.save()
+        if syncSubject != nil { onLocalWrite?() }
     }
+
     /// Finishing a review (TKL-863): the note's cards become exactly `kept`, in order.
     /// Every card is validated first, so a rejected keep changes nothing.
     public func keepCards(_ kept: [KeptCard], for note: LordsDayNote) throws {
         for card in kept { try validate(kind: card.kind, body: card.body, verseRef: card.verseRef) }
-        let now = Date()
-        for old in try cards(for: note) { old.deletedAt = now; old.updatedAt = now }
-        for (position, card) in kept.enumerated() {
-            context.insert(NoteCard(noteId: note.id, userId: note.userId, kind: card.kind, body: card.body, verseRef: card.verseRef,
-                                    position: position, attribution: card.kind == .quote ? card.attribution : nil, editedByUser: card.editedByUser))
+        let ts = stampedNow(after: note.updatedAt)
+        note.updatedAt = ts
+        context.insert(note)
+        // Always enqueue the parent note first so card writes on the server find an owned parent note.
+        try enqueueNoteUpsert(note)
+        for old in try cards(for: note) {
+            let oldTs = stampedNow(after: max(old.updatedAt, ts))
+            old.deletedAt = oldTs
+            old.updatedAt = oldTs
+            try enqueueCardTombstone(old, deletedAt: oldTs)
         }
-        note.updatedAt = now
+        for (position, card) in kept.enumerated() {
+            let created = NoteCard(
+                noteId: note.id, userId: note.userId, kind: card.kind, body: card.body, verseRef: card.verseRef,
+                position: position, attribution: card.kind == .quote ? card.attribution : nil,
+                editedByUser: card.editedByUser, now: ts
+            )
+            context.insert(created)
+            try enqueueCardUpsert(created)
+        }
         try context.save()
+        if syncSubject != nil { onLocalWrite?() }
     }
+
     /// Every live note, for the journal (TKL-944).
     func allNotes() throws -> [LordsDayNote] {
         try context.fetch(FetchDescriptor<LordsDayNote>(predicate: #Predicate { $0.deletedAt == nil }))
     }
     func allCards() throws -> [NoteCard] { try context.fetch(FetchDescriptor<NoteCard>()) }
-    public func removeCard(_ card: NoteCard) throws { card.deletedAt = Date(); card.updatedAt = Date(); try context.save() }
+
+    public func removeCard(_ card: NoteCard) throws {
+        let ts = stampedNow(after: card.updatedAt)
+        card.deletedAt = ts
+        card.updatedAt = ts
+        try enqueueCardTombstone(card, deletedAt: ts)
+        try context.save()
+        if syncSubject != nil { onLocalWrite?() }
+    }
+
+    // MARK: Sync outbox helpers
+
+    private func enqueueNoteUpsert(_ note: LordsDayNote) throws {
+        guard let subject = syncSubject else { return }
+        let nid = note.id.uuidString.lowercased()
+        let payload = try JSONEncoder().encode(LordsDayNoteSyncPayload(
+            service_date: SyncTimestamp.format(note.serviceDate),
+            passage_ref: note.passageRef,
+            sermon_title: note.sermonTitle,
+            preacher: note.preacher,
+            church: note.church,
+            extracted_text: note.extractedText,
+            created_at: SyncTimestamp.format(note.createdAt)
+        ))
+        try SyncMetaStore.upsert(
+            table: SyncTable.lordsDayNotes, rowId: nid, childId: "", naturalKey: nid,
+            updatedAt: note.updatedAt, in: context
+        )
+        try SyncMetaStore.enqueueOutbox(
+            subject: subject, table: SyncTable.lordsDayNotes, rowId: nid, childId: nil, noteId: nid,
+            payload: payload, updatedAt: note.updatedAt, in: context
+        )
+    }
+
+    private func enqueueNoteTombstone(_ note: LordsDayNote, deletedAt: Date) throws {
+        guard let subject = syncSubject else { return }
+        let nid = note.id.uuidString.lowercased()
+        try SyncMetaStore.upsert(
+            table: SyncTable.lordsDayNotes, rowId: nid, childId: "", naturalKey: nid,
+            updatedAt: deletedAt, in: context
+        )
+        try SyncMetaStore.enqueueOutbox(
+            subject: subject, table: SyncTable.lordsDayNotes, rowId: nid, childId: nil, noteId: nid,
+            payload: nil, updatedAt: deletedAt, deletedAt: deletedAt, in: context
+        )
+    }
+
+    private func enqueueCardUpsert(_ card: NoteCard) throws {
+        guard let subject = syncSubject else { return }
+        let cid = card.id.uuidString.lowercased()
+        let nid = card.noteId.uuidString.lowercased()
+        let payload = try JSONEncoder().encode(NoteCardSyncPayload(
+            kind: card.kind.rawValue,
+            body: card.body,
+            verse_ref: card.verseRef,
+            attribution: card.attribution,
+            palette: card.palette,
+            position: card.position,
+            edited_by_user: card.editedByUser,
+            created_at: SyncTimestamp.format(card.createdAt)
+        ))
+        try SyncMetaStore.upsert(
+            table: SyncTable.noteCards, rowId: cid, childId: "", naturalKey: nid,
+            updatedAt: card.updatedAt, in: context
+        )
+        try SyncMetaStore.enqueueOutbox(
+            subject: subject, table: SyncTable.noteCards, rowId: cid, childId: nil, noteId: nid,
+            payload: payload, updatedAt: card.updatedAt, in: context
+        )
+    }
+
+    private func enqueueCardTombstone(_ card: NoteCard, deletedAt: Date) throws {
+        guard let subject = syncSubject else { return }
+        let cid = card.id.uuidString.lowercased()
+        let nid = card.noteId.uuidString.lowercased()
+        try SyncMetaStore.upsert(
+            table: SyncTable.noteCards, rowId: cid, childId: "", naturalKey: nid,
+            updatedAt: deletedAt, in: context
+        )
+        try SyncMetaStore.enqueueOutbox(
+            subject: subject, table: SyncTable.noteCards, rowId: cid, childId: nil, noteId: nid,
+            payload: nil, updatedAt: deletedAt, deletedAt: deletedAt, in: context
+        )
+    }
     public func note(id: UUID) throws -> LordsDayNote? {
         try context.fetch(FetchDescriptor<LordsDayNote>()).first { $0.id == id && $0.deletedAt == nil }
     }

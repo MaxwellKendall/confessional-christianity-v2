@@ -1,5 +1,6 @@
 // Cognito-authorized AppSync transport and bidirectional DomainKit <-> AppSync
-// field mapping for children and catechism progress (TKL-1068, TKL-818, TKL-820).
+// field mapping for children, catechism progress, and Lord's Day notes/cards
+// (TKL-1068, TKL-818, TKL-820, TKL-1069, TKL-866).
 //
 // Contract: infra/SYNC.md and infra/schema/sync.graphql.
 //
@@ -23,6 +24,25 @@
 //       state              <-> MilestoneRecord.state ("introduced" | "reviewing" | "mastered")
 //       introduced_at      <-> MilestoneRecord.introducedAt (UTC ISO 8601 ms)
 //       review_count       <-> MilestoneRecord.reviewCount
+//   - `lords_day_notes` (row_id == note_id == LordsDayNote.id.uuidString.lowercased()):
+//       service_date       <-> LordsDayNote.serviceDate (UTC ISO 8601 ms)
+//       passage_ref        <-> LordsDayNote.passageRef
+//       sermon_title       <-> LordsDayNote.sermonTitle
+//       preacher           <-> LordsDayNote.preacher
+//       church             <-> LordsDayNote.church
+//       extracted_text     <-> LordsDayNote.extractedText
+//       created_at         <-> LordsDayNote.createdAt (UTC ISO 8601 ms)
+//       (envelope updated_at/deleted_at <-> LordsDayNote.updatedAt/deletedAt; photos never sync)
+//   - `note_cards` (row_id == NoteCard.id, envelope note_id == NoteCard.noteId):
+//       kind               <-> NoteCard.kind.rawValue ("key_point" | "quote" | "verse")
+//       body               <-> NoteCard.body ("" for verse)
+//       verse_ref          <-> NoteCard.verseRef
+//       attribution        <-> NoteCard.attribution
+//       palette            <-> NoteCard.palette
+//       position           <-> NoteCard.position (order)
+//       edited_by_user     <-> NoteCard.editedByUser
+//       created_at         <-> NoteCard.createdAt (UTC ISO 8601 ms)
+//       (envelope updated_at/deleted_at <-> NoteCard.updatedAt/deletedAt)
 import CryptoKit
 import Foundation
 import SwiftData
@@ -172,6 +192,7 @@ public final class AppSyncTransport: SyncTransport {
         table
         id
         child_id
+        note_id
         updated_at
         deleted_at
         payload
@@ -190,14 +211,19 @@ public final class AppSyncTransport: SyncTransport {
             let slice = Array(changes[offset..<end])
             let input: [[String: Any]] = slice.map { change in
                 let rowId = change.rowId.lowercased()
-                let childId = (change.childId ?? (change.table == SyncTable.children ? rowId : "")).lowercased()
                 var item: [String: Any] = [
                     "id": change.id.uuidString.lowercased(),
                     "table": change.table,
                     "row_id": rowId,
-                    "child_id": childId,
                     "updated_at": SyncTimestamp.format(change.updatedAt),
                 ]
+                if SyncTable.isNoteTable(change.table) {
+                    let noteId = (change.noteId ?? (change.table == SyncTable.lordsDayNotes ? rowId : "")).lowercased()
+                    item["note_id"] = noteId
+                } else {
+                    let childId = (change.childId ?? (change.table == SyncTable.children ? rowId : "")).lowercased()
+                    item["child_id"] = childId
+                }
                 if let deletedAt = change.deletedAt {
                     item["deleted_at"] = SyncTimestamp.format(deletedAt)
                 } else if let payload = change.payload, let payloadString = String(data: payload, encoding: .utf8) {
@@ -280,7 +306,8 @@ public final class AppSyncTransport: SyncTransport {
             records.append(SyncRecord(
                 table: item.table,
                 id: item.id.lowercased(),
-                childId: item.child_id.lowercased(),
+                childId: item.child_id?.lowercased(),
+                noteId: item.note_id?.lowercased(),
                 payload: item.payload.map { Data($0.utf8) },
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -363,7 +390,8 @@ public final class AppSyncTransport: SyncTransport {
         struct Record: Decodable {
             let table: String
             let id: String
-            let child_id: String
+            let child_id: String?
+            let note_id: String?
             let updated_at: String
             let deleted_at: String?
             let payload: String?
@@ -380,6 +408,12 @@ public enum SyncTable {
     public static let catechismAssignments = "catechism_assignments"
     public static let catechismPacing = "catechism_pacing"
     public static let catechismMilestones = "catechism_milestones"
+    public static let lordsDayNotes = "lords_day_notes"
+    public static let noteCards = "note_cards"
+
+    public static func isNoteTable(_ table: String) -> Bool {
+        table == lordsDayNotes || table == noteCards
+    }
 
     public static func catechismSlug(forContentId contentId: String) -> String {
         programForContentId(contentId)?.slug ?? contentId
@@ -430,6 +464,27 @@ struct CatechismMilestoneSyncPayload: Codable {
     let state: String
     let introduced_at: String
     let review_count: Int
+}
+
+struct LordsDayNoteSyncPayload: Codable {
+    let service_date: String
+    let passage_ref: String?
+    let sermon_title: String?
+    let preacher: String?
+    let church: String?
+    let extracted_text: String?
+    let created_at: String
+}
+
+struct NoteCardSyncPayload: Codable {
+    let kind: String
+    let body: String
+    let verse_ref: String?
+    let attribution: String?
+    let palette: String?
+    let position: Int
+    let edited_by_user: Bool
+    let created_at: String
 }
 
 // MARK: - SyncRowMeta helpers & outbox recording
@@ -488,7 +543,8 @@ enum SyncMetaStore {
         subject: String,
         table: String,
         rowId: String,
-        childId: String,
+        childId: String? = nil,
+        noteId: String? = nil,
         payload: Data?,
         updatedAt: Date,
         deletedAt: Date? = nil,
@@ -502,7 +558,8 @@ enum SyncMetaStore {
             subject: subject,
             table: table,
             rowId: rowId.lowercased(),
-            childId: childId.lowercased(),
+            childId: childId?.lowercased(),
+            noteId: noteId?.lowercased(),
             payload: payload,
             updatedAt: updatedAt,
             deletedAt: deletedAt
@@ -523,6 +580,197 @@ public enum ChildProgressSyncAdapters {
             CatechismPacingSyncAdapter(),
             CatechismMilestonesSyncAdapter(),
         ]
+    }
+}
+
+@MainActor
+public enum LordsDaySyncAdapters {
+    /// Both Lord's Day adapters in dependency order: parent notes before cards.
+    public static func all() -> [any SyncTableAdapter] {
+        [
+            LordsDayNotesSyncAdapter(),
+            NoteCardsSyncAdapter(),
+        ]
+    }
+}
+
+@MainActor
+public enum AccountSyncAdapters {
+    /// Every synced table in dependency order.
+    public static func all() -> [any SyncTableAdapter] {
+        ChildProgressSyncAdapters.all() + LordsDaySyncAdapters.all()
+    }
+}
+
+@MainActor
+final class LordsDayNotesSyncAdapter: SyncTableAdapter {
+    let table = SyncTable.lordsDayNotes
+
+    func localUpdatedAt(id: String, in context: ModelContext) throws -> Date? {
+        if let uuid = UUID(uuidString: id) {
+            let predicate = #Predicate<LordsDayNote> { $0.id == uuid }
+            if let note = try context.fetch(FetchDescriptor(predicate: predicate)).first {
+                return note.updatedAt
+            }
+        }
+        return try SyncMetaStore.meta(table: table, rowId: id, in: context)?.updatedAt
+    }
+
+    func apply(_ record: SyncRecord, in context: ModelContext) throws {
+        guard let uuid = UUID(uuidString: record.id),
+              let data = record.payload,
+              let payload = try? JSONDecoder().decode(LordsDayNoteSyncPayload.self, from: data),
+              let serviceDate = SyncTimestamp.parse(payload.service_date) else {
+            return
+        }
+        let createdAt = SyncTimestamp.parse(payload.created_at) ?? record.updatedAt
+        let predicate = #Predicate<LordsDayNote> { $0.id == uuid }
+        if let existing = try context.fetch(FetchDescriptor(predicate: predicate)).first {
+            existing.applySynced(
+                serviceDate: serviceDate,
+                passageRef: payload.passage_ref,
+                sermonTitle: payload.sermon_title,
+                preacher: payload.preacher,
+                church: payload.church,
+                extractedText: payload.extracted_text,
+                createdAt: createdAt,
+                updatedAt: record.updatedAt,
+                deletedAt: nil
+            )
+        } else {
+            let note = LordsDayNote(
+                id: uuid,
+                serviceDate: serviceDate,
+                passageRef: payload.passage_ref,
+                sermonTitle: payload.sermon_title,
+                preacher: payload.preacher,
+                church: payload.church,
+                extractedText: payload.extracted_text,
+                createdAt: createdAt,
+                updatedAt: record.updatedAt,
+                deletedAt: nil
+            )
+            context.insert(note)
+        }
+        let lowerId = uuid.uuidString.lowercased()
+        try SyncMetaStore.upsert(
+            table: table, rowId: lowerId, childId: "", naturalKey: lowerId,
+            updatedAt: record.updatedAt, in: context
+        )
+    }
+
+    func remove(id: String, in context: ModelContext) throws {
+        try softDelete(id: id, updatedAt: SyncTimestamp.truncate(Date()), deletedAt: SyncTimestamp.truncate(Date()), in: context)
+    }
+
+    func remove(_ record: SyncRecord, in context: ModelContext) throws {
+        try softDelete(id: record.id, updatedAt: record.updatedAt, deletedAt: record.deletedAt ?? record.updatedAt, in: context)
+    }
+
+    private func softDelete(id: String, updatedAt: Date, deletedAt: Date, in context: ModelContext) throws {
+        guard let uuid = UUID(uuidString: id) else { return }
+        let predicate = #Predicate<LordsDayNote> { $0.id == uuid }
+        if let existing = try context.fetch(FetchDescriptor(predicate: predicate)).first {
+            existing.deletedAt = deletedAt
+            existing.updatedAt = updatedAt
+        }
+        let lowerId = uuid.uuidString.lowercased()
+        try SyncMetaStore.upsert(
+            table: table, rowId: lowerId, childId: "", naturalKey: lowerId,
+            updatedAt: updatedAt, in: context
+        )
+    }
+}
+
+@MainActor
+final class NoteCardsSyncAdapter: SyncTableAdapter {
+    let table = SyncTable.noteCards
+
+    func localUpdatedAt(id: String, in context: ModelContext) throws -> Date? {
+        if let uuid = UUID(uuidString: id) {
+            let predicate = #Predicate<NoteCard> { $0.id == uuid }
+            if let card = try context.fetch(FetchDescriptor(predicate: predicate)).first {
+                return card.updatedAt
+            }
+        }
+        return try SyncMetaStore.meta(table: table, rowId: id, in: context)?.updatedAt
+    }
+
+    func apply(_ record: SyncRecord, in context: ModelContext) throws {
+        guard let uuid = UUID(uuidString: record.id),
+              let rawNoteId = record.noteId,
+              let noteId = UUID(uuidString: rawNoteId),
+              let data = record.payload,
+              let payload = try? JSONDecoder().decode(NoteCardSyncPayload.self, from: data),
+              let kind = CardKind(rawValue: payload.kind) else {
+            return
+        }
+        let body = kind == .verse ? "" : payload.body
+        if kind == .verse, (payload.verse_ref?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true) {
+            return
+        }
+        let createdAt = SyncTimestamp.parse(payload.created_at) ?? record.updatedAt
+        let predicate = #Predicate<NoteCard> { $0.id == uuid }
+        if let existing = try context.fetch(FetchDescriptor(predicate: predicate)).first {
+            existing.applySynced(
+                noteId: noteId,
+                kind: kind,
+                body: body,
+                verseRef: payload.verse_ref,
+                attribution: payload.attribution,
+                palette: payload.palette,
+                position: max(0, payload.position),
+                editedByUser: payload.edited_by_user,
+                createdAt: createdAt,
+                updatedAt: record.updatedAt,
+                deletedAt: nil
+            )
+        } else {
+            let card = NoteCard(
+                id: uuid,
+                noteId: noteId,
+                kind: kind,
+                body: body,
+                verseRef: payload.verse_ref,
+                attribution: payload.attribution,
+                palette: payload.palette,
+                position: max(0, payload.position),
+                editedByUser: payload.edited_by_user,
+                createdAt: createdAt,
+                updatedAt: record.updatedAt,
+                deletedAt: nil
+            )
+            context.insert(card)
+        }
+        let lowerId = uuid.uuidString.lowercased()
+        try SyncMetaStore.upsert(
+            table: table, rowId: lowerId, childId: "", naturalKey: rawNoteId.lowercased(),
+            updatedAt: record.updatedAt, in: context
+        )
+    }
+
+    func remove(id: String, in context: ModelContext) throws {
+        try softDelete(id: id, noteId: nil, updatedAt: SyncTimestamp.truncate(Date()), deletedAt: SyncTimestamp.truncate(Date()), in: context)
+    }
+
+    func remove(_ record: SyncRecord, in context: ModelContext) throws {
+        try softDelete(id: record.id, noteId: record.noteId, updatedAt: record.updatedAt, deletedAt: record.deletedAt ?? record.updatedAt, in: context)
+    }
+
+    private func softDelete(id: String, noteId: String?, updatedAt: Date, deletedAt: Date, in context: ModelContext) throws {
+        guard let uuid = UUID(uuidString: id) else { return }
+        let predicate = #Predicate<NoteCard> { $0.id == uuid }
+        var resolvedNoteId = noteId?.lowercased() ?? ""
+        if let existing = try context.fetch(FetchDescriptor(predicate: predicate)).first {
+            existing.deletedAt = deletedAt
+            existing.updatedAt = updatedAt
+            if resolvedNoteId.isEmpty { resolvedNoteId = existing.noteId.uuidString.lowercased() }
+        }
+        let lowerId = uuid.uuidString.lowercased()
+        try SyncMetaStore.upsert(
+            table: table, rowId: lowerId, childId: "", naturalKey: resolvedNoteId,
+            updatedAt: updatedAt, in: context
+        )
     }
 }
 

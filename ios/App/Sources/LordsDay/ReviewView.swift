@@ -73,6 +73,13 @@ struct ReviewView: View {
                 model.retry()
             }
         }
+        .task {
+            for await online in NetworkConnectivity.shared.onlineUpdates() {
+                if online, model.review.retryWhenOnline, model.review.canRetry {
+                    model.retry()
+                }
+            }
+        }
         .sheet(isPresented: $showsSignIn, onDismiss: { auth.cancelCode() }) {
             SignInSheet()
         }
@@ -767,26 +774,65 @@ private struct EditCardSheet: View {
 /// drafted `sermon` event (TKL-1061).
 struct LordsDayReviewFixture: View {
     let scene: String
+    @Environment(\.modelContext) private var appContext
+    @Environment(SyncService.self) private var sync
     @State private var model: ReviewModel?
+    @State private var finished = false
+
+    private var persistsToAppStore: Bool {
+        UserDefaults.standard.bool(forKey: "LordsDayReviewPersist")
+    }
+
+    private var autoKeep: Bool {
+        UserDefaults.standard.bool(forKey: "LordsDayReviewAutoKeep")
+    }
 
     var body: some View {
         ZStack {
-            if let model { ReviewView(model: model, onClose: {}, onFinish: {}, startAt: UserDefaults.standard.string(forKey: "LordsDayReviewCard")) }
+            if finished {
+                RootView()
+            } else if let model {
+                ReviewView(model: model, onClose: {}, onFinish: {
+                    if persistsToAppStore { finished = true }
+                }, startAt: UserDefaults.standard.string(forKey: "LordsDayReviewCard"))
+                    .onChange(of: model.review.canFinish) { _, ready in
+                        guard ready, autoKeep else { return }
+                        try? model.finish()
+                        if persistsToAppStore { finished = true }
+                    }
+            }
         }
-        .task {
-            let container = try! ModelContainer(for: progressSchema, configurations: [ModelConfiguration(schema: progressSchema, isStoredInMemoryOnly: true)])
-            let context = ModelContext(container)
+        .task(id: persistsToAppStore ? sync.activeSubject : "in-memory") {
+            guard model == nil else { return }
+            let context: ModelContext
+            let storeProvider: @MainActor () -> LordsDayStore
+            if persistsToAppStore {
+                guard sync.activeSubject != nil else { return }
+                context = appContext
+                storeProvider = { [sync, appContext] in sync.lordsDayStore(in: appContext) }
+            } else {
+                let container = try! ModelContainer(for: progressSchema, configurations: [ModelConfiguration(schema: progressSchema, isStoredInMemoryOnly: true)])
+                let memContext = ModelContext(container)
+                context = memContext
+                storeProvider = { LordsDayStore(context: memContext) }
+            }
             let root = FileManager.default.temporaryDirectory.appendingPathComponent("review-fixture-\(UUID().uuidString)")
+            let customTitle = UserDefaults.standard.string(forKey: "LordsDayReviewTitle")
             let note = scene == "smyrna"
                 ? LordsDayNote(serviceDate: CaptureModel.lastSunday(onOrBefore: Date()))
-                : LordsDayNote(serviceDate: CaptureModel.lastSunday(onOrBefore: Date()), passageRef: "Romans 8:28–30", preacher: "Rev. [your pastor]")
-            try! LordsDayStore(context: context).save(note)
+                : LordsDayNote(
+                    serviceDate: CaptureModel.lastSunday(onOrBefore: Date()),
+                    passageRef: "Romans 8:28–30",
+                    sermonTitle: customTitle,
+                    preacher: "Rev. [your pastor]"
+                )
+            try! storeProvider().save(note)
             let draft = try! CaptureDraft(noteId: note.id, root: root)
             for _ in 0..<(scene == "smyrna" ? 1 : 3) { try! draft.addPage(CaptureModel.jpegForUpload(CaptureFixture.samplePage())!) }
             let generator = scene == "smyrna"
                 ? FixtureCardsGenerator.smyrna
                 : FixtureCardsGenerator(stopsAfter: scene == "filling" ? 2 : nil, delay: .milliseconds(scene == "filling" ? 300 : 150))
-            model = ReviewModel.session(for: note, context: context, generator: generator, root: root)
+            model = ReviewModel.session(for: note, context: context, storeProvider: storeProvider, generator: generator, root: root)
         }
     }
 }
