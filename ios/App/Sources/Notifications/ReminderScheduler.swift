@@ -87,19 +87,27 @@ final class ReminderScheduler: NSObject, UNUserNotificationCenterDelegate {
             }
         }
 
+        let allowed = authorization == .authorized || authorization == .provisional || authorization == .ephemeral
         let calendar = Calendar.current
         var entries: [JournalEntry] = []
-        if settings.weekday != nil || settings.saturday != nil, let context {
-            // Keep existing requests if reading the store fails transiently.
-            guard let journal = try? LordsDayJournal(store: LordsDayStore(context: context), calendar: calendar) else { return }
-            entries = journal.entries
+        var preserveSermonRequests = false
+        if allowed, settings.weekday != nil || settings.saturday != nil {
+            if let context, let journal = try? LordsDayJournal(store: LordsDayStore(context: context), calendar: calendar) {
+                entries = journal.entries
+            } else {
+                // A failed read should leave enabled sermon reminders intact.
+                preserveSermonRequests = true
+            }
         }
-        let allowed = authorization == .authorized || authorization == .provisional || authorization == .ephemeral
         let plan = allowed ? ReminderPlanner.plan(settings: settings, now: Date(), calendar: calendar, entries: entries) : []
         let requests = plan.map { Self.request(for: $0, calendar: calendar) }
         let plannedIDs = Set(requests.map(\.identifier))
-        let obsolete = pending.map(\.identifier).filter {
-            $0 == Self.legacyID || ($0.hasPrefix(Self.prefix) && !plannedIDs.contains($0))
+        let obsolete = pending.map(\.identifier).filter { id in
+            if preserveSermonRequests {
+                if settings.weekday != nil, id.hasPrefix(Self.prefix + "weekday.") { return false }
+                if settings.saturday != nil, id.hasPrefix(Self.prefix + "saturday.") { return false }
+            }
+            return id == Self.legacyID || (id.hasPrefix(Self.prefix) && !plannedIDs.contains(id))
         }
         center.removePendingNotificationRequests(withIdentifiers: obsolete)
         for request in requests {
