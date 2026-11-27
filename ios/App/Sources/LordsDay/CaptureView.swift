@@ -28,6 +28,8 @@ struct CaptureView: View {
     var onClose: () -> Void
     /// Done: the notes are ready to draft cards from (TKL-863). Without it, Done just closes.
     var onFinish: (() -> Void)? = nil
+    /// "Type them instead" on the landing page: open on the typing sheet.
+    var startsTyping = false
     /// DEBUG screenshots: the simulator has no camera, so show a sample page in the viewfinder.
     var simulatedViewfinder: UIImage? = nil
 
@@ -59,6 +61,7 @@ struct CaptureView: View {
         .foregroundStyle(.white)
         .preferredColorScheme(.dark)
         .task {
+            if startsTyping { showsTyping = true }
             if simulatedViewfinder == nil { cameraStatus = await camera.start() } else { cameraStatus = .unavailable }
         }
         .onDisappear { camera.stop() }

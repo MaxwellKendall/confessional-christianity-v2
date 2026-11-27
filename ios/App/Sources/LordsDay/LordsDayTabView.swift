@@ -1,60 +1,63 @@
-// The Lord's Day tab (pillar two, TKL-825). With cards for this week it is the
-// week's card feed (TKL-862), read from the local store only. Without them it
-// is the empty state from TKL-885's prototype (TKL-868 replaces it), with the
-// way into photographing Sunday's notes (TKL-860). Finishing a capture opens
-// the review of the drafted cards (TKL-863), which can be left and reopened
-// from here until the week is kept. The header opens the sermon journal of
-// every kept Lord's Day (TKL-944); back returns to the feed where it was.
+// The Lord's Day tab (pillar two, TKL-825). Its landing page (TKL-1063, design
+// TKL-1062) shows this week's sermon as a stack that opens the reel of every
+// kept sermon, the earlier Lord's Days, and each state of the week: Sunday
+// before notes, notes being read (drafting carries on while you're away; a
+// tap opens the review, TKL-863), drafts waiting for review, no sermon, before
+// a first Sunday, offline and a failed read. All of it comes from the local
+// store. The header opens the sermon journal (TKL-944) and the camera (TKL-860).
 import SwiftUI
 import SwiftData
 import DomainKit
 
 struct LordsDayTabView: View {
     @Binding var path: NavigationPath
-    /// Every tab stays mounted from launch; only an on-screen feed may fetch verse text.
+    /// Every tab stays mounted from launch; only an on-screen reel may fetch verse text.
     var isActive = true
     @Binding var startsCapture: Bool
     @Environment(\.modelContext) private var context
     @Environment(AuthService.self) private var auth
     @State private var capture: CaptureModel?
+    @State private var capturesTyping = false
     @State private var status = CaptureStatus()
-    @State private var feed: LordsDayFeed?
+    @State private var reel = LordsDayReel(testSermonPageCounts: [])
     @State private var review: ReviewModel?
-    /// Set by the capture's Done, so its cover's dismissal opens the review.
-    @State private var reviewAfterCapture: UUID?
-    @State private var feedDay: Date?
+    /// The newest note waiting on drafting or review, observed for the landing page.
+    @State private var pending: ReviewModel?
+    @State private var reelStart: ReelOpening?
+    @State private var memory = LordsDayStackMemory()
+    @State private var offline = false
+    @State private var now = Date()
+    /// Set by the capture's Done, so its cover's dismissal starts reading the notes.
+    @State private var draftAfterCapture: UUID?
     @Environment(\.scenePhase) private var scenePhase
+
+    private let calendar = Calendar.current
 
     var body: some View {
         NavigationStack(path: $path) {
-            Group {
-                if let feed {
-                    LordsDayFeedView(feed: feed, allowsNetwork: isActive && scenePhase == .active) { palette in
-                        feedHeaderControls(palette: palette)
-                    }
-                    .id(feedDay)
-                } else {
-                    emptyState
+            landing
+                .toolbar(.hidden, for: .navigationBar)
+                .appDestinations(path: $path)
+                .navigationDestination(for: JournalRoute.self) { _ in
+                    JournalView(onCapture: {
+                        path = NavigationPath()
+                        startCapture()
+                    })
                 }
-            }
-            .toolbar(.hidden, for: .navigationBar)
-            .appDestinations(path: $path)
-            .navigationDestination(for: JournalRoute.self) { _ in
-                JournalView(onCapture: {
-                    path = NavigationPath()
-                    capture = CaptureModel(context: context)
-                })
-            }
         }
         .tint(.ccInk)
         .fullScreenCover(item: $capture, onDismiss: afterCapture) { model in
             CaptureView(model: model, onClose: { capture = nil }, onFinish: {
-                reviewAfterCapture = model.noteId
+                draftAfterCapture = model.noteId
                 capture = nil
-            })
+            }, startsTyping: capturesTyping)
         }
         .fullScreenCover(item: $review, onDismiss: refresh) { model in
             ReviewView(model: model, onClose: { review = nil }, onFinish: { review = nil })
+        }
+        .fullScreenCover(item: $reelStart, onDismiss: refresh) { opening in
+            LordsDayReelView(reel: reel, start: opening.position, allowsNetwork: scenePhase == .active,
+                             onPage: remember, onClose: { reelStart = nil })
         }
         .onAppear(perform: refresh)
         #if DEBUG
@@ -65,7 +68,7 @@ struct LordsDayTabView: View {
         #endif
         .onChange(of: startsCapture, initial: true) { _, requested in
             guard requested else { return }
-            capture = CaptureModel(context: context)
+            startCapture()
             startsCapture = false
         }
         .onChange(of: isActive) { _, active in
@@ -74,148 +77,67 @@ struct LordsDayTabView: View {
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { refresh() }
         }
+        .onChange(of: pending?.review.phase) { _, phase in
+            // Drafting finished while the landing page was showing it.
+            if phase != .drafting { refresh() }
+        }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.significantTimeChangeNotification)) { _ in
             refresh()
         }
     }
 
-    @ViewBuilder
-    private func feedHeaderControls(palette: QuoteCardPalette) -> some View {
-        let ink = Color(hex: palette.ink)
-        HStack(spacing: 8) {
-            if status.reviewable { reviewButton(ink: ink) }
-            journalButton(ink: ink)
-            captureButton(ink: ink)
-        }
+    private var isSunday: Bool { calendar.component(.weekday, from: now) == 1 }
+
+    private var landing: some View {
+        let draft = pending.map(Self.draft(from:))
+        let reading = pending?.review.isDrafting ?? false
+        let failed = pending.map { model in
+            !model.review.isDrafting && (model.failure != nil || !model.review.failedPages.isEmpty)
+                && !model.review.unhandledUnreadPages.isEmpty
+        } ?? false
+        let thisWeek = reel.thisWeek(today: now, calendar: calendar)
+        let kind = LordsDayLanding.kind(isSunday: isSunday, hasThisWeeksSermon: thisWeek != nil,
+                                        hasAnyKeptSermon: !reel.sermons.isEmpty, isReadingNotes: reading,
+                                        readFailed: failed, hasPendingReview: pending != nil || status.reviewable)
+        return LordsDayLandingView(
+            reel: reel, kind: kind, today: now, isSunday: isSunday, offline: offline,
+            stackPage: thisWeek.map(memory.page(for:)) ?? 0, draft: draft, calendar: calendar,
+            onOpenReel: { reelStart = ReelOpening(position: $0) },
+            onJournal: { path.append(JournalRoute.journal) },
+            onCapture: { startCapture() },
+            onType: { startCapture(typing: true) },
+            onOpenReview: openPendingReview,
+            onRetry: { pending?.retry() }
+        )
     }
 
-    /// The sermon journal: every kept Lord's Day (TKL-944).
-    private func journalButton(ink: Color) -> some View {
-        Button { path.append(JournalRoute.journal) } label: {
-            LordsDayHeaderCameraLabel(ink: ink, systemImage: "book.closed")
-        }
-        .accessibilityLabel("Journal")
-        .accessibilityIdentifier("lordsDay.journal")
+    static func draft(from model: ReviewModel) -> LandingDraft {
+        let review = model.review
+        let kept = review.cards.filter(\.kept)
+        return LandingDraft(
+            title: model.title, passage: model.passage, preacher: model.preacher,
+            dateCaps: model.serviceDate.formatted(.dateTime.month(.abbreviated).day()).uppercased(),
+            pageCount: review.pageCount, pagesRead: review.readPages.count, progress: review.progress,
+            arrived: kept.map { $0.kind == .verse ? ($0.verseRef.map(Self.readable) ?? "") : $0.words }.filter { !$0.isEmpty },
+            cardCount: kept.count, failedPage: review.failedPages.min() ?? review.unhandledUnreadPages.first
+        )
     }
 
-    /// Until the Sunday cover card (TKL-864) carries it, the way back to the camera.
-    private func captureButton(ink: Color) -> some View {
-        Button { capture = CaptureModel(context: context) } label: {
-            LordsDayHeaderCameraLabel(ink: ink)
-        }
-        .accessibilityLabel(status.resumable ? "Continue Sunday's notes" : "Photograph Sunday's notes")
-        .accessibilityIdentifier("lordsDay.capture")
+    private static func readable(_ ref: String) -> String {
+        ref.contains(".") ? parseOsisBibleReference(ref) : ref
     }
 
-    @ViewBuilder
-    private func reviewButton(ink: Color) -> some View {
-        if status.pendingReviews.count == 1, let only = status.pendingReviews.first {
-            Button { openReview(noteId: only.id) } label: {
-                LordsDayHeaderPillLabel(title: "Review cards", systemImage: "rectangle.stack", ink: ink)
-            }
-            .accessibilityIdentifier("lordsDay.review")
-        } else {
-            Menu {
-                ForEach(status.pendingReviews) { item in
-                    Button(item.label) { openReview(noteId: item.id) }
-                        .accessibilityIdentifier("lordsDay.review.\(item.id.uuidString)")
-                }
-            } label: {
-                LordsDayHeaderPillLabel(title: "Review cards (\(status.pendingReviews.count))", systemImage: "rectangle.stack", ink: ink)
-            }
-            .accessibilityIdentifier("lordsDay.review")
-        }
+    private func startCapture(typing: Bool = false) {
+        capturesTyping = typing
+        capture = CaptureModel(context: context)
     }
 
-    private var emptyState: some View {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    HStack(alignment: .bottom) {
-                        VStack(alignment: .leading, spacing: 0) {
-                            Text("Pillar two")
-                                .labelCaps(size: 10.5, tracking: 0.16)
-                                .padding(.top, 16)
-                            Text("The Lord's Day")
-                                .font(.ccDisplay(25, semibold: true))
-                                .foregroundStyle(.ccInk)
-                                .padding(.top, 4)
-                        }
-                        Spacer()
-                        Button { path.append(JournalRoute.journal) } label: {
-                            Label("Journal", systemImage: "book.closed")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundStyle(Color.ccChapel)
-                        }
-                        .accessibilityIdentifier("lordsDay.journal")
-                    }
-                    .padding(.bottom, 16)
-
-                    VStack(alignment: .leading, spacing: 0) {
-                        Text("Keep Sunday's sermon")
-                            .font(.ccDisplay(19, semibold: true))
-                            .foregroundStyle(.ccInk)
-                            .padding(.bottom, 8)
-                        Text("Take notes on Sunday's sermon and photograph them after church. The app turns them into a card for each day of the week: a key point, a verse, a quote, and a prayer for the Sunday ahead.")
-                            .font(.ccBody(15.5))
-                            .lineSpacing(3)
-                            .foregroundStyle(.ccInk2)
-                            .fixedSize(horizontal: false, vertical: true)
-                        if status.pendingReviews.count == 1, let only = status.pendingReviews.first {
-                            Button { openReview(noteId: only.id) } label: {
-                                Label("Review your cards", systemImage: "rectangle.stack")
-                                    .font(.system(size: 15.5, weight: .semibold))
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 13)
-                                    .background(Color.ccChapel, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                                    .foregroundStyle(Color.ccOnChapel)
-                            }
-                            .accessibilityIdentifier("lordsDay.review")
-                            .padding(.top, 16)
-                        } else if status.pendingReviews.count > 1 {
-                            VStack(spacing: 8) {
-                                ForEach(status.pendingReviews) { item in
-                                    Button { openReview(noteId: item.id) } label: {
-                                        Label("Review · \(item.label)", systemImage: "rectangle.stack")
-                                            .font(.system(size: 15, weight: .semibold))
-                                            .frame(maxWidth: .infinity)
-                                            .padding(.vertical, 12)
-                                            .background(Color.ccChapel, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                                            .foregroundStyle(Color.ccOnChapel)
-                                    }
-                                    .accessibilityIdentifier("lordsDay.review.\(item.id.uuidString)")
-                                }
-                            }
-                            .padding(.top, 16)
-                        }
-                        Button { capture = CaptureModel(context: context) } label: {
-                            Label(status.resumable ? "Continue Sunday's notes" : "Photograph Sunday's notes", systemImage: "camera")
-                                .font(.system(size: 15.5, weight: .semibold))
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 13)
-                                .background(Color.ccChapel, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                                .foregroundStyle(Color.ccOnChapel)
-                        }
-                        .accessibilityIdentifier("lordsDay.capture")
-                        .padding(.top, 16)
-                        if let saved = status.savedLine {
-                            Text(saved)
-                                .font(.system(size: 13))
-                                .foregroundStyle(.ccInk3)
-                                .padding(.top, 10)
-                        }
-                    }
-                    .padding(20)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.ccFill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Color.ccHairline, lineWidth: 1))
-                }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 120)
-                .frame(maxWidth: 704)
-                .frame(maxWidth: .infinity)
-            }
-            .background(Color.ccCard)
+    private func remember(_ sermon: ReelSermon, _ page: Int) {
+        memory.remember(page: page, for: sermon.id)
+        UserDefaults.standard.set(memory.stored, forKey: Self.memoryKey)
     }
+
+    private static let memoryKey = "LordsDayStackMemory"
 
     private func makeGenerator() -> LiveCardsGenerator {
         LiveCardsGenerator(accessToken: { [auth] forceRefresh in
@@ -223,13 +145,21 @@ struct LordsDayTabView: View {
         })
     }
 
+    /// Finishing a capture starts reading the notes; the landing page shows it, and a tap opens the review.
     private func afterCapture() {
         refresh()
-        guard let id = reviewAfterCapture else { return }
-        reviewAfterCapture = nil
-        if let note = try? LordsDayStore(context: context).note(id: id) {
-            review = ReviewModel.session(for: note, context: context, generator: makeGenerator())
-        }
+        guard let id = draftAfterCapture else { return }
+        draftAfterCapture = nil
+        guard let note = try? LordsDayStore(context: context).note(id: id) else { return }
+        let model = ReviewModel.session(for: note, context: context, generator: makeGenerator())
+        model.startIfNeeded()
+        pending = model
+    }
+
+    private func openPendingReview() {
+        if let pending { review = pending; return }
+        guard let first = status.pendingReviews.first else { return }
+        openReview(noteId: first.id)
     }
 
     private func openReview(noteId: UUID) {
@@ -238,12 +168,24 @@ struct LordsDayTabView: View {
     }
 
     private func refresh() {
-        let now = Date()
-        let calendar = Calendar.current
+        now = Date()
         status = CaptureStatus(context: context, now: now, calendar: calendar)
-        feed = try? LordsDayFeed(store: LordsDayStore(context: context), today: now, calendar: calendar)
-        feedDay = calendar.startOfDay(for: now)
+        let store = LordsDayStore(context: context)
+        reel = (try? LordsDayReel(store: store, today: now, calendar: calendar)) ?? LordsDayReel(testSermonPageCounts: [])
+        memory = LordsDayStackMemory(stored: UserDefaults.standard.dictionary(forKey: Self.memoryKey) as? [String: Int] ?? [:])
+        if let first = status.pendingReviews.first, let note = try? store.note(id: first.id) {
+            pending = ReviewModel.session(for: note, context: context, generator: makeGenerator())
+        } else {
+            pending = nil
+        }
+        Task { offline = !(await NetworkConnectivity.shared.isOnline()) }
     }
+}
+
+/// Where the reel opens.
+private struct ReelOpening: Identifiable {
+    let id = UUID()
+    let position: ReelPosition
 }
 
 private struct PendingReviewItem: Identifiable, Equatable {

@@ -43,6 +43,8 @@ struct ConfessionalChristianityApp: App {
                     CaptureFixture(scene: scene)
                 } else if let scene = UserDefaults.standard.string(forKey: "LordsDayReviewFixture") {
                     LordsDayReviewFixture(scene: scene)
+                } else if let scene = UserDefaults.standard.string(forKey: "LordsDayLandingFixture") {
+                    LordsDayLandingFixture(scene: scene)
                 } else if let scene = UserDefaults.standard.string(forKey: "LordsDayFeedFixture") {
                     LordsDayFeedFixture(scene: scene)
                 } else if let spec = UserDefaults.standard.string(forKey: "LibraryEntry"),

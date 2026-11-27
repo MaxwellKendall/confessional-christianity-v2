@@ -48,6 +48,9 @@ public struct ReelSermon: Identifiable, Equatable, Sendable {
         page >= 1 && page <= cards.count ? cards[page - 1] : nil
     }
 
+    /// Page `page`'s light palette: the cover's, or that card's.
+    public func palette(atPage page: Int) -> QuoteCardPalette { card(atPage: page)?.palette ?? coverPalette }
+
     /// A verse card opens the reader on its own reference.
     public func readerSource(for card: LordsDayFeedCard) -> ReaderSource? { feed?.readerSource(for: card) }
 

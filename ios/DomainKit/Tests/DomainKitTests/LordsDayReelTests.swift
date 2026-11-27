@@ -42,6 +42,11 @@ import XCTest
         // A cover, then its cards.
         XCTAssertEqual(reel.sermons.map(\.pageCount), [7, 5, 4])
         XCTAssertEqual(reel.pageCount, 16)
+        // The cover has its own colour and each card keeps its own.
+        let smyrna = reel.sermons[0]
+        XCTAssertEqual(smyrna.palette(atPage: 0), smyrna.coverPalette)
+        XCTAssertEqual(smyrna.palette(atPage: 3), smyrna.cards[2].palette)
+        XCTAssertNotEqual(smyrna.palette(atPage: 1), smyrna.coverPalette)
     }
 
     func testBindingNamesTheSermonAndFallsBackToPassageThenDate() throws {
