@@ -261,11 +261,12 @@ extension View {
 // MARK: - Components
 
 extension View {
-    /// A bordered card on surface: pillar cards and lists.
-    func chapelCard() -> some View {
+    /// A bordered card on surface: pillar cards and lists. Lists inside a
+    /// sheet (which is itself on surface) sit on paper.
+    func chapelCard(fill: Color = .ccSurface) -> some View {
         let shape = RoundedRectangle(cornerRadius: ChapelRadius.card, style: .circular)
         return padding(1) // the border takes space, as in the prototype
-            .background(Color.ccSurface, in: shape)
+            .background(fill, in: shape)
             .overlay(shape.strokeBorder(Color.ccLine, lineWidth: 1))
     }
 
@@ -365,48 +366,94 @@ struct ChapelHeroCard: View {
 }
 
 /// A row in a list card: an initial or icon, a title over one line of detail,
-/// then a chevron, or a gilt tick when it's done.
+/// then a chevron, a gilt tick when it's done, a chapel tick when it's the one
+/// selected, or a value (a reminder's time).
 struct ChapelListRow<Lead: View>: View {
+    enum Trailing: Equatable { case chevron, done, selected, value(String), nothing }
+
     let title: String
-    let detail: String
-    let done: Bool
-    @ViewBuilder let lead: Lead
+    let detail: String?
+    let trailing: Trailing
+    let lead: Lead?
+
+    init(title: String, detail: String?, done: Bool, @ViewBuilder lead: () -> Lead) {
+        self.init(title: title, detail: detail, trailing: done ? .done : .chevron, lead: lead)
+    }
+
+    init(title: String, detail: String?, trailing: Trailing, @ViewBuilder lead: () -> Lead) {
+        self.title = title
+        self.detail = detail
+        self.trailing = trailing
+        self.lead = lead()
+    }
 
     var body: some View {
         HStack(spacing: ChapelSpace.m) {
-            lead
-                .font(.ccRowInitial)
-                .foregroundStyle(.ccInk)
-                .frame(width: ChapelSize.rowWell, height: ChapelSize.rowWell)
-                .background(Color.ccFill, in: RoundedRectangle(cornerRadius: ChapelRadius.well, style: .circular))
-                .accessibilityHidden(true) // the title says it
+            if let lead {
+                lead
+                    .font(.ccRowInitial)
+                    .foregroundStyle(.ccInk)
+                    .frame(width: ChapelSize.rowWell, height: ChapelSize.rowWell)
+                    .background(Color.ccFill, in: RoundedRectangle(cornerRadius: ChapelRadius.well, style: .circular))
+                    .accessibilityHidden(true) // the title says it
+            }
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .font(.ccUI())
-                    .foregroundStyle(done ? Color.ccInk3 : Color.ccInk)
-                Text(detail)
-                    .font(.ccUI(13))
-                    .foregroundStyle(.ccInk2)
-                    .lineLimit(1)
+                    .foregroundStyle(trailing == .done ? Color.ccInk3 : Color.ccInk)
+                if let detail {
+                    Text(detail)
+                        .font(.ccUI(13))
+                        .foregroundStyle(.ccInk2)
+                        .lineLimit(1)
+                }
             }
             .multilineTextAlignment(.leading)
             Spacer(minLength: 0)
-            if done {
+            switch trailing {
+            case .done:
                 Text("✓")
                     .font(.ccUI(12))
                     .foregroundStyle(.ccOnGilt)
                     .frame(width: ChapelSize.tick, height: ChapelSize.tick)
                     .background(Color.ccGilt, in: Circle())
                     .accessibilityLabel("Done")
-            } else {
+            case .selected:
+                Text("✓")
+                    .font(.ccUI(17, weight: .semibold))
+                    .foregroundStyle(.ccChapel)
+                    .accessibilityLabel("Selected")
+            case .value(let value):
+                Text(value)
+                    .font(.ccUI(13))
+                    .foregroundStyle(.ccInk2)
+            case .chevron:
                 Text("›")
                     .font(.ccUI(18))
                     .foregroundStyle(.ccInk3)
                     .accessibilityHidden(true)
+            case .nothing:
+                EmptyView()
             }
         }
         .padding(.horizontal, ChapelSpace.l)
         .padding(.vertical, 14)
         .contentShape(Rectangle())
     }
+}
+
+extension ChapelListRow where Lead == EmptyView {
+    /// A row with no initial or icon (a reminder).
+    init(title: String, detail: String?, trailing: Trailing) {
+        self.title = title
+        self.detail = detail
+        self.trailing = trailing
+        self.lead = nil
+    }
+}
+
+
+/// The hairline between rows in a list card.
+struct ChapelRowDivider: View {
+    var body: some View { Rectangle().fill(Color.ccLine).frame(height: 1) }
 }

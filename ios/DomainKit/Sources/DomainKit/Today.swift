@@ -4,7 +4,9 @@
 //   1. Sunday with the notes not captured yet → "photograph your notes".
 //   2. The active child's next catechism session, if not practised today;
 //      else the next child still due.
-//   3. Else today's day of the current sermon week.
+//   3. Else this week's sermon stack's current card. Cards are a numbered
+//      stack, not tied to days (TKL-1062): the card shown is the one the
+//      stack was last left on in the Lord's Day tab.
 //   4. Else (everyone done, no sermon week) the active child, shown as done.
 // A new guest with nothing started gets `.empty`: the two pillars, nothing else.
 import Foundation
@@ -48,16 +50,20 @@ public struct TodayChild: Equatable, Sendable, Identifiable {
     public var isDue: Bool { !practisedToday && !finished }
 }
 
-/// Today's card of the current sermon week, from the Lord's Day store
+/// This week's sermon stack's current card, from the Lord's Day store
 /// (`LordsDayStore.todaySermon`).
 public struct TodaySermonDay: Equatable, Sendable {
-    public let dayLabel: String
+    /// The sermon's title, else its passage, else its date (as the reel names it).
+    public let sermonTitle: String
+    /// The card's place in the stack: "3 of 7".
+    public let countLabel: String
     public let kind: String
     public let text: String
     public let attribution: String
 
-    public init(dayLabel: String, kind: String, text: String, attribution: String) {
-        self.dayLabel = dayLabel
+    public init(sermonTitle: String, countLabel: String, kind: String, text: String, attribution: String) {
+        self.sermonTitle = sermonTitle
+        self.countLabel = countLabel
         self.kind = kind
         self.text = text
         self.attribution = attribution
@@ -181,25 +187,47 @@ extension LocalProgressStore {
 }
 
 extension LordsDayStore {
-    /// What Today needs from the Lord's Day store: today's card of the current
-    /// sermon week, if it has cards, and whether it's a Sunday whose notes
+    /// What Today needs from the Lord's Day store: this week's sermon stack's
+    /// current card (the page `stackMemory` holds for it; the cover counts as
+    /// the first card), if it has cards, and whether it's a Sunday whose notes
     /// aren't saved yet. A note saved but not yet drafted counts as captured
     /// (the Lord's Day tab offers its review).
-    public func todaySermon(on date: Date = Date(), calendar: Calendar = .current) -> (day: TodaySermonDay?, sundayCaptureDue: Bool) {
+    public func todaySermon(
+        on date: Date = Date(), calendar: Calendar = .current, stackMemory: LordsDayStackMemory = LordsDayStackMemory()
+    ) -> (day: TodaySermonDay?, sundayCaptureDue: Bool) {
         let week = try? currentWeek(on: date, calendar: calendar)
         let capturedToday = week.map { calendar.isDate($0.serviceDate, inSameDayAs: date) } ?? false
         let sundayCaptureDue = calendar.component(.weekday, from: date) == 1 && !capturedToday
 
-        guard let feed = try? LordsDayFeed(store: self, today: date, calendar: calendar),
-              let index = feed.todayIndex, feed.cards.indices.contains(index)
-        else { return (nil, sundayCaptureDue) }
-        let card = feed.cards[index]
+        guard let kept = try? currentWeekWithCards(on: date, calendar: calendar) else { return (nil, sundayCaptureDue) }
+        let sermon = ReelSermon(note: kept.note, cards: kept.cards, today: date, calendar: calendar)
+        guard !sermon.cards.isEmpty else { return (nil, sundayCaptureDue) }
+        let index = max(stackMemory.page(for: sermon) - 1, 0)
+        let card = sermon.cards[index]
         let day = TodaySermonDay(
-            dayLabel: LordsDayFeed.weekdays[calendar.component(.weekday, from: date) - 1],
+            sermonTitle: sermon.title,
+            countLabel: "\(index + 1) of \(sermon.cards.count)",
             kind: card.kind.label,
             text: card.kind == .verse ? (card.reference ?? "") : card.body,
             attribution: card.attributionLine ?? card.passage.map { "From your notes on \($0)" } ?? "From your notes"
         )
         return (day, sundayCaptureDue)
+    }
+
+    /// The Sunday capture card's line about the previous Sunday's kept sermon
+    /// ("Last Sunday: More than conquerors · Romans 8:28–39"), or nil when none
+    /// was kept that day.
+    public func lastSundayLine(on date: Date = Date(), calendar: Calendar = .current) -> String? {
+        let today = calendar.startOfDay(for: date)
+        guard let previous = calendar.date(byAdding: .day, value: -7, to: today),
+              let notes = try? allNotes() else { return nil }
+        let kept = notes
+            .filter { calendar.isDate($0.serviceDate, inSameDayAs: previous) }
+            .sorted { $0.updatedAt > $1.updatedAt }
+            .first { !((try? cards(for: $0))?.isEmpty ?? true) }
+        guard let note = kept else { return nil }
+        let sermon = ReelSermon(note: note, cards: (try? cards(for: note)) ?? [], today: date, calendar: calendar)
+        let passage = sermon.title == sermon.passage ? nil : sermon.passage
+        return "Last Sunday: " + ([sermon.title, passage].compactMap { $0 }.joined(separator: " · "))
     }
 }

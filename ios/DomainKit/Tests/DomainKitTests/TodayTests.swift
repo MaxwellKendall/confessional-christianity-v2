@@ -29,7 +29,8 @@ private func child(
 }
 
 private let thursday = TodaySermonDay(
-    dayLabel: "Thursday",
+    sermonTitle: "More than conquerors",
+    countLabel: "4 of 7",
     kind: "Key point",
     text: "Nothing shall separate us.",
     attribution: "From my notes"
@@ -284,41 +285,78 @@ extension TodayChildrenTests {
         #expect(sunday.sundayCaptureDue == true)
     }
 
-    @Test("a weekday of the current week gives that day's card")
-    func weekdayCard() throws {
+    @Test("the current week's stack gives its first card when it was never opened")
+    func firstCardByDefault() throws {
         let store = try makeStore()
         _ = try seedWeek(store)
         let monday = store.todaySermon(on: day(16), calendar: calendar)
         #expect(monday.sundayCaptureDue == false)
         #expect(monday.day == TodaySermonDay(
-            dayLabel: "Monday", kind: "Key point",
+            sermonTitle: "Romans 8:28–30", countLabel: "1 of 3", kind: "Key point",
             text: "God's purpose decides what is good.",
             attribution: "From your notes on Romans 8:28–30"
         ))
-        let wednesday = store.todaySermon(on: day(18), calendar: calendar)
-        #expect(wednesday.day == TodaySermonDay(
-            dayLabel: "Wednesday", kind: "Quote", text: "He is not finished.",
+    }
+
+    @Test("cards aren't tied to days: every day of the week shows the same card (TKL-941)")
+    func notTiedToDays() throws {
+        let store = try makeStore()
+        _ = try seedWeek(store)
+        let monday = store.todaySermon(on: day(16), calendar: calendar).day
+        for d in 17...21 {
+            #expect(store.todaySermon(on: day(d), calendar: calendar).day == monday)
+        }
+    }
+
+    @Test("the stack's current card is the one it was last on (cover counts as the first card)")
+    func followsStackMemory() throws {
+        let store = try makeStore()
+        let note = try seedWeek(store)
+        var memory = LordsDayStackMemory()
+        memory.remember(page: 3, for: note.id)
+        let quote = try #require(store.todaySermon(on: day(18), calendar: calendar, stackMemory: memory).day)
+        #expect(quote == TodaySermonDay(
+            sermonTitle: "Romans 8:28–30", countLabel: "3 of 3", kind: "Quote", text: "He is not finished.",
             attribution: "Rev. Smith · Romans 8:28–30"
         ))
+        memory.remember(page: 0, for: note.id)
+        let cover = try #require(store.todaySermon(on: day(18), calendar: calendar, stackMemory: memory).day)
+        #expect(cover.countLabel == "1 of 3")
+        memory.remember(page: 99, for: note.id)
+        let past = try #require(store.todaySermon(on: day(18), calendar: calendar, stackMemory: memory).day)
+        #expect(past.countLabel == "3 of 3")
+    }
+
+    @Test("a titled sermon is named by its title")
+    func titledSermon() throws {
+        let store = try makeStore()
+        let note = try seedWeek(store)
+        note.sermonTitle = "More than conquerors"
+        let card = try #require(store.todaySermon(on: day(18), calendar: calendar).day)
+        #expect(card.sermonTitle == "More than conquerors")
     }
 
     @Test("a verse card shows its reference, since its text is fetched later")
     func verseCard() throws {
         let store = try makeStore()
-        _ = try seedWeek(store)
-        let tuesday = try #require(store.todaySermon(on: day(17), calendar: calendar).day)
-        #expect(tuesday.kind == "Verse")
-        #expect(tuesday.text == "Romans 8:28")
-        #expect(tuesday.attribution == "From your notes on Romans 8:28–30")
+        let note = try seedWeek(store)
+        var memory = LordsDayStackMemory()
+        memory.remember(page: 2, for: note.id)
+        let verse = try #require(store.todaySermon(on: day(17), calendar: calendar, stackMemory: memory).day)
+        #expect(verse.kind == "Verse")
+        #expect(verse.text == "Romans 8:28")
+        #expect(verse.attribution == "From your notes on Romans 8:28–30")
     }
 
-    @Test("days past the last card stay on the last card")
-    func clampsToLastCard() throws {
+    @Test("Sunday's capture card names last Sunday's sermon, only when one was kept that day")
+    func lastSundayLine() throws {
         let store = try makeStore()
-        _ = try seedWeek(store)
-        let saturday = try #require(store.todaySermon(on: day(21), calendar: calendar).day)
-        #expect(saturday.dayLabel == "Saturday")
-        #expect(saturday.text == "He is not finished.")
+        #expect(store.lastSundayLine(on: day(22), calendar: calendar) == nil)
+        let note = try seedWeek(store)
+        #expect(store.lastSundayLine(on: day(22), calendar: calendar) == "Last Sunday: Romans 8:28–30")
+        note.sermonTitle = "More than conquerors"
+        #expect(store.lastSundayLine(on: day(22), calendar: calendar) == "Last Sunday: More than conquerors · Romans 8:28–30")
+        #expect(store.lastSundayLine(on: day(29), calendar: calendar) == nil) // two weeks on
     }
 
     @Test("the next Sunday asks for new notes; last week's cards are over")
@@ -336,7 +374,7 @@ extension TodayChildrenTests {
         _ = try seedWeek(store, sunday: 22)
         let sunday = store.todaySermon(on: day(22, hour: 14), calendar: calendar)
         #expect(sunday.sundayCaptureDue == false)
-        #expect(sunday.day?.dayLabel == "Sunday")
+        #expect(sunday.day?.countLabel == "1 of 3")
         #expect(sunday.day?.text == "God's purpose decides what is good.")
     }
 

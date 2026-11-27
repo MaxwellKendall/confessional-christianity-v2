@@ -3,9 +3,10 @@
 // avatar opening Settings. A new guest gets only the two pillars. Its look is
 // the prototype's (TKL-938); check changes with ios/scripts/prototype-shots.
 //
-// The sermon side comes from the Lord's Day store (TKL-859): today's card of
-// the current week, or on a Sunday with no notes yet, "photograph your notes",
-// which opens the camera (TKL-860) on the Lord's Day tab. The prototype's
+// The sermon side comes from the Lord's Day store (TKL-859): this week's
+// sermon stack's current card (cards aren't tied to days, TKL-1062/TKL-941),
+// or on a Sunday with no notes yet, "photograph your notes", which opens the
+// camera (TKL-860) on the Lord's Day tab. The prototype's
 // "Share this week's line" strip is not built yet.
 import SwiftUI
 import SwiftData
@@ -35,7 +36,10 @@ struct TodayView: View {
     private var store: LocalProgressStore { LocalProgressStore(context: modelContext) }
 
     private var plan: TodayPlan {
-        let sermon = LordsDayStore(context: modelContext).todaySermon()
+        let memory = LordsDayStackMemory(
+            stored: UserDefaults.standard.dictionary(forKey: LordsDayTabView.memoryKey) as? [String: Int] ?? [:]
+        )
+        let sermon = LordsDayStore(context: modelContext).todaySermon(stackMemory: memory)
         return planToday(TodayInput(
             children: store.todayChildren(), activeChildId: store.activeChildId,
             sermonDay: sermon.day, sundayCaptureDue: sermon.sundayCaptureDue
@@ -85,6 +89,8 @@ struct TodayView: View {
         .tint(.ccInk)
         .sheet(isPresented: $showsSettings) { SettingsView() }
         .sheet(isPresented: $showsAddChild) { AddChildView() }
+        // Back from the Lord's Day tab, its stack may sit on another card.
+        .onAppear { clockTick += 1 }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { clockTick += 1 }
         }
@@ -193,18 +199,18 @@ struct TodayView: View {
             ) { begin(child) }
         case .sermonDay(let day):
             ChapelHeroCard(
-                eyebrow: "\(day.dayLabel) · from Sunday's sermon",
+                eyebrow: "From Sunday’s sermon · \(day.countLabel)",
                 text: day.text,
                 progress: nil,
                 detail: day.attribution,
-                button: "Open today's card"
+                button: "Open the sermon’s cards"
             ) { openTab(.lordsDay) }
         case .captureSunday:
             ChapelHeroCard(
-                eyebrow: "The Lord's Day",
+                eyebrow: "The Lord’s Day",
                 text: "After church, photograph your sermon notes. Your week builds from them.",
                 progress: nil,
-                detail: nil,
+                detail: LordsDayStore(context: modelContext).lastSundayLine(),
                 button: "Photograph notes"
             ) { startCapture() }
         }
@@ -230,7 +236,7 @@ struct TodayView: View {
             .buttonStyle(.plain)
         case .sermonDay(let day):
             Button { openTab(.lordsDay) } label: {
-                ChapelListRow(title: "\(day.dayLabel)’s card", detail: "\(day.kind) · \(day.text)", done: false) {
+                ChapelListRow(title: day.sermonTitle, detail: "\(day.countLabel) · \(day.kind) · \(day.text)", done: false) {
                     sermonIcon
                 }
             }

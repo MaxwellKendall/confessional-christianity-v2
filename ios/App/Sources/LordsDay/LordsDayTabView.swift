@@ -137,7 +137,7 @@ struct LordsDayTabView: View {
         UserDefaults.standard.set(memory.stored, forKey: Self.memoryKey)
     }
 
-    private static let memoryKey = "LordsDayStackMemory"
+    static let memoryKey = "LordsDayStackMemory"
 
     private func makeGenerator() -> LiveCardsGenerator {
         LiveCardsGenerator(accessToken: { [auth] forceRefresh in

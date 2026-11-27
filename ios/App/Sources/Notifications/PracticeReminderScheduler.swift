@@ -40,6 +40,13 @@ enum PracticeReminderScheduler {
         center.add(request)
     }
 
+    /// The time the daily reminder is set for, if one is scheduled (Settings shows it).
+    static func scheduledTime() async -> DateComponents? {
+        let pending = await UNUserNotificationCenter.current().pendingNotificationRequests()
+        let trigger = pending.first { $0.identifier == requestIdentifier }?.trigger as? UNCalendarNotificationTrigger
+        return trigger?.dateComponents
+    }
+
     static func cancel() {
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [requestIdentifier])
     }

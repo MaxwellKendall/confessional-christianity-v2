@@ -1,19 +1,23 @@
-// Settings, opened from Today's avatar (TKL-825): the account (sign in with
-// an emailed code, TKL-928), the children (pick who is being catechized, add
-// another) and About & Credits. The practice reminder joins it in its own ticket.
+// Settings, opened from Today's avatar (TKL-825), as in TKL-885's approved
+// prototype (TKL-941): a sheet on surface with lists on paper. The account
+// slot (sign in with an emailed code, TKL-928; its look is TKL-930's), the
+// children (tap one to make them the active child, or add another), the
+// reminders set on this iPhone, and About & Credits.
 import SwiftUI
 import SwiftData
 import DomainKit
 
 struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
-    @Environment(\.dismiss) private var dismiss
     @Environment(AuthService.self) private var auth
     @Query private var observedChildren: [LocalChild]
     @Query private var observedTracks: [ChildCatechismTrack]
     @Query private var observedSettings: [ProgressSettings]
     @State private var showsAddChild = false
     @State private var showsSignIn = false
+    @State private var showsAbout = false
+    /// The daily catechism reminder's time, nil when none is set.
+    @State private var practiceReminder: DateComponents?
 
     private var store: LocalProgressStore { LocalProgressStore(context: modelContext) }
 
@@ -22,63 +26,46 @@ struct SettingsView: View {
         let _ = observedTracks.map(\.updatedAt)
         let activeId = observedSettings.first?.activeChildId
         NavigationStack {
-            List {
-                if auth.isConfigured {
-                    Section("Account") {
-                        if let user = auth.user {
-                            Text(user.email ?? "Signed in")
-                                .foregroundStyle(.ccInk)
-                                .accessibilityIdentifier("settings.accountEmail")
-                            Button("Sign out", action: signOut)
-                                .foregroundStyle(.ccDanger)
-                                .accessibilityIdentifier("settings.signOut")
-                        } else if auth.phase == .restoring {
-                            Text("Checking…").foregroundStyle(.ccInk2)
-                        } else {
-                            Button("Sign in") { showsSignIn = true }
-                                .foregroundStyle(.ccChapel)
-                                .accessibilityIdentifier("settings.signIn")
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    Text("Settings")
+                        .font(.ccDisplay(22, semibold: true))
+                        .foregroundStyle(.ccInk)
+                        .accessibilityAddTraits(.isHeader)
+                        .padding(.bottom, 6)
+                    Text("On this iPhone")
+                        .font(.ccUI(13))
+                        .foregroundStyle(.ccInk3)
+                        .padding(.bottom, 14)
+                    if auth.isConfigured { account }
+                    section("Children")
+                    children(activeId: activeId)
+                    section("Reminders")
+                    reminders
+                    section("About")
+                    list {
+                        Button { showsAbout = true } label: {
+                            ChapelListRow(title: "About & Credits", detail: nil, trailing: .chevron)
                         }
+                        .buttonStyle(.plain)
                     }
                 }
-                Section("Children") {
-                    ForEach(store.todayChildren()) { child in
-                        Button {
-                            try? store.selectChild(childId: child.id)
-                        } label: {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(child.name).foregroundStyle(.ccInk)
-                                    Text("\(child.programShortTitle) · \(child.learned) of \(child.totalQuestions) learned")
-                                        .font(.ccUI(13))
-                                        .foregroundStyle(.ccInk2)
-                                }
-                                Spacer()
-                                if child.id == activeId {
-                                    Image(systemName: "checkmark").foregroundStyle(.ccChapel)
-                                }
-                            }
-                        }
-                    }
-                    Button("Add a child") { showsAddChild = true }
-                        .foregroundStyle(.ccChapel)
-                }
-                Section {
-                    NavigationLink("About & Credits") {
-                        AboutView(path: .constant(NavigationPath()))
-                            .toolbar(.visible, for: .navigationBar)
-                    }
-                }
+                .padding(.horizontal, ChapelSpace.gutter)
+                .padding(.top, ChapelSpace.xl)
+                .padding(.bottom, 36)
             }
-            .navigationTitle("Settings")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
-                }
+            .background(Color.ccSurface)
+            .toolbar(.hidden, for: .navigationBar)
+            .navigationDestination(isPresented: $showsAbout) {
+                AboutView(path: .constant(NavigationPath()))
+                    .toolbar(.visible, for: .navigationBar)
             }
         }
         .tint(.ccInk)
+        .presentationDragIndicator(.visible)
+        .presentationCornerRadius(ChapelRadius.sheet)
+        .presentationBackground(.ccSurface)
+        .task { practiceReminder = await PracticeReminderScheduler.scheduledTime() }
         .sheet(isPresented: $showsAddChild) { AddChildView() }
         .sheet(isPresented: $showsSignIn, onDismiss: { auth.cancelCode() }) { SignInSheet() }
         #if DEBUG
@@ -94,6 +81,105 @@ struct SettingsView: View {
             }
         }
         #endif
+    }
+
+    // MARK: sections
+
+    /// The account slot, in the prototype's place. Its look is TKL-930's.
+    @ViewBuilder
+    private var account: some View {
+        if let user = auth.user {
+            list {
+                ChapelListRow(title: "Signed in", detail: user.email ?? "", trailing: .nothing) {
+                    Text(String((user.email ?? "?").prefix(1)).uppercased())
+                }
+                .accessibilityIdentifier("settings.accountEmail")
+            }
+            Button("Sign out", action: signOut)
+                .buttonStyle(ChapelQuietButtonStyle())
+                .padding(.top, ChapelSpace.m)
+                .accessibilityIdentifier("settings.signOut")
+        } else if auth.phase == .restoring {
+            list {
+                ChapelListRow(title: "Checking…", detail: nil, trailing: .nothing) { Text("•") }
+            }
+        } else {
+            list {
+                Button { showsSignIn = true } label: {
+                    ChapelListRow(title: "Sign in to sync", detail: "Keep progress and notes if you lose this iPhone", trailing: .chevron) {
+                        Text("•")
+                    }
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("settings.signIn")
+            }
+        }
+    }
+
+    private func children(activeId: UUID?) -> some View {
+        let children = store.todayChildren()
+        return list {
+            ForEach(children) { child in
+                Button {
+                    try? store.selectChild(childId: child.id)
+                } label: {
+                    ChapelListRow(
+                        title: child.name,
+                        detail: "\(child.programShortTitle) · Q. \(child.questionNumber)",
+                        // With one child there is nothing to choose between.
+                        trailing: children.count > 1 && child.id == activeId ? .selected : .chevron
+                    ) {
+                        Text(String(child.name.prefix(1)))
+                    }
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(child.id == activeId ? .isSelected : [])
+                ChapelRowDivider()
+            }
+            Button { showsAddChild = true } label: {
+                ChapelListRow(title: "Add a child", detail: nil, trailing: .nothing) { Text("+") }
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    /// Only the reminders this iPhone actually sets; the rest arrive with
+    /// TKL-1072/TKL-1074.
+    private var reminders: some View {
+        list {
+            ChapelListRow(
+                title: "Catechism practice",
+                detail: practiceReminder == nil ? "Turns on after your first session" : "Every day",
+                trailing: .value(practiceReminder.map(Self.time) ?? "Off")
+            )
+        }
+    }
+
+    // MARK: pieces
+
+    private func section(_ title: String) -> some View {
+        Text(title)
+            .chapelCaps()
+            .padding(.top, ChapelSpace.xl)
+            .padding(.bottom, ChapelSpace.s)
+            .accessibilityAddTraits(.isHeader)
+    }
+
+    /// A list card on paper, as lists sit inside a sheet.
+    private func list<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+        VStack(spacing: 0) { content() }.chapelCard(fill: .ccPaper)
+    }
+
+    /// "7:30 pm".
+    static func time(_ parts: DateComponents) -> String {
+        var calendar = Calendar.current
+        calendar.timeZone = .current
+        let date = calendar.date(from: DateComponents(hour: parts.hour ?? 0, minute: parts.minute ?? 0)) ?? Date()
+        let formatter = DateFormatter()
+        formatter.dateFormat = "h:mm a"
+        formatter.amSymbol = "am"
+        formatter.pmSymbol = "pm"
+        return formatter.string(from: date)
     }
 
     private func signOut() {
