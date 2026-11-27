@@ -4,6 +4,9 @@
 // streaming. Every event and every edit is saved at once (LordsDayReview's
 // file beside the note's photos), so a relaunch shows what had arrived and
 // offers to read the rest. Only `finish()` writes NoteCards.
+// The sermon's title, preacher, passage, church and date, when the notes name
+// them, fill the note's empty fields as they arrive (TKL-1061); the review's
+// header edits title, preacher and passage in place, saved like any note change.
 import Foundation
 import SwiftData
 import DomainKit
@@ -14,8 +17,15 @@ final class ReviewModel {
     private(set) var review: LordsDayReview
     private(set) var failure: CardsGeneratorError?
     private(set) var saveFailed = false
-    let passage: String?
-    let preacher: String?
+    /// The note's sermon fields as typed in the review header. Each edit saves the note.
+    var titleText: String { didSet { if !loadingNote, oldValue != titleText { writeNote { $0.sermonTitle = normalizedNoteField(self.titleText) } } } }
+    var preacherText: String { didSet { if !loadingNote, oldValue != preacherText { writeNote { $0.preacher = normalizedNoteField(self.preacherText) } } } }
+    var passageText: String { didSet { if !loadingNote, oldValue != passageText { writeNote { $0.passageRef = normalizedNoteField(self.passageText) } } } }
+    private(set) var serviceDate: Date
+    var passage: String? { normalizedNoteField(passageText) }
+    var preacher: String? { normalizedNoteField(preacherText) }
+    var title: String? { normalizedNoteField(titleText) }
+    @ObservationIgnored private var loadingNote = false
 
     @ObservationIgnored private let note: LordsDayNote
     @ObservationIgnored private let context: ModelContext
@@ -51,8 +61,10 @@ final class ReviewModel {
         self.context = context
         self.generator = generator
         self.root = root
-        passage = normalizedNoteField(note.passageRef)
-        preacher = normalizedNoteField(note.preacher)
+        titleText = note.sermonTitle ?? ""
+        preacherText = note.preacher ?? ""
+        passageText = note.passageRef ?? ""
+        serviceDate = note.serviceDate
         let pages = (try? CaptureDraft(noteId: note.id, root: root))?.pages.count ?? 0
         review = (try? LordsDayReview.load(noteId: note.id, root: root)) ?? LordsDayReview(noteId: note.id, pageCount: pages)
     }
@@ -94,6 +106,7 @@ final class ReviewModel {
                 for try await event in stream {
                     guard let self else { return }
                     self.review.apply(event)
+                    if case .sermon = event, let sermon = self.review.sermon { self.fillNote(from: sermon) }
                     self.save()
                 }
             } catch {
@@ -188,6 +201,35 @@ final class ReviewModel {
         task?.cancel()
         try? LordsDayReview.delete(noteId: noteId, root: root)
         Self.sessions[noteId] = nil
+    }
+
+    // MARK: The note's sermon fields
+
+    /// What the notes named fills only what the person left empty.
+    private func fillNote(from sermon: SermonDetails) {
+        guard note.fill(with: sermon) else { return }
+        saveNote()
+        loadingNote = true
+        titleText = note.sermonTitle ?? ""
+        preacherText = note.preacher ?? ""
+        passageText = note.passageRef ?? ""
+        serviceDate = note.serviceDate
+        loadingNote = false
+    }
+
+    private func writeNote(_ change: (LordsDayNote) -> Void) {
+        change(note)
+        note.updatedAt = Date()
+        saveNote()
+    }
+
+    private func saveNote() {
+        do {
+            try context.save()
+            saveFailed = false
+        } catch {
+            saveFailed = true
+        }
     }
 
     private func save() {

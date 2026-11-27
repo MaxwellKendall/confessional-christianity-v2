@@ -268,13 +268,15 @@ private struct CaptureStatus {
         let pending = (try? store.pendingReviewNotes(activeSessionIds: ReviewModel.activeSessionIds)) ?? []
         pendingReviews = pending.map { note in
             let date = note.serviceDate.formatted(.dateTime.month(.abbreviated).day())
-            let passage = normalizedNoteField(note.passageRef)
-            let label = passage.map { "\($0) · \(date)" } ?? date
+            let heading = SermonHeading(note: note, date: date)
+            let label = heading.hasSermonName ? "\(heading.headline) · \(date)" : date
             return PendingReviewItem(id: note.id, label: label)
         }
         guard let note = pending.first ?? (try? store.currentWeek(on: now, calendar: calendar)) else { return }
         let pages = CaptureDraft.savedPageCount(noteId: note.id)
         let what = pages > 0 ? "\(pages) page\(pages == 1 ? "" : "s")" : "typed notes"
-        savedLine = "Saved: \(note.serviceDate.formatted(.dateTime.weekday(.wide).day().month())) · \(what)."
+        let date = note.serviceDate.formatted(.dateTime.weekday(.wide).day().month())
+        let heading = SermonHeading(note: note, date: date)
+        savedLine = "Saved: \(heading.hasSermonName ? "\(heading.headline), \(date)" : date) · \(what)."
     }
 }

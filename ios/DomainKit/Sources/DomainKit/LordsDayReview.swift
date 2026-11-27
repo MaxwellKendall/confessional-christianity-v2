@@ -36,6 +36,8 @@ public enum LordsDayCardsEvent: Equatable, Sendable {
     /// and `extractedText` is the model's transcription of it, shown while the rest is still drafting.
     case page(Int, cardCount: Int? = nil, extractedText: String? = nil, generationId: String? = nil)
     case card(DraftCardPayload)
+    /// Which sermon that page's notes say this is (TKL-1061); sent only when they name something.
+    case sermon(Int, SermonDetails)
     /// That page failed; the others continue.
     case pageFailed(Int)
     /// The original generated page is no longer available to replay; existing partial cards stay untouched.
@@ -52,6 +54,7 @@ public enum LordsDayCardsEvent: Equatable, Sendable {
         let extractedText: String?
         let card: DraftCardPayload?
         let failedPages: [Int]?
+        let sermon: SermonDetails?
     }
 
     /// Nil for a blank line or an event type this app doesn't know (the server may add some).
@@ -62,6 +65,9 @@ public enum LordsDayCardsEvent: Equatable, Sendable {
         case "started": return .started(pages: event.pages ?? 0)
         case "page": return event.page.map { .page($0, cardCount: event.cardCount, extractedText: event.extractedText, generationId: event.generationId) }
         case "card": return event.card.map(LordsDayCardsEvent.card)
+        case "sermon":
+            guard let page = event.page, let sermon = event.sermon else { return nil }
+            return .sermon(page, sermon)
         case "error":
             guard let page = event.page else { return nil }
             return event.code == "replay_unavailable" ? .pageReplayUnavailable(page) : .pageFailed(page)
@@ -206,6 +212,8 @@ public struct LordsDayReview: Codable, Equatable, Sendable {
     public private(set) var replayUnavailablePages: Set<Int> = []
     /// Unread pages the user explicitly chose to skip so the already-read cards can be finished.
     public private(set) var skippedPages: Set<Int> = []
+    /// What each note page said about the sermon (TKL-1061), persisted so a resumed review still has it.
+    private var pageSermons: [Int: SermonDetails] = [:]
     /// The note page each page of the request in flight stands for (a retry sends only some).
     private var requestPages: [Int] = []
     /// In-flight page completion state (cleared on begin / done / interrupt; not persisted).
@@ -224,6 +232,7 @@ public struct LordsDayReview: Codable, Equatable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case noteId, pageCount, phase, cards, readPages, failedPages, replayUnavailablePages, skippedPages, requestPages, pageGenerationIds
+        case pageSermons = "sermon"
     }
 
     public init(noteId: UUID, pageCount: Int) {
@@ -243,6 +252,16 @@ public struct LordsDayReview: Codable, Equatable, Sendable {
         skippedPages = try c.decodeIfPresent(Set<Int>.self, forKey: .skippedPages) ?? []
         requestPages = try c.decode([Int].self, forKey: .requestPages)
         pageGenerationIds = try c.decodeIfPresent([Int: String].self, forKey: .pageGenerationIds) ?? [:]
+        // Reviews saved before TKL-1061 have no sermon.
+        pageSermons = try c.decodeIfPresent([Int: SermonDetails].self, forKey: .pageSermons) ?? [:]
+    }
+
+    /// The sermon the notes name: each field from the earliest note page that has it; nil when none named anything.
+    public var sermon: SermonDetails? {
+        let merged = pageSermons.keys.sorted().reduce(SermonDetails(title: nil, preacher: nil, passage: nil, church: nil, serviceDate: nil)) {
+            $0.filling(from: pageSermons[$1]!)
+        }
+        return merged.isEmpty ? nil : merged
     }
 
     public var isDrafting: Bool { phase == .drafting }
@@ -343,6 +362,9 @@ public struct LordsDayReview: Codable, Equatable, Sendable {
                 // Without a declared card count, wait for `done` so a drop mid-page replays it.
                 seenPagesWithoutCount.insert(page)
             }
+        case .sermon(let requestPage, let details):
+            guard let page = notePage(requestPage), !rejectedGenerationPages.contains(page), !details.isEmpty else { return }
+            pageSermons[page] = details
         case .pageFailed(let page):
             if let page = notePage(page), !readPages.contains(page) { failedPages.insert(page) }
         case .pageReplayUnavailable(let page):

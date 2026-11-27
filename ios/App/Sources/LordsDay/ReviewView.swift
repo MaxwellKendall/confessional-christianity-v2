@@ -98,15 +98,16 @@ struct ReviewView: View {
                     .foregroundStyle(chapel)
                     .accessibilityIdentifier("review.close")
                 Spacer()
-                if let passage = model.passage {
-                    Text(passage).font(.system(size: 13)).foregroundStyle(ink2)
-                }
+                Text("Your week, from your notes")
+                    .font(.ccDisplay(10.5))
+                    .tracking(10.5 * 0.16)
+                    .textCase(.uppercase)
+                    .foregroundStyle(ink2)
                 Spacer()
                 Color.clear.frame(width: 44, height: 1)
             }
             .padding(.bottom, 6)
-            Text("Your week, from your notes")
-                .font(.ccDisplay(23, semibold: true))
+            sermonFields
             Text(subtitle)
                 .font(.system(size: 14))
                 .foregroundStyle(ink2)
@@ -121,6 +122,34 @@ struct ReviewView: View {
         .padding(.horizontal, 20)
         .padding(.top, 12)
         .padding(.bottom, 10)
+    }
+
+    /// The sermon, as the notes named it (TKL-1061), each field edited in place. An empty
+    /// title shows what the sermon is otherwise called: its passage, else its date.
+    private var sermonFields: some View {
+        let date = model.serviceDate.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day())
+        let fallback = SermonHeading(title: nil, passage: model.passage, preacher: nil, date: date).headline
+        return VStack(alignment: .leading, spacing: 4) {
+            TextField("Sermon title", text: $model.titleText, prompt: Text(fallback).foregroundStyle(ink.opacity(0.55)), axis: .vertical)
+                .font(.ccDisplay(23, semibold: true))
+                .lineLimit(1...2)
+                .submitLabel(.done)
+                .accessibilityLabel("Sermon title")
+                .accessibilityIdentifier("review.sermon.title")
+            HStack(spacing: 6) {
+                TextField("Preacher", text: $model.preacherText, prompt: Text("Preacher").foregroundStyle(ink2.opacity(0.6)))
+                    .fixedSize()
+                    .accessibilityIdentifier("review.sermon.preacher")
+                Text("·").foregroundStyle(ink2.opacity(0.6))
+                TextField("Passage", text: $model.passageText, prompt: Text("Passage").foregroundStyle(ink2.opacity(0.6)))
+                    .accessibilityIdentifier("review.sermon.passage")
+            }
+            .font(.system(size: 14))
+            .foregroundStyle(ink2)
+            .lineLimit(1)
+        }
+        .textInputAutocapitalization(.words)
+        .autocorrectionDisabled()
     }
 
     private var subtitle: String {
@@ -730,10 +759,12 @@ private struct EditCardSheet: View {
 }
 
 #if DEBUG
-/// Screenshot hook: `-LordsDayReviewFixture filling|complete`, optionally
+/// Screenshot hook: `-LordsDayReviewFixture filling|complete|smyrna`, optionally
 /// `-LordsDayReviewCard p0-1` (or `drafting`) to open at that card. Replays sample
 /// drafts into a throwaway folder and an in-memory store; `filling` stops
-/// after two pages and stays mid-fill.
+/// after two pages and stays mid-fill. `smyrna` drafts the Revelation 2:8-11 note
+/// from a note with no sermon fields, so its title, preacher and passage come from the
+/// drafted `sermon` event (TKL-1061).
 struct LordsDayReviewFixture: View {
     let scene: String
     @State private var model: ReviewModel?
@@ -746,11 +777,15 @@ struct LordsDayReviewFixture: View {
             let container = try! ModelContainer(for: progressSchema, configurations: [ModelConfiguration(schema: progressSchema, isStoredInMemoryOnly: true)])
             let context = ModelContext(container)
             let root = FileManager.default.temporaryDirectory.appendingPathComponent("review-fixture-\(UUID().uuidString)")
-            let note = LordsDayNote(serviceDate: CaptureModel.lastSunday(onOrBefore: Date()), passageRef: "Romans 8:28–30", preacher: "Rev. [your pastor]")
+            let note = scene == "smyrna"
+                ? LordsDayNote(serviceDate: CaptureModel.lastSunday(onOrBefore: Date()))
+                : LordsDayNote(serviceDate: CaptureModel.lastSunday(onOrBefore: Date()), passageRef: "Romans 8:28–30", preacher: "Rev. [your pastor]")
             try! LordsDayStore(context: context).save(note)
             let draft = try! CaptureDraft(noteId: note.id, root: root)
-            for _ in 0..<3 { try! draft.addPage(CaptureModel.jpegForUpload(CaptureFixture.samplePage())!) }
-            let generator = FixtureCardsGenerator(stopsAfter: scene == "filling" ? 2 : nil, delay: .milliseconds(scene == "filling" ? 300 : 150))
+            for _ in 0..<(scene == "smyrna" ? 1 : 3) { try! draft.addPage(CaptureModel.jpegForUpload(CaptureFixture.samplePage())!) }
+            let generator = scene == "smyrna"
+                ? FixtureCardsGenerator.smyrna
+                : FixtureCardsGenerator(stopsAfter: scene == "filling" ? 2 : nil, delay: .milliseconds(scene == "filling" ? 300 : 150))
             model = ReviewModel.session(for: note, context: context, generator: generator, root: root)
         }
     }

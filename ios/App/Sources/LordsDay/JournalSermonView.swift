@@ -99,10 +99,12 @@ struct JournalSermonView: View {
         let band = LordsDayFeed.palette(entry.cards.first?.palette(at: 0) ?? LordsDayFeed.rotation[0], dark: scheme == .dark)
         return VStack(alignment: .leading, spacing: 0) {
             Text("\(entry.serviceDate.journalDate) · The Lord's Day").chapelCaps()
-            Text(entry.passage ?? "Lord's Day").font(.ccDisplay(21, semibold: true)).foregroundStyle(Color.ccInk).padding(.top, 6)
+            // Named by the sermon (TKL-1061): title, else passage, else the date.
+            let heading = SermonHeading(title: entry.title, passage: entry.passage, preacher: entry.preacher, date: entry.serviceDate.journalDate)
+            Text(heading.headline).font(.ccDisplay(21, semibold: true)).foregroundStyle(Color.ccInk).padding(.top, 6)
                 .accessibilityIdentifier("journal.sermon.passage")
-            if let title = entry.title {
-                Text(title).font(.ccBody(17)).foregroundStyle(Color.ccInk2).padding(.top, 2)
+            if let byline = heading.byline {
+                Text(byline).font(.ccBody(17)).foregroundStyle(Color.ccInk2).padding(.top, 2)
             }
             VStack(alignment: .leading, spacing: 0) {
                 ForEach(Array(entry.keyLines.enumerated()), id: \.offset) { i, line in

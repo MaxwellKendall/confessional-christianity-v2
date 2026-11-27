@@ -120,6 +120,7 @@ public struct LordsDayFeed: Equatable, Sendable {
         self.readerDay = (Self.weekdays[calendar.component(.weekday, from: today) - 1], dayIndex)
         self.keyPoint = cards.lazy.filter { $0.kind == .keyPoint }.compactMap { normalizedNoteField($0.body) }.first
         let preacher = normalizedNoteField(note.preacher)
+        let title = normalizedNoteField(note.sermonTitle)
         let todayStart = calendar.startOfDay(for: today)
         self.cards = cards.enumerated().map { index, card in
             // Card 0 is Monday's: the day after the service.
@@ -132,7 +133,8 @@ public struct LordsDayFeed: Equatable, Sendable {
                 weekday
             }
             let attribution: String? = switch card.kind {
-            case .keyPoint: passage.map { "From your notes on \($0)" } ?? "From your notes"
+            // Named by the sermon's title when the notes gave one (TKL-1061), else its passage.
+            case .keyPoint: (title ?? passage).map { "From your notes on \($0)" } ?? "From your notes"
             case .quote:
                 // Nil means "the preacher"; empty means the user cleared it in review (TKL-863).
                 [card.attribution == nil ? preacher : normalizedNoteField(card.attribution), passage].compactMap { $0 }.joined(separator: " · ").nilIfEmpty

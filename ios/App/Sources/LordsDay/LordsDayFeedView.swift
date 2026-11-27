@@ -513,7 +513,7 @@ struct LordsDayHeaderCameraLabel: View {
 }
 
 #if DEBUG
-/// Screenshot hook: `-LordsDayFeedFixture key_point|quote|verse|verse_offline`
+/// Screenshot hook: `-LordsDayFeedFixture key_point|quote|verse|verse_offline|smyrna`
 /// shows a sample week from an in-memory store whose card for today is that
 /// kind. `verse_offline` is a verse whose text isn't bundled (pair it with
 /// `-EsvOffline YES`); `sermon` is a verse card on the sermon text, Romans 8:28–30
@@ -599,6 +599,7 @@ struct LordsDayFeedFixture: View {
         let calendar = Calendar.current
         let weekday = calendar.component(.weekday, from: today) // 1 = Sunday
         let sunday = calendar.date(byAdding: .day, value: -(weekday - 1), to: calendar.startOfDay(for: today))!
+        if scene == "smyrna" { return smyrnaFeed(store: store, sunday: sunday, today: today) }
         let note = LordsDayNote(serviceDate: sunday, passageRef: "Romans 8:28–30", preacher: "Rev. [your pastor]")
         try! store.save(note)
         enum Sample { case point(String), quote(String), verse(String) }
@@ -626,6 +627,23 @@ struct LordsDayFeedFixture: View {
             case .verse(let r): try! store.appendCard(to: note, kind: .verse, body: "", verseRef: r)
             }
         }
+        return LordsDayFeed(note: note, cards: try! store.cards(for: note), today: today)
+    }
+
+    /// `-LordsDayFeedFixture smyrna`: the Revelation 2:8-11 note with its title and a
+    /// placeholder preacher (TKL-1061), every card a key point so today's names the sermon.
+    @MainActor private static func smyrnaFeed(store: LordsDayStore, sunday: Date, today: Date) -> LordsDayFeed {
+        let note = LordsDayNote(serviceDate: sunday, passageRef: "Revelation 2:8-11", sermonTitle: "To the Church at Smyrna",
+                                preacher: FixtureCardsGenerator.smyrnaSermon.preacher)
+        try! store.save(note)
+        for point in [
+            "The hatred of the world is part of our heritage with Christ (John 15:18-25).",
+            "True union with Christ is a matter of the heart, by the Spirit (Rom 2:28-29).",
+            "“Do not fear”: Christ walks among his lampstands; he is with us in his Church.",
+            "The Devil is behind these fiery persecutions, but we are called to endure his rage.",
+            "God is behind the testing, and Jesus tests our faith.",
+            "The crown is our participation in the victory of Christ over sin, death, hell, and the Devil.",
+        ] { try! store.appendCard(to: note, kind: .keyPoint, body: point) }
         return LordsDayFeed(note: note, cards: try! store.cards(for: note), today: today)
     }
 }

@@ -61,9 +61,7 @@ final class CaptureModel {
     }
 
     static func lastSunday(onOrBefore date: Date, calendar: Calendar = .current) -> Date {
-        let day = calendar.startOfDay(for: date)
-        let back = (calendar.component(.weekday, from: day) - 1 + 7) % 7 // weekday 1 = Sunday
-        return calendar.date(byAdding: .day, value: -back, to: day) ?? day
+        DomainKit.lastSunday(onOrBefore: date, calendar: calendar)
     }
 
     // MARK: Pages

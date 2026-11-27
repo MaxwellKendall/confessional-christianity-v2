@@ -765,9 +765,11 @@ private struct JournalCover: View {
         Button(action: action) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(entry.serviceDate.journalDate).font(.ccDisplay(9.5)).tracking(1.1).textCase(.uppercase).foregroundStyle(Color.ccInk3)
-                Text(highlighted(entry.passage ?? "Lord's Day")).font(.ccDisplay(13.5, semibold: true)).foregroundStyle(Color.ccInk).lineLimit(2)
-                if let title = entry.title {
-                    Text(highlighted(title)).font(.ccBody(13.5)).foregroundStyle(Color.ccInk2).lineLimit(2)
+                // Named by the sermon (TKL-1061): title, else passage, else the date.
+                let heading = SermonHeading(title: entry.title, passage: entry.passage, preacher: entry.preacher, date: entry.serviceDate.journalDate)
+                Text(highlighted(heading.headline)).font(.ccDisplay(13.5, semibold: true)).foregroundStyle(Color.ccInk).lineLimit(2)
+                if let byline = heading.byline {
+                    Text(highlighted(byline)).font(.ccBody(13.5)).foregroundStyle(Color.ccInk2).lineLimit(2)
                 }
                 if let snippet = hit.snippet {
                     Text(snippetText(snippet)).font(.ccBody(12)).foregroundStyle(Color.ccInk2).lineLimit(3)

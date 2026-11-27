@@ -156,6 +156,25 @@ struct LiveCardsGenerator: CardsGenerator {
 struct FixtureCardsGenerator: CardsGenerator {
     var stopsAfter: Int?
     var delay: Duration = .milliseconds(450)
+    var pages: [[DraftCardPayload]] = Self.sample
+    var pageText: [String] = Self.sampleText
+    /// What the notes say about the sermon, sent after the first page (TKL-1061).
+    var sermon: SermonDetails?
+
+    /// The Revelation 2:8-11 note behind the approved journal prototype (TKL-951),
+    /// with a placeholder preacher the way TKL-1062's prototype shows it.
+    static let smyrnaSermon = SermonDetails(title: "To the Church at Smyrna", preacher: "Rev. [Preacher]", passage: "Revelation 2:8-11", church: nil, serviceDate: nil)
+    static let smyrna = FixtureCardsGenerator(
+        delay: .milliseconds(150),
+        pages: [[
+            DraftCardPayload(kind: "key_point", page: 0, order: 0, text: "The hatred of the world is part of our heritage with Christ (John 15:18-25)."),
+            DraftCardPayload(kind: "key_point", page: 0, order: 1, text: "“Do not fear”: Christ walks among his lampstands; he is with us in his Church."),
+            DraftCardPayload(kind: "quote", page: 0, order: 2, text: "I see Christ wrestling there.", attribution: "Margaret Wilson"),
+            DraftCardPayload(kind: "verse", page: 0, order: 3, reference: "Revelation 2:10", osis: "Rev.2.10"),
+        ]],
+        pageText: ["Revelation 2:8-11 To the Church at Smyrna\nThe hatred of the world is part of our heritage with Christ. Do not fear is a constant refrain in the Bible."],
+        sermon: smyrnaSermon
+    )
 
     /// What the model "read" on each page, so the drafting screen shows words and
     /// Try again is available in the fixture (TKL-1053).
@@ -192,7 +211,9 @@ struct FixtureCardsGenerator: CardsGenerator {
     }
 
     func draft(_ request: LordsDayCardsRequest) -> AsyncThrowingStream<LordsDayCardsEvent, Error> {
-        let pages = Self.sample
+        let pages = pages
+        let pageText = pageText
+        let sermon = sermon
         let stopsAfter = stopsAfter
         let delay = delay
         return AsyncThrowingStream { continuation in
@@ -208,8 +229,9 @@ struct FixtureCardsGenerator: CardsGenerator {
                     continuation.yield(.page(
                         index,
                         cardCount: cards.count,
-                        extractedText: Self.sampleText.indices.contains(index) ? Self.sampleText[index] : nil
+                        extractedText: pageText.indices.contains(index) ? pageText[index] : nil
                     ))
+                    if index == 0, let sermon { continuation.yield(.sermon(0, sermon)) }
                     for card in cards { continuation.yield(.card(card)) }
                 }
                 continuation.yield(.done(failedPages: []))
