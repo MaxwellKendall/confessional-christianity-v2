@@ -14,6 +14,7 @@ struct VerseReaderView: View {
         let text: String
         let reference: String
         let entries: [ScriptureCitingEntry]
+        var initialClause: ScriptureCitingEntry? = nil
     }
 
     let source: ReaderSource
@@ -41,8 +42,9 @@ struct VerseReaderView: View {
         }
     }
 
-    private var title: String { parseOsisBibleReference(osis) }
-    private var dark: Bool { settings.dark || colorScheme == .dark }
+    private var passageReference: String { parseOsisBibleReference(osis) }
+    private var headerTitle: String { readerHeaderTitle(for: source) }
+    private var dark: Bool { readerEffectiveDark(settings: settings, systemIsDark: colorScheme == .dark) }
     private var paper: Palette { palette(.paper) }
 
     private func palette(_ token: ChapelPalette) -> Palette {
@@ -51,6 +53,7 @@ struct VerseReaderView: View {
     private var gilt: Color { Color(hex: dark ? 0xd3a654 : 0xa67a2c) }
     private var chapel: Color { Color(hex: dark ? 0xa8c6b6 : 0x2e4a3e) }
     private var onChapel: Color { Color(hex: dark ? 0x102019 : 0xf2f4ef) }
+    private var surfaceFill: Color { Color(hex: dark ? 0x1a1e1b : 0xfcfcfa).opacity(0.75) }
 
     var body: some View {
         GeometryReader { geometry in
@@ -65,16 +68,16 @@ struct VerseReaderView: View {
                         screen(paper, top, bottom) { offline }
                     case let .bundled(text):
                         screen(paper, top, bottom) {
-                            VStack(spacing: 24) {
-                                verse(text, reference: title, palette: paper)
-                                HStack(spacing: 28) {
-                                    confessionsSeal(osis: osis, text: text, reference: title, color: gilt)
-                                    ShareLink(item: "\(text)\n— \(title)") {
+                            VStack(spacing: 28) {
+                                verse(text, reference: passageReference, palette: paper)
+                                HStack(spacing: 34) {
+                                    confessionsSeal(osis: osis, text: text, reference: passageReference, color: gilt)
+                                    ShareLink(item: "\(text)\n— \(passageReference)") {
                                         actionLabel("Share", icon: "square.and.arrow.up")
                                     }
                                 }
                             }
-                        } footer: { copyright }
+                        } footer: { copyright(palette: paper) }
                     case let .verses(verses):
                         ForEach(pages(verses), id: \.offset) { index, card in
                             readerPage(card, index: index, verseCount: verses.count, top: top, bottom: bottom)
@@ -91,19 +94,27 @@ struct VerseReaderView: View {
         .toolbar(.hidden, for: .navigationBar, .tabBar)
         .hidesFloatingTabBar()
         .navigationDestination(item: $contextChapter) { chapter in
-            ReaderChapterView(chapterOSIS: chapter, passageOSIS: osis, settings: settings)
+            ReaderChapterView(chapterOSIS: chapter, passageOSIS: osis, settings: $settings)
         }
         .sheet(isPresented: $showsSettings) {
-            Text("Reading settings")
-                .font(.ccDisplay(19, semibold: true))
-                .presentationDetents([.medium])
-                .presentationDragIndicator(.visible)
+            ReaderSettingsSheet(settings: $settings)
                 .environment(\.colorScheme, dark ? .dark : .light)
         }
+        .onChange(of: settings) { _, new in new.save() }
+        #if DEBUG
+        .onAppear {
+            if UserDefaults.standard.bool(forKey: "ReaderSettingsSheet") { showsSettings = true }
+            if UserDefaults.standard.bool(forKey: "ReaderConfessionsSheet")
+                || UserDefaults.standard.bool(forKey: "ReaderConfessionsClause") {
+                openFixtureConfessions(openClause: UserDefaults.standard.bool(forKey: "ReaderConfessionsClause"))
+            }
+        }
+        #endif
         .sheet(item: $citation) { selection in
             ReaderConfessionsSheet(
                 verseText: selection.text, reference: selection.reference, entries: selection.entries,
-                paper: paper.paper, ink: paper.ink, gilt: gilt, chapel: chapel, onChapel: onChapel
+                paper: paper.paper, ink: paper.ink, gilt: gilt, chapel: chapel, onChapel: onChapel,
+                initialClause: selection.initialClause
             )
             .environment(\.colorScheme, dark ? .dark : .light)
         }
@@ -145,29 +156,37 @@ struct VerseReaderView: View {
     private var header: some View {
         HStack(spacing: 8) {
             Button { dismiss() } label: {
-                Image(systemName: "chevron.left").frame(width: 44, height: 44)
-                    .background(.regularMaterial, in: Circle())
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 16, weight: .semibold))
+                    .frame(width: 36, height: 36)
+                    .background(surfaceFill, in: Circle())
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
             }
             .accessibilityLabel("Back")
-            Text(title)
+            Text(headerTitle)
                 .font(.ccDisplay(13))
+                .tracking(1.04)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
                 .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(.regularMaterial, in: Capsule())
+                .padding(.vertical, 7)
+                .background(surfaceFill, in: Capsule())
             Spacer()
             Button { showsSettings = true } label: {
-                Text("Aa").font(.ccBody(18))
+                Text("Aa")
+                    .font(.ccUI(16, weight: .medium))
+                    .frame(width: 36, height: 36)
+                    .background(surfaceFill, in: Circle())
                     .frame(width: 44, height: 44)
-                    .background(.regularMaterial, in: Circle())
+                    .contentShape(Rectangle())
             }
             .accessibilityLabel("Reading settings")
         }
         .buttonStyle(.plain)
         .foregroundStyle(paper.ink)
         .environment(\.colorScheme, dark ? .dark : .light)
-        .padding(.horizontal, 18)
+        .padding(.horizontal, 14)
         .padding(.top, 4)
     }
 
@@ -179,9 +198,11 @@ struct VerseReaderView: View {
             screen(palette, top, bottom) {
                 intro(verseCount: verseCount, palette: palette)
             } footer: {
-                Label("Swipe up", systemImage: "chevron.up")
-                    .font(.caption)
-                    .foregroundStyle(palette.secondary)
+                Text("Swipe up")
+                    .font(.ccUI(11))
+                    .tracking(0.55)
+                    .foregroundStyle(palette.ink.opacity(0.55))
+                    .padding(.bottom, 16)
             }
         case let .verse(item):
             let paletteIndex = index % ChapelPalette.rotating.count
@@ -198,16 +219,17 @@ struct VerseReaderView: View {
             screen(palette, top, bottom) {
                 VStack(spacing: 16) {
                     kicker("From your notes · Sunday", palette: palette)
-                    Text(readerQuoted(note)).font(.ccBody(26))
+                    Text(readerQuoted(note)).chapelReading(size: 26, lineHeight: 1.25)
                 }
             } footer: {
                 ShareLink(item: note) { actionLabel("Share", icon: "square.and.arrow.up") }
             }
         case .end:
-            let palette = palette(ChapelPalette.rotating[index % ChapelPalette.rotating.count])
+            let paletteIndex = index % ChapelPalette.rotating.count
+            let palette = palette(ChapelPalette.rotating[paletteIndex])
             screen(palette, top, bottom) {
-                end(palette: palette)
-            } footer: { copyright }
+                end(palette: palette, onChapelCard: paletteIndex == 3)
+            } footer: { copyright(palette: palette) }
         }
     }
 
@@ -228,9 +250,9 @@ struct VerseReaderView: View {
         .multilineTextAlignment(.center)
         .foregroundStyle(palette.ink)
         .buttonStyle(.plain)
-        .padding(.horizontal, 32)
+        .padding(.horizontal, 34)
         .padding(.top, top + 54)
-        .padding(.bottom, bottom + 12)
+        .padding(.bottom, bottom + 14)
         .containerRelativeFrame([.horizontal, .vertical])
         .background(palette.paper)
     }
@@ -244,14 +266,17 @@ struct VerseReaderView: View {
 
     @ViewBuilder
     private func intro(verseCount: Int, palette: Palette) -> some View {
-        VStack(spacing: 14) {
+        VStack(spacing: 12) {
             switch source {
             case let .sermonText(_, weekday, dayIndex, daysInWeek, _):
                 kicker("This week’s sermon text · \(weekday)", palette: palette)
-                Text(title).font(.ccBody(30))
+                Text(passageReference)
+                    .chapelReading(size: 30, lineHeight: 1.25)
+                    .padding(.top, 4)
                 Text("\(verseCount) \(verseCount == 1 ? "verse" : "verses"). Read slowly, then swipe up.")
-                    .font(.subheadline)
+                    .font(.ccUI(14))
                     .foregroundStyle(palette.secondary)
+                    .frame(maxWidth: 270)
                 HStack(spacing: 8) {
                     ForEach(0..<max(0, daysInWeek), id: \.self) { day in
                         Circle().strokeBorder(palette.secondary)
@@ -259,15 +284,18 @@ struct VerseReaderView: View {
                             .frame(width: 7, height: 7)
                     }
                 }
-                .padding(.top, 4)
+                .padding(.top, 6)
                 .accessibilityLabel("Day \(dayIndex) of \(daysInWeek)")
                 .accessibilityElement(children: .ignore)
             case let .proofText(slug, number, question, _, _):
                 kicker(catechismLabel(slug, number: number), palette: palette)
-                Text(question).font(.ccBody(24))
+                Text(question)
+                    .chapelReading(size: 24, lineHeight: 1.25)
+                    .padding(.top, 4)
                 Text("The proof text. Read it aloud, slowly.")
-                    .font(.subheadline)
+                    .font(.ccUI(14))
                     .foregroundStyle(palette.secondary)
+                    .frame(maxWidth: 280)
             }
         }
     }
@@ -277,17 +305,22 @@ struct VerseReaderView: View {
     }
 
     private func verse(_ text: String, reference: String, palette: Palette) -> some View {
-        VStack(spacing: 24) {
+        let size = readerVerseFontSize(textLength: text.count, textSize: settings.textSize)
+        return VStack(spacing: 28) {
             Text(text)
-                .font(.ccBody(readerVerseFontSize(textLength: text.count, textSize: settings.textSize)))
-                .lineSpacing(5)
+                .font(.ccBody(size))
+                .lineSpacing(size * (1.42 - 1.254))
                 .minimumScaleFactor(0.55)
-            kicker(reference, palette: palette)
+                .frame(maxWidth: 310)
+            Text(reference.uppercased())
+                .font(.ccDisplay(12))
+                .tracking(2.64)
+                .foregroundStyle(palette.secondary)
         }
     }
 
     private func verseActions(_ verse: ReaderVerse, reference: String, sealColor: Color) -> some View {
-        HStack(spacing: 28) {
+        HStack(spacing: 34) {
             confessionsSeal(osis: verse.osis, text: verse.text, reference: reference, color: sealColor)
             if let chapter = ReaderChapter.chapterOSIS(for: verse.osis) {
                 Button { contextChapter = chapter } label: {
@@ -300,16 +333,19 @@ struct VerseReaderView: View {
 
     @ViewBuilder
     private func confessionsSeal(osis: String, text: String, reference: String, color: Color) -> some View {
-        let entries = settings.showConfessionMarks ? citingEntries(forVerse: osis) : []
+        let entries = readerVisibleCitations(forVerse: osis, settings: settings)
         if !entries.isEmpty {
             Button {
                 citation = CitationSelection(id: osis, text: text, reference: reference, entries: entries)
             } label: {
                 VStack(spacing: 5) {
-                    Text("\(entries.count)").font(.ccDisplay(12, semibold: true))
+                    Text("\(entries.count)")
+                        .font(.ccDisplay(12, semibold: true))
                         .frame(width: 30, height: 30)
                         .overlay { Circle().strokeBorder(lineWidth: 1.5) }
-                    Text("Confessions").font(.caption2)
+                    Text("Confessions")
+                        .font(.ccUI(10))
+                        .tracking(0.4)
                 }
                 .foregroundStyle(color)
                 .frame(minWidth: 44, minHeight: 48)
@@ -320,57 +356,79 @@ struct VerseReaderView: View {
 
     private func actionLabel(_ title: String, icon: String) -> some View {
         VStack(spacing: 5) {
-            Image(systemName: icon).font(.system(size: 20)).frame(height: 30)
-            Text(title).font(.caption2)
+            Image(systemName: icon)
+                .font(.system(size: 20, weight: .light))
+                .frame(height: 30)
+            Text(title)
+                .font(.ccUI(10))
+                .tracking(0.4)
         }
+        .opacity(0.8)
         .frame(minWidth: 44, minHeight: 48)
     }
 
     private func kicker(_ title: String, palette: Palette) -> some View {
-        Text(title.uppercased()).font(.ccDisplay(11))
-            .tracking(2)
+        Text(title.uppercased())
+            .font(.ccDisplay(11))
+            .tracking(2.64)
             .foregroundStyle(palette.secondary)
     }
 
-    private func end(palette: Palette) -> some View {
-        VStack(spacing: 14) {
+    private func end(palette: Palette, onChapelCard: Bool) -> some View {
+        VStack(spacing: 12) {
             switch source {
             case let .sermonText(_, _, dayIndex, daysInWeek, _):
                 kicker("This week’s sermon text", palette: palette)
-                Text("That’s the passage.").font(.ccBody(30))
+                Text("That’s the passage.")
+                    .chapelReading(size: 30, lineHeight: 1.25)
+                    .padding(.top, 4)
                 Text("Day \(dayIndex) of \(daysInWeek) · come back tomorrow and sit with it again.")
-                    .font(.subheadline)
+                    .font(.ccUI(14))
                     .foregroundStyle(palette.secondary)
-                primaryButton("Done for today") { dismiss() }
-                if let chapter = ReaderChapter.chapterOSIS(for: osis) {
-                    Button { contextChapter = chapter } label: {
-                        Text("Read all of \(parseOsisBibleReference(chapter))")
-                            .padding(10)
-                            .overlay { Capsule().strokeBorder() }
+                VStack(spacing: 10) {
+                    primaryButton("Done for today", onChapelCard: onChapelCard) { dismiss() }
+                    if let chapter = ReaderChapter.chapterOSIS(for: osis) {
+                        Button { contextChapter = chapter } label: {
+                            Text("Read all of \(parseOsisBibleReference(chapter))")
+                                .font(.ccUI(15, weight: .medium))
+                                .padding(.horizontal, 22)
+                                .frame(minHeight: 44)
+                                .overlay { Capsule().strokeBorder(palette.ink.opacity(0.8)) }
+                        }
                     }
                 }
+                .padding(.top, 14)
             case let .proofText(slug, number, _, answer, _):
                 kicker(catechismLabel(slug, number: number), palette: palette)
-                Text("Now say the answer together.").font(.ccBody(30))
-                Text(answer).font(.ccBody(16)).foregroundStyle(palette.secondary)
-                primaryButton("Back to Q. \(number)") { dismiss() }
+                Text("Now say the answer together.")
+                    .chapelReading(size: 30, lineHeight: 1.25)
+                    .padding(.top, 4)
+                Text(readerQuoted(answer))
+                    .font(.ccUI(14))
+                    .lineSpacing(3)
+                    .foregroundStyle(palette.secondary)
+                    .frame(maxWidth: 280)
+                primaryButton("Back to Q. \(number)", onChapelCard: onChapelCard) { dismiss() }
+                    .padding(.top, 14)
             }
         }
     }
 
-    private func primaryButton(_ title: String, action: @escaping () -> Void) -> some View {
+    private func primaryButton(_ title: String, onChapelCard: Bool = false, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Text(title).font(.subheadline.weight(.semibold))
+            Text(title)
+                .font(.ccUI(15, weight: .semibold))
                 .padding(.horizontal, 22)
                 .frame(minHeight: 44)
-                .background(chapel, in: Capsule())
-                .foregroundStyle(onChapel)
+                .background(onChapelCard ? onChapel : chapel, in: Capsule())
+                .foregroundStyle(onChapelCard ? Color(hex: 0x2e4a3e) : onChapel)
         }
     }
 
-    private var copyright: some View {
+    private func copyright(palette: Palette) -> some View {
         Text(EsvClient.copyrightNotice)
-            .font(.caption2)
+            .font(.ccUI(10))
+            .foregroundStyle(palette.secondary)
             .padding(.bottom, 4)
     }
 
@@ -383,17 +441,53 @@ struct VerseReaderView: View {
                     .frame(height: 22)
             }
             .accessibilityHidden(true)
-            kicker(title, palette: paper).padding(.top, 14)
-            Text("Loading passage").font(.caption).foregroundStyle(paper.secondary)
+            Text(passageReference.uppercased())
+                .font(.ccDisplay(12))
+                .tracking(2.64)
+                .foregroundStyle(paper.secondary)
+                .padding(.top, 14)
+            Text("Loading passage")
+                .font(.ccUI(12))
+                .foregroundStyle(paper.secondary)
+                .padding(.top, 16)
         }
     }
 
     private var offline: some View {
-        VStack(spacing: 14) {
-            Image(systemName: "wifi.slash").font(.title)
-            Text("The text can’t load right now.").font(.ccBody(24))
-            Text(title).font(.subheadline).foregroundStyle(paper.secondary)
-            primaryButton("Try again") { attempt += 1 }
+        let offlineCitations = readerVisibleCitations(forPassage: osis, settings: settings)
+        let firstRef = String(osis.prefix { $0 != "-" && $0 != "," }).trimmingCharacters(in: .whitespaces)
+        return VStack(spacing: 12) {
+            Image(systemName: "wifi.slash")
+                .font(.system(size: 32, weight: .light))
+                .foregroundStyle(Color(hex: dark ? 0xec8a7c : 0x9b3328))
+            Text("The text can’t load right now.")
+                .chapelReading(size: 24, lineHeight: 1.25)
+                .padding(.top, 4)
+            Text("You’re offline. Your sermon notes and the confessions are saved on this phone.")
+                .font(.ccUI(14))
+                .lineSpacing(3)
+                .foregroundStyle(paper.secondary)
+                .frame(maxWidth: 280)
+            VStack(spacing: 10) {
+                primaryButton("Try again") { attempt += 1 }
+                if !offlineCitations.isEmpty {
+                    Button {
+                        citation = CitationSelection(
+                            id: firstRef,
+                            text: bundledEsvText(for: firstRef) ?? "",
+                            reference: parseOsisBibleReference(firstRef),
+                            entries: offlineCitations
+                        )
+                    } label: {
+                        Text("What the confessions say")
+                            .font(.ccUI(15, weight: .medium))
+                            .padding(.horizontal, 22)
+                            .frame(minHeight: 44)
+                            .overlay { Capsule().strokeBorder(paper.ink.opacity(0.75)) }
+                    }
+                }
+            }
+            .padding(.top, 14)
         }
     }
 
@@ -407,7 +501,6 @@ struct VerseReaderView: View {
             self.ink = Color(hex: ink)
             self.secondary = Color(hex: secondary)
         }
-
     }
 
     private struct ChapelPalette {
@@ -423,6 +516,19 @@ struct VerseReaderView: View {
     }
 
     #if DEBUG
+    private func openFixtureConfessions(openClause: Bool) {
+        guard case let .verses(verses) = passage, let first = verses.first else { return }
+        let entries = citingEntries(forVerse: first.osis)
+        guard !entries.isEmpty else { return }
+        citation = CitationSelection(
+            id: first.osis,
+            text: first.text,
+            reference: parseOsisBibleReference(first.osis),
+            entries: entries,
+            initialClause: openClause ? entries.first : nil
+        )
+    }
+
     static func fixture(_ scene: String) -> Self {
         if scene == "bundled-citations" {
             let osis = "Prov.31.23"
@@ -431,23 +537,37 @@ struct VerseReaderView: View {
             ))
         }
 
+        if scene == "long" {
+            let verse = ReaderVerse(
+                osis: "Rom.8.11",
+                verse: 11,
+                text: "If the Spirit of him who raised Jesus from the dead dwells in you, he who raised Christ Jesus from the dead will also give life to your mortal bodies through his Spirit who dwells in you."
+            )
+            var view = Self(source: .sermonText(
+                passageOsis: verse.osis, weekday: "Wednesday", dayIndex: 3, daysInWeek: 6, notesKeyPoint: nil
+            ))
+            view.fixtureStart = 1
+            view._passage = State(initialValue: .verses([verse]))
+            return view
+        }
+
         if scene == "citations" || scene == "uncited" {
             let cited = scene == "citations"
             let verse = cited
-                ? ReaderVerse(osis: "Rom.8.16", verse: 16, text: "The Spirit itself beareth witness with our spirit, that we are the children of God:")
+                ? ReaderVerse(osis: "Rom.8.16", verse: 16, text: "The Spirit himself bears witness with our spirit that we are children of God,")
                 : ReaderVerse(osis: "Rom.16.24", verse: 24, text: "The grace of our Lord Jesus Christ be with you all. Amen.")
             var view = Self(source: .sermonText(
                 passageOsis: verse.osis, weekday: "Wednesday", dayIndex: 3, daysInWeek: 6, notesKeyPoint: nil
             ))
-            view.fixtureStart = cited ? 0 : 1
+            view.fixtureStart = 1
             view._passage = State(initialValue: .verses([verse]))
             return view
         }
 
         let verses = [
-            ReaderVerse(osis: "Rom.8.28", verse: 28, text: "And we know that all things work together for good to them that love God, to them who are the called according to his purpose."),
-            ReaderVerse(osis: "Rom.8.29", verse: 29, text: "For whom he did foreknow, he also did predestinate to be conformed to the image of his Son."),
-            ReaderVerse(osis: "Rom.8.30", verse: 30, text: "Moreover whom he did predestinate, them he also called: and whom he called, them he also justified.")
+            ReaderVerse(osis: "Rom.8.28", verse: 28, text: "And we know that for those who love God all things work together for good, for those who are called according to his purpose."),
+            ReaderVerse(osis: "Rom.8.29", verse: 29, text: "For those whom he foreknew he also predestined to be conformed to the image of his Son, in order that he might be the firstborn among many brothers."),
+            ReaderVerse(osis: "Rom.8.30", verse: 30, text: "And those whom he predestined he also called, and those whom he called he also justified, and those whom he justified he also glorified.")
         ]
         var view = Self(source: .sermonText(
             passageOsis: "Rom.8.28-Rom.8.30", weekday: "Wednesday", dayIndex: 3,

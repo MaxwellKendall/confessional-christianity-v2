@@ -31,9 +31,7 @@ struct ConfessionalChristianityApp: App {
             Group {
                 if let passage = UserDefaults.standard.string(forKey: "ReaderChapterReference"),
                    let chapter = ReaderChapter.chapterOSIS(for: passage) {
-                    NavigationStack {
-                        ReaderChapterView(chapterOSIS: chapter, passageOSIS: passage, settings: .load())
-                    }
+                    ReaderChapterFixture(chapterOSIS: chapter, passageOSIS: passage)
                 } else if let session = UserDefaults.standard.string(forKey: "ProofTextSession") {
                     ProofTextSessionFixture(spec: session)
                 } else if let scene = UserDefaults.standard.string(forKey: "VerseReaderFixture") {

@@ -28,7 +28,8 @@ Linear project: **confessional christianity** (team TKL): https://linear.app/sof
 - Xcode 27, XcodeGen at `/opt/homebrew/bin/xcodegen`. Bundle id `com.confessionalchristianity.app`, team `7GZKY29XJH`, automatic signing. iOS 17.0 target, Swift 6.
 - Simulator: **"CC iPhone 17 Pro"** (its own, so runs don't fight barbrabell's shared "iPhone 17 Pro").
 - Screenshots without taps (DEBUG launch args, `xcrun simctl launch <dev> com.confessionalchristianity.app -Key value`; the simulator
-  runs headless, so there is no window to click): `-VerseReaderFixture verse|notes|end|loading|error`,
+  runs headless, so there is no window to click): `-VerseReaderFixture verse|long|citations|notes|end|loading|error` (plus
+  `-ReaderSettingsSheet YES`, `-ReaderConfessionsSheet YES`, `-ReaderConfessionsClause YES`, TKL-972),
   `-ReaderChapterReference Rom.8.28`, `-ProofTextSession catechizing-shorter-catechism:32[:Rom.8.30]` (session at Q. 32, optionally
   with the proof-text reader pushed) plus `-ProofTextReaderCard verse|notes|end`, `-LordsDayFeedFixture key_point|quote|verse|verse_offline|sermon|smyrna` (the week's card feed from an in-memory sample week, opened
   at today's card of that kind; `verse_offline` is a verse with no bundled text; `sermon` is a verse card on Romans 8:28–30, and

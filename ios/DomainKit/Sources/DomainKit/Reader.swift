@@ -188,6 +188,81 @@ public func readerVerseFontSize(textLength: Int, textSize: Int) -> Double {
     return base + Double(offset * 2)
 }
 
+/// The design's chapter-text size in points for a settings step: its five
+/// reading sizes (20 / 23 / 26 / 30 / 34) less 6, as the In context view and
+/// the settings sheet's preview line show them (TKL-972).
+public func readerChapterFontSize(textSize: Int) -> Double {
+    [14, 17, 20, 24, 28][ReaderSettings.clampTextSize(textSize)]
+}
+
+/// The settings sheet's "A" buttons grow 2 points a step, from 12.
+public func readerSettingsSizeButtonFont(_ step: Int) -> Double {
+    Double(12 + ReaderSettings.clampTextSize(step) * 2)
+}
+
+/// The header pill's title: the question label for a catechism proof text
+/// ("Q. 32 · proof text") and the passage reference for a sermon text (TKL-972).
+public func readerHeaderTitle(for source: ReaderSource) -> String {
+    switch source {
+    case let .sermonText(osis, _, _, _, _):
+        return parseOsisBibleReference(osis)
+    case let .proofText(_, number, _, _, _):
+        return "Q. \(number) · proof text"
+    }
+}
+
+/// The reader's Dark switch forces dark on reader screens; when off, the
+/// reader follows the system colour scheme (spec decision R5, TKL-972).
+public func readerEffectiveDark(settings: ReaderSettings, systemIsDark: Bool) -> Bool {
+    settings.dark || systemIsDark
+}
+
+/// Citations for one verse, empty when confession marks are turned off.
+public func readerVisibleCitations(forVerse osis: String, settings: ReaderSettings) -> [ScriptureCitingEntry] {
+    settings.showConfessionMarks ? citingEntries(forVerse: osis) : []
+}
+
+/// Citations for the first verse of a passage (used on the offline error card),
+/// empty when confession marks are turned off.
+public func readerVisibleCitations(forPassage osis: String, settings: ReaderSettings) -> [ScriptureCitingEntry] {
+    guard settings.showConfessionMarks else { return [] }
+    let first = String(osis.prefix { $0 != "-" && $0 != "," }).trimmingCharacters(in: .whitespaces)
+    let direct = citingEntries(forVerse: first)
+    return direct.isEmpty ? getScriptureCitingEntries(osis) : direct
+}
+
+/// The heading shown on a confession citation card and clause screen:
+/// the chapter/article title for confessions ("Of the Assurance of Grace and
+/// Salvation"), or the question text for catechisms (TKL-972).
+public func readerClauseHeading(for entry: ScriptureCitingEntry) -> String? {
+    guard let doc = loadConfessionContent(entry.documentSlug),
+          let item = doc.contentById[entry.entryId] else { return nil }
+    if let heading = entryHeading(item, contentById: doc.contentById) {
+        return heading
+    }
+    if let title = item.title, let colon = title.firstIndex(of: ":") {
+        let rest = title[title.index(after: colon)...].trimmingCharacters(in: .whitespacesAndNewlines)
+        return rest.isEmpty ? nil : rest
+    }
+    return nil
+}
+
+/// Compact topbar title for the clause screen, e.g. "WCF · Ch. 18.2",
+/// "WLC · Q. 80", "HC · Q. 1" (TKL-972).
+public func readerClauseShortLabel(for entry: ScriptureCitingEntry) -> String {
+    let abbr: String
+    if let doc = LIBRARY_DOCUMENTS.first(where: { $0.slug == entry.documentSlug }) {
+        abbr = doc.documentId == "WCoF" ? "WCF" : doc.documentId
+    } else {
+        abbr = entry.documentTitle
+    }
+    let short = entry.entryLabel
+        .replacingOccurrences(of: "Chapter ", with: "Ch. ")
+        .replacingOccurrences(of: " · Article ", with: ".")
+        .replacingOccurrences(of: ", Article ", with: ".")
+    return "\(abbr) · \(short)"
+}
+
 // MARK: - Catechism proof texts (TKL-878)
 
 /// The reader source for a proof text tapped in a catechism session. The

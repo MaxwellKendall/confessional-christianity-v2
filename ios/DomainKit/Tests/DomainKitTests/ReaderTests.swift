@@ -158,3 +158,70 @@ private let ROM_8_16_IDS = ["WCoF-18-2", "WLC-80", "HC-1-1", "HC-13-33"]
 private let ROM_8_30_IDS = [
     "WSC-32", "WCoF-3-5", "WCoF-3-6", "WCoF-10-1", "WCoF-11-1", "WCoF-11-4", "WLC-69", "HC-21-54",
 ]
+
+/// The chapter view and the settings sheet's preview line use the design's
+/// five sizes (FS = 20/23/26/30/34, less 6 points) (TKL-972).
+@Suite struct ChapterFontSizeTests {
+    @Test(arguments: [(0, 14.0), (1, 17.0), (2, 20.0), (3, 24.0), (4, 28.0)])
+    func followsTheDesignsFiveSteps(textSize: Int, expected: Double) {
+        #expect(readerChapterFontSize(textSize: textSize) == expected)
+    }
+
+    @Test func clampsOutOfRangeSteps() {
+        #expect(readerChapterFontSize(textSize: -2) == 14)
+        #expect(readerChapterFontSize(textSize: 12) == 28)
+    }
+
+    @Test func sheetButtonsGrowTwoPointsPerStep() {
+        #expect((0...4).map(readerSettingsSizeButtonFont) == [12, 14, 16, 18, 20])
+    }
+}
+
+/// Reader display helpers for the approved v2 design (TKL-972): header pill title,
+/// dark override, citation visibility, and clause headings / short topbar labels.
+@Suite struct ReaderDisplayHelpersTests {
+    @Test func headerTitleUsesQuestionLabelForProofTextAndReferenceForSermon() {
+        #expect(readerHeaderTitle(for: proof) == "Q. 32 · proof text")
+        #expect(readerHeaderTitle(for: sermon) == "Romans 8:28-30")
+    }
+
+    @Test func darkSettingForcesDarkAndOffFollowsSystem() {
+        let off = ReaderSettings(dark: false)
+        let on = ReaderSettings(dark: true)
+        #expect(!readerEffectiveDark(settings: off, systemIsDark: false))
+        #expect(readerEffectiveDark(settings: off, systemIsDark: true))
+        #expect(readerEffectiveDark(settings: on, systemIsDark: false))
+        #expect(readerEffectiveDark(settings: on, systemIsDark: true))
+    }
+
+    @Test func turningConfessionMarksOffHidesAllCitations() {
+        let on = ReaderSettings(showConfessionMarks: true)
+        let off = ReaderSettings(showConfessionMarks: false)
+        #expect(readerVisibleCitations(forVerse: "Rom.8.16", settings: on).count == ROM_8_16_IDS.count)
+        #expect(readerVisibleCitations(forVerse: "Rom.8.16", settings: off).isEmpty)
+        #expect(!readerVisibleCitations(forPassage: "Rom.8.28-Rom.8.30", settings: on).isEmpty)
+        #expect(readerVisibleCitations(forPassage: "Rom.8.28-Rom.8.30", settings: off).isEmpty)
+    }
+
+    @Test func clauseHeadingUsesChapterTitleForConfessionsAndQuestionForCatechisms() {
+        let rom816 = citingEntries(forVerse: "Rom.8.16")
+        let wcf = rom816.first { $0.entryId == "WCoF-18-2" }!
+        let wlc = rom816.first { $0.entryId == "WLC-80" }!
+        let hc = rom816.first { $0.entryId == "HC-1-1" }!
+
+        #expect(readerClauseHeading(for: wcf) == "Of the Assurance of Grace and Salvation")
+        #expect(readerClauseHeading(for: wlc)?.hasPrefix("Can true believers be infallibly assured") == true)
+        #expect(readerClauseHeading(for: hc) == "What is thy only comfort in life and death?")
+    }
+
+    @Test func clauseShortLabelFormatsDocumentAbbreviationAndReference() {
+        let rom816 = citingEntries(forVerse: "Rom.8.16")
+        let wcf = rom816.first { $0.entryId == "WCoF-18-2" }!
+        let wlc = rom816.first { $0.entryId == "WLC-80" }!
+        let hc = rom816.first { $0.entryId == "HC-1-1" }!
+
+        #expect(readerClauseShortLabel(for: wcf) == "WCF · Ch. 18.2")
+        #expect(readerClauseShortLabel(for: wlc) == "WLC · Q. 80")
+        #expect(readerClauseShortLabel(for: hc) == "HC · Q. 1")
+    }
+}
