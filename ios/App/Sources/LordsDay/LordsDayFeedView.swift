@@ -529,7 +529,7 @@ struct LordsDayFeedFixture: View {
     var body: some View {
         ZStack {
             if scene == "saved" {
-                LordsDayTabView(path: $path, startsCapture: .constant(false))
+                LordsDayTabView(path: $path, startsCapture: .constant(false), reminder: .constant(nil))
                     .modelContainer(Self.savedContainer)
             } else if let feed {
                 let showHeader = UserDefaults.standard.bool(forKey: "LordsDayFeedShowHeader")

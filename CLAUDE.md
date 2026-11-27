@@ -42,6 +42,8 @@ Linear project: **confessional christianity** (team TKL): https://linear.app/sof
   against `render.sh settings-full-<theme>` / `addchild-full-<theme>`), `-EsvOffline YES` (reader,
   verse cards and the cards generator act offline), `-LordsDayCardsEndpoint <url>` (DEBUG-only override for `LiveCardsGenerator`, e.g. a local dev server; Release always hits the hosted endpoint), and
   `-SkipNotificationOffer YES` (always pass it: an unanswered notification prompt survives reinstalls until the simulator reboots),
+  `-OpenReminders YES` (with `-OpenSheet settings`, opens Reminders), `-FireReminder weekday|saturday|resurfaced|catechism`
+  (makes two sample sermon weeks in an in-memory store and routes the planner's notification payload through the app),
   `-OpenSignIn YES` (with `-OpenSheet settings`, opens the sign-in sheet on top), `-OpenSignOutConfirm YES` (with `-OpenSheet settings`, opens the sign-out confirmation sheet), `-SettingsAutoSignOut YES` (confirms sign-out and clears local synced data once restored), `-GuestMergeFixture full|loading|error` (the "Keep what's on this phone in your account" merge screen, TKL-1070), `-GuestMergeAutoConfirm YES` (auto-confirms the guest merge screen on first sign-in),
   and for signing in without taps (TKL-928, dev pool only): `-SignInEmail otp-test@cc-dev-mail.barbrabell.com -SignInAutoSend YES -SignInCodeFile /tmp/code.txt`
   sends the code through the sheet, then types and submits each new code written to that host file (2 s later, for a screenshot);

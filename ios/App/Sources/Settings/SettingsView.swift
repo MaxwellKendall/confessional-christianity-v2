@@ -19,8 +19,7 @@ struct SettingsView: View {
     @State private var showsSignOutConfirm = false
     @State private var showsGuestMerge = false
     @State private var showsAbout = false
-    /// The daily catechism reminder's time, nil when none is set.
-    @State private var practiceReminder: DateComponents?
+    @State private var showsReminders = false
 
     private var store: LocalProgressStore { sync.progressStore(in: modelContext) }
 
@@ -60,6 +59,9 @@ struct SettingsView: View {
             .refreshable { await sync.refresh() }
             .background(Color.ccSurface)
             .toolbar(.hidden, for: .navigationBar)
+            .navigationDestination(isPresented: $showsReminders) {
+                ReminderSettingsView()
+            }
             .navigationDestination(isPresented: $showsAbout) {
                 AboutView(path: .constant(NavigationPath()))
                     .toolbar(.visible, for: .navigationBar)
@@ -69,7 +71,9 @@ struct SettingsView: View {
         .presentationDragIndicator(.visible)
         .presentationCornerRadius(ChapelRadius.sheet)
         .presentationBackground(.ccSurface)
-        .task { practiceReminder = await PracticeReminderScheduler.scheduledTime() }
+        #if DEBUG
+        .task { showsReminders = UserDefaults.standard.bool(forKey: "OpenReminders") }
+        #endif
         .onAppear { sync.isSettingsPresenting = true }
         .onDisappear { sync.isSettingsPresenting = false }
         .sheet(isPresented: $showsAddChild) { AddChildView() }
@@ -185,15 +189,12 @@ struct SettingsView: View {
         }
     }
 
-    /// Only the reminders this iPhone actually sets; the rest arrive with
-    /// TKL-1072/TKL-1074.
     private var reminders: some View {
         list {
-            ChapelListRow(
-                title: "Catechism practice",
-                detail: practiceReminder == nil ? "Turns on after your first session" : "Every day",
-                trailing: .value(practiceReminder.map(Self.time) ?? "Off")
-            )
+            Button { showsReminders = true } label: {
+                ChapelListRow(title: "Reminders", detail: nil, trailing: .chevron)
+            }
+            .buttonStyle(.plain)
         }
     }
 
@@ -210,18 +211,6 @@ struct SettingsView: View {
     /// A list card on paper, as lists sit inside a sheet.
     private func list<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
         VStack(spacing: 0) { content() }.chapelCard(fill: .ccPaper)
-    }
-
-    /// "7:30 pm".
-    static func time(_ parts: DateComponents) -> String {
-        var calendar = Calendar.current
-        calendar.timeZone = .current
-        let date = calendar.date(from: DateComponents(hour: parts.hour ?? 0, minute: parts.minute ?? 0)) ?? Date()
-        let formatter = DateFormatter()
-        formatter.dateFormat = "h:mm a"
-        formatter.amSymbol = "am"
-        formatter.pmSymbol = "pm"
-        return formatter.string(from: date)
     }
 
     private func confirmSignOut() {

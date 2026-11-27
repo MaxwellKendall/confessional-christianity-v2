@@ -14,6 +14,7 @@ struct LordsDayTabView: View {
     /// Every tab stays mounted from launch; only an on-screen reel may fetch verse text.
     var isActive = true
     @Binding var startsCapture: Bool
+    @Binding var reminder: ReminderRoute?
     @Environment(\.modelContext) private var context
     @Environment(AuthService.self) private var auth
     @Environment(SyncService.self) private var sync
@@ -42,11 +43,11 @@ struct LordsDayTabView: View {
             landing
                 .toolbar(.hidden, for: .navigationBar)
                 .appDestinations(path: $path)
-                .navigationDestination(for: JournalRoute.self) { _ in
+                .navigationDestination(for: JournalRoute.self) { route in
                     JournalView(onCapture: {
                         path = NavigationPath()
                         startCapture()
-                    }, onOpenReel: openReel(sermon:))
+                    }, onOpenReel: openReel(sermon:), initialSermon: route.sermonID)
                 }
         }
         .tint(.ccInk)
@@ -57,7 +58,10 @@ struct LordsDayTabView: View {
             }, startsTyping: capturesTyping)
         }
         .fullScreenCover(item: $review, onDismiss: refresh) { model in
-            ReviewView(model: model, onClose: { review = nil }, onFinish: { review = nil })
+            ReviewView(model: model, onClose: { review = nil }, onFinish: {
+                review = nil
+                ReminderScheduler.shared.refresh(in: context, keptSermon: true)
+            })
         }
         .fullScreenCover(item: $reelStart, onDismiss: refresh) { opening in
             LordsDayReelView(reel: reel, start: opening.position, allowsNetwork: scenePhase == .active,
@@ -76,6 +80,11 @@ struct LordsDayTabView: View {
             if UserDefaults.standard.bool(forKey: "OpenJournal"), path.isEmpty { path.append(JournalRoute.journal) }
         }
         #endif
+        .onChange(of: reminder, initial: true) { _, route in
+            guard let route else { return }
+            reminder = nil
+            openReminder(route)
+        }
         .onChange(of: startsCapture, initial: true) { _, requested in
             guard requested else { return }
             startCapture()
@@ -175,6 +184,21 @@ struct LordsDayTabView: View {
     /// The journal opens the same reel as the landing page, at that sermon on the
     /// card last read there (TKL-1085 pass 2). Closing it returns to the journal,
     /// which stays pushed with its filters and scroll.
+    private func openReminder(_ route: ReminderRoute) {
+        guard let id = route.sermonID else { return }
+        refresh()
+        guard let index = reel.index(of: id) else { return }
+        if route.kind == .resurfaced {
+            reelStart = nil
+            var journalPath = NavigationPath()
+            journalPath.append(JournalRoute.sermon(id))
+            path = journalPath
+        } else if let page = route.page {
+            path = NavigationPath()
+            reelStart = ReelOpening(position: ReelPosition(sermon: index, page: min(max(0, page), reel.sermons[index].pageCount - 1)))
+        }
+    }
+
     private func openReel(sermon id: UUID) {
         refresh()
         guard let position = reel.opening(sermon: id, memory: memory) else { return }

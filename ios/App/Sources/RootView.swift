@@ -21,6 +21,10 @@ struct RootView: View {
     @Environment(SyncService.self) private var sync
     @Query private var children: [LocalChild]
     @Query private var sermons: [LordsDayNote]
+    @Query private var reminderCards: [NoteCard]
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var lordsDayReminder: ReminderRoute?
+    private let reminderScheduler = ReminderScheduler.shared
     @AppStorage("didCompleteOnboarding") private var didCompleteOnboarding = false
     @State private var showsSignIn = false
     @State private var showsGuestMerge = false
@@ -59,6 +63,35 @@ struct RootView: View {
                 tabs
             }
         }
+        .task {
+            #if DEBUG
+            if fireReminderForScreenshots() { return }
+            #endif
+            reminderScheduler.refresh(in: modelContext)
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { refreshReminders() }
+        }
+        .onChange(of: sermons.map(\.updatedAt)) { _, _ in refreshReminders() }
+        .onChange(of: reminderCards.map(\.updatedAt)) { _, _ in refreshReminders() }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.significantTimeChangeNotification)) { _ in
+            refreshReminders()
+        }
+        .onChange(of: reminderScheduler.route, initial: true) { _, route in
+            guard let route else { return }
+            #if DEBUG
+            if UserDefaults.standard.string(forKey: "FireReminder") == nil { didCompleteOnboarding = true }
+            #else
+            didCompleteOnboarding = true
+            #endif
+            if route.kind == .catechism {
+                selected = .catechism
+            } else {
+                selected = .lordsDay
+                lordsDayReminder = route
+            }
+            reminderScheduler.route = nil
+        }
         .sheet(isPresented: $showsSignIn, onDismiss: {
             auth.cancelCode()
             if sync.pendingGuestMerge != nil && !sync.isSettingsPresenting {
@@ -78,6 +111,9 @@ struct RootView: View {
             }
         }
         .onChange(of: hasLocalHistory, initial: true) { _, hasHistory in
+            #if DEBUG
+            if UserDefaults.standard.string(forKey: "FireReminder") != nil { return }
+            #endif
             if hasHistory { didCompleteOnboarding = true }
         }
         .onChange(of: auth.phase.isSignedIn, initial: true) { _, signedIn in
@@ -88,11 +124,18 @@ struct RootView: View {
         }
     }
 
+    private func refreshReminders() {
+        #if DEBUG
+        if UserDefaults.standard.string(forKey: "FireReminder") != nil { return }
+        #endif
+        reminderScheduler.refresh(in: modelContext)
+    }
+
     private var shouldShowOnboarding: Bool {
         #if DEBUG
         let args = UserDefaults.standard
         if args.string(forKey: "OnboardingPage") != nil { return !didCompleteOnboarding }
-        if ["StartTab", "OpenSheet", "SeedChildren", "SeedSermonWeek"].contains(where: { args.object(forKey: $0) != nil }) {
+        if ["StartTab", "OpenSheet", "SeedChildren", "SeedSermonWeek", "FireReminder"].contains(where: { args.object(forKey: $0) != nil }) {
             return false
         }
         #endif
@@ -131,7 +174,8 @@ struct RootView: View {
                 .opacity(selected == .catechism ? 1 : 0)
                 .allowsHitTesting(selected == .catechism)
             LordsDayTabView(
-                path: $lordsDayPath, isActive: selected == .lordsDay, startsCapture: $startsCapture
+                path: $lordsDayPath, isActive: selected == .lordsDay, startsCapture: $startsCapture,
+                reminder: $lordsDayReminder
             )
                 .onHidesFloatingTabBarChange { lordsDayHidesBar = $0 }
                 .opacity(selected == .lordsDay ? 1 : 0)
@@ -167,6 +211,31 @@ struct RootView: View {
     }
 
     #if DEBUG
+    private func fireReminderForScreenshots() -> Bool {
+        guard let raw = UserDefaults.standard.string(forKey: "FireReminder"),
+              let kind = PlannedReminder.Kind(rawValue: raw) else { return false }
+        let calendar = Calendar.current
+        let sunday = lastSunday(onOrBefore: Date(), calendar: calendar)
+        let earlier = calendar.date(byAdding: .day, value: -7, to: sunday)!
+        let store = LordsDayStore(context: modelContext)
+        for (date, title) in [(sunday, "This week's sermon"), (earlier, "An earlier sermon")] {
+            let note = LordsDayNote(serviceDate: date, sermonTitle: title, preacher: "John Smith")
+            try? store.save(note)
+            try? store.keepCards((1...5).map {
+                KeptCard(kind: .keyPoint, body: "\(title) · card \($0)",
+                         verseRef: nil, attribution: nil, editedByUser: false)
+            }, for: note)
+        }
+        if let journal = try? LordsDayJournal(store: store, calendar: calendar) {
+            let settings = ReminderSettings(weekday: .init(hour: 9), saturday: .init(hour: 9), catechism: .init(hour: 17))
+            let plan = ReminderPlanner.plan(settings: settings, now: sunday, calendar: calendar, entries: journal.entries)
+            if let request = plan.first(where: { $0.kind == kind }) {
+                reminderScheduler.fire(request, calendar: calendar)
+            }
+        }
+        return true
+    }
+
     /// Screenshot hook: `-SeedChildren "Samuel:9,Thomas:4"` adds those children
     /// on the Shorter Catechism at those questions, only when there are none.
     private func seedChildrenForScreenshots() {

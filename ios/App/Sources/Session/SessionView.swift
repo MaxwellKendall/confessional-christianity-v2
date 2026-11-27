@@ -26,7 +26,6 @@ struct SessionView: View {
     @State private var track: ChildCatechismTrack?
     @State private var showJump = false
     @State private var showMilestones = false
-    @State private var notificationsOffered = false
     /// Which edge the next question card enters from — set just before each
     /// state change so the transition below reads as a directional page turn
     /// (forward = enters from trailing, back = enters from leading) rather
@@ -146,7 +145,6 @@ struct SessionView: View {
             if let startQuestion {
                 jump(to: startQuestion)
             }
-            await offerNotificationsIfNeeded()
         }
     }
 
@@ -244,19 +242,5 @@ struct SessionView: View {
     private func goPrev() {
         guard (track?.currentQuestion ?? 1) > 1 else { return }
         jump(to: (track?.currentQuestion ?? 1) - 1)
-    }
-
-    // Offered once per session view, not gated behind a settings screen —
-    // v1 keeps this to the single most valuable native touch point (daily
-    // practice reminder) rather than building out a full notifications UI.
-    private func offerNotificationsIfNeeded() async {
-        guard !notificationsOffered else { return }
-        #if DEBUG
-        // Screenshot runs (`-SkipNotificationOffer YES`) can't dismiss the system prompt.
-        if UserDefaults.standard.bool(forKey: "SkipNotificationOffer") { return }
-        #endif
-        notificationsOffered = true
-        guard await PracticeReminderScheduler.requestAuthorizationIfNeeded() else { return }
-        PracticeReminderScheduler.scheduleDaily(hour: 17, minute: 0, programTitle: program.shortTitle)
     }
 }

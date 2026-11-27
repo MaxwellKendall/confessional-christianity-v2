@@ -9,7 +9,15 @@ import DomainKit
 import os
 
 /// Pushed from the Lord's Day tab's header.
-enum JournalRoute: Hashable { case journal }
+enum JournalRoute: Hashable {
+    case journal
+    case sermon(UUID)
+
+    var sermonID: UUID? {
+        if case .sermon(let id) = self { return id }
+        return nil
+    }
+}
 
 enum JournalTimeZoom: String, CaseIterable {
     case years, months, sundays
@@ -94,6 +102,7 @@ struct JournalView: View {
     var onCapture: () -> Void = {}
     /// Opens the reel at this sermon; the tab presents it over the journal.
     var onOpenReel: (UUID) -> Void = { _ in }
+    var initialSermon: UUID? = nil
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
     @State private var model: JournalModel?
@@ -135,6 +144,7 @@ struct JournalView: View {
             loadStarted = Date()
             let journal = Self.load(context: context)
             model = JournalModel(journal: journal)
+            if let initialSermon, journal.entry(id: initialSermon) != nil { open(initialSermon) }
             #if DEBUG
             applyScreenshotHooks()
             #endif
