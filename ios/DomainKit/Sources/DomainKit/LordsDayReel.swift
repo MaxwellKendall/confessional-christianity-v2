@@ -186,6 +186,14 @@ public struct LordsDayReel: Equatable, Sendable {
         min(max(loaded, index + 2), sermons.count)
     }
 
+    /// Where the reel opens for a sermon picked in the journal (TKL-1085): at that
+    /// sermon, on the card last read there (its cover if never read), or nil when
+    /// the note has no kept cards and so isn't in the reel.
+    public func opening(sermon id: UUID, memory: LordsDayStackMemory) -> ReelPosition? {
+        guard let index = sermons.firstIndex(where: { $0.id == id }) else { return nil }
+        return ReelPosition(sermon: index, page: memory.page(for: sermons[index]))
+    }
+
     public func flatIndex(of position: ReelPosition) -> Int {
         guard !sermons.isEmpty else { return 0 }
         let s = min(max(position.sermon, 0), sermons.count - 1)

@@ -85,8 +85,15 @@ struct JournalOpenedSermon: Identifiable, Hashable {
     let whereLabel: String
 }
 
+extension EnvironmentValues {
+    /// Opens the Lord's Day reel at a sermon picked in the journal (TKL-1085 pass 2).
+    @Entry var openJournalReel: (UUID) -> Void = { _ in }
+}
+
 struct JournalView: View {
     var onCapture: () -> Void = {}
+    /// Opens the reel at this sermon; the tab presents it over the journal.
+    var onOpenReel: (UUID) -> Void = { _ in }
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
     @State private var model: JournalModel?
@@ -107,6 +114,7 @@ struct JournalView: View {
             }
         }
         .toolbar(.hidden, for: .navigationBar)
+        .environment(\.openJournalReel, onOpenReel)
         .navigationDestination(item: $opened) { sermon in
             if let model {
                 JournalSermonView(
@@ -115,6 +123,7 @@ struct JournalView: View {
                     whereLabel: sermon.whereLabel,
                     query: model.query,
                     current: sermon.id,
+                    onOpenReel: onOpenReel,
                     onDetailsUpdated: {
                         model.update(journal: Self.load(context: context))
                     }
@@ -159,7 +168,7 @@ struct JournalView: View {
     #if DEBUG
     /// Screenshot hooks: `-JournalLens scripture`, `-JournalQuery grace`, `-JournalYear 2026`,
     /// `-JournalMonth 3`, `-JournalBook Rev`, `-JournalChapter 2`, `-JournalZoom months|sundays`,
-    /// `-JournalOpenSermon first`.
+    /// `-JournalOpenSermon first`, `-JournalOpenReel first|<n>` (the reel at that hit, 0-based).
     private func applyScreenshotHooks() {
         guard let model else { return }
         let d = UserDefaults.standard
@@ -173,6 +182,10 @@ struct JournalView: View {
         if let zoom = d.string(forKey: "JournalZoom").flatMap(JournalTimeZoom.init(rawValue:)) { model.timeZoom = zoom }
         if let lens = d.string(forKey: "JournalLens").flatMap(JournalLens.init(rawValue:)) { model.lens = lens }
         if d.string(forKey: "JournalOpenSermon") == "first", let first = model.hits.first { open(first.id) }
+        if let spec = d.string(forKey: "JournalOpenReel") {
+            let i = spec == "first" ? 0 : (Int(spec) ?? 0)
+            if model.hits.indices.contains(i) { onOpenReel(model.hits[i].id) }
+        }
     }
     #endif
 }
@@ -771,6 +784,7 @@ private struct JournalCover: View {
     let query: String
     let action: () -> Void
     @Environment(\.colorScheme) private var scheme
+    @Environment(\.openJournalReel) private var openReel
 
     var body: some View {
         let entry = hit.entry
@@ -800,6 +814,23 @@ private struct JournalCover: View {
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("journal.cover")
+        .overlay(alignment: .bottomTrailing) {
+            // Read this sermon as cards without a second hop (TKL-1085 pass 2).
+            Button { openReel(hit.id) } label: {
+                HStack(spacing: 3) {
+                    Image(systemName: "rectangle.stack").font(.system(size: 10, weight: .semibold))
+                    Text("Read").font(.system(size: 11.5, weight: .semibold))
+                }
+                .foregroundStyle(Color.ccChapel)
+                .padding(.horizontal, 9).frame(height: 26)
+                .background(Color.ccFill, in: Capsule())
+                .contentShape(Capsule())
+            }
+            .buttonStyle(.plain)
+            .padding(.trailing, 8).padding(.bottom, 7)
+            .accessibilityLabel("Read this sermon's cards")
+            .accessibilityIdentifier("journal.cover.read")
+        }
     }
 
     private func highlighted(_ text: String) -> AttributedString {

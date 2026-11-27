@@ -161,6 +161,26 @@ import XCTest
         XCTAssertEqual(LordsDayStackMemory(stored: ["junk": 3, note.id.uuidString: -2]).page(for: reel.sermons[0]), 0)
     }
 
+    // MARK: opening the reel from the journal (TKL-1085 pass 2)
+
+    func testTheJournalOpensTheReelAtThatSermonNotTheTop() throws {
+        let store = try makeStore()
+        try sermon(store, day(2026, 11, 22), title: "Smyrna", cards: 6)
+        let chain = try sermon(store, day(2026, 11, 8), title: "The Golden Chain", cards: 4)
+        let unkept = try sermon(store, day(2026, 11, 15), title: "Not kept yet", cards: 0)
+        let reel = try LordsDayReel(store: store, calendar: calendar)
+        var memory = LordsDayStackMemory()
+        // Never read: its cover.
+        XCTAssertEqual(reel.opening(sermon: chain.id, memory: memory), ReelPosition(sermon: 1, page: 0))
+        // Read before, from either place: the card last read, which the landing page shares.
+        memory.remember(page: 3, for: chain.id)
+        XCTAssertEqual(reel.opening(sermon: chain.id, memory: memory), ReelPosition(sermon: 1, page: 3))
+        XCTAssertEqual(reel.flatIndex(of: reel.opening(sermon: chain.id, memory: memory)!), 7 + 3)
+        // A sermon with no kept cards isn't in the reel.
+        XCTAssertNil(reel.opening(sermon: unkept.id, memory: memory))
+        XCTAssertNil(reel.opening(sermon: UUID(), memory: memory))
+    }
+
     func testTheStackPeeksTheTwoCardsAfterTheTopOne() {
         XCTAssertEqual(LordsDayStackMemory.peeking(after: 4, pageCount: 7), [5, 6])
         XCTAssertEqual(LordsDayStackMemory.peeking(after: 6, pageCount: 7), [0, 1])

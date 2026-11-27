@@ -13,6 +13,8 @@ struct JournalSermonView: View {
     let whereLabel: String
     let query: String
     @State var current: UUID
+    /// Opens the reel at this sermon (TKL-1085 pass 2).
+    var onOpenReel: (UUID) -> Void = { _ in }
     var onDetailsUpdated: () -> Void = {}
     @State private var editingNote: LordsDayNote?
     @Environment(\.modelContext) private var context
@@ -85,6 +87,19 @@ struct JournalSermonView: View {
 
     @ViewBuilder private func page(_ entry: JournalEntry) -> some View {
         summary(entry)
+        Button { onOpenReel(entry.id) } label: {
+            HStack(spacing: 7) {
+                Image(systemName: "rectangle.stack").font(.system(size: 14, weight: .semibold))
+                Text("Read the cards").font(.system(size: 15, weight: .semibold))
+            }
+            .foregroundStyle(Color.ccPaper)
+            .frame(maxWidth: .infinity)
+            .frame(height: 46)
+            .background(Color.ccChapel, in: RoundedRectangle(cornerRadius: ChapelRadius.control, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .padding(.top, 12)
+        .accessibilityIdentifier("journal.sermon.readCards")
         Text("\(entry.cards.count) card\(entry.cards.count == 1 ? "" : "s") from this Lord's Day")
             .chapelCaps()
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -92,7 +107,10 @@ struct JournalSermonView: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 ForEach(Array(entry.cards.enumerated()), id: \.offset) { i, card in
-                    JournalMiniCard(card: card, palette: LordsDayFeed.palette(card.palette(at: i), dark: scheme == .dark), passage: entry.passage)
+                    Button { onOpenReel(entry.id) } label: {
+                        JournalMiniCard(card: card, palette: LordsDayFeed.palette(card.palette(at: i), dark: scheme == .dark), passage: entry.passage)
+                    }
+                    .buttonStyle(.plain)
                 }
             }
             .padding(.horizontal, ChapelSpace.gutter)

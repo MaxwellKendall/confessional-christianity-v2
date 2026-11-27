@@ -46,7 +46,7 @@ struct LordsDayTabView: View {
                     JournalView(onCapture: {
                         path = NavigationPath()
                         startCapture()
-                    })
+                    }, onOpenReel: openReel(sermon:))
                 }
         }
         .tint(.ccInk)
@@ -170,6 +170,15 @@ struct LordsDayTabView: View {
     private func startCapture(typing: Bool = false) {
         capturesTyping = typing
         capture = CaptureModel(context: context, storeProvider: makeStoreProvider())
+    }
+
+    /// The journal opens the same reel as the landing page, at that sermon on the
+    /// card last read there (TKL-1085 pass 2). Closing it returns to the journal,
+    /// which stays pushed with its filters and scroll.
+    private func openReel(sermon id: UUID) {
+        refresh()
+        guard let position = reel.opening(sermon: id, memory: memory) else { return }
+        reelStart = ReelOpening(position: position)
     }
 
     private func remember(_ sermon: ReelSermon, _ page: Int) {
