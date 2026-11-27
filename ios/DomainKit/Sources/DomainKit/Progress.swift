@@ -43,15 +43,32 @@ public final class LocalChild {
     public private(set) var age: Int?
     public private(set) var createdAt: Date
     public fileprivate(set) var updatedAt: Date
-    fileprivate var activeCatechismId: String?
+    internal var activeCatechismId: String?
 
-    init(name: String, age: Int? = nil) {
+    init(name: String, age: Int? = nil, now: Date = Date()) {
         self.id = UUID()
         self.name = name
         self.age = age
-        let now = Date()
-        self.createdAt = now
-        self.updatedAt = now
+        let stamped = SyncTimestamp.truncate(now)
+        self.createdAt = stamped
+        self.updatedAt = stamped
+    }
+
+    init(id: UUID, name: String, age: Int?, createdAt: Date, updatedAt: Date, activeCatechismId: String?) {
+        self.id = id
+        self.name = name
+        self.age = age
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+        self.activeCatechismId = activeCatechismId
+    }
+
+    func applySynced(name: String, age: Int?, createdAt: Date, updatedAt: Date, activeCatechismId: String?) {
+        self.name = name
+        self.age = age
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+        self.activeCatechismId = activeCatechismId
     }
 }
 
@@ -95,7 +112,7 @@ public final class ChildCatechismTrack {
 @Model
 public final class ProgressSettings {
     var activeCatechismId: String?
-    public fileprivate(set) var activeChildId: UUID?
+    public internal(set) var activeChildId: UUID?
     fileprivate var didInitializeChildren: Bool?
     init() {}
 }
@@ -190,9 +207,15 @@ func openProgressContainer(at url: URL) throws -> ModelContainer {
 @MainActor
 public final class LocalProgressStore {
     let context: ModelContext
+    /// When signed in, local writes atomically enqueue outbox entries for this Cognito subject.
+    /// When nil (guest), writes stay strictly local and nothing is queued for sync.
+    let syncSubject: String?
+    let onLocalWrite: (@MainActor () -> Void)?
 
-    public init(context: ModelContext) {
+    public init(context: ModelContext, syncSubject: String? = nil, onLocalWrite: (@MainActor () -> Void)? = nil) {
         self.context = context
+        self.syncSubject = syncSubject
+        self.onLocalWrite = onLocalWrite
     }
 
     public var activeChildId: UUID? {
@@ -214,20 +237,24 @@ public final class LocalProgressStore {
     }
 
     @discardableResult
-    public func addChild(name: String, age: Int? = nil) throws -> LocalChild {
+    public func addChild(name: String, age: Int? = nil, now: Date = Date()) throws -> LocalChild {
         let settings = try settings()
-        let child = LocalChild(name: name, age: age)
+        let stamped = SyncTimestamp.truncate(now)
+        let child = LocalChild(name: name, age: age, now: stamped)
         context.insert(child)
         if settings.activeChildId == nil { settings.activeChildId = child.id }
-        try commitChanges()
+        try enqueueChildUpsert(child, updatedAt: stamped)
+        try commitChanges(didSyncWrite: syncSubject != nil)
         return child
     }
 
-    public func renameChild(childId: UUID, name: String) throws {
+    public func renameChild(childId: UUID, name: String, now: Date = Date()) throws {
         guard let child = try child(for: childId) else { return }
+        let stamped = SyncTimestamp.truncate(now)
         child.name = name
-        child.updatedAt = Date()
-        try commitChanges()
+        child.updatedAt = stamped
+        try enqueueChildUpsert(child, updatedAt: stamped)
+        try commitChanges(didSyncWrite: syncSubject != nil)
     }
 
     private enum SelectionError: Error {
@@ -237,20 +264,22 @@ public final class LocalProgressStore {
     public func selectChild(childId: UUID) throws {
         guard try child(for: childId) != nil else { throw SelectionError.childNotFound }
         try settings().activeChildId = childId
-        try commitChanges()
+        try commitChanges(didSyncWrite: false)
     }
 
-    public func deleteChild(childId: UUID) throws {
+    public func deleteChild(childId: UUID, now: Date = Date()) throws {
         guard let child = try child(for: childId) else { return }
+        let stamped = SyncTimestamp.truncate(now)
         let childTracks = try context.fetch(tracks(for: childId))
         let settings = try settings()
         if settings.activeChildId == childId {
             let others = try context.fetch(FetchDescriptor<LocalChild>(sortBy: [SortDescriptor(\.createdAt)]))
             settings.activeChildId = others.first(where: { $0.id != childId })?.id
         }
+        try enqueueChildDeletionTombstones(child: child, tracks: childTracks, deletedAt: stamped)
         for track in childTracks { context.delete(track) }
         context.delete(child)
-        try commitChanges()
+        try commitChanges(didSyncWrite: syncSubject != nil)
     }
 
     private func tracks(for childId: UUID) -> FetchDescriptor<ChildCatechismTrack> {
@@ -274,12 +303,15 @@ public final class LocalProgressStore {
         return all.max { $0.updatedAt < $1.updatedAt }
     }
 
-    private func commitChanges() throws {
+    private func commitChanges(didSyncWrite: Bool) throws {
         do {
             try context.save()
         } catch {
             context.rollback()
             throw error
+        }
+        if didSyncWrite {
+            onLocalWrite?()
         }
     }
 
@@ -290,10 +322,23 @@ public final class LocalProgressStore {
     // explicitly after every mutation is what makes "answer a question in
     // the app" show up in the widget on its next refresh instead of
     // whenever autosave next happens to run.
-    private func saveTrack(_ track: ChildCatechismTrack, for child: LocalChild) -> ChildCatechismTrack? {
+    private func saveTrack(
+        _ track: ChildCatechismTrack,
+        for child: LocalChild,
+        updatedAt: Date,
+        enqueueSync: (() throws -> Void)? = nil
+    ) -> ChildCatechismTrack? {
+        let activeChanged = child.activeCatechismId != track.catechismId
         child.activeCatechismId = track.catechismId
+        if activeChanged {
+            child.updatedAt = max(child.updatedAt, updatedAt)
+        }
         do {
-            try commitChanges()
+            if activeChanged {
+                try enqueueChildUpsert(child, updatedAt: child.updatedAt)
+            }
+            try enqueueSync?()
+            try commitChanges(didSyncWrite: syncSubject != nil)
             return track
         } catch {
             return nil
@@ -302,13 +347,14 @@ public final class LocalProgressStore {
 
     /// Resumes the existing track for this catechism, or starts a fresh one at question 1.
     @discardableResult
-    public func resumeOrStartTrack(childId: UUID, catechismId: String) -> ChildCatechismTrack? {
+    public func resumeOrStartTrack(childId: UUID, catechismId: String, now: Date = Date()) -> ChildCatechismTrack? {
         guard let child = try? child(for: childId) else { return nil }
+        let stamped = SyncTimestamp.truncate(now)
         do {
             if let existing = try track(childId: childId, catechismId: catechismId) {
-                return saveTrack(existing, for: child)
+                return saveTrack(existing, for: child, updatedAt: stamped)
             }
-            return createTrack(for: child, catechismId: catechismId, startingQuestion: 1)
+            return createTrack(for: child, catechismId: catechismId, startingQuestion: 1, now: stamped)
         } catch {
             return nil
         }
@@ -316,61 +362,281 @@ public final class LocalProgressStore {
 
     /// Starts at `startingQuestion`, clearing existing milestones for this child's catechism.
     @discardableResult
-    public func startTrack(childId: UUID, catechismId: String, startingQuestion: Int) -> ChildCatechismTrack? {
+    public func startTrack(childId: UUID, catechismId: String, startingQuestion: Int, now: Date = Date()) -> ChildCatechismTrack? {
         guard let child = try? child(for: childId) else { return nil }
+        let stamped = SyncTimestamp.truncate(now)
         do {
             guard let existing = try track(childId: childId, catechismId: catechismId) else {
-                return createTrack(for: child, catechismId: catechismId, startingQuestion: startingQuestion)
+                return createTrack(for: child, catechismId: catechismId, startingQuestion: startingQuestion, now: stamped)
             }
-            let now = Date()
+            let clearedQuestions = existing.milestones.keys.compactMap(Int.init).sorted()
             existing.currentQuestion = startingQuestion
             existing.startedAtQuestion = startingQuestion
-            existing.startedAt = now
-            existing.updatedAt = now
+            existing.startedAt = stamped
+            existing.updatedAt = stamped
             existing.milestones = [:]
-            return saveTrack(existing, for: child)
+            return saveTrack(existing, for: child, updatedAt: stamped) {
+                for question in clearedQuestions {
+                    try self.enqueueMilestoneTombstone(
+                        childId: child.id, catechismId: catechismId, question: question, deletedAt: stamped
+                    )
+                }
+                try self.enqueueAssignmentUpsert(existing, updatedAt: stamped)
+                try self.enqueuePacingUpsert(existing, updatedAt: stamped)
+            }
         } catch {
             return nil
         }
     }
 
-    private func createTrack(for child: LocalChild, catechismId: String, startingQuestion: Int) -> ChildCatechismTrack? {
-        let now = Date()
+    private func createTrack(for child: LocalChild, catechismId: String, startingQuestion: Int, now: Date) -> ChildCatechismTrack? {
         let created = ChildCatechismTrack(
             childId: child.id, catechismId: catechismId, currentQuestion: startingQuestion,
             startedAtQuestion: startingQuestion, startedAt: now, updatedAt: now
         )
         context.insert(created)
-        return saveTrack(created, for: child)
+        return saveTrack(created, for: child, updatedAt: now) {
+            try self.enqueueAssignmentUpsert(created, updatedAt: now)
+            try self.enqueuePacingUpsert(created, updatedAt: now)
+        }
     }
 
     // The "Next Question" primitive: the current question enters the record
     // as introduced and the position advances, clamped one past the end so a
     // finished track reads as complete.
     @discardableResult
-    public func advanceQuestion(childId: UUID, catechismId: String, totalQuestions: Int) -> ChildCatechismTrack? {
+    public func advanceQuestion(childId: UUID, catechismId: String, totalQuestions: Int, now: Date = Date()) -> ChildCatechismTrack? {
         guard let child = try? child(for: childId),
               let existing = try? track(childId: childId, catechismId: catechismId) else { return nil }
-        let now = Date()
-        let key = String(existing.currentQuestion)
-        if existing.currentQuestion <= totalQuestions, existing.milestones[key] == nil {
+        let stamped = SyncTimestamp.truncate(now)
+        let questionNum = existing.currentQuestion
+        let key = String(questionNum)
+        var addedMilestone: (Int, MilestoneRecord)?
+        if questionNum <= totalQuestions, existing.milestones[key] == nil {
+            let record = MilestoneRecord(state: "introduced", introducedAt: stamped, reviewCount: 0)
             var milestones = existing.milestones
-            milestones[key] = MilestoneRecord(state: "introduced", introducedAt: now, reviewCount: 0)
+            milestones[key] = record
             existing.milestones = milestones
+            addedMilestone = (questionNum, record)
         }
         existing.currentQuestion = min(totalQuestions + 1, existing.currentQuestion + 1)
-        existing.updatedAt = now
-        return saveTrack(existing, for: child)
+        existing.updatedAt = stamped
+        return saveTrack(existing, for: child, updatedAt: stamped) {
+            try self.enqueuePacingUpsert(existing, updatedAt: stamped)
+            if let (q, milestone) = addedMilestone {
+                try self.enqueueMilestoneUpsert(
+                    childId: child.id, catechismId: catechismId, question: q, milestone: milestone, updatedAt: stamped
+                )
+            }
+        }
     }
 
     // Jumping to an arbitrary question repositions the track without
     // touching milestones — it's browsing, not re-introducing material.
     @discardableResult
-    public func jumpToQuestion(childId: UUID, catechismId: String, questionNumber: Int, totalQuestions: Int) -> ChildCatechismTrack? {
+    public func jumpToQuestion(
+        childId: UUID, catechismId: String, questionNumber: Int, totalQuestions: Int, now: Date = Date()
+    ) -> ChildCatechismTrack? {
         guard let child = try? child(for: childId),
               let existing = try? track(childId: childId, catechismId: catechismId) else { return nil }
+        let stamped = SyncTimestamp.truncate(now)
         existing.currentQuestion = min(totalQuestions, max(1, questionNumber))
-        existing.updatedAt = Date()
-        return saveTrack(existing, for: child)
+        existing.updatedAt = stamped
+        return saveTrack(existing, for: child, updatedAt: stamped) {
+            try self.enqueuePacingUpsert(existing, updatedAt: stamped)
+        }
+    }
+
+    /// Updates (or creates) a single question milestone and queues its sync row.
+    @discardableResult
+    public func updateMilestone(
+        childId: UUID,
+        catechismId: String,
+        question: Int,
+        state: String,
+        introducedAt: Date? = nil,
+        reviewCount: Int,
+        now: Date = Date()
+    ) -> ChildCatechismTrack? {
+        guard let child = try? child(for: childId),
+              let existing = try? track(childId: childId, catechismId: catechismId) else { return nil }
+        let stamped = SyncTimestamp.truncate(now)
+        let key = String(question)
+        let intro = SyncTimestamp.truncate(introducedAt ?? existing.milestones[key]?.introducedAt ?? stamped)
+        let updated = MilestoneRecord(state: state, introducedAt: intro, reviewCount: reviewCount)
+        var milestones = existing.milestones
+        milestones[key] = updated
+        existing.milestones = milestones
+        existing.updatedAt = max(existing.updatedAt, stamped)
+        return saveTrack(existing, for: child, updatedAt: stamped) {
+            try self.enqueueMilestoneUpsert(
+                childId: child.id, catechismId: catechismId, question: question, milestone: updated, updatedAt: stamped
+            )
+        }
+    }
+
+    // MARK: Sync outbox helpers
+
+    private func enqueueChildUpsert(_ child: LocalChild, updatedAt: Date) throws {
+        guard let subject = syncSubject else { return }
+        let cid = child.id.uuidString.lowercased()
+        let payload = try JSONEncoder().encode(ChildSyncPayload(
+            name: child.name,
+            age: child.age,
+            created_at: SyncTimestamp.format(child.createdAt),
+            active_catechism_id: child.activeCatechismId
+        ))
+        try SyncMetaStore.upsert(
+            table: SyncTable.children, rowId: cid, childId: cid, naturalKey: cid,
+            updatedAt: updatedAt, in: context
+        )
+        try SyncMetaStore.enqueueOutbox(
+            subject: subject, table: SyncTable.children, rowId: cid, childId: cid,
+            payload: payload, updatedAt: updatedAt, in: context
+        )
+    }
+
+    private func enqueueAssignmentUpsert(_ track: ChildCatechismTrack, updatedAt: Date) throws {
+        guard let subject = syncSubject else { return }
+        let cid = track.childId.uuidString.lowercased()
+        let slug = SyncTable.catechismSlug(forContentId: track.catechismId)
+        let naturalKey = SyncTable.assignmentNaturalKey(childId: track.childId, catechismId: track.catechismId)
+        let rowId = try SyncMetaStore.resolvedRowId(
+            table: SyncTable.catechismAssignments, naturalKey: naturalKey, in: context
+        )
+        let payload = try JSONEncoder().encode(CatechismAssignmentSyncPayload(
+            catechism_slug: slug,
+            started_at: SyncTimestamp.format(track.startedAt),
+            started_at_question: track.startedAtQuestion
+        ))
+        try SyncMetaStore.upsert(
+            table: SyncTable.catechismAssignments, rowId: rowId, childId: cid, naturalKey: naturalKey,
+            updatedAt: updatedAt, in: context
+        )
+        try SyncMetaStore.enqueueOutbox(
+            subject: subject, table: SyncTable.catechismAssignments, rowId: rowId, childId: cid,
+            payload: payload, updatedAt: updatedAt, in: context
+        )
+    }
+
+    private func enqueuePacingUpsert(_ track: ChildCatechismTrack, updatedAt: Date) throws {
+        guard let subject = syncSubject else { return }
+        let cid = track.childId.uuidString.lowercased()
+        let slug = SyncTable.catechismSlug(forContentId: track.catechismId)
+        let naturalKey = SyncTable.pacingNaturalKey(childId: track.childId, catechismId: track.catechismId)
+        let rowId = try SyncMetaStore.resolvedRowId(
+            table: SyncTable.catechismPacing, naturalKey: naturalKey, in: context
+        )
+        let payload = try JSONEncoder().encode(CatechismPacingSyncPayload(
+            catechism_slug: slug,
+            current_question: track.currentQuestion
+        ))
+        try SyncMetaStore.upsert(
+            table: SyncTable.catechismPacing, rowId: rowId, childId: cid, naturalKey: naturalKey,
+            updatedAt: updatedAt, in: context
+        )
+        try SyncMetaStore.enqueueOutbox(
+            subject: subject, table: SyncTable.catechismPacing, rowId: rowId, childId: cid,
+            payload: payload, updatedAt: updatedAt, in: context
+        )
+    }
+
+    private func enqueueMilestoneUpsert(
+        childId: UUID, catechismId: String, question: Int, milestone: MilestoneRecord, updatedAt: Date
+    ) throws {
+        guard let subject = syncSubject else { return }
+        let cid = childId.uuidString.lowercased()
+        let slug = SyncTable.catechismSlug(forContentId: catechismId)
+        let naturalKey = SyncTable.milestoneNaturalKey(childId: childId, catechismId: catechismId, question: question)
+        let rowId = try SyncMetaStore.resolvedRowId(
+            table: SyncTable.catechismMilestones, naturalKey: naturalKey, in: context
+        )
+        let payload = try JSONEncoder().encode(CatechismMilestoneSyncPayload(
+            catechism_slug: slug,
+            question: question,
+            state: milestone.state,
+            introduced_at: SyncTimestamp.format(milestone.introducedAt),
+            review_count: milestone.reviewCount
+        ))
+        try SyncMetaStore.upsert(
+            table: SyncTable.catechismMilestones, rowId: rowId, childId: cid, naturalKey: naturalKey,
+            updatedAt: updatedAt, in: context
+        )
+        try SyncMetaStore.enqueueOutbox(
+            subject: subject, table: SyncTable.catechismMilestones, rowId: rowId, childId: cid,
+            payload: payload, updatedAt: updatedAt, in: context
+        )
+    }
+
+    private func enqueueMilestoneTombstone(
+        childId: UUID, catechismId: String, question: Int, deletedAt: Date
+    ) throws {
+        guard let subject = syncSubject else { return }
+        let cid = childId.uuidString.lowercased()
+        let naturalKey = SyncTable.milestoneNaturalKey(childId: childId, catechismId: catechismId, question: question)
+        let rowId = try SyncMetaStore.resolvedRowId(
+            table: SyncTable.catechismMilestones, naturalKey: naturalKey, in: context
+        )
+        if let meta = try SyncMetaStore.meta(table: SyncTable.catechismMilestones, rowId: rowId, in: context) {
+            context.delete(meta)
+        }
+        try SyncMetaStore.enqueueOutbox(
+            subject: subject, table: SyncTable.catechismMilestones, rowId: rowId, childId: cid,
+            payload: nil, updatedAt: deletedAt, deletedAt: deletedAt, in: context
+        )
+    }
+
+    private func enqueueChildDeletionTombstones(
+        child: LocalChild, tracks: [ChildCatechismTrack], deletedAt: Date
+    ) throws {
+        guard let subject = syncSubject else { return }
+        let cid = child.id.uuidString.lowercased()
+        var tombstoned = Set<String>()
+        for track in tracks {
+            for key in track.milestones.keys.compactMap(Int.init).sorted() {
+                let nat = SyncTable.milestoneNaturalKey(childId: child.id, catechismId: track.catechismId, question: key)
+                let rowId = try SyncMetaStore.resolvedRowId(
+                    table: SyncTable.catechismMilestones, naturalKey: nat, in: context
+                )
+                tombstoned.insert("\(SyncTable.catechismMilestones):\(rowId)")
+                try SyncMetaStore.enqueueOutbox(
+                    subject: subject, table: SyncTable.catechismMilestones, rowId: rowId, childId: cid,
+                    payload: nil, updatedAt: deletedAt, deletedAt: deletedAt, in: context
+                )
+            }
+            let pacingNat = SyncTable.pacingNaturalKey(childId: child.id, catechismId: track.catechismId)
+            let pacingId = try SyncMetaStore.resolvedRowId(
+                table: SyncTable.catechismPacing, naturalKey: pacingNat, in: context
+            )
+            tombstoned.insert("\(SyncTable.catechismPacing):\(pacingId)")
+            try SyncMetaStore.enqueueOutbox(
+                subject: subject, table: SyncTable.catechismPacing, rowId: pacingId, childId: cid,
+                payload: nil, updatedAt: deletedAt, deletedAt: deletedAt, in: context
+            )
+
+            let assignNat = SyncTable.assignmentNaturalKey(childId: child.id, catechismId: track.catechismId)
+            let assignId = try SyncMetaStore.resolvedRowId(
+                table: SyncTable.catechismAssignments, naturalKey: assignNat, in: context
+            )
+            tombstoned.insert("\(SyncTable.catechismAssignments):\(assignId)")
+            try SyncMetaStore.enqueueOutbox(
+                subject: subject, table: SyncTable.catechismAssignments, rowId: assignId, childId: cid,
+                payload: nil, updatedAt: deletedAt, deletedAt: deletedAt, in: context
+            )
+        }
+        // Any remaining persisted meta rows for this child (e.g. pulled rows).
+        for meta in try SyncMetaStore.allMeta(forChildId: child.id, in: context) {
+            if meta.table != SyncTable.children, !tombstoned.contains(meta.lookupKey) {
+                try SyncMetaStore.enqueueOutbox(
+                    subject: subject, table: meta.table, rowId: meta.rowId, childId: cid,
+                    payload: nil, updatedAt: deletedAt, deletedAt: deletedAt, in: context
+                )
+            }
+            context.delete(meta)
+        }
+        try SyncMetaStore.enqueueOutbox(
+            subject: subject, table: SyncTable.children, rowId: cid, childId: cid,
+            payload: nil, updatedAt: deletedAt, deletedAt: deletedAt, in: context
+        )
     }
 }

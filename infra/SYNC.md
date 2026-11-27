@@ -11,6 +11,17 @@ Use the stage stack's `AccountSyncUrl` with a Cognito user-pool JWT from that st
 | `catechism_pacing` | Persisted UUID per child's catechism pacing row | `catechism_slug`, `current_question` |
 | `catechism_milestones` | Persisted UUID per child's catechism question milestone | `catechism_slug`, `question`, `state`, `introduced_at`, `review_count` |
 
+### DomainKit / iOS field mapping (TKL-1068)
+
+| AppSync table | Row ID (`row_id`) | Local SwiftData model | Field mapping |
+| --- | --- | --- | --- |
+| `children` | `LocalChild.id` (lowercased UUID; equals `child_id`) | `LocalChild` | `name` ↔ `name`, `age` ↔ `age`, `created_at` ↔ `createdAt` (UTC ISO 8601 ms), `active_catechism_id` ↔ `activeCatechismId` (`ContentId.rawValue`, e.g. `"WSC"`). Envelope `updated_at` ↔ `updatedAt`. |
+| `catechism_assignments` | Persisted `SyncRowMeta.rowId`, or deterministic UUIDv5 of `("catechism_assignments", childId, catechism_slug)` | `ChildCatechismTrack` | `catechism_slug` ↔ `programForContentId(catechismId)?.slug ?? catechismId` (e.g. `"catechizing-shorter-catechism"` ↔ `"WSC"`), `started_at` ↔ `startedAt`, `started_at_question` ↔ `startedAtQuestion`. |
+| `catechism_pacing` | Persisted `SyncRowMeta.rowId`, or deterministic UUIDv5 of `("catechism_pacing", childId, catechism_slug)` | `ChildCatechismTrack` | `catechism_slug` ↔ `catechismId` (via `PROGRAMS`), `current_question` ↔ `currentQuestion`. |
+| `catechism_milestones` | Persisted `SyncRowMeta.rowId`, or deterministic UUIDv5 of `("catechism_milestones", childId, catechism_slug, question)` | `ChildCatechismTrack.milestones[String(question)]` (`MilestoneRecord`) | `catechism_slug` ↔ `catechismId`, `question` ↔ dictionary key `Int`, `state` ↔ `state`, `introduced_at` ↔ `introducedAt`, `review_count` ↔ `reviewCount`. |
+
+Each table tracks its own `SyncRowMeta.updatedAt` per row so last-write-wins resolves independently for assignment, pacing and each individual milestone (e.g. a pacing change does not block a newer milestone edit). Rows pulled from a co-guardian keep their server `row_id` in `SyncRowMeta` so subsequent edits and tombstones reuse the exact same ID. Deleting a child locally enqueues separate tombstones for each milestone, pacing, and assignment row as well as the `children` row.
+
 Clients can create UUIDs offline. Reuse the same row ID for future updates, and treat UUID casing as insignificant. The server returns lowercase UUIDs. Each ID is unique per table and bound to one child. The payload is a complete row snapshot, encoded as a JSON object string (up to 4 KiB). Its fields take scalar JSON values: names, slugs, timestamps and milestone states are strings, and ages, question numbers and review counts are numbers. Omit unset fields or use null.
 
 Creating a child makes the verified caller its owner. A co-guardian may read and edit its records, including the profile. Only the owner may tombstone the profile. Tombstones are row-level. A transport removing a child should enqueue separate tombstones for its progress rows and remove its local child and progress from the UI.

@@ -10,6 +10,7 @@ import DomainKit
 struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(AuthService.self) private var auth
+    @Environment(SyncService.self) private var sync
     @Query private var observedChildren: [LocalChild]
     @Query private var observedTracks: [ChildCatechismTrack]
     @Query private var observedSettings: [ProgressSettings]
@@ -19,7 +20,7 @@ struct SettingsView: View {
     /// The daily catechism reminder's time, nil when none is set.
     @State private var practiceReminder: DateComponents?
 
-    private var store: LocalProgressStore { LocalProgressStore(context: modelContext) }
+    private var store: LocalProgressStore { sync.progressStore(in: modelContext) }
 
     var body: some View {
         let _ = observedChildren.map(\.updatedAt)
@@ -54,6 +55,7 @@ struct SettingsView: View {
                 .padding(.top, ChapelSpace.xl)
                 .padding(.bottom, 36)
             }
+            .refreshable { await sync.refresh() }
             .background(Color.ccSurface)
             .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(isPresented: $showsAbout) {
@@ -94,6 +96,15 @@ struct SettingsView: View {
                     Text(String((user.email ?? "?").prefix(1)).uppercased())
                 }
                 .accessibilityIdentifier("settings.accountEmail")
+            }
+            if sync.isConfigured {
+                TimelineView(.periodic(from: .now, by: 30)) { context in
+                    Text(SyncService.lastSyncedLine(lastSyncedAt: sync.lastSyncedAt, now: context.date))
+                        .font(.ccUI(13))
+                        .foregroundStyle(.ccInk3)
+                        .padding(.top, ChapelSpace.s)
+                        .accessibilityIdentifier("settings.lastSynced")
+                }
             }
             Button("Sign out", action: signOut)
                 .buttonStyle(ChapelQuietButtonStyle())
@@ -183,6 +194,7 @@ struct SettingsView: View {
     }
 
     private func signOut() {
+        sync.willSignOut()
         Task { await auth.signOut() }
     }
 }
@@ -193,6 +205,7 @@ struct SettingsView: View {
 struct AddChildView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(SyncService.self) private var sync
     @Query private var children: [LocalChild]
     @State private var name = ""
     @State private var submitted = false
@@ -266,7 +279,7 @@ struct AddChildView: View {
     private func add() {
         submitted = true
         guard case .valid(let trimmed) = check else { return }
-        let store = LocalProgressStore(context: modelContext)
+        let store = sync.progressStore(in: modelContext)
         guard let child = try? store.addChild(name: trimmed) else { return }
         // The newest child becomes the one Today and the Catechism tab show.
         try? store.selectChild(childId: child.id)

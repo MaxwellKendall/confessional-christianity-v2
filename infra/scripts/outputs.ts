@@ -21,8 +21,11 @@ const config = {
     mfa_configuration: "NONE",
     mfa_methods: [],
   },
-  // TKL-889: native Sign in with Apple posts Apple's identity token here first (Amplify's schema keeps app data in "custom").
-  custom: { apple_start_url: out.AppleStartUrl },
+  // TKL-889 / TKL-1068: native Sign in with Apple and account sync URLs (Amplify's schema keeps app data in "custom").
+  custom: {
+    apple_start_url: out.AppleStartUrl,
+    account_sync_url: out.AccountSyncUrl,
+  },
 };
 
 const dir = new URL("../../ios/App/Resources/", import.meta.url);

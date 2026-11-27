@@ -22,6 +22,7 @@ struct SessionView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(SyncService.self) private var sync
     @State private var track: ChildCatechismTrack?
     @State private var showJump = false
     @State private var showMilestones = false
@@ -32,7 +33,7 @@ struct SessionView: View {
     /// than a generic cross-fade.
     @State private var navDirection: Edge = .trailing
 
-    private var store: LocalProgressStore { LocalProgressStore(context: modelContext) }
+    private var store: LocalProgressStore { sync.progressStore(in: modelContext) }
 
     private var questionNumber: Int? {
         guard let track else { return nil }

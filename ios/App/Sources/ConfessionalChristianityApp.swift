@@ -13,12 +13,16 @@ struct ConfessionalChristianityApp: App {
 
     // Account session (guest by default); restored locally from the Keychain at launch.
     @State private var auth: AuthService
+    @State private var sync: SyncService
+    @Environment(\.scenePhase) private var scenePhase
 
     init() {
         #if DEBUG
         NetworkAudit.installIfConfigured()
         #endif
-        _auth = State(initialValue: AuthService())
+        let authService = AuthService()
+        _auth = State(initialValue: authService)
+        _sync = State(initialValue: SyncService(container: container, auth: authService))
     }
 
     var body: some Scene {
@@ -55,9 +59,23 @@ struct ConfessionalChristianityApp: App {
                 }
             }
             .environment(auth)
+            .environment(sync)
+            .onChange(of: auth.user, initial: true) { _, user in
+                sync.handleAuthChange(user)
+            }
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active { sync.appDidBecomeActive() }
+            }
             #else
             root
                 .environment(auth)
+                .environment(sync)
+                .onChange(of: auth.user, initial: true) { _, user in
+                    sync.handleAuthChange(user)
+                }
+                .onChange(of: scenePhase) { _, phase in
+                    if phase == .active { sync.appDidBecomeActive() }
+                }
             #endif
         }
         .modelContainer(container)

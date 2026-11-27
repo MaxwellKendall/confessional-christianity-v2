@@ -19,6 +19,7 @@ struct TodayView: View {
     let startCapture: () -> Void
 
     @Environment(\.modelContext) private var modelContext
+    @Environment(SyncService.self) private var sync
     // Observed only so Today re-renders when children or progress change.
     @Query private var observedChildren: [LocalChild]
     @Query private var observedTracks: [ChildCatechismTrack]
@@ -33,7 +34,7 @@ struct TodayView: View {
     @State private var showsAddChild = false
     @State private var showsSessionError = false
 
-    private var store: LocalProgressStore { LocalProgressStore(context: modelContext) }
+    private var store: LocalProgressStore { sync.progressStore(in: modelContext) }
 
     private var plan: TodayPlan {
         let memory = LordsDayStackMemory(
@@ -78,6 +79,7 @@ struct TodayView: View {
                 .frame(maxWidth: 704)
                 .frame(maxWidth: .infinity)
             }
+            .refreshable { await sync.refresh() }
             // Scrolled content stops under the status bar, as in the prototype.
             .safeAreaInset(edge: .top, spacing: 0) {
                 Color.clear.frame(height: 0).background(Color.ccPaper)

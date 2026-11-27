@@ -13,6 +13,7 @@ struct CatechismTabView: View {
     @Binding var path: NavigationPath
 
     @Environment(\.modelContext) private var modelContext
+    @Environment(SyncService.self) private var sync
     // Observed only so the cards re-render when children or progress change.
     @Query private var observedChildren: [LocalChild]
     @Query private var observedTracks: [ChildCatechismTrack]
@@ -24,7 +25,7 @@ struct CatechismTabView: View {
 
     private static let addCardId = UUID()
 
-    private var store: LocalProgressStore { LocalProgressStore(context: modelContext) }
+    private var store: LocalProgressStore { sync.progressStore(in: modelContext) }
 
     private var cards: [TodayChild] {
         orderCatechismCards(store.todayChildren(), activeChildId: store.activeChildId)
@@ -53,6 +54,7 @@ struct CatechismTabView: View {
                 .frame(maxWidth: 704)
                 .frame(maxWidth: .infinity)
             }
+            .refreshable { await sync.refresh() }
             .safeAreaInset(edge: .top, spacing: 0) {
                 Color.clear.frame(height: 0).background(Color.ccPaper)
             }

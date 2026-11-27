@@ -18,6 +18,7 @@
     "mfa_methods": []
   },
   "custom": {
-    "apple_start_url": "https://6fbtjph2oj74k3a7ovlmpndmsm0whktf.lambda-url.us-east-1.on.aws/"
+    "apple_start_url": "https://6fbtjph2oj74k3a7ovlmpndmsm0whktf.lambda-url.us-east-1.on.aws/",
+    "account_sync_url": "https://kzceqr3xobd57covn5fuqsfiwi.appsync-api.us-east-1.amazonaws.com/graphql"
   }
 }

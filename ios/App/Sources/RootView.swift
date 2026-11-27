@@ -18,6 +18,7 @@ import DomainKit
 struct RootView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(AuthService.self) private var auth
+    @Environment(SyncService.self) private var sync
     @Query private var children: [LocalChild]
     @Query private var sermons: [LordsDayNote]
     @AppStorage("didCompleteOnboarding") private var didCompleteOnboarding = false
@@ -87,7 +88,7 @@ struct RootView: View {
     private func beginCatechism(name: String) -> Bool {
         guard !didCompleteOnboarding else { return true }
         do {
-            try LocalProgressStore(context: modelContext).addChild(name: name)
+            try sync.progressStore(in: modelContext).addChild(name: name)
             todayPath.append(LibraryRoute.session(programSlug: PROGRAMS[0].slug, questionNumber: 1))
             selected = .today
             didCompleteOnboarding = true
@@ -132,6 +133,10 @@ struct RootView: View {
             seedChildrenForScreenshots()
             seedSermonWeekForScreenshots()
         }
+        .onChange(of: sync.activeSubject, initial: true) { _, subject in
+            guard subject != nil else { return }
+            runSyncTestActionIfConfigured()
+        }
         #endif
     }
 
@@ -164,6 +169,24 @@ struct RootView: View {
     private func seedSermonWeekForScreenshots() {
         guard UserDefaults.standard.bool(forKey: "SeedSermonWeek"), sermons.isEmpty else { return }
         _ = LordsDayFeedFixture.makeFeed("key_point", container: modelContext.container)
+    }
+
+    /// Two-simulator sync proof hook (TKL-1068): `-SyncTestAddChild "Samuel:1"`
+    /// adds that child on WSC and advances N questions through `sync.progressStore`
+    /// once signed in, if a child with that name does not already exist locally.
+    private func runSyncTestActionIfConfigured() {
+        guard let spec = UserDefaults.standard.string(forKey: "SyncTestAddChild") else { return }
+        let bits = spec.split(separator: ":").map(String.init)
+        guard let name = bits.first, !name.isEmpty else { return }
+        let advances = Int(bits.dropFirst().first ?? "1") ?? 1
+        let store = sync.progressStore(in: modelContext)
+        guard !store.todayChildren().contains(where: { $0.name == name }) else { return }
+        guard let child = try? store.addChild(name: name) else { return }
+        try? store.selectChild(childId: child.id)
+        _ = store.resumeOrStartTrack(childId: child.id, catechismId: "WSC")
+        for _ in 0..<max(0, advances) {
+            _ = store.advanceQuestion(childId: child.id, catechismId: "WSC", totalQuestions: PROGRAMS[0].totalQuestions)
+        }
     }
     #endif
 }

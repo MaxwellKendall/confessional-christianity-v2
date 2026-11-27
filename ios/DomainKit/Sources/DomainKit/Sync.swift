@@ -32,15 +32,17 @@ import SwiftData
 public struct SyncRecord: Equatable, Sendable {
     public var table: String
     public var id: String
+    public var childId: String?
     public var payload: Data?
     public var updatedAt: Date
     public var deletedAt: Date?
     public var changeId: Int64
 
-    public init(table: String, id: String, payload: Data?, updatedAt: Date, deletedAt: Date? = nil,
-                changeId: Int64 = 0) {
+    public init(table: String, id: String, childId: String? = nil, payload: Data?, updatedAt: Date,
+                deletedAt: Date? = nil, changeId: Int64 = 0) {
         self.table = table
         self.id = id
+        self.childId = childId
         self.payload = payload
         self.updatedAt = updatedAt
         self.deletedAt = deletedAt
@@ -56,9 +58,21 @@ public struct SyncChange: Equatable, Sendable {
     public var id: UUID
     public var table: String
     public var rowId: String
+    public var childId: String?
     public var payload: Data?
     public var updatedAt: Date
     public var deletedAt: Date?
+
+    public init(id: UUID, table: String, rowId: String, childId: String? = nil, payload: Data?,
+                updatedAt: Date, deletedAt: Date? = nil) {
+        self.id = id
+        self.table = table
+        self.rowId = rowId
+        self.childId = childId
+        self.payload = payload
+        self.updatedAt = updatedAt
+        self.deletedAt = deletedAt
+    }
 }
 
 /// Where a table's pull resumes: strictly after this server `change_id`.
@@ -115,31 +129,38 @@ public final class SyncOutboxEntry {
     @Attribute(.unique) public var entryId: UUID
     /// Monotonic order of local writes; push sends ascending.
     public var sequence: Int
+    /// Cognito subject this outbox entry belongs to (nil in unscoped unit tests).
+    public var subject: String?
     public var table: String
     public var rowId: String
+    /// Stable child UUID for child-scoped tables (`child_id` in AppSync).
+    public var childId: String?
     public var payload: Data?
     public var updatedAt: Date
     public var deletedAt: Date?
 
-    public init(entryId: UUID = UUID(), sequence: Int, table: String, rowId: String,
-                payload: Data?, updatedAt: Date, deletedAt: Date?) {
+    public init(entryId: UUID = UUID(), sequence: Int, subject: String? = nil, table: String,
+                rowId: String, childId: String? = nil, payload: Data?, updatedAt: Date, deletedAt: Date?) {
         self.entryId = entryId
         self.sequence = sequence
+        self.subject = subject
         self.table = table
         self.rowId = rowId
+        self.childId = childId
         self.payload = payload
         self.updatedAt = updatedAt
         self.deletedAt = deletedAt
     }
 
     var change: SyncChange {
-        SyncChange(id: entryId, table: table, rowId: rowId, payload: payload,
+        SyncChange(id: entryId, table: table, rowId: rowId, childId: childId, payload: payload,
                    updatedAt: updatedAt, deletedAt: deletedAt)
     }
 }
 
 @Model
 public final class SyncCursorRecord {
+    /// Storage key: `table` when unscoped, or `"<subject>::<table>"` when scoped to a Cognito subject.
     @Attribute(.unique) public var table: String
     /// The last server `change_id` applied for this table.
     public var changeId: Int64
@@ -150,9 +171,37 @@ public final class SyncCursorRecord {
     }
 }
 
+/// Persisted mapping between a server sync row ID and its local domain identity
+/// plus its own per-row `updatedAt`. Needed so (1) a co-guardian's server-assigned
+/// UUID is reused on future edits, (2) tombstones (which carry no payload) know
+/// which local milestone/assignment/pacing row to remove, and (3) LWW resolves
+/// independently per table/milestone even when multiple server tables map to one
+/// local SwiftData model (`ChildCatechismTrack`).
+@Model
+public final class SyncRowMeta {
+    @Attribute(.unique) public var lookupKey: String
+    public var table: String
+    public var rowId: String
+    public var childId: String
+    public var naturalKey: String
+    public var updatedAt: Date
+
+    public init(table: String, rowId: String, childId: String, naturalKey: String, updatedAt: Date) {
+        let lowerRow = rowId.lowercased()
+        self.lookupKey = "\(table):\(lowerRow)"
+        self.table = table
+        self.rowId = lowerRow
+        self.childId = childId.lowercased()
+        self.naturalKey = naturalKey
+        self.updatedAt = updatedAt
+    }
+}
+
 /// The sync engine's own models; `progressSchema` includes them so the
 /// outbox lives in the shared App Group store beside the data it describes.
-public let syncModelTypes: [any PersistentModel.Type] = [SyncOutboxEntry.self, SyncCursorRecord.self]
+public let syncModelTypes: [any PersistentModel.Type] = [
+    SyncOutboxEntry.self, SyncCursorRecord.self, SyncRowMeta.self,
+]
 public let syncSchema = Schema(syncModelTypes)
 
 // MARK: - Engine
@@ -172,18 +221,48 @@ public final class SyncEngine: SyncRunning {
     private let save: Save
     private let transport: any SyncTransport
     private let adapters: [any SyncTableAdapter]
+    public let subject: String?
     private let pushBatchSize: Int
     private let pullPageSize: Int
+    private var isInvalidated = false
 
     public init(context: ModelContext, transport: any SyncTransport, tables: [any SyncTableAdapter],
-                pushBatchSize: Int = 100, pullPageSize: Int = 500,
+                subject: String? = nil, pushBatchSize: Int = 100, pullPageSize: Int = 500,
                 save: @escaping Save = { try $0.save() }) {
         self.context = context
         self.save = save
         self.transport = transport
         self.adapters = tables
+        self.subject = subject
         self.pushBatchSize = max(1, pushBatchSize)
         self.pullPageSize = max(1, pullPageSize)
+    }
+
+    /// Invalidates this engine instance (called on sign-out). Any in-flight push
+    /// or pull stops before committing rows, advancing cursors, or mutating the outbox.
+    public func invalidate() {
+        isInvalidated = true
+    }
+
+    /// Deletes every persisted outbox entry and pull cursor owned by `subject`.
+    /// Called on sign-out so a later sign-in (same or other account) never sees
+    /// the previous session's cursors or outbox.
+    public static func clearAccountState(for subject: String, in context: ModelContext) throws {
+        do {
+            let entries = try context.fetch(FetchDescriptor<SyncOutboxEntry>())
+            for entry in entries where entry.subject == subject {
+                context.delete(entry)
+            }
+            let prefix = "\(subject)::"
+            let cursors = try context.fetch(FetchDescriptor<SyncCursorRecord>())
+            for cursor in cursors where cursor.table.hasPrefix(prefix) {
+                context.delete(cursor)
+            }
+            try context.save()
+        } catch {
+            context.rollback()
+            throw error
+        }
     }
 
     // MARK: Local writes
@@ -194,10 +273,12 @@ public final class SyncEngine: SyncRunning {
     /// `deletedAt` (and usually a nil payload) after removing the local row.
     /// Throws if the save fails; both the entry and the unsaved row change are
     /// rolled back, so the caller must not report the write as saved.
-    public func recordLocalWrite(table: String, id: String, payload: Data?, updatedAt: Date, deletedAt: Date? = nil) throws {
+    public func recordLocalWrite(table: String, id: String, childId: String? = nil, payload: Data?,
+                                 updatedAt: Date, deletedAt: Date? = nil) throws {
         try commit {
-            let entry = SyncOutboxEntry(sequence: try nextSequence(), table: table, rowId: id,
-                                        payload: payload, updatedAt: updatedAt, deletedAt: deletedAt)
+            let entry = SyncOutboxEntry(sequence: try nextSequence(), subject: subject, table: table,
+                                        rowId: id, childId: childId, payload: payload,
+                                        updatedAt: updatedAt, deletedAt: deletedAt)
             context.insert(entry)
         }
     }
@@ -216,7 +297,9 @@ public final class SyncEngine: SyncRunning {
     /// Push, then pull. A push failure stops the run (the outbox is kept and
     /// the next run retries); the caller's scheduler backs off.
     public func sync() async throws {
+        try checkActive()
         try await push()
+        try checkActive()
         try await pull()
     }
 
@@ -225,9 +308,11 @@ public final class SyncEngine: SyncRunning {
     /// acknowledged so later writes never overtake earlier ones.
     public func push() async throws {
         while true {
+            try checkActive()
             let batch = Array(try outbox().prefix(pushBatchSize))
             guard !batch.isEmpty else { return }
             let acknowledged = try await transport.push(batch.map(\.change))
+            try checkActive()
             var removed = 0
             try commit {
                 for entry in batch where acknowledged.contains(entry.entryId) {
@@ -246,15 +331,18 @@ public final class SyncEngine: SyncRunning {
     /// page and the cursor commit in one save).
     public func pull() async throws {
         for adapter in adapters {
+            try checkActive()
             try await pull(adapter)
         }
     }
 
     private func pull(_ adapter: any SyncTableAdapter) async throws {
         while true {
+            try checkActive()
             let cursor = try cursor(for: adapter.table)
             let page = try await transport.pull(table: adapter.table, after: cursor, limit: pullPageSize)
                 .sorted { $0.changeId < $1.changeId }
+            try checkActive()
             guard let last = page.last else { return }
             try commit {
                 for record in page where record.table == adapter.table {
@@ -270,7 +358,8 @@ public final class SyncEngine: SyncRunning {
     /// and any write still queued for it (so a queued delete, whose row is
     /// already gone, still beats an older server copy). Ties keep local.
     private func apply(_ record: SyncRecord, to adapter: any SyncTableAdapter) throws {
-        let queued = try outbox().filter { $0.table == record.table && $0.rowId == record.id }
+        let lowerId = record.id.lowercased()
+        let queued = try outbox().filter { $0.table == record.table && $0.rowId.lowercased() == lowerId }
         let localTimes = [try adapter.localUpdatedAt(id: record.id, in: context)].compactMap { $0 } + queued.map(\.updatedAt)
         if let localLatest = localTimes.max(), localLatest >= record.updatedAt {
             return
@@ -289,6 +378,12 @@ public final class SyncEngine: SyncRunning {
 
     // MARK: Storage
 
+    private func checkActive() throws {
+        if isInvalidated || Task.isCancelled {
+            throw CancellationError()
+        }
+    }
+
     /// Runs the changes and saves them as one unit. On any error the context
     /// is rolled back (nothing half-applied stays in memory to be saved by a
     /// later call) and the error is rethrown.
@@ -304,7 +399,7 @@ public final class SyncEngine: SyncRunning {
 
     private func outbox() throws -> [SyncOutboxEntry] {
         let descriptor = FetchDescriptor<SyncOutboxEntry>(sortBy: [SortDescriptor(\.sequence)])
-        return try context.fetch(descriptor)
+        return try context.fetch(descriptor).filter { $0.subject == subject }
     }
 
     private func nextSequence() throws -> Int {
@@ -314,16 +409,23 @@ public final class SyncEngine: SyncRunning {
         return last + 1
     }
 
+    private func cursorStorageKey(for table: String) -> String {
+        if let subject { return "\(subject)::\(table)" }
+        return table
+    }
+
     private func cursorRecord(for table: String) throws -> SyncCursorRecord? {
-        let predicate = #Predicate<SyncCursorRecord> { $0.table == table }
+        let key = cursorStorageKey(for: table)
+        let predicate = #Predicate<SyncCursorRecord> { $0.table == key }
         return try context.fetch(FetchDescriptor(predicate: predicate)).first
     }
 
     private func setCursor(_ cursor: SyncCursor, for table: String) throws {
+        let key = cursorStorageKey(for: table)
         if let existing = try cursorRecord(for: table) {
             existing.changeId = cursor.changeId
         } else {
-            context.insert(SyncCursorRecord(table: table, changeId: cursor.changeId))
+            context.insert(SyncCursorRecord(table: key, changeId: cursor.changeId))
         }
     }
 }
@@ -369,9 +471,10 @@ public final class SyncScheduler {
     /// Called once each run ends (after any reruns it absorbed and after a
     /// retry is scheduled), with whether its last sync succeeded. Lets the UI
     /// and tests react to the end of a run instead of polling.
-    public var runDidFinish: ((_ succeeded: Bool) -> Void)?
+    public var runDidFinish: (@MainActor (_ succeeded: Bool) -> Void)?
 
     private var rerunRequested = false
+    private var isStopped = false
     private var debounceTask: Task<Void, Never>?
     private var retryTask: Task<Void, Never>?
     private var runTask: Task<Bool, Never>?
@@ -385,13 +488,29 @@ public final class SyncScheduler {
         self.sleep = sleep
     }
 
+    /// Stops and cancels any pending debounce, retry, or in-flight sync run.
+    /// Once stopped, this scheduler never starts another run or records results.
+    public func stop() {
+        isStopped = true
+        rerunRequested = false
+        debounceTask?.cancel()
+        debounceTask = nil
+        retryTask?.cancel()
+        retryTask = nil
+        runTask?.cancel()
+        runTask = nil
+        isSyncing = false
+    }
+
     /// The app came to the foreground: sync now.
     public func appDidBecomeActive() {
+        guard !isStopped else { return }
         trigger()
     }
 
     /// A synced row was written locally: sync once writes settle.
     public func localWriteOccurred() {
+        guard !isStopped else { return }
         debounceTask?.cancel()
         let delay = debounce
         let sleep = self.sleep
@@ -405,6 +524,7 @@ public final class SyncScheduler {
     /// Pull-to-refresh: runs a sync and returns whether it succeeded.
     @discardableResult
     public func refresh() async -> Bool {
+        guard !isStopped else { return false }
         trigger()
         // Either a fresh run, or the in-flight one that will loop once more
         // for this request; its result covers the refresh.
@@ -413,6 +533,7 @@ public final class SyncScheduler {
     }
 
     private func trigger() {
+        guard !isStopped else { return }
         retryTask?.cancel()
         retryTask = nil
         if isSyncing {
@@ -423,6 +544,7 @@ public final class SyncScheduler {
     }
 
     private func start() {
+        guard !isStopped else { return }
         isSyncing = true
         runTask = Task { [weak self] in
             guard let self else { return false }
@@ -431,22 +553,35 @@ public final class SyncScheduler {
     }
 
     private func run() async -> Bool {
-        var succeeded: Bool
+        var succeeded = false
         repeat {
+            if isStopped || Task.isCancelled {
+                isSyncing = false
+                return false
+            }
             rerunRequested = false
             do {
                 try await syncer.sync()
+                if isStopped || Task.isCancelled {
+                    isSyncing = false
+                    return false
+                }
                 succeeded = true
                 consecutiveFailures = 0
                 lastError = nil
                 lastSuccessAt = Date()
             } catch {
+                if isStopped || Task.isCancelled {
+                    isSyncing = false
+                    return false
+                }
                 succeeded = false
                 consecutiveFailures += 1
                 lastError = error
             }
-        } while rerunRequested
+        } while rerunRequested && !isStopped && !Task.isCancelled
         isSyncing = false
+        if isStopped || Task.isCancelled { return false }
         if !succeeded {
             scheduleRetry()
         }
@@ -455,11 +590,12 @@ public final class SyncScheduler {
     }
 
     private func scheduleRetry() {
+        guard !isStopped else { return }
         let delay = backoff.delay(afterFailures: consecutiveFailures)
         let sleep = self.sleep
         retryTask = Task { [weak self] in
             do { try await sleep(delay) } catch { return }
-            guard !Task.isCancelled, let self, !self.isSyncing else { return }
+            guard !Task.isCancelled, let self, !self.isStopped, !self.isSyncing else { return }
             self.retryTask = nil
             self.start()
         }
