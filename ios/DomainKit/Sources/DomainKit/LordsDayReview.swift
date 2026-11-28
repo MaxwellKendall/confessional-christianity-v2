@@ -218,6 +218,9 @@ public struct LordsDayReview: Codable, Equatable, Sendable {
     /// Set when drafting failed because the device was offline; persisted so the generator
     /// automatically retries when connectivity returns (even after an app kill, TKL-1069).
     public private(set) var retryWhenOnline: Bool = false
+    /// The note's service date was a guess (nothing on the pages or photos said it; batch import,
+    /// TKL-1107), so the review header says so until the person saves the details.
+    public private(set) var dateIsGuess: Bool = false
     /// What each note page said about the sermon (TKL-1061), persisted so a resumed review still has it.
     private var pageSermons: [Int: SermonDetails] = [:]
     /// The note page each page of the request in flight stands for (a retry sends only some).
@@ -237,7 +240,7 @@ public struct LordsDayReview: Codable, Equatable, Sendable {
     private var pageText: [PageTranscription] = []
 
     private enum CodingKeys: String, CodingKey {
-        case noteId, pageCount, phase, cards, readPages, failedPages, replayUnavailablePages, skippedPages, retryWhenOnline, requestPages, pageGenerationIds
+        case noteId, pageCount, phase, cards, readPages, failedPages, replayUnavailablePages, skippedPages, retryWhenOnline, requestPages, pageGenerationIds, dateIsGuess
         case pageSermons = "sermon"
     }
 
@@ -257,6 +260,7 @@ public struct LordsDayReview: Codable, Equatable, Sendable {
         replayUnavailablePages = try c.decodeIfPresent(Set<Int>.self, forKey: .replayUnavailablePages) ?? []
         skippedPages = try c.decodeIfPresent(Set<Int>.self, forKey: .skippedPages) ?? []
         retryWhenOnline = try c.decodeIfPresent(Bool.self, forKey: .retryWhenOnline) ?? false
+        dateIsGuess = try c.decodeIfPresent(Bool.self, forKey: .dateIsGuess) ?? false
         requestPages = try c.decode([Int].self, forKey: .requestPages)
         pageGenerationIds = try c.decodeIfPresent([Int: String].self, forKey: .pageGenerationIds) ?? [:]
         // Reviews saved before TKL-1061 have no sermon.
@@ -321,6 +325,11 @@ public struct LordsDayReview: Codable, Equatable, Sendable {
     public mutating func skipUnreadPages() {
         guard !isDrafting else { return }
         skippedPages.formUnion(unreadPages)
+    }
+
+    /// Records whether the note's service date was guessed (TKL-1107).
+    public mutating func setDateIsGuess(_ guessed: Bool) {
+        dateIsGuess = guessed
     }
 
     /// Marks that drafting failed because the device was offline, so it retries once connectivity returns.

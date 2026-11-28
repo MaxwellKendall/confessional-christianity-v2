@@ -111,7 +111,7 @@ public final class CaptureDraft {
         try JSONEncoder().encode(pages).write(to: folder.appendingPathComponent("pages.json"), options: .atomic)
     }
 
-    private static func makeFolder(_ url: URL) throws {
+    static func makeFolder(_ url: URL) throws {
         guard !FileManager.default.fileExists(atPath: url.path) else { return }
         try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
         var copy = url

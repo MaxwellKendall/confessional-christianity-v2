@@ -83,13 +83,7 @@ extension LordsDayNote {
     }
 
     private static func day(_ iso: String, calendar: Calendar) -> Date? {
-        let parts = iso.split(separator: "-").compactMap { Int($0) }
-        guard parts.count == 3, iso.count == 10 else { return nil }
-        let components = DateComponents(year: parts[0], month: parts[1], day: parts[2])
-        guard let date = calendar.date(from: components),
-              calendar.dateComponents([.year, .month, .day], from: date) == DateComponents(year: parts[0], month: parts[1], day: parts[2])
-        else { return nil }
-        return date
+        isoServiceDay(iso, calendar: calendar)
     }
 }
 
@@ -243,4 +237,15 @@ public struct SermonDetailsEdit: Equatable, Sendable {
             serviceDate: note.serviceDate
         )
     }
+}
+
+/// A `YYYY-MM-DD` date as the notes write it, at the start of that day; nil unless it is a real date.
+func isoServiceDay(_ iso: String, calendar: Calendar) -> Date? {
+    let parts = iso.split(separator: "-").compactMap { Int($0) }
+    guard parts.count == 3, iso.count == 10 else { return nil }
+    let components = DateComponents(year: parts[0], month: parts[1], day: parts[2])
+    guard let date = calendar.date(from: components),
+          calendar.dateComponents([.year, .month, .day], from: date) == DateComponents(year: parts[0], month: parts[1], day: parts[2])
+    else { return nil }
+    return date
 }
