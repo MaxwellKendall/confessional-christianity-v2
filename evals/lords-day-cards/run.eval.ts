@@ -5,6 +5,8 @@ import { expect, test } from 'vitest';
 import { SERMON_FIELDS, normalizeForMatch, type DraftCard, type SermonDetails, type SermonField } from '@/lib/lordsDay/cards';
 import { cardsModel } from '@/lib/lordsDay/gemini';
 import { handleCardsRequest } from '@/lib/lordsDay/handler';
+import { proposeGroups, scoreGrouping } from '@/lib/lordsDay/grouping';
+import { MAX_PAGES } from '@/lib/lordsDay/handler';
 import { createRateLimiter } from '@/lib/lordsDay/rateLimit';
 
 import { sermonFieldMadeUp, sermonFieldMatches, sermonFieldMisread } from './sermonMatch';
@@ -24,6 +26,12 @@ import { sermonFieldMadeUp, sermonFieldMatches, sermonFieldMisread } from './ser
 // value where the truth is null, or a different value that isn't a misreading of
 // it, sermonMatch.ts; misreads are reported and fail the case only). Cases with `typed` send
 // typed notes instead of a photo.
+//
+// The grouping eval (TKL-1107) sends each batch in grouping.json the way the app's
+// batch import does (chunks of up to 6 photos, no title/preacher/passage), groups
+// the pages from the `sermon` events that come back plus the batch's photo times,
+// and scores that against the batch's truth. It runs only when EVAL_CASES is unset
+// or names `grouping`. ~18 photos, about $0.2 a run.
 
 const DIR = __dirname;
 
@@ -163,6 +171,68 @@ test(
     // or if any sermon field was made up (TKL-1061: null when the notes don't say it)
     expect(results.some((r) => r.kinds.length > 0)).toBe(true);
     expect(results.flatMap((r) => r.sermonMadeUp.map((f) => `${r.id}.${f}=${JSON.stringify(r.sermon?.[f])}`))).toEqual([]);
+  },
+  10 * 60 * 1000,
+);
+
+interface GroupingBatch {
+  id: string;
+  pages: { case: string; takenAt: string | null }[];
+  truth: number[][];
+}
+
+const groupingEval = JSON.parse(readFileSync(path.join(DIR, 'grouping.json'), 'utf8')) as {
+  gapHours: number;
+  batches: GroupingBatch[];
+};
+
+const runGroupingBatch = async (batch: GroupingBatch, model: string, apiKey: string) => {
+  const photoOf = (id: string) => cases.find((c) => c.id === id)!.photo!;
+  const sermons: (SermonDetails | null)[] = batch.pages.map(() => null);
+  let costUsd = 0;
+  for (let start = 0; start < batch.pages.length; start += MAX_PAGES) {
+    const chunk = batch.pages.slice(start, start + MAX_PAGES);
+    const response = await handleCardsRequest(
+      new Request('http://eval/api/lords-day/cards', {
+        method: 'POST',
+        headers: { authorization: 'Bearer eval', 'content-type': 'application/json' },
+        body: JSON.stringify({
+          images: chunk.map((p) => ({ data: readFileSync(path.join(DIR, photoOf(p.case))).toString('base64'), mimeType: 'image/jpeg' })),
+        }),
+      }),
+      {
+        geminiApiKey: apiKey,
+        model,
+        verifyAccessToken: async () => ({ sub: 'eval' }),
+        limiter: createRateLimiter({ limit: 1000, windowMs: 1000 }),
+      },
+    );
+    for (const line of (await response.text()).split('\n').filter(Boolean)) {
+      const event = JSON.parse(line);
+      if (event.type === 'sermon') sermons[start + event.page] = event.sermon;
+      if (event.type === 'done') costUsd += event.costUsd ?? 0;
+    }
+  }
+  const groups = proposeGroups(batch.pages.map((p, i) => ({ takenAt: p.takenAt, sermon: sermons[i] })), groupingEval.gapHours);
+  return { id: batch.id, ...scoreGrouping(groups, batch.truth), groups, truth: batch.truth, sermons, costUsd };
+};
+
+test.runIf(!process.env.EVAL_CASES || process.env.EVAL_CASES.split(',').includes('grouping'))(
+  'lords-day batch grouping eval',
+  async () => {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) throw new Error('GEMINI_API_KEY is not set (source ~/dev/.secrets.env)');
+    const model = cardsModel();
+    const results = await Promise.all(groupingEval.batches.map((b) => runGroupingBatch(b, model, apiKey)));
+    const cost = results.reduce((s, r) => s + r.costUsd, 0);
+    const rows = results.map(
+      (r) => `${r.pass ? 'PASS' : 'FAIL'}  grouping ${r.id}  boundaries=${r.correct}/${r.total}  got=${JSON.stringify(r.groups)} want=${JSON.stringify(r.truth)}`,
+    );
+    console.log(`\n${rows.join('\n')}\n\nGROUPING ${results.filter((r) => r.pass).length}/${results.length}  model=${model}  cost=$${cost.toFixed(4)}\n`);
+    mkdirSync(path.join(DIR, 'results'), { recursive: true });
+    writeFileSync(path.join(DIR, 'results', `grouping-${model}.json`), `${JSON.stringify({ model, date: new Date().toISOString(), results }, null, 2)}\n`);
+    // A report, not a gate: it fails only if no page read came back at all.
+    expect(results.some((r) => r.sermons.some(Boolean))).toBe(true);
   },
   10 * 60 * 1000,
 );
