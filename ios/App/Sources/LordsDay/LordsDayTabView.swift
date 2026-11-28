@@ -136,9 +136,12 @@ struct LordsDayTabView: View {
                                         hasAnyKeptSermon: !reel.sermons.isEmpty, isReadingNotes: reading,
                                         readFailed: failed, hasPendingReview: pending != nil || status.reviewable,
                                         pendingReviewIsEmpty: pending?.review.hasNothingToKeep ?? false)
+        let emptyReviewWaiting = LordsDayLanding.showsEmptyReviewNote(
+            kind: kind, hasPendingReview: pending != nil, pendingReviewIsEmpty: pending?.review.hasNothingToKeep ?? false)
         return LordsDayLandingView(
             reel: reel, kind: kind, today: now, isSunday: isSunday, offline: offline,
-            stackPage: thisWeek.map(memory.page(for:)) ?? 0, draft: draft, calendar: calendar,
+            stackPage: thisWeek.map(memory.page(for:)) ?? 0, draft: draft, emptyReviewWaiting: emptyReviewWaiting,
+            calendar: calendar,
             onOpenReel: { reelStart = ReelOpening(position: $0) },
             onEditSermon: { noteId in
                 if let note = try? sync.lordsDayStore(in: context).note(id: noteId) {

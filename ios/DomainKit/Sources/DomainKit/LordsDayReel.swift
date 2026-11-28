@@ -311,6 +311,12 @@ public enum LordsDayLanding {
         return isSunday ? .sundayBeforeNotes : .noSermon
     }
 
+    /// The kept stack shows while a review with nothing to keep waits (TKL-1103): the landing adds a
+    /// small note under it that opens that review, so it can still be discarded.
+    public static func showsEmptyReviewNote(kind: Kind, hasPendingReview: Bool, pendingReviewIsEmpty: Bool) -> Bool {
+        kind == .week && hasPendingReview && pendingReviewIsEmpty
+    }
+
     public static func title(kind: Kind, isSunday: Bool) -> String {
         if kind == .firstSunday { return "Your sermon journal" }
         return isSunday ? "Today" : "This week"

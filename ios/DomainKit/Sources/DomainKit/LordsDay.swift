@@ -218,13 +218,34 @@ public func todayCardIndex(serviceDate: Date, today: Date, cardCount: Int, calen
     }
 
     /// Drops a review there is nothing to keep from (TKL-1103): its saved review and the
-    /// note's photos go, and so does the note itself when it has no kept cards.
+    /// note's photos go. A guest's note with no kept cards goes too. A signed-in device only
+    /// forgets the review locally: its copy having no cards doesn't mean the account has none
+    /// (another phone may have kept and synced cards for this note), so nothing is tombstoned.
     public func discardPendingReview(_ note: LordsDayNote, root: URL = CaptureDraft.defaultRoot) throws {
         try LordsDayReview.delete(noteId: note.id, root: root)
         let folder = root.appendingPathComponent(note.id.uuidString, isDirectory: true)
         if FileManager.default.fileExists(atPath: folder.path) { try FileManager.default.removeItem(at: folder) }
         if (try? CaptureDraft.activeNoteId(root: root)) == note.id { try CaptureDraft.setActive(nil, root: root) }
-        if try cards(for: note).isEmpty { try removeNote(note) }
+        guard try cards(for: note).isEmpty else { return }
+        if syncSubject == nil {
+            try removeNote(note)
+        } else {
+            try Self.markDiscarded(note.id, root: root)
+        }
+    }
+
+    private static func discardedMarker(_ noteId: UUID, root: URL) -> URL {
+        root.appendingPathComponent("discarded-reviews", isDirectory: true).appendingPathComponent(noteId.uuidString)
+    }
+
+    private static func markDiscarded(_ noteId: UUID, root: URL) throws {
+        let marker = discardedMarker(noteId, root: root)
+        try FileManager.default.createDirectory(at: marker.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try Data().write(to: marker, options: .atomic)
+    }
+
+    static func wasDiscarded(_ noteId: UUID, root: URL) -> Bool {
+        FileManager.default.fileExists(atPath: discardedMarker(noteId, root: root).path)
     }
 
     public func cards(for note: LordsDayNote) throws -> [NoteCard] {
@@ -427,7 +448,7 @@ public func todayCardIndex(serviceDate: Date, today: Date, cardCount: Int, calen
         return try notes.filter { note in
             if activeSessionIds.contains(note.id) { return true }
             if LordsDayReview.exists(noteId: note.id, root: root) { return true }
-            guard try cards(for: note).isEmpty else { return false }
+            guard try cards(for: note).isEmpty, !Self.wasDiscarded(note.id, root: root) else { return false }
             return CaptureDraft.savedPageCount(noteId: note.id, root: root) > 0 || normalizedNoteField(note.extractedText) != nil
         }
     }

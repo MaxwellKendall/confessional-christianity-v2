@@ -255,7 +255,8 @@ final class ReviewModel {
     }
 
     /// Drops notes there is nothing to keep from (TKL-1103): the saved review and the
-    /// photos go, and the note too when it has no kept cards, so it stops waiting for review.
+    /// photos go, so it stops waiting for review. A guest's note with no cards goes too; a
+    /// signed-in device forgets it locally and tombstones nothing (see `discardPendingReview`).
     func discard() throws {
         guard review.hasNothingToKeep else { throw LordsDayReviewError.nothingToKeep }
         task?.cancel()

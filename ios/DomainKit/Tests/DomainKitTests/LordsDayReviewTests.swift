@@ -934,6 +934,59 @@ final class LordsDayReviewTests: XCTestCase {
         XCTAssertEqual(try store.cards(for: note).map(\.body), ["Kept already"])
     }
 
+    // TKL-1103 review round 1: a signed-in device must not tombstone a note account-wide just because
+    // its own copy has no cards yet; another device may already have kept and synced cards for it.
+    func testSyncedDiscardStaysLocalSoAnotherDevicesKeptCardsSurvive() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("discard-synced-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let container = try ModelContainer(for: progressSchema, configurations: [ModelConfiguration(schema: progressSchema, isStoredInMemoryOnly: true)])
+        let context = ModelContext(container)
+        let store = LordsDayStore(context: context, syncSubject: "sub-a")
+
+        let note = LordsDayNote(serviceDate: Date(), extractedText: "Some words the reader saw")
+        try store.save(note)
+        try CaptureDraft(noteId: note.id, root: root).addPage(Data([0xFF, 0xD8, 0xFF]))
+        var review = LordsDayReview(noteId: note.id, pageCount: 1)
+        _ = review.begin()
+        review.apply(.page(0, cardCount: 0))
+        review.apply(.done(failedPages: []))
+        try review.save(root: root)
+        let outboxBefore = try context.fetch(FetchDescriptor<SyncOutboxEntry>()).count
+
+        try store.discardPendingReview(note, root: root)
+
+        XCTAssertEqual(try store.pendingReviewNotes(root: root).map(\.id), [], "the discarded review leaves this device's pending list")
+        XCTAssertFalse(LordsDayReview.exists(noteId: note.id, root: root))
+        XCTAssertEqual(CaptureDraft.savedPageCount(noteId: note.id, root: root), 0)
+        let outbox = try context.fetch(FetchDescriptor<SyncOutboxEntry>())
+        XCTAssertEqual(outbox.count, outboxBefore, "discard writes nothing to sync")
+        XCTAssertTrue(outbox.allSatisfy { $0.deletedAt == nil }, "no tombstone goes to the account")
+        XCTAssertNil(try store.note(id: note.id)?.deletedAt, "the synced note itself is left alone")
+
+        // Device B's kept card arrives on the next pull: the sermon shows in the reel.
+        try store.appendCard(to: note, kind: .keyPoint, body: "Kept on the other phone.")
+        let reel = try LordsDayReel(store: store)
+        XCTAssertEqual(reel.sermons.map(\.id), [note.id])
+        XCTAssertEqual(try store.pendingReviewNotes(root: root).map(\.id), [])
+    }
+
+    func testANewReadingOfADiscardedNoteIsPendingAgain() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("discard-again-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let container = try ModelContainer(for: progressSchema, configurations: [ModelConfiguration(schema: progressSchema, isStoredInMemoryOnly: true)])
+        let store = LordsDayStore(context: ModelContext(container), syncSubject: "sub-a")
+        let note = LordsDayNote(serviceDate: Date())
+        try store.save(note)
+        try CaptureDraft(noteId: note.id, root: root).addPage(Data([0xFF, 0xD8, 0xFF]))
+        try store.discardPendingReview(note, root: root)
+        XCTAssertEqual(try store.pendingReviewNotes(root: root).map(\.id), [])
+
+        var review = LordsDayReview(noteId: note.id, pageCount: 1)
+        _ = review.begin()
+        try review.save(root: root)
+        XCTAssertEqual(try store.pendingReviewNotes(root: root).map(\.id), [note.id])
+    }
+
     func testRetryUsesSavedGenerationWhenStreamDropsAfterPageHeader() throws {
         var review = LordsDayReview(noteId: UUID(), pageCount: 2)
         XCTAssertEqual(review.begin(), [0, 1])

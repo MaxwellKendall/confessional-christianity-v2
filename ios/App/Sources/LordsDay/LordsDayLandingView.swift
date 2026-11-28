@@ -39,6 +39,8 @@ struct LordsDayLandingView: View {
     /// This week's sermon's stack page (where it reopens).
     var stackPage: Int = 0
     var draft: LandingDraft?
+    /// A review with nothing to keep waits behind this week's kept stack (TKL-1103).
+    var emptyReviewWaiting = false
     var calendar: Calendar = .current
     var onOpenReel: (ReelPosition) -> Void = { _ in }
     var onEditSermon: ((UUID) -> Void)? = nil
@@ -111,6 +113,7 @@ struct LordsDayLandingView: View {
         switch kind {
         case .week:
             if let thisWeek { weekStack(thisWeek) }
+            if emptyReviewWaiting { emptyReviewNote }
             shelf
         case .sundayBeforeNotes:
             sundayCapture
@@ -214,6 +217,20 @@ struct LordsDayLandingView: View {
             EmptyStackArt(top: "SUNDAY · \(dateCaps(today))", title: "This week's sermon", line: "From your notes")
             leadCopy("Photograph this morning's notes. They become a stack of cards to carry through the week.")
             captureButtons(primary: "Photograph notes").padding(.top, 20)
+        }
+    }
+
+    /// Opens the review that drafted nothing, so it can be discarded (TKL-1103).
+    private var emptyReviewNote: some View {
+        section {
+            Button(action: onOpenReview) {
+                NotePanel(icon: "tray") {
+                    Text("Other notes, nothing to keep").fontWeight(.semibold).foregroundStyle(.ccInk)
+                        + Text("\nNo cards were drafted from them. Tap to review or discard.")
+                }
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("lordsDay.emptyReview")
         }
     }
 
@@ -615,6 +632,7 @@ struct LordsDayLandingFixture: View {
     @State private var opening: ReelPosition?
     @State private var path = NavigationPath()
     @State private var computedKind: LordsDayLanding.Kind?
+    @State private var emptyReviewWaiting = false
 
     private var defaults: UserDefaults { .standard }
 
@@ -635,7 +653,7 @@ struct LordsDayLandingFixture: View {
             LordsDayLandingView(
                 reel: reel, kind: kind, today: today, isSunday: isSunday, offline: scene == "offline",
                 stackPage: defaults.object(forKey: "LordsDayStackPage") == nil ? 4 : defaults.integer(forKey: "LordsDayStackPage"),
-                draft: Self.draft(scene), onOpenReel: { opening = $0 }
+                draft: Self.draft(scene), emptyReviewWaiting: emptyReviewWaiting, onOpenReel: { opening = $0 }
             )
             .toolbar(.hidden, for: .navigationBar)
             .appDestinations(path: $path)
@@ -648,7 +666,11 @@ struct LordsDayLandingFixture: View {
             let (reel, today) = Self.make(scene)
             self.reel = reel
             self.today = today
-            if scene == "keptPlusEmpty" { computedKind = Self.keptPlusEmptyKind(today: today) }
+            if scene == "keptPlusEmpty" {
+                let computed = Self.keptPlusEmptyKind(today: today)
+                computedKind = computed.kind
+                emptyReviewWaiting = computed.emptyReviewWaiting
+            }
             if let spec = defaults.string(forKey: "LordsDayReelAt") {
                 let parts = spec.split(separator: ":").compactMap { Int($0) }
                 if parts.count == 2 { opening = ReelPosition(sermon: parts[0], page: parts[1]) }
@@ -682,7 +704,7 @@ struct LordsDayLandingFixture: View {
 
     /// This week's kept sermon, then a second, untitled note of the same Sunday whose one page drafted
     /// nothing: the landing state the tab computes from the same store and saved review (TKL-1103).
-    @MainActor static func keptPlusEmptyKind(today: Date) -> LordsDayLanding.Kind {
+    @MainActor static func keptPlusEmptyKind(today: Date) -> (kind: LordsDayLanding.Kind, emptyReviewWaiting: Bool) {
         let calendar = Calendar.current
         let container = try! ModelContainer(for: progressSchema, configurations: [ModelConfiguration(schema: progressSchema, isStoredInMemoryOnly: true)])
         let store = LordsDayStore(context: ModelContext(container))
@@ -702,10 +724,12 @@ struct LordsDayLandingFixture: View {
         let pending = (try? store.pendingReviewNotes(root: root)) ?? []
         let first = pending.first.flatMap { try? LordsDayReview.load(noteId: $0.id, root: root) }
         let reel = (try? LordsDayReel(store: store, today: today, calendar: calendar)) ?? LordsDayReel(testSermonPageCounts: [])
-        return LordsDayLanding.kind(isSunday: calendar.component(.weekday, from: today) == 1,
-                                    hasThisWeeksSermon: reel.thisWeek(today: today, calendar: calendar) != nil,
-                                    hasAnyKeptSermon: !reel.sermons.isEmpty, isReadingNotes: false, readFailed: false,
-                                    hasPendingReview: !pending.isEmpty, pendingReviewIsEmpty: first?.hasNothingToKeep ?? false)
+        let isEmpty = first?.hasNothingToKeep ?? false
+        let kind = LordsDayLanding.kind(isSunday: calendar.component(.weekday, from: today) == 1,
+                                        hasThisWeeksSermon: reel.thisWeek(today: today, calendar: calendar) != nil,
+                                        hasAnyKeptSermon: !reel.sermons.isEmpty, isReadingNotes: false, readFailed: false,
+                                        hasPendingReview: !pending.isEmpty, pendingReviewIsEmpty: isEmpty)
+        return (kind, LordsDayLanding.showsEmptyReviewNote(kind: kind, hasPendingReview: !pending.isEmpty, pendingReviewIsEmpty: isEmpty))
     }
 
     @MainActor static func make(_ scene: String) -> (LordsDayReel, Date) {

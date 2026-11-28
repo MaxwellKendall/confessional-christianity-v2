@@ -215,6 +215,15 @@ import XCTest
         XCTAssertEqual(state(kept: true, review: true, empty: true), .reviewPending)
     }
 
+    // TKL-1103 review round 1: with the kept stack showing, the empty review still needs a way in.
+    func testWeekKeepsAWayBackToAnEmptyReview() {
+        XCTAssertTrue(LordsDayLanding.showsEmptyReviewNote(kind: .week, hasPendingReview: true, pendingReviewIsEmpty: true))
+        XCTAssertFalse(LordsDayLanding.showsEmptyReviewNote(kind: .week, hasPendingReview: false, pendingReviewIsEmpty: false))
+        XCTAssertFalse(LordsDayLanding.showsEmptyReviewNote(kind: .reviewPending, hasPendingReview: true, pendingReviewIsEmpty: true),
+                       "the review stack is the way in there")
+        XCTAssertFalse(LordsDayLanding.showsEmptyReviewNote(kind: .week, hasPendingReview: true, pendingReviewIsEmpty: false))
+    }
+
     func testHeaderTitle() {
         XCTAssertEqual(LordsDayLanding.title(kind: .week, isSunday: false), "This week")
         XCTAssertEqual(LordsDayLanding.title(kind: .week, isSunday: true), "Today")
