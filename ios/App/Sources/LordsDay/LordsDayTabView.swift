@@ -66,6 +66,9 @@ struct LordsDayTabView: View {
         .fullScreenCover(item: $batch, onDismiss: refresh) { model in
             BatchImportView(model: model, onClose: { batch = nil }, onKeep: {
                 ReminderScheduler.shared.refresh(in: context, keptSermon: true)
+            }, onJournal: {
+                batch = nil
+                path.append(JournalRoute.journal)
             })
         }
         .fullScreenCover(item: $review, onDismiss: refresh) { model in

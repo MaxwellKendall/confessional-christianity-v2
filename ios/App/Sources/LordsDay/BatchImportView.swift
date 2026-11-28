@@ -8,11 +8,13 @@ struct BatchImportView: View {
     @State var model: BatchImportModel
     var onClose: () -> Void
     var onKeep: () -> Void = {}
+    var onJournal: () -> Void = {}
 
     @Environment(\.colorScheme) private var colorScheme
     @State private var reviewing: ReviewModel?
     @State private var selectedSermon = 0
     @State private var kept: Set<UUID> = []
+    @State private var discarded: Set<UUID> = []
     @State private var opensDate = false
     @State private var picked: [PhotosPickerItem] = []
     @State private var showsPicker = false
@@ -28,13 +30,17 @@ struct BatchImportView: View {
         .background(Color.ccPaper.ignoresSafeArea())
         .fullScreenCover(item: $reviewing) { review in
             ReviewView(model: review, onClose: { reviewing = nil }, onFinish: {
-                kept.insert(review.noteId)
-                if let next = model.noteIds.indices.first(where: { $0 > selectedSermon && !kept.contains(model.noteIds[$0]) })
-                    ?? model.noteIds.indices.first(where: { !kept.contains(model.noteIds[$0]) }) {
+                if review.review.hasNothingToKeep {
+                    discarded.insert(review.noteId)
+                } else {
+                    kept.insert(review.noteId)
+                    onKeep()
+                }
+                let pending = model.noteIds.indices.filter { !kept.contains(model.noteIds[$0]) && !discarded.contains(model.noteIds[$0]) }
+                if let next = pending.first(where: { $0 > selectedSermon }) ?? pending.first {
                     selectedSermon = next
                 }
                 reviewing = nil
-                onKeep()
             }, startsEditingDate: opensDate)
         }
         .tint(.ccInk)
@@ -62,7 +68,9 @@ struct BatchImportView: View {
         switch model.step {
         case .picking, .reading: picking
         case .grouping: groupingList
-        case .done: queue
+        case .done:
+            if kept.count == model.noteIds.count { allKept }
+            else { queue }
         }
     }
 
@@ -105,9 +113,7 @@ struct BatchImportView: View {
             Text(title).font(.ccUI(15, weight: .semibold))
                 .frame(maxWidth: .infinity, minHeight: 48)
         }
-        .buttonStyle(.borderedProminent)
-        .tint(.ccChapel)
-        .foregroundStyle(.ccOnChapel)
+        .buttonStyle(ChapelPrimaryButtonStyle())
     }
 
     // MARK: Choosing and reading
@@ -406,7 +412,7 @@ struct BatchImportView: View {
                                     .font(.ccUI(12)).foregroundStyle(.ccInk2)
                             }
                             Spacer()
-                            Text(kept.contains(group.id) ? "✓ Kept" : "Ready").font(.ccUI(12, weight: .semibold))
+                            Text(queueStatus(group)).font(.ccUI(12, weight: .semibold))
                                 .foregroundStyle(.ccChapel)
                         }
                         .padding(10)
@@ -435,8 +441,8 @@ struct BatchImportView: View {
 
     private func queueCard(_ group: SermonGroup, index: Int) -> some View {
         let palette = queuePalette(index)
-        let isKept = kept.contains(group.id)
-        let dateIsGuess = !isKept && model.dateIsGuess(for: group.id)
+        let isPending = !kept.contains(group.id) && !discarded.contains(group.id)
+        let dateIsGuess = isPending && model.details(for: group.id)?.dateIsGuess == true
         return VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text(queueDate(group).formatted(.dateTime.weekday(.wide).month(.wide).day()).uppercased())
@@ -462,9 +468,9 @@ struct BatchImportView: View {
             }
             Spacer(minLength: 0)
             HStack {
-                Text(isKept ? "✓ Kept" : "Ready").font(.ccUI(12, weight: .semibold))
+                Text(queueStatus(group)).font(.ccUI(12, weight: .semibold))
                 Spacer()
-                if !isKept {
+                if isPending {
                     Button("Review") { openReview(group.id) }.buttonStyle(.borderedProminent).tint(Color(hex: palette.accent)).foregroundStyle(Color(hex: palette.field))
                         .accessibilityIdentifier("batch.queue.review")
                 }
@@ -475,6 +481,41 @@ struct BatchImportView: View {
         .foregroundStyle(Color(hex: palette.ink))
         .background(Color(hex: palette.field), in: RoundedRectangle(cornerRadius: 18))
         .overlay { RoundedRectangle(cornerRadius: 18).strokeBorder(Color(hex: palette.frame)) }
+    }
+
+    private func queueStatus(_ group: SermonGroup) -> String {
+        if kept.contains(group.id) { return "✓ Kept" }
+        if discarded.contains(group.id) { return "Discarded" }
+        if model.details(for: group.id)?.hasNothingToKeep == true { return "Couldn’t draft" }
+        return "Ready to review"
+    }
+
+    private var allKept: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
+                Image(systemName: "checkmark").font(.system(size: 34, weight: .medium))
+                    .foregroundStyle(.ccOnChapel)
+                    .frame(width: 80, height: 80)
+                    .background(Color.ccChapel, in: Circle())
+                    .frame(maxWidth: .infinity)
+                    .accessibilityHidden(true)
+                Text("Your sermons are in the journal on the days they were preached.")
+                    .font(.ccBody(17)).foregroundStyle(.ccInk2)
+                ForEach(model.grouping?.groups ?? []) { group in
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(queueTitle(group)).font(.ccDisplay(15, semibold: true))
+                        Text(queueDate(group).formatted(.dateTime.weekday(.wide).month(.wide).day().year()))
+                            .font(.ccUI(13)).foregroundStyle(.ccInk2)
+                    }
+                }
+            }
+            .padding(20)
+        }
+        .safeAreaInset(edge: .bottom) {
+            primaryButton("Open the journal", action: onJournal)
+                .padding(.horizontal, 20).padding(.vertical, 8)
+                .background(Color.ccPaper)
+        }
     }
 
     private func openReview(_ id: UUID, editingDate: Bool = false) {

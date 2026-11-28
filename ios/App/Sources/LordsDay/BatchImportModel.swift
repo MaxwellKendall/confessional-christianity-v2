@@ -193,8 +193,8 @@ final class BatchImportModel {
         try? storeProvider().note(id: id)
     }
 
-    func dateIsGuess(for id: UUID) -> Bool {
-        (try? LordsDayReview.load(noteId: id, root: root))?.dateIsGuess == true
+    func details(for id: UUID) -> LordsDayReview? {
+        try? LordsDayReview.load(noteId: id, root: root)
     }
 
     func review(for id: UUID) -> ReviewModel? {
