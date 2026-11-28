@@ -26,6 +26,8 @@ struct SessionView: View {
     @State private var track: ChildCatechismTrack?
     @State private var showJump = false
     @State private var showMilestones = false
+    /// A session started with no child asks who is learning (TKL-1116).
+    @State private var asksForChild = false
     /// Which edge the next question card enters from — set just before each
     /// state change so the transition below reads as a directional page turn
     /// (forward = enters from trailing, back = enters from leading) rather
@@ -140,12 +142,16 @@ struct SessionView: View {
         .sheet(isPresented: $showMilestones) {
             MilestonesView(program: program, currentQuestion: track?.currentQuestion ?? 1)
         }
-        .task {
-            load()
-            if let startQuestion {
-                jump(to: startQuestion)
-            }
+        .sheet(isPresented: $asksForChild, onDismiss: {
+            // Closing the prompt without a name leaves nothing to practise.
+            if track == nil { dismiss() }
+        }) {
+            AddChildView(
+                subtitle: "Who is learning the \(program.shortTitle)? Only a first name, kept on this iPhone.",
+                onAdded: { _ in start() }
+            )
         }
+        .task { start() }
     }
 
     private var header: some View {
@@ -209,10 +215,15 @@ struct SessionView: View {
         }
     }
 
-    private func load() {
-        let store = self.store
-        guard let childId = store.activeChildId ?? (try? store.addChild(name: "My child").id) else { return }
+    private func start() {
+        guard let childId = store.activeChildId else {
+            asksForChild = true
+            return
+        }
         track = store.resumeOrStartTrack(childId: childId, catechismId: program.contentId.rawValue)
+        if let startQuestion {
+            jump(to: startQuestion)
+        }
     }
 
     private func advance() {

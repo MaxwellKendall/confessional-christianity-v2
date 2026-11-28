@@ -154,6 +154,24 @@ struct ProgressSchemaTests {
         #expect(try container.mainContext.fetchCount(FetchDescriptor<ChildCatechismTrack>()) == 1)
         #expect(store.startTrack(childId: deletedId, catechismId: "WSC", startingQuestion: 1) == nil)
     }
+
+    @Test("removing the last child leaves no child, no progress and no active child (TKL-1116)")
+    @MainActor
+    func removesTheLastChild() throws {
+        let config = ModelConfiguration(schema: progressSchema, isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: progressSchema, configurations: [config])
+        let store = LocalProgressStore(context: container.mainContext)
+        let only = try store.addChild(name: "My child")
+        store.startTrack(childId: only.id, catechismId: "WSC", startingQuestion: 5)
+        try store.renameChild(childId: only.id, name: "Samuel")
+        #expect(store.todayChildren().map(\.name) == ["Samuel"])
+
+        try store.deleteChild(childId: only.id)
+        #expect(store.activeChildId == nil)
+        #expect(store.todayChildren().isEmpty)
+        #expect(try container.mainContext.fetchCount(FetchDescriptor<LocalChild>()) == 0)
+        #expect(try container.mainContext.fetchCount(FetchDescriptor<ChildCatechismTrack>()) == 0)
+    }
 }
 
 private enum LegacySettings {

@@ -44,4 +44,25 @@ public enum ChildName {
         }
         return .valid(name)
     }
+
+    /// Renaming a child in Settings (TKL-1116): the same rules as adding one,
+    /// checked against every other child, so keeping their own name is fine.
+    public static func validateRename(_ raw: String, childId: UUID, children: [(id: UUID, name: String)]) -> Check {
+        validate(raw, existing: children.filter { $0.id != childId }.map(\.name))
+    }
+
+    /// The confirmation shown before a child and their progress are removed.
+    public struct Removal: Equatable, Sendable {
+        public let title: String
+        public let message: String
+        public let confirm: String
+    }
+
+    public static func removal(name: String) -> Removal {
+        Removal(
+            title: "Remove \(name)?",
+            message: "\(name)'s catechism progress goes with them. This can't be undone.",
+            confirm: "Remove \(name)"
+        )
+    }
 }
