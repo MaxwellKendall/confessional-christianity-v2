@@ -247,6 +247,37 @@ public struct LordsDayReel: Equatable, Sendable {
     /// The sermon's index, for opening the reel at its cover.
     public func index(of id: UUID) -> Int? { sermons.firstIndex { $0.id == id } }
 
+    // MARK: the landing stack, swiped sideways (TKL-1096)
+
+    /// Whether `sermon` was kept for the week `today` falls in.
+    public func isThisWeek(_ sermon: ReelSermon, today: Date, calendar: Calendar = .current) -> Bool {
+        inWeek(sermon.serviceDate, of: today, calendar)
+    }
+
+    /// The sermon the landing stack shows: the one swiped to (`shown`) while it is still kept, else this
+    /// week's; nil when neither is there (the landing page then shows another state).
+    public func stackSermon(shown: UUID?, today: Date, calendar: Calendar = .current) -> Int? {
+        if let shown, let index = index(of: shown) { return index }
+        return thisWeek(today: today, calendar: calendar).flatMap { index(of: $0.id) }
+    }
+
+    /// One swipe from sermon `index`: `by` +1 is older, -1 newer. It stays put at either end, never wrapping.
+    public func stackStep(from index: Int, by step: Int) -> Int {
+        guard !sermons.isEmpty else { return 0 }
+        return min(max(index + step, 0), sermons.count - 1)
+    }
+
+    /// The stack's section header: "THIS WEEK'S SERMON", else the sermon's date ("NOV 15").
+    public func stackHeader(_ sermon: ReelSermon, today: Date, calendar: Calendar = .current) -> String {
+        isThisWeek(sermon, today: today, calendar: calendar) ? "THIS WEEK'S SERMON" : sermon.dateCaps
+    }
+
+    /// The hint under the stack's top card, saying where a swipe goes.
+    public func stackHint(at index: Int) -> String {
+        guard sermons.count > 1 else { return "Tap to open the stack" }
+        return index < sermons.count - 1 ? "Tap to open · swipe for earlier" : "Tap to open · your first kept"
+    }
+
     private func inWeek(_ date: Date, of day: Date, _ calendar: Calendar) -> Bool {
         let sunday = lastSunday(onOrBefore: day, calendar: calendar)
         let days = calendar.dateComponents([.day], from: sunday, to: calendar.startOfDay(for: date)).day ?? -1

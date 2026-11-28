@@ -1,7 +1,8 @@
 // The Lord's Day tab's landing page (TKL-1063, design TKL-1062): "The Lord's
 // Day" with this week's title and two round buttons (Journal, Camera); this
-// week's sermon as a stack that reopens on the card you were last on; and a
-// swipe row of earlier Lord's Days ending in the journal. Each state of the
+// week's sermon as a stack that reopens on the card you were last on, swiped
+// sideways to earlier sermons' stacks (TKL-1096); and a swipe row of earlier
+// Lord's Days ending in the journal, following the stack. Each state of the
 // week (Sunday before notes, reading notes, review pending, no sermon, before
 // a first Sunday, offline, read failed) is drawn here from plain inputs, so
 // the tab and the screenshot fixture share it.
@@ -36,8 +37,10 @@ struct LordsDayLandingView: View {
     let today: Date
     var isSunday: Bool
     var offline = false
-    /// This week's sermon's stack page (where it reopens).
-    var stackPage: Int = 0
+    /// Which page each sermon's stack reopens on.
+    var memory = LordsDayStackMemory()
+    /// The sermon the stack starts on (an index into the reel); nil is this week's.
+    var startSermon: Int? = nil
     var draft: LandingDraft?
     /// A review with nothing to keep waits behind this week's kept stack (TKL-1103).
     var emptyReviewWaiting = false
@@ -51,7 +54,10 @@ struct LordsDayLandingView: View {
     var onRetry: () -> Void = {}
     var onRefresh: (@MainActor () async -> Void)? = nil
 
-    private var thisWeek: ReelSermon? { reel.thisWeek(today: today, calendar: calendar) }
+    /// The sermon the stack was swiped to; nil until it moves (this week's).
+    @State private var shownSermon: UUID?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     private var earlier: [ReelSermon] { reel.earlier(today: today, calendar: calendar) }
 
     var body: some View {
@@ -112,7 +118,7 @@ struct LordsDayLandingView: View {
     @ViewBuilder private var content: some View {
         switch kind {
         case .week:
-            if let thisWeek { weekStack(thisWeek) }
+            if let index = reel.stackSermon(shown: shownSermon, today: today, calendar: calendar) { weekStack(at: index) }
             if emptyReviewWaiting { emptyReviewNote }
             shelf
         case .sundayBeforeNotes:
@@ -160,27 +166,64 @@ struct LordsDayLandingView: View {
 
     // MARK: the week's stack
 
-    private func weekStack(_ sermon: ReelSermon) -> some View {
-        let index = reel.index(of: sermon.id) ?? 0
-        let page = min(stackPage, sermon.pageCount - 1)
-        let peeking = LordsDayStackMemory.peeking(after: page, pageCount: sermon.pageCount)
+    /// The stack, swiped sideways through every kept sermon, newest to oldest (TKL-1096). A paging
+    /// horizontal scroll view: it locks to the swipe's direction, so vertical drags still scroll the
+    /// page; it builds only the stacks on screen; and at the oldest sermon it bounces rather than wraps.
+    private func weekStack(at index: Int) -> some View {
+        let sermon = reel.sermons[index]
         return section {
-            sectionHeader("THIS WEEK'S SERMON", action: "All cards", id: "lordsDay.allCards") {
+            sectionHeader(reel.stackHeader(sermon, today: today, calendar: calendar), action: "All cards", id: "lordsDay.allCards") {
                 onOpenReel(ReelPosition(sermon: index, page: 0))
             }
-            StackFrame(under: peeking.map { sermon.palette(atPage: $0) }) {
-                SermonCardView(
-                    sermon: sermon,
-                    page: page,
-                    hint: "Tap to open the stack",
-                    onEditDetails: onEditSermon.map { edit in { edit(sermon.id) } }
-                )
+            ScrollView(.horizontal, showsIndicators: false) {
+                LazyHStack(spacing: 0) {
+                    ForEach(Array(reel.sermons.enumerated()), id: \.element.id) { k, sermon in
+                        stackPage(sermon, at: k)
+                            .padding(.horizontal, ChapelSpace.gutter)
+                            .containerRelativeFrame(.horizontal)
+                    }
+                }
+                .scrollTargetLayout()
+                .padding(.bottom, 28)
             }
-            .contentShape(Rectangle())
-            .onTapGesture { onOpenReel(ReelPosition(sermon: index, page: page)) }
-            .accessibilityAddTraits(.isButton)
-            .accessibilityIdentifier("lordsDay.stack")
+            .scrollTargetBehavior(.paging)
+            .scrollPosition(id: Binding(get: { sermon.id }, set: { id in
+                if let id, id != sermon.id { shownSermon = id }
+            }))
+            .padding(.horizontal, -ChapelSpace.gutter)
+            .padding(.bottom, -28)
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("lordsDay.deck")
         }
+        .onChange(of: reel.sermons.map(\.id), initial: true) { _, ids in
+            if let start = startSermon, shownSermon == nil, ids.indices.contains(start) { shownSermon = ids[start] }
+        }
+    }
+
+    private func stackPage(_ sermon: ReelSermon, at index: Int) -> some View {
+        let page = memory.page(for: sermon)
+        let peeking = LordsDayStackMemory.peeking(after: page, pageCount: sermon.pageCount)
+        return StackFrame(under: peeking.map { sermon.palette(atPage: $0) }) {
+            SermonCardView(
+                sermon: sermon,
+                page: page,
+                hint: reel.stackHint(at: index),
+                onEditDetails: onEditSermon.map { edit in { edit(sermon.id) } }
+            )
+        }
+        .contentShape(Rectangle())
+        .onTapGesture { onOpenReel(ReelPosition(sermon: index, page: page)) }
+        .accessibilityAddTraits(.isButton)
+        .accessibilityHint("Opens the stack. Swipe up or down for another Lord's Day.")
+        .accessibilityAdjustableAction { direction in
+            let step = direction == .increment ? 1 : -1
+            showSermon(reel.sermons[reel.stackStep(from: index, by: step)].id)
+        }
+        .accessibilityIdentifier(index == 0 ? "lordsDay.stack" : "lordsDay.stack.\(sermon.shortDate)")
+    }
+
+    private func showSermon(_ id: UUID) {
+        if reduceMotion { shownSermon = id } else { withAnimation(.easeOut(duration: 0.3)) { shownSermon = id } }
     }
 
     private var reviewStack: some View {
@@ -394,10 +437,12 @@ struct LordsDayLandingView: View {
     @ViewBuilder private var shelf: some View {
         section {
             sectionHeader("EARLIER LORD'S DAYS", action: "Journal", id: "lordsDay.shelfJournal", perform: onJournal)
+            ScrollViewReader { proxy in
             ScrollView(.horizontal, showsIndicators: false) {
                 LazyHStack(spacing: 10) {
                     ForEach(earlier) { sermon in
-                        SermonTile(sermon: sermon, detail: sermon.passage == sermon.title ? nil : sermon.passage)
+                        SermonTile(sermon: sermon, detail: sermon.passage == sermon.title ? nil : sermon.passage,
+                                   isShown: kind == .week && sermon.id == shownSermon)
                             .frame(width: 150, height: 186)
                             .contentShape(Rectangle())
                             .onTapGesture { onOpenReel(ReelPosition(sermon: reel.index(of: sermon.id) ?? 0, page: 0)) }
@@ -417,6 +462,15 @@ struct LordsDayLandingView: View {
             }
             .scrollTargetBehavior(.viewAligned)
             .padding(.horizontal, -ChapelSpace.gutter)
+            // The row follows the stack: swiping to an earlier sermon brings its tile into view, marked.
+            .onChange(of: shownSermon) { _, id in
+                guard kind == .week else { return }
+                let target = id.flatMap { id in earlier.contains { $0.id == id } ? id : nil }
+                guard let target = target ?? earlier.first?.id else { return }
+                if reduceMotion { proxy.scrollTo(target, anchor: .leading) }
+                else { withAnimation(.easeOut(duration: 0.3)) { proxy.scrollTo(target, anchor: .leading) } }
+            }
+            }
         }
     }
 
@@ -458,6 +512,8 @@ private struct StackFrame<Card: View>: View {
 private struct SermonTile: View {
     let sermon: ReelSermon
     var detail: String?
+    /// The stack above is on this sermon (TKL-1096).
+    var isShown = false
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
@@ -479,6 +535,10 @@ private struct SermonTile: View {
                 .padding(6)
         }
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay {
+            if isShown { RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Color.ccGilt, lineWidth: 2) }
+        }
+        .accessibilityAddTraits(isShown ? .isSelected : [])
     }
 }
 
@@ -623,7 +683,7 @@ private extension View {
 /// its state comes from the store through `LordsDayLanding.kind`, as on the tab)
 /// draws the landing page in that state from an in-memory store (this week's sermon is the
 /// Revelation 2:8-11 note; earlier ones are samples). `-LordsDayStackPage 4` puts the stack on that
-/// page; `-LordsDayReelAt 0:4` opens the reel at sermon 0, page 4; `-LordsDayReelBubble YES`
+/// page; `-LordsDayStackSermon 2` starts the stack swiped to sermon 2 (TKL-1096); `-LordsDayReelAt 0:4` opens the reel at sermon 0, page 4; `-LordsDayReelBubble YES`
 /// shows the scrub bubble as if the rail were being dragged.
 struct LordsDayLandingFixture: View {
     let scene: String
@@ -652,7 +712,8 @@ struct LordsDayLandingFixture: View {
         NavigationStack(path: $path) {
             LordsDayLandingView(
                 reel: reel, kind: kind, today: today, isSunday: isSunday, offline: scene == "offline",
-                stackPage: defaults.object(forKey: "LordsDayStackPage") == nil ? 4 : defaults.integer(forKey: "LordsDayStackPage"),
+                memory: Self.memory(reel, page: defaults.object(forKey: "LordsDayStackPage") == nil ? 4 : defaults.integer(forKey: "LordsDayStackPage")),
+                startSermon: defaults.object(forKey: "LordsDayStackSermon") == nil ? nil : defaults.integer(forKey: "LordsDayStackSermon"),
                 draft: Self.draft(scene), emptyReviewWaiting: emptyReviewWaiting, onOpenReel: { opening = $0 }
             )
             .toolbar(.hidden, for: .navigationBar)
@@ -681,6 +742,14 @@ struct LordsDayLandingFixture: View {
     private struct FixtureOpening: Identifiable {
         let position: ReelPosition
         var id: ReelPosition { position }
+    }
+
+    /// The newest sermon's stack on `page`; the next one on its second card, so a swipe shows each keeps its own.
+    static func memory(_ reel: LordsDayReel, page: Int) -> LordsDayStackMemory {
+        var memory = LordsDayStackMemory()
+        if let first = reel.sermons.first { memory.remember(page: page, for: first.id) }
+        if reel.sermons.count > 1 { memory.remember(page: 1, for: reel.sermons[1].id) }
+        return memory
     }
 
     static func draft(_ scene: String) -> LandingDraft? {

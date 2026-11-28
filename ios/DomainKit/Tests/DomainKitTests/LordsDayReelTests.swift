@@ -187,6 +187,58 @@ import XCTest
         XCTAssertEqual(LordsDayStackMemory.peeking(after: 0, pageCount: 2), [1, 0])
     }
 
+    // MARK: swiping the landing stack sideways (TKL-1096)
+
+    func testTheStackSwipesNewestToOldestWithoutWrapping() throws {
+        let store = try makeStore()
+        try sermon(store, day(2026, 11, 22), title: "Smyrna", cards: 6)
+        try sermon(store, day(2026, 11, 15), title: "Grace upon Grace", cards: 3)
+        try sermon(store, day(2026, 11, 8), title: "The Golden Chain", cards: 4)
+        let reel = try LordsDayReel(store: store, calendar: calendar)
+        // Older is the next sermon along; newer the one before.
+        XCTAssertEqual(reel.stackStep(from: 0, by: 1), 1)
+        XCTAssertEqual(reel.stackStep(from: 1, by: -1), 0)
+        // At either end it stays put: no wrapping round.
+        XCTAssertEqual(reel.stackStep(from: 2, by: 1), 2)
+        XCTAssertEqual(reel.stackStep(from: 0, by: -1), 0)
+        XCTAssertEqual(LordsDayReel(testSermonPageCounts: []).stackStep(from: 0, by: 1), 0)
+    }
+
+    func testTheStackOpensOnThisWeekAndKeepsTheSermonYouSwipedTo() throws {
+        let store = try makeStore()
+        try sermon(store, day(2026, 11, 22), title: "Smyrna", cards: 6)
+        let chain = try sermon(store, day(2026, 11, 8), title: "The Golden Chain", cards: 4)
+        let reel = try LordsDayReel(store: store, today: day(2026, 11, 26), calendar: calendar)
+        let thursday = day(2026, 11, 26)
+        XCTAssertEqual(reel.stackSermon(shown: nil, today: thursday, calendar: calendar), 0)
+        XCTAssertEqual(reel.stackSermon(shown: chain.id, today: thursday, calendar: calendar), 1)
+        // A sermon no longer kept falls back to this week's.
+        XCTAssertEqual(reel.stackSermon(shown: UUID(), today: thursday, calendar: calendar), 0)
+        // With no sermon this week there is no stack.
+        XCTAssertNil(reel.stackSermon(shown: nil, today: day(2026, 12, 3), calendar: calendar))
+        XCTAssertEqual(reel.stackSermon(shown: chain.id, today: day(2026, 12, 3), calendar: calendar), 1)
+    }
+
+    func testTheStackHeaderNamesThisWeekOrTheSermonsDate() throws {
+        let store = try makeStore()
+        try sermon(store, day(2026, 11, 22), title: "Smyrna", cards: 6)
+        try sermon(store, day(2026, 11, 15), title: "Grace upon Grace", cards: 3)
+        try sermon(store, day(2025, 11, 23), title: "A year ago", cards: 2)
+        let thursday = day(2026, 11, 26)
+        let reel = try LordsDayReel(store: store, today: thursday, calendar: calendar)
+        XCTAssertEqual(reel.stackHeader(reel.sermons[0], today: thursday, calendar: calendar), "THIS WEEK'S SERMON")
+        XCTAssertEqual(reel.stackHeader(reel.sermons[1], today: thursday, calendar: calendar), "NOV 15")
+        XCTAssertEqual(reel.stackHeader(reel.sermons[2], today: thursday, calendar: calendar), "NOV 23, 2025")
+    }
+
+    func testTheStackHintSaysWhereTheSwipeGoes() {
+        let three = LordsDayReel(testSermonPageCounts: [7, 5, 4])
+        XCTAssertEqual(three.stackHint(at: 0), "Tap to open · swipe for earlier")
+        XCTAssertEqual(three.stackHint(at: 1), "Tap to open · swipe for earlier")
+        XCTAssertEqual(three.stackHint(at: 2), "Tap to open · your first kept")
+        XCTAssertEqual(LordsDayReel(testSermonPageCounts: [7]).stackHint(at: 0), "Tap to open the stack")
+    }
+
     // MARK: the landing page's state
 
     func testLandingStates() {

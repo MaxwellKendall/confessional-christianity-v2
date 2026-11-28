@@ -140,7 +140,7 @@ struct LordsDayTabView: View {
             kind: kind, hasPendingReview: pending != nil, pendingReviewIsEmpty: pending?.review.hasNothingToKeep ?? false)
         return LordsDayLandingView(
             reel: reel, kind: kind, today: now, isSunday: isSunday, offline: offline,
-            stackPage: thisWeek.map(memory.page(for:)) ?? 0, draft: draft, emptyReviewWaiting: emptyReviewWaiting,
+            memory: memory, draft: draft, emptyReviewWaiting: emptyReviewWaiting,
             calendar: calendar,
             onOpenReel: { reelStart = ReelOpening(position: $0) },
             onEditSermon: { noteId in
