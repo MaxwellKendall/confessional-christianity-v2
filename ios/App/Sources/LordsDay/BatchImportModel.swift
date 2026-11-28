@@ -19,6 +19,7 @@ final class BatchImportModel {
     private(set) var pages: [BatchPage] = []
     private(set) var thumbnails: [UUID: UIImage] = [:]
     private(set) var grouping: SermonGrouping?
+    private(set) var retryingPage: UUID?
     private(set) var failure: CardsGeneratorError?
     private(set) var saveFailed = false
     /// The notes made from the groups, in order.
@@ -80,6 +81,7 @@ final class BatchImportModel {
     }
 
     func removePage(_ id: UUID) {
+        guard retryingPage == nil else { return }
         do {
             try draft.removePage(id)
             thumbnails[id] = nil
@@ -120,6 +122,28 @@ final class BatchImportModel {
             } catch {
                 self.saveFailed = true
                 self.step = .picking
+            }
+        }
+    }
+
+    func retry(_ page: UUID) {
+        guard step == .grouping, retryingPage == nil,
+              let index = pages.firstIndex(where: { $0.id == page && $0.read?.failed == true }) else { return }
+        retryingPage = page
+        task = Task { [weak self] in
+            guard let self else { return }
+            defer { retryingPage = nil }
+            do {
+                let chunk = index..<(index + 1)
+                var reader = BatchChunkReader(chunk: chunk)
+                for try await event in generator.draft(try draft.request(for: chunk)) {
+                    reader.apply(event)
+                }
+                try Task.checkCancellation()
+                try draft.record(reader)
+                pages = draft.pages
+            } catch {
+                // The original failed page stays visible and can be retried again.
             }
         }
     }

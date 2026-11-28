@@ -440,7 +440,7 @@ struct NoteDetailsView: View {
 }
 
 #if DEBUG
-/// Screenshot hook: `-LordsDayCaptureFixture camera|strip|type|details`. Uses a
+/// Screenshot hook: `-LordsDayCaptureFixture camera|strip|type|details|batchEntry`. Uses a
 /// throwaway folder and an in-memory store, so it never touches real notes.
 struct CaptureFixture: View {
     let scene: String
@@ -452,7 +452,8 @@ struct CaptureFixture: View {
         ZStack {
             Color.black.ignoresSafeArea()
             if let model {
-                CaptureView(model: model, onClose: {}, simulatedViewfinder: Self.samplePage())
+                CaptureView(model: model, onClose: {}, onImportSeveral: scene == "batchEntry" ? {} : nil,
+                            simulatedViewfinder: Self.samplePage())
                     .sheet(isPresented: $showsTyping) { TypeNotesView(model: model).preferredColorScheme(systemColorScheme()) }
                     .sheet(isPresented: $showsDetails) { NoteDetailsView(model: model).preferredColorScheme(systemColorScheme()) }
             }

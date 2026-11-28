@@ -1,7 +1,4 @@
-// The batch import screens (TKL-1107 skeleton: plain visuals; the approved
-// design is TKL-1108). Choose up to 30 photos, read them, check which pages
-// make each sermon (move a page, start a new sermon at a page, merge two), then
-// make one note per sermon, each waiting in the existing review.
+// Choose sermon photos, correct the proposed groups, and review each imported sermon.
 import SwiftUI
 import SwiftData
 import PhotosUI
@@ -12,6 +9,7 @@ struct BatchImportView: View {
     var onClose: () -> Void
     var onKeep: () -> Void = {}
 
+    @Environment(\.colorScheme) private var colorScheme
     @State private var reviewing: ReviewModel?
     @State private var selectedSermon = 0
     @State private var kept: Set<UUID> = []
@@ -74,7 +72,7 @@ struct BatchImportView: View {
         case .picking: "Several sermons at once"
         case .reading: "Reading your notes"
         case .grouping: "Here's how I split them"
-        case .done: kept.count == model.noteIds.count ? "All sermons kept" : "Review each sermon"
+        case .done: kept.count == model.noteIds.count ? "All sermons kept" : "\(kept.count) of \(model.noteIds.count) kept"
         }
         let eyebrow = switch model.step {
         case .grouping: "Import · \(model.pages.count) pages · \(groups) sermons"
@@ -182,7 +180,7 @@ struct BatchImportView: View {
 
     private var introArtwork: some View {
         ZStack {
-            ForEach(0..<3) { index in
+            ForEach(0..<4) { index in
                 RoundedRectangle(cornerRadius: 6)
                     .fill(Color.ccSurface)
                     .overlay { RoundedRectangle(cornerRadius: 6).strokeBorder(Color.ccLine) }
@@ -192,11 +190,11 @@ struct BatchImportView: View {
                             .foregroundStyle(.ccGilt)
                     }
                     .frame(width: 66, height: 86)
-                    .rotationEffect(.degrees(Double(index - 1) * 13))
-                    .offset(x: Double(index - 1) * 35)
+                    .rotationEffect(.degrees((Double(index) - 1.5) * 5))
+                    .offset(x: (Double(index) - 1.5) * 39)
             }
         }
-        .frame(maxWidth: .infinity, minHeight: 144)
+        .frame(maxWidth: .infinity, minHeight: 110)
         .background(Color.ccFill, in: RoundedRectangle(cornerRadius: 16))
         .accessibilityHidden(true)
     }
@@ -209,7 +207,8 @@ struct BatchImportView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(12)
-        .background(Color.ccFill, in: RoundedRectangle(cornerRadius: 12))
+        .background(Color.ccSurface, in: RoundedRectangle(cornerRadius: 12))
+        .overlay { RoundedRectangle(cornerRadius: 12).strokeBorder(Color.ccLine) }
     }
 
     private func failureText(_ failure: CardsGeneratorError) -> String {
@@ -266,7 +265,7 @@ struct BatchImportView: View {
                 primaryButton(oversized > 0 ? "Fix \(oversized) over the page limit" : "Draft \(groups.count) sermon\(groups.count == 1 ? "" : "s")") {
                     do { try model.finish() } catch { finishFailed = true }
                 }
-                .disabled(!(model.grouping?.canContinue ?? false))
+                .disabled(!(model.grouping?.canContinue ?? false) || model.retryingPage != nil)
                 .accessibilityIdentifier("batch.finish")
             }
             .padding(.horizontal, 20).padding(.vertical, 8)
@@ -310,6 +309,14 @@ struct BatchImportView: View {
                     }
                 }
             }
+            if let page = group.pageIds.first(where: { id in model.pages.contains { $0.id == id && $0.read?.failed == true } }) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Page \(pageNumber(page)) couldn’t be read.")
+                    Button(model.retryingPage == page ? "Reading again…" : "Try again") { model.retry(page) }
+                        .disabled(model.retryingPage != nil)
+                }
+                .font(.ccUI(12, weight: .semibold)).foregroundStyle(.ccDanger)
+            }
             if over {
                 Text("\(group.pageIds.count) pages. A sermon takes \(CaptureDraft.maxPages) at most.")
                     .font(.ccUI(12, weight: .semibold)).foregroundStyle(.ccDanger)
@@ -347,6 +354,7 @@ struct BatchImportView: View {
         } label: {
             thumbnail(page, label: "\(pageNumber(page))", read: true)
         }
+        .disabled(model.retryingPage != nil)
         .draggable(page.uuidString)
         .accessibilityLabel("Page \(pageNumber(page))")
         .accessibilityIdentifier("batch.page.\(pageNumber(page))")
@@ -368,24 +376,30 @@ struct BatchImportView: View {
         let groups = model.grouping?.groups ?? []
         return ScrollView {
             VStack(alignment: .leading, spacing: 10) {
-                ProgressView(value: Double(selectedSermon + 1), total: Double(max(groups.count, 1)))
-                    .tint(.ccChapel)
-                    .padding(.horizontal, 20)
+                HStack(spacing: 5) {
+                    ForEach(Array(groups.enumerated()), id: \.element.id) { index, group in
+                        Capsule().fill(kept.contains(group.id) ? Color.ccChapel : Color.ccGilt)
+                            .frame(height: 4)
+                            .overlay { Capsule().strokeBorder(index == selectedSermon ? Color.ccInk : .clear) }
+                    }
+                }
+                .padding(.horizontal, 20)
+                .accessibilityHidden(true)
                 Text("Sermon \(selectedSermon + 1) of \(groups.count) · \(kept.count) kept")
                     .font(.ccUI(12)).foregroundStyle(.ccInk2).padding(.horizontal, 20)
                     .accessibilityIdentifier("batch.queue.progress")
                 TabView(selection: $selectedSermon) {
                     ForEach(Array(groups.enumerated()), id: \.element.id) { index, group in
-                        queueCard(group).padding(.horizontal, 20).tag(index)
+                        queueCard(group, index: index).padding(.horizontal, 20).tag(index)
                     }
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
-                .frame(height: 256)
+                .frame(height: 320)
 
                 ForEach(Array(groups.enumerated()), id: \.element.id) { index, group in
                     Button { selectedSermon = index } label: {
                         HStack(spacing: 10) {
-                            RoundedRectangle(cornerRadius: 3).fill(Color.ccChapel).frame(width: 5, height: 30)
+                            RoundedRectangle(cornerRadius: 3).fill(Color(hex: queuePalette(index).accent)).frame(width: 5, height: 30)
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(queueTitle(group)).font(.ccDisplay(14, semibold: true)).foregroundStyle(.ccInk)
                                 Text(queueDate(group).formatted(.dateTime.month(.abbreviated).day()))
@@ -414,13 +428,19 @@ struct BatchImportView: View {
         model.note(for: group.id)?.serviceDate ?? model.date(of: group).date
     }
 
-    private func queueCard(_ group: SermonGroup) -> some View {
+    private func queuePalette(_ index: Int) -> QuoteCardPalette {
+        let rotation = LordsDayFeed.rotation
+        return LordsDayFeed.palette(rotation[index % rotation.count], dark: colorScheme == .dark)
+    }
+
+    private func queueCard(_ group: SermonGroup, index: Int) -> some View {
+        let palette = queuePalette(index)
         let isKept = kept.contains(group.id)
         let dateIsGuess = !isKept && model.dateIsGuess(for: group.id)
         return VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text(queueDate(group).formatted(.dateTime.month(.wide).day().year()).uppercased())
-                    .font(.ccLabelCaps).tracking(0.7)
+                Text(queueDate(group).formatted(.dateTime.weekday(.wide).month(.wide).day()).uppercased())
+                    .font(.ccLabelCaps).tracking(0.7).foregroundStyle(Color(hex: palette.accent))
                 if dateIsGuess {
                     Button { openReview(group.id, editingDate: true) } label: { dateMark(.guess) }
                         .buttonStyle(.plain)
@@ -429,11 +449,15 @@ struct BatchImportView: View {
             }
             Text(queueTitle(group)).font(.ccTitle).lineLimit(2)
             if let passage = model.note(for: group.id)?.passageRef {
-                Text(passage).font(.ccUI(12)).lineLimit(1)
+                Text(passage).font(.ccBody(17)).lineLimit(1)
             }
+            if let preacher = model.note(for: group.id)?.preacher {
+                Text(preacher).font(.ccUI(13)).foregroundStyle(Color(hex: palette.muted))
+            }
+            Spacer(minLength: 0)
             HStack(spacing: 5) {
                 ForEach(group.pageIds.prefix(6), id: \.self) { page in
-                    thumbnail(page, label: "\(pageNumber(page))", read: true, width: 34, height: 42)
+                    thumbnail(page, label: "\(pageNumber(page))", read: true, width: 40, height: 52)
                 }
             }
             Spacer(minLength: 0)
@@ -441,16 +465,16 @@ struct BatchImportView: View {
                 Text(isKept ? "✓ Kept" : "Ready").font(.ccUI(12, weight: .semibold))
                 Spacer()
                 if !isKept {
-                    Button("Review") { openReview(group.id) }.buttonStyle(.borderedProminent)
+                    Button("Review") { openReview(group.id) }.buttonStyle(.borderedProminent).tint(Color(hex: palette.accent)).foregroundStyle(Color(hex: palette.field))
                         .accessibilityIdentifier("batch.queue.review")
                 }
             }
         }
         .padding(16)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .foregroundStyle(.ccChapel)
-        .background(Color.ccFill, in: RoundedRectangle(cornerRadius: 18))
-        .overlay { RoundedRectangle(cornerRadius: 18).strokeBorder(Color.ccLine) }
+        .foregroundStyle(Color(hex: palette.ink))
+        .background(Color(hex: palette.field), in: RoundedRectangle(cornerRadius: 18))
+        .overlay { RoundedRectangle(cornerRadius: 18).strokeBorder(Color(hex: palette.frame)) }
     }
 
     private func openReview(_ id: UUID, editingDate: Bool = false) {
