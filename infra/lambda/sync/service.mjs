@@ -216,9 +216,25 @@ async function applyChange(db, subject, record, sleep) {
       return { status: "REJECTED", reason: "UNAUTHORIZED" };
     }
     const creating = !access && !previous && record.table === "children" && !record.deleted_at;
-    if (!creating && (!canAccess(access, subject) ||
-        (record.table === "children" && record.deleted_at && access.owner !== subject))) {
+    if (!creating && !canAccess(access, subject)) {
       return { status: "REJECTED", reason: "UNAUTHORIZED" };
+    }
+    if (record.deleted_at && access.owner !== subject) {
+      // Only the owner may remove a whole child. A co-guardian's removal sends the profile
+      // tombstone first, then its progress tombstones with the same deleted_at: remember the
+      // refused removal so none of its progress tombstones apply, in this batch or a later one.
+      const deniedKey = `removal_denied#${subject}`;
+      if (record.table === "children") {
+        const denied = await db.get(childKey, deniedKey);
+        if (denied?.deleted_at !== record.deleted_at) {
+          await db.commit([write(childKey, deniedKey, denied, { version: randomUUID(), deleted_at: record.deleted_at })]);
+        }
+        return { status: "REJECTED", reason: "UNAUTHORIZED" };
+      }
+      const denied = await db.get(childKey, deniedKey);
+      if (denied?.deleted_at === record.deleted_at) {
+        return { status: "REJECTED", reason: "UNAUTHORIZED" };
+      }
     }
     if (previous && previous.record.updated_at >= record.updated_at) {
       return { status: "ACCEPTED", reason: null };

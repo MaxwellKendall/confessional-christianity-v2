@@ -626,6 +626,13 @@ public final class LocalProgressStore {
     ) throws {
         guard let subject = syncSubject else { return }
         let cid = child.id.uuidString.lowercased()
+        // The profile goes first: the server refuses a co-guardian's profile tombstone and then
+        // every progress tombstone with the same deletedAt, so a shared child's progress survives
+        // a removal only its owner may make (TKL-1116).
+        try SyncMetaStore.enqueueOutbox(
+            subject: subject, table: SyncTable.children, rowId: cid, childId: cid,
+            payload: nil, updatedAt: deletedAt, deletedAt: deletedAt, in: context
+        )
         var tombstoned = Set<String>()
         for track in tracks {
             for key in track.milestones.keys.compactMap(Int.init).sorted() {
@@ -669,9 +676,5 @@ public final class LocalProgressStore {
             }
             context.delete(meta)
         }
-        try SyncMetaStore.enqueueOutbox(
-            subject: subject, table: SyncTable.children, rowId: cid, childId: cid,
-            payload: nil, updatedAt: deletedAt, deletedAt: deletedAt, in: context
-        )
     }
 }

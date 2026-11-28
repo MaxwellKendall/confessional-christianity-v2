@@ -56,9 +56,9 @@ Linear project: **confessional christianity** (team TKL): https://linear.app/sof
 |---|---|---|
 | web unit | `npm test` (vitest, 392 tests, incl. `scripts/**/*.test.mjs`; 60 s timeouts for the loaded build Mac) | ~1 s |
 | web build | `npm run build` (needs `.env.local`; ESLint enforced) | ~15 s |
-| DomainKit | `cd ios/DomainKit && swift test` (452 tests: 330 Swift Testing + 122 XCTest) | ~15 s |
+| DomainKit | `cd ios/DomainKit && swift test` (453 tests: 331 Swift Testing + 122 XCTest) | ~15 s |
 | iOS build | `cd ios/App && xcodegen generate && xcodebuild -scheme ConfessionalChristianity -destination 'platform=iOS Simulator,name=CC iPhone 17 Pro' -derivedDataPath ../../build/dd build` | 15+ min cold (AWS SDK), ~1 min warm |
-| infra | `cd infra && npm ci && npm test` (vitest CDK assertions, 20 tests) | ~6 s |
+| infra | `cd infra && npm ci && npm test` (vitest: CDK assertions and the sync resolvers, 90 tests) | ~6 s |
 | iOS UI (loop events) | `cd ios/App && xcodegen generate && xcodebuild test -scheme ConfessionalChristianity -destination 'platform=iOS Simulator,name=CC iPhone 17 Pro' -derivedDataPath ../../build/dd -only-testing:ConfessionalChristianityUITests` (not a Verify check; sends real events) | ~3 min |
 
 ### Lord's Day loop analytics (TKL-947)

@@ -612,6 +612,36 @@ struct ChildProgressSyncTests {
         #expect(try ctx1.fetch(FetchDescriptor<ChildCatechismTrack>()).isEmpty)
     }
 
+    @Test("removing a child sends its profile tombstone before its progress tombstones, all with one deleted_at")
+    func removingAChildSendsTheProfileTombstoneFirst() async throws {
+        // The server refuses a co-guardian's profile tombstone and then every progress tombstone
+        // carrying the same deleted_at, so the profile must reach it first (TKL-1116).
+        let subject = "11111111-1111-4111-8111-111111111111"
+        let ctx = try makeProgressContext()
+        let store = LocalProgressStore(context: ctx, syncSubject: subject)
+        let engine = SyncEngine(
+            context: ctx,
+            transport: FakeAppSyncServer().transport(for: subject),
+            tables: ChildProgressSyncAdapters.all(),
+            subject: subject,
+            pushBatchSize: 20,
+            pullPageSize: 50
+        )
+        let samuel = try store.addChild(name: "Samuel", age: 9)
+        _ = store.resumeOrStartTrack(childId: samuel.id, catechismId: "WSC")
+        _ = store.advanceQuestion(childId: samuel.id, catechismId: "WSC", totalQuestions: 107)
+        try await engine.sync()
+        #expect(try engine.pendingChanges().isEmpty)
+
+        try store.deleteChild(childId: samuel.id)
+        let pending = try engine.pendingChanges()
+        #expect(pending.count > 1)
+        let first = try #require(pending.first)
+        #expect(first.table == SyncTable.children)
+        #expect(first.rowId.lowercased() == samuel.id.uuidString.lowercased())
+        #expect(pending.allSatisfy { $0.deletedAt != nil && $0.deletedAt == first.deletedAt })
+    }
+
     @Test("a child shared by a co-guardian appears and edits sync both ways using the server's row IDs")
     func coGuardianSharedChildSyncsBothWays() async throws {
         let server = FakeAppSyncServer()

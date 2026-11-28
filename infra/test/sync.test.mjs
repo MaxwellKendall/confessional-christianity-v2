@@ -546,3 +546,39 @@ it("records ownership and row catalog entries for account deletion and blocks re
   await expect(pull(owner, "note_cards")).rejects.toThrow("Not authorized");
   await expect(push(owner, { ...noteChange, row_id: secondNoteId, note_id: secondNoteId })).rejects.toThrow("Not authorized");
 });
+
+it("refuses a co-guardian's whole-child removal without touching the profile or its progress", async () => {
+  const { push, pull, grant } = fixture();
+  await expect(push(owner, profile)).resolves.toEqual([accepted()]);
+  await expect(push(owner, { ...assignment, id: secondOperation })).resolves.toEqual([accepted(secondOperation)]);
+  await expect(push(owner, { ...assignment, id: thirdOperation, row_id: secondProgress, table: "catechism_pacing",
+    payload: JSON.stringify({ catechism_slug: "shorter", current_question: 4 }) }))
+    .resolves.toEqual([accepted(thirdOperation)]);
+  grant();
+
+  // The app sends the profile tombstone first, then the progress tombstones of the same removal,
+  // possibly in a later batch.
+  const removedAt = later;
+  const tombstone = { payload: null, updated_at: removedAt, deleted_at: removedAt };
+  await expect(push(guardian, { ...profile, ...tombstone }, { ...assignment, ...tombstone, id: secondOperation }))
+    .resolves.toEqual([rejected("UNAUTHORIZED"), rejected("UNAUTHORIZED", secondOperation)]);
+  await expect(push(guardian, { ...assignment, ...tombstone, id: thirdOperation, row_id: secondProgress,
+    table: "catechism_pacing" })).resolves.toEqual([rejected("UNAUTHORIZED", thirdOperation)]);
+
+  // The owner still pulls a live profile and live progress, with no tombstone published.
+  await expect(pull(owner, "children")).resolves.toMatchObject([{ id: child, deleted_at: null }]);
+  await expect(pull(owner, "catechism_assignments")).resolves.toMatchObject([{ id: progress, deleted_at: null }]);
+  await expect(pull(owner, "catechism_pacing")).resolves.toMatchObject([{ id: secondProgress, deleted_at: null }]);
+
+  // A co-guardian's own later row-level tombstone (e.g. clearing progress) still applies.
+  const unmarkAt = "2026-11-21T10:02:00.000Z";
+  await expect(push(guardian, { ...assignment, payload: null, updated_at: unmarkAt, deleted_at: unmarkAt }))
+    .resolves.toEqual([accepted()]);
+
+  // The owner can still remove the child and its progress.
+  const ownerAt = "2026-11-21T10:03:00.000Z";
+  const ownerTombstone = { payload: null, updated_at: ownerAt, deleted_at: ownerAt };
+  await expect(push(owner, { ...profile, ...ownerTombstone },
+    { ...assignment, ...ownerTombstone, id: secondOperation, row_id: secondProgress, table: "catechism_pacing" }))
+    .resolves.toEqual([accepted(), accepted(secondOperation)]);
+});
