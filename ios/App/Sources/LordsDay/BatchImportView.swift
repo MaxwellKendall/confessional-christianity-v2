@@ -710,7 +710,7 @@ struct LordsDayBatchFixture: View {
             root = FileManager.default.temporaryDirectory.appendingPathComponent("batch-fixture-\(UUID().uuidString)")
             storeProvider = { LordsDayStore(context: context) }
         }
-        let generator = BatchFixtureGenerator(failsPage: scene == "failed" ? 6 : nil,
+        let generator = BatchFixtureGenerator(failsPage: scene == "failed" ? 1 : nil,
                                              pageDelay: scene == "reading" ? .seconds(2) : .milliseconds(120))
         guard let model = try? BatchImportModel(context: context, storeProvider: storeProvider, generator: generator, root: root) else { return }
         if scene == "cap" {
