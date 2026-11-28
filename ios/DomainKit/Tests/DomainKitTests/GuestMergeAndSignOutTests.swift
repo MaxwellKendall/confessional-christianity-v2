@@ -465,4 +465,105 @@ struct GuestMergeAndSignOutTests {
         #expect(childrenOnDevice.map(\.id) == [childB.id])
         #expect(try ctx.fetch(FetchDescriptor<LordsDayNote>()).isEmpty)
     }
+
+    // MARK: - Session expiry and per-account SyncRowMeta (TKL-1081)
+
+    @Test("a session expiry keeps the outbox: signing in again as the same subject resumes and pushes the queued edit")
+    func sessionExpiryKeepsOutboxForSameSubject() async throws {
+        let server = FakeFullAccountSyncServer()
+        let ctx = try makeContext()
+        let progress = LocalProgressStore(context: ctx, syncSubject: subjectA)
+        let engine = SyncEngine(
+            context: ctx, transport: server.transport(for: subjectA),
+            tables: AccountSyncAdapters.all(subject: subjectA), subject: subjectA
+        )
+        let child = try progress.addChild(name: "Samuel", now: gmStamp(1))
+        _ = progress.resumeOrStartTrack(childId: child.id, catechismId: "WSC", now: gmStamp(2))
+        try await engine.sync()
+        #expect(try AccountSession.signIn(subject: subjectA, lastSyncedSubject: nil, in: ctx) == .resume)
+
+        // Offline edit, then the refresh token expires: the runtime stops, nothing is cleared.
+        server.online = false
+        _ = progress.advanceQuestion(childId: child.id, catechismId: "WSC", totalQuestions: 107, now: gmStamp(5))
+        await #expect(throws: (any Error).self) { try await engine.sync() }
+        let queued = try engine.pendingChanges()
+        #expect(!queued.isEmpty)
+        engine.invalidate()
+        server.online = true
+        server.pushedBySubject[subjectA] = []
+
+        // Same subject signs in again: resume, the queued edit is still there and is pushed.
+        #expect(try AccountSession.signIn(subject: subjectA, lastSyncedSubject: subjectA, in: ctx) == .resume)
+        #expect(try ctx.fetch(FetchDescriptor<SyncRowMeta>()).isEmpty == false)
+        let resumed = SyncEngine(
+            context: ctx, transport: server.transport(for: subjectA),
+            tables: AccountSyncAdapters.all(subject: subjectA), subject: subjectA
+        )
+        #expect(try resumed.pendingChanges().map(\.id) == queued.map(\.id))
+        try await resumed.sync()
+        let pushedIds = Set((server.pushedBySubject[subjectA] ?? []).map(\.id))
+        #expect(Set(queued.map(\.id)).isSubset(of: pushedIds))
+        #expect(try resumed.pendingChanges().isEmpty)
+    }
+
+    @Test("after a session expiry, a different subject signing in clears the first account's data, outbox and SyncRowMeta and starts with no metadata")
+    func differentSubjectAfterExpiryStartsWithNoMetadata() async throws {
+        let server = FakeFullAccountSyncServer()
+        let ctx = try makeContext()
+        let progressA = LocalProgressStore(context: ctx, syncSubject: subjectA)
+        let engineA = SyncEngine(
+            context: ctx, transport: server.transport(for: subjectA),
+            tables: AccountSyncAdapters.all(subject: subjectA), subject: subjectA
+        )
+        let child = try progressA.addChild(name: "AccountAChild", now: gmStamp(1))
+        _ = progressA.resumeOrStartTrack(childId: child.id, catechismId: "WSC", now: gmStamp(2))
+        try await engineA.sync()
+        _ = progressA.advanceQuestion(childId: child.id, catechismId: "WSC", totalQuestions: 107, now: gmStamp(3))
+        #expect(try ctx.fetch(FetchDescriptor<SyncRowMeta>()).isEmpty == false)
+        engineA.invalidate() // session expired, no explicit sign-out
+
+        #expect(try AccountSession.signIn(subject: subjectB, lastSyncedSubject: subjectA, in: ctx) == .firstOnDevice)
+        #expect(try ctx.fetch(FetchDescriptor<SyncRowMeta>()).isEmpty)
+        #expect(try ctx.fetch(FetchDescriptor<SyncOutboxEntry>()).isEmpty)
+        #expect(try ctx.fetch(FetchDescriptor<SyncCursorRecord>()).isEmpty)
+        #expect(try ctx.fetch(FetchDescriptor<LocalChild>()).isEmpty)
+        #expect(try GuestDataMerge.summary(in: ctx).hasData == false)
+    }
+
+    @Test("a first sign-in with no prior owner drops stale SyncRowMeta but keeps guest data for the merge")
+    func firstSignInDropsStaleMetadataKeepsGuestData() throws {
+        let ctx = try makeContext()
+        // Metadata left behind by an older build with no last-synced-subject marker.
+        ctx.insert(SyncRowMeta(table: SyncTable.children, rowId: UUID().uuidString, childId: UUID().uuidString,
+                               naturalKey: "stale", updatedAt: gmStamp(1)))
+        try ctx.save()
+        let guest = LocalProgressStore(context: ctx)
+        _ = try guest.addChild(name: "GuestChild", now: gmStamp(2))
+
+        #expect(try AccountSession.signIn(subject: subjectB, lastSyncedSubject: nil, in: ctx) == .firstOnDevice)
+        #expect(try ctx.fetch(FetchDescriptor<SyncRowMeta>()).isEmpty)
+        #expect(try GuestDataMerge.summary(in: ctx).childCount == 1)
+    }
+
+    @Test("explicit sign-out still clears the outbox and SyncRowMeta, so signing in again as the same subject starts fresh")
+    func explicitSignOutStillClears() async throws {
+        let server = FakeFullAccountSyncServer()
+        let ctx = try makeContext()
+        let progress = LocalProgressStore(context: ctx, syncSubject: subjectA)
+        let engine = SyncEngine(
+            context: ctx, transport: server.transport(for: subjectA),
+            tables: AccountSyncAdapters.all(subject: subjectA), subject: subjectA
+        )
+        let child = try progress.addChild(name: "Samuel", now: gmStamp(1))
+        try await engine.sync()
+        _ = progress.resumeOrStartTrack(childId: child.id, catechismId: "WSC", now: gmStamp(2))
+        #expect(try !engine.pendingChanges().isEmpty)
+        engine.invalidate()
+        try AccountDataCleanup.clearSyncedData(for: subjectA, in: ctx)
+
+        #expect(try ctx.fetch(FetchDescriptor<SyncOutboxEntry>()).isEmpty)
+        #expect(try ctx.fetch(FetchDescriptor<SyncRowMeta>()).isEmpty)
+        // The app forgets the last-synced subject on sign-out, so the next sign-in is a first one.
+        #expect(try AccountSession.signIn(subject: subjectA, lastSyncedSubject: nil, in: ctx) == .firstOnDevice)
+    }
 }

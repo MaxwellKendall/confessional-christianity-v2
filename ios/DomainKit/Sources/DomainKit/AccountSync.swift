@@ -1477,3 +1477,42 @@ public enum AccountDataCleanup {
         }
     }
 }
+
+/// What a sign-in does to local sync state (TKL-1081). A session expiry is not a
+/// sign-out: the app only stops syncing and keeps the outbox, cursors and
+/// `SyncRowMeta`, so the same account signing in again resumes and pushes what
+/// was queued. Only an explicit sign-out (`AccountDataCleanup`) clears them.
+@MainActor
+public enum AccountSession {
+    public enum SignIn: Equatable, Sendable {
+        /// This device already synced as this subject: keep everything and resume.
+        case resume
+        /// First sign-in for this subject here: local data is guest data (offer the merge).
+        case firstOnDevice
+    }
+
+    /// Prepares local state for `subject` signing in, given the subject that last
+    /// synced on this device. A different previous owner (left behind by a session
+    /// expiry) has its synced data, outbox, cursors and metadata cleared so none of
+    /// it reaches the new account. On a first sign-in any leftover `SyncRowMeta`
+    /// (written only by signed-in stores, so never guest state) is dropped, so
+    /// every subject starts with no metadata.
+    public static func signIn(subject: String, lastSyncedSubject: String?, in context: ModelContext) throws -> SignIn {
+        if let previous = lastSyncedSubject, previous != subject {
+            try AccountDataCleanup.clearSyncedData(for: previous, in: context)
+            return .firstOnDevice
+        }
+        if lastSyncedSubject == subject { return .resume }
+        if try SyncEngine.hasSyncedState(for: subject, in: context) { return .resume }
+        do {
+            for meta in try context.fetch(FetchDescriptor<SyncRowMeta>()) {
+                context.delete(meta)
+            }
+            try context.save()
+        } catch {
+            context.rollback()
+            throw error
+        }
+        return .firstOnDevice
+    }
+}

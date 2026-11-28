@@ -114,17 +114,25 @@ final class SyncService {
         }
         _ = syncURL
 
-        // If another account previously owned local data and exited uncleanly
-        // (e.g. session expiry without explicit sign-out), clear its data so it
-        // is never treated as guest data or uploaded to the new account.
-        if let previousOwner = lastSyncedSubject, previousOwner != nextSubject {
-            clearLocalAccountData(subject: previousOwner)
+        // A session expiry (user nil above) only stops the runtime: the outbox,
+        // cursors and SyncRowMeta stay, so the same account resumes here (TKL-1081).
+        // A different previous owner's data is cleared so it never reaches the new
+        // account; a first sign-in drops any leftover SyncRowMeta.
+        let previousOwner = lastSyncedSubject
+        if let previousOwner, previousOwner != nextSubject {
+            clearLocalSessionState()
             lastSyncedSubject = nil
         }
-
-        let alreadySyncedHere = lastSyncedSubject == nextSubject
-            || ((try? SyncEngine.hasSyncedState(for: nextSubject, in: container.mainContext)) ?? false)
-        if alreadySyncedHere {
+        let plan: AccountSession.SignIn
+        do {
+            plan = try AccountSession.signIn(
+                subject: nextSubject, lastSyncedSubject: previousOwner, in: container.mainContext
+            )
+        } catch {
+            Self.logger.error("failed to prepare local state for sign-in: \(String(describing: error), privacy: .public)")
+            plan = previousOwner == nextSubject ? .resume : .firstOnDevice
+        }
+        if plan == .resume {
             lastSyncedSubject = nextSubject
             pendingGuestMerge = nil
             guestMergePhase = .idle
@@ -320,10 +328,15 @@ final class SyncService {
         isSyncing = false
     }
 
-    private func clearLocalAccountData(subject: String?) {
+    /// Drafting sessions, the active capture draft and the Lord's Day tab memory.
+    private func clearLocalSessionState() {
         ReviewModel.cancelAllSessions()
         try? CaptureDraft.setActive(nil)
         UserDefaults.standard.removeObject(forKey: LordsDayTabView.memoryKey)
+    }
+
+    private func clearLocalAccountData(subject: String?) {
+        clearLocalSessionState()
         do {
             try AccountDataCleanup.clearSyncedData(for: subject, in: container.mainContext)
         } catch {
