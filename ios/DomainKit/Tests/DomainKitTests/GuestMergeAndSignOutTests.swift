@@ -530,6 +530,51 @@ struct GuestMergeAndSignOutTests {
         #expect(try GuestDataMerge.summary(in: ctx).hasData == false)
     }
 
+    @Test("a failed cleanup of the previous owner keeps its marker and refuses the sign-in; a retry clears it before any merge is offered")
+    func failedOwnerCleanupBlocksSignInUntilRetry() async throws {
+        let server = FakeFullAccountSyncServer()
+        let ctx = try makeContext()
+        let progressA = LocalProgressStore(context: ctx, syncSubject: subjectA)
+        let engineA = SyncEngine(
+            context: ctx, transport: server.transport(for: subjectA),
+            tables: AccountSyncAdapters.all(subject: subjectA), subject: subjectA
+        )
+        let child = try progressA.addChild(name: "AccountAChild", now: gmStamp(1))
+        try await engineA.sync()
+        engineA.invalidate() // A's session expired, no explicit sign-out
+        let owner = InMemoryAccountOwnerMarker(subject: subjectA)
+
+        struct DiskFull: Error {}
+        let blocked = AccountSession.prepareSignIn(
+            subject: subjectB, owner: owner, in: ctx,
+            clearSyncedData: { _, _ in throw DiskFull() }
+        )
+        #expect(blocked == .retryLater)
+        #expect(owner.subject == subjectA)
+        #expect(try ctx.fetch(FetchDescriptor<LocalChild>()).map(\.id) == [child.id])
+
+        let retried = AccountSession.prepareSignIn(subject: subjectB, owner: owner, in: ctx)
+        #expect(retried == .firstOnDevice)
+        #expect(owner.subject == nil)
+        #expect(try ctx.fetch(FetchDescriptor<LocalChild>()).isEmpty)
+        #expect(try ctx.fetch(FetchDescriptor<SyncRowMeta>()).isEmpty)
+        #expect(try GuestDataMerge.summary(in: ctx).hasData == false)
+    }
+
+    @Test("prepareSignIn resumes the same owner without touching its marker or outbox")
+    func prepareSignInResumesSameOwner() throws {
+        let ctx = try makeContext()
+        let progress = LocalProgressStore(context: ctx, syncSubject: subjectA)
+        _ = try progress.addChild(name: "Samuel", now: gmStamp(1))
+        let owner = InMemoryAccountOwnerMarker(subject: subjectA)
+        #expect(AccountSession.prepareSignIn(
+            subject: subjectA, owner: owner, in: ctx,
+            clearSyncedData: { _, _ in Issue.record("same owner must not be cleared") }
+        ) == .resume)
+        #expect(owner.subject == subjectA)
+        #expect(try !ctx.fetch(FetchDescriptor<SyncOutboxEntry>()).isEmpty)
+    }
+
     @Test("a first sign-in with no prior owner drops stale SyncRowMeta but keeps guest data for the merge")
     func firstSignInDropsStaleMetadataKeepsGuestData() throws {
         let ctx = try makeContext()

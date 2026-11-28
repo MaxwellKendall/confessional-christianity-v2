@@ -1478,6 +1478,18 @@ public enum AccountDataCleanup {
     }
 }
 
+/// Where the device remembers which subject last synced here (UserDefaults in the app).
+@MainActor
+public protocol AccountOwnerMarker: AnyObject {
+    var subject: String? { get set }
+}
+
+@MainActor
+public final class InMemoryAccountOwnerMarker: AccountOwnerMarker {
+    public var subject: String?
+    public init(subject: String? = nil) { self.subject = subject }
+}
+
 /// What a sign-in does to local sync state (TKL-1081). A session expiry is not a
 /// sign-out: the app only stops syncing and keeps the outbox, cursors and
 /// `SyncRowMeta`, so the same account signing in again resumes and pushes what
@@ -1489,6 +1501,45 @@ public enum AccountSession {
         case resume
         /// First sign-in for this subject here: local data is guest data (offer the merge).
         case firstOnDevice
+    }
+
+    public enum Outcome: Equatable, Sendable {
+        case resume
+        case firstOnDevice
+        /// Local cleanup failed (e.g. the store could not save): the previous owner's
+        /// marker and data are left as they were. Don't offer a merge or start sync;
+        /// call `prepareSignIn` again later.
+        case retryLater
+    }
+
+    /// The whole sign-in transition, including the device's "last synced subject"
+    /// marker. The marker moves only after the previous owner's data is cleared and
+    /// saved, so a failed cleanup can never leave that data looking like guest data
+    /// that a different account could be offered to merge (TKL-1081 verify finding).
+    @MainActor
+    public static func prepareSignIn(
+        subject: String,
+        owner: any AccountOwnerMarker,
+        in context: ModelContext,
+        clearSyncedData: ((String, ModelContext) throws -> Void)? = nil
+    ) -> Outcome {
+        let previous = owner.subject
+        do {
+            if let previous, previous != subject {
+                if let clearSyncedData {
+                    try clearSyncedData(previous, context)
+                } else {
+                    try AccountDataCleanup.clearSyncedData(for: previous, in: context)
+                }
+                owner.subject = nil
+            }
+            switch try signIn(subject: subject, lastSyncedSubject: owner.subject, in: context) {
+            case .resume: return .resume
+            case .firstOnDevice: return .firstOnDevice
+            }
+        } catch {
+            return .retryLater
+        }
     }
 
     /// Prepares local state for `subject` signing in, given the subject that last

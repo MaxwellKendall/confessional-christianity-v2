@@ -50,6 +50,10 @@ final class SyncService {
     @ObservationIgnored private var connectivityTask: Task<Void, Never>?
     @ObservationIgnored private var mergeTask: Task<Void, Never>?
 
+    /// A sign-in whose local cleanup failed; retried on the next foreground.
+    @ObservationIgnored private var pendingSignInRetry: DomainKit.AuthUser?
+    @ObservationIgnored private lazy var ownerMarker = UserDefaultsOwnerMarker(key: Self.lastSyncedSubjectKey)
+
     private var lastSyncedSubject: String? {
         get { UserDefaults.standard.string(forKey: Self.lastSyncedSubjectKey) }
         set {
@@ -98,6 +102,9 @@ final class SyncService {
     /// Reacts to Cognito auth transitions (restore, sign-in, sign-out, session expiry).
     func handleAuthChange(_ user: DomainKit.AuthUser?) {
         let nextSubject = user?.id
+        if pendingSignInRetry?.id != nextSubject {
+            pendingSignInRetry = nil
+        }
         if nextSubject == activeSubject && pendingGuestMerge == nil {
             return
         }
@@ -117,21 +124,23 @@ final class SyncService {
         // A session expiry (user nil above) only stops the runtime: the outbox,
         // cursors and SyncRowMeta stay, so the same account resumes here (TKL-1081).
         // A different previous owner's data is cleared so it never reaches the new
-        // account; a first sign-in drops any leftover SyncRowMeta.
-        let previousOwner = lastSyncedSubject
-        if let previousOwner, previousOwner != nextSubject {
+        // account; its marker moves only once that clear is saved. If cleanup fails,
+        // nothing is offered or synced and the transition is retried on the next
+        // foreground or auth change.
+        if let previousOwner = lastSyncedSubject, previousOwner != nextSubject {
             clearLocalSessionState()
-            lastSyncedSubject = nil
         }
-        let plan: AccountSession.SignIn
-        do {
-            plan = try AccountSession.signIn(
-                subject: nextSubject, lastSyncedSubject: previousOwner, in: container.mainContext
-            )
-        } catch {
-            Self.logger.error("failed to prepare local state for sign-in: \(String(describing: error), privacy: .public)")
-            plan = previousOwner == nextSubject ? .resume : .firstOnDevice
+        let plan = AccountSession.prepareSignIn(
+            subject: nextSubject, owner: ownerMarker, in: container.mainContext
+        )
+        if plan == .retryLater {
+            Self.logger.error("failed to prepare local state for sign-in; holding sync until a retry")
+            pendingGuestMerge = nil
+            guestMergePhase = .idle
+            pendingSignInRetry = user
+            return
         }
+        pendingSignInRetry = nil
         if plan == .resume {
             lastSyncedSubject = nextSubject
             pendingGuestMerge = nil
@@ -215,6 +224,7 @@ final class SyncService {
     /// Synchronously stops and invalidates in-flight sync and clears all synced
     /// account data from the device back to an empty guest state (TKL-1070).
     func signOutAndClearLocalData() {
+        pendingSignInRetry = nil
         let departingSubject = activeSubject ?? lastSyncedSubject
         stopRuntime()
         pendingGuestMerge = nil
@@ -227,6 +237,10 @@ final class SyncService {
 
     /// App came to the foreground: trigger an immediate non-blocking sync if signed in.
     func appDidBecomeActive() {
+        if let retry = pendingSignInRetry {
+            handleAuthChange(retry)
+            return
+        }
         guard pendingGuestMerge == nil, let scheduler else { return }
         isSyncing = true
         scheduler.appDidBecomeActive()
@@ -355,5 +369,22 @@ final class SyncService {
         }
         #endif
         return AccountSyncConfig.syncURL(in: bundle, resourceName: AuthService.outputsResource)
+    }
+}
+
+/// The "last synced subject" marker, stored in UserDefaults (TKL-1081).
+@MainActor
+private final class UserDefaultsOwnerMarker: AccountOwnerMarker {
+    private let key: String
+    init(key: String) { self.key = key }
+    var subject: String? {
+        get { UserDefaults.standard.string(forKey: key) }
+        set {
+            if let newValue {
+                UserDefaults.standard.set(newValue, forKey: key)
+            } else {
+                UserDefaults.standard.removeObject(forKey: key)
+            }
+        }
     }
 }
