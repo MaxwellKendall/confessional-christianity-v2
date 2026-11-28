@@ -24,6 +24,8 @@ final class BatchImportModel {
     /// The notes made from the groups, in order.
     private(set) var noteIds: [UUID] = []
 
+    @ObservationIgnored private let context: ModelContext
+    @ObservationIgnored private let root: URL
     @ObservationIgnored private let draft: BatchImportDraft
     @ObservationIgnored private let storeProvider: @MainActor () -> LordsDayStore
     @ObservationIgnored private let generator: CardsGenerator
@@ -42,6 +44,8 @@ final class BatchImportModel {
         root: URL = CaptureDraft.defaultRoot,
         now: @escaping () -> Date = Date.init
     ) throws {
+        self.context = context
+        self.root = root
         draft = try BatchImportDraft(root: root)
         self.storeProvider = storeProvider ?? { LordsDayStore(context: context) }
         self.generator = generator
@@ -76,9 +80,13 @@ final class BatchImportModel {
     }
 
     func removePage(_ id: UUID) {
-        try? draft.removePage(id)
-        thumbnails[id] = nil
-        pages = draft.pages
+        do {
+            try draft.removePage(id)
+            thumbnails[id] = nil
+            pages = draft.pages
+            grouping = draft.grouping
+            if pages.isEmpty { step = .picking }
+        } catch { saveFailed = true }
     }
 
     // MARK: Reading
@@ -122,6 +130,7 @@ final class BatchImportModel {
     func date(of group: SermonGroup) -> ServiceDateResolution { draft.date(of: group, now: now()) }
 
     func move(_ page: UUID, to group: UUID) { change { $0.move(page, to: group) } }
+    func moveToNewGroup(_ page: UUID) { change { $0.moveToNewGroup(page) } }
     func split(_ group: UUID, at page: UUID) { change { $0.split(group, at: page) } }
     func merge(_ group: UUID, into target: UUID) { change { $0.merge(group, into: target) } }
 
@@ -154,6 +163,19 @@ final class BatchImportModel {
         noteIds = grouping.groups.map(\.id)
         try draft.discard()
         step = .done
+    }
+
+    func note(for id: UUID) -> LordsDayNote? {
+        try? storeProvider().note(id: id)
+    }
+
+    func dateIsGuess(for id: UUID) -> Bool {
+        (try? LordsDayReview.load(noteId: id, root: root))?.dateIsGuess == true
+    }
+
+    func review(for id: UUID) -> ReviewModel? {
+        guard let note = note(for: id) else { return nil }
+        return ReviewModel.session(for: note, context: context, storeProvider: storeProvider, generator: generator, root: root)
     }
 
     /// Throws the batch away (the photos and what was read); notes already made stay.

@@ -10,25 +10,34 @@ import DomainKit
 struct BatchImportView: View {
     @State var model: BatchImportModel
     var onClose: () -> Void
-    /// The notes were made; the landing page lists their reviews.
-    var onFinish: ([UUID]) -> Void
+    var onKeep: () -> Void = {}
 
+    @State private var reviewing: ReviewModel?
+    @State private var selectedSermon = 0
+    @State private var kept: Set<UUID> = []
+    @State private var opensDate = false
     @State private var picked: [PhotosPickerItem] = []
     @State private var showsPicker = false
     @State private var showsCancel = false
     @State private var finishFailed = false
 
     var body: some View {
-        NavigationStack {
+        VStack(spacing: 0) {
+            header
             content
-                .background(Color.ccPaper.ignoresSafeArea())
-                .navigationTitle("Import several sermons")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("Cancel") { if model.pages.isEmpty { onClose() } else { showsCancel = true } }
-                    }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.ccPaper.ignoresSafeArea())
+        .fullScreenCover(item: $reviewing) { review in
+            ReviewView(model: review, onClose: { reviewing = nil }, onFinish: {
+                kept.insert(review.noteId)
+                if let next = model.noteIds.indices.first(where: { $0 > selectedSermon && !kept.contains(model.noteIds[$0]) })
+                    ?? model.noteIds.indices.first(where: { !kept.contains(model.noteIds[$0]) }) {
+                    selectedSermon = next
                 }
+                reviewing = nil
+                onKeep()
+            }, startsEditingDate: opensDate)
         }
         .tint(.ccInk)
         .photosPicker(isPresented: $showsPicker, selection: $picked, maxSelectionCount: max(1, model.remainingPhotos),
@@ -54,8 +63,53 @@ struct BatchImportView: View {
     @ViewBuilder private var content: some View {
         switch model.step {
         case .picking, .reading: picking
-        case .grouping, .done: groupingList
+        case .grouping: groupingList
+        case .done: queue
         }
+    }
+
+    private var header: some View {
+        let groups = model.grouping?.groups.count ?? 0
+        let title = switch model.step {
+        case .picking: "Several sermons at once"
+        case .reading: "Reading your notes"
+        case .grouping: "Here's how I split them"
+        case .done: kept.count == model.noteIds.count ? "All sermons kept" : "Review each sermon"
+        }
+        let eyebrow = switch model.step {
+        case .grouping: "Import · \(model.pages.count) pages · \(groups) sermons"
+        case .done: "Imported sermons"
+        default: "Import"
+        }
+        return HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 5) {
+                Text(eyebrow.uppercased()).font(.ccLabelCaps).tracking(1.2).foregroundStyle(.ccInk2)
+                Text(title).font(.ccTitle).foregroundStyle(.ccInk)
+            }
+            Spacer()
+            Button {
+                if model.pages.isEmpty || model.step == .done { onClose() }
+                else { showsCancel = true }
+            } label: {
+                Image(systemName: "xmark").font(.system(size: 15, weight: .semibold))
+                    .frame(width: 44, height: 44)
+                    .background(Color.ccFill, in: Circle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Close")
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 12)
+    }
+
+    private func primaryButton(_ title: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title).font(.ccUI(15, weight: .semibold))
+                .frame(maxWidth: .infinity, minHeight: 48)
+        }
+        .buttonStyle(.borderedProminent)
+        .tint(.ccChapel)
+        .foregroundStyle(.ccOnChapel)
     }
 
     // MARK: Choosing and reading
@@ -63,13 +117,23 @@ struct BatchImportView: View {
     private var picking: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                Text("Choose up to \(BatchImportDraft.maxPhotos) photos of sermon notes, from as many Sundays as you like. Each sermon keeps up to \(CaptureDraft.maxPages) pages.")
-                    .font(.ccUI(15))
-                    .foregroundStyle(.ccInk2)
-                    .accessibilityIdentifier("batch.cap")
-                Text("\(model.pages.count) of \(BatchImportDraft.maxPhotos) photos")
-                    .font(.ccUI(13, weight: .semibold))
-                    .foregroundStyle(.ccInk3)
+                if model.pages.isEmpty {
+                    introArtwork
+                    Text("Choose photos of notes from as many past sermons as you like.")
+                        .font(.ccBody(17))
+                    introNote("info.circle", "Up to \(BatchImportDraft.maxPhotos) photos per import. Have more? Import these first, then the rest.")
+                        .accessibilityIdentifier("batch.cap")
+                    introNote("text.alignleft", "Pages are sorted into sermons as they're read. You can check the split before reviewing cards.")
+                    introNote("calendar", "Each sermon is dated from its notes or photos. If neither has a date, the date is marked as a guess.")
+                } else {
+                    Text("\(model.pages.count) of \(BatchImportDraft.maxPhotos) photos")
+                        .font(.ccUI(13, weight: .semibold))
+                        .foregroundStyle(.ccInk2)
+                    ProgressView(value: Double(model.pages.count), total: Double(BatchImportDraft.maxPhotos)).tint(.ccChapel)
+                    if !model.canAddPhotos && model.step == .picking {
+                        Text("Add these, then import the rest.").font(.ccUI(13)).foregroundStyle(.ccInk2)
+                    }
+                }
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 72), spacing: 8)], spacing: 8) {
                     ForEach(Array(model.pages.enumerated()), id: \.element.id) { index, page in
                         thumbnail(page.id, label: "\(index + 1)", read: page.read != nil)
@@ -94,26 +158,58 @@ struct BatchImportView: View {
                             .foregroundStyle(.ccInk2)
                     }
                     .accessibilityIdentifier("batch.reading")
-                } else {
-                    Button { showsPicker = true } label: {
-                        Label(model.pages.isEmpty ? "Choose photos" : "Add photos", systemImage: "photo.on.rectangle")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.bordered)
-                    .disabled(!model.canAddPhotos)
-                    .accessibilityIdentifier("batch.choose")
-                    Button { model.read() } label: {
-                        Text(model.readCount > 0 ? "Read the rest" : "Read \(model.pages.count) photo\(model.pages.count == 1 ? "" : "s")")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(.ccChapel)
-                    .disabled(model.pages.isEmpty)
-                    .accessibilityIdentifier("batch.read")
                 }
             }
             .padding(20)
         }
+        .safeAreaInset(edge: .bottom) {
+            if model.step == .picking {
+                VStack(spacing: 8) {
+                    if model.canAddPhotos {
+                        primaryButton(model.pages.isEmpty ? "Choose Photos" : "Add Photos") { showsPicker = true }
+                            .accessibilityIdentifier("batch.choose")
+                    }
+                    if !model.pages.isEmpty {
+                        primaryButton(model.readCount > 0 ? "Read the rest" : "Read \(model.pages.count) photos") { model.read() }
+                            .accessibilityIdentifier("batch.read")
+                    }
+                }
+                .padding(.horizontal, 20).padding(.vertical, 8)
+                .background(Color.ccPaper)
+            }
+        }
+    }
+
+    private var introArtwork: some View {
+        ZStack {
+            ForEach(0..<3) { index in
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(Color.ccSurface)
+                    .overlay { RoundedRectangle(cornerRadius: 6).strokeBorder(Color.ccLine) }
+                    .overlay {
+                        Image(systemName: "text.alignleft")
+                            .font(.system(size: 30, weight: .thin))
+                            .foregroundStyle(.ccGilt)
+                    }
+                    .frame(width: 66, height: 86)
+                    .rotationEffect(.degrees(Double(index - 1) * 13))
+                    .offset(x: Double(index - 1) * 35)
+            }
+        }
+        .frame(maxWidth: .infinity, minHeight: 144)
+        .background(Color.ccFill, in: RoundedRectangle(cornerRadius: 16))
+        .accessibilityHidden(true)
+    }
+
+    private func introNote(_ icon: String, _ copy: String) -> some View {
+        Label {
+            Text(copy).font(.ccUI(13)).foregroundStyle(.ccInk2)
+        } icon: {
+            Image(systemName: icon).foregroundStyle(.ccGilt)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(Color.ccFill, in: RoundedRectangle(cornerRadius: 12))
     }
 
     private func failureText(_ failure: CardsGeneratorError) -> String {
@@ -129,99 +225,240 @@ struct BatchImportView: View {
 
     private var groupingList: some View {
         let groups = model.grouping?.groups ?? []
-        return List {
-            Section {
-                Text("Check which pages make each sermon. Hold a page to move it or start a new sermon there.")
-                    .font(.ccUI(14))
-                    .foregroundStyle(.ccInk2)
-            }
-            ForEach(Array(groups.enumerated()), id: \.element.id) { index, group in
-                Section {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 8) {
-                            ForEach(group.pageIds, id: \.self) { pageId in
-                                pageMenu(pageId, in: group, index: index, groups: groups)
-                            }
+        let oversized = model.grouping?.oversizedGroups.count ?? 0
+        return ScrollView {
+            VStack(spacing: 10) {
+                ForEach(Array(groups.enumerated()), id: \.element.id) { index, group in
+                    if index > 0 {
+                        Button {
+                            model.merge(group.id, into: groups[index - 1].id)
+                        } label: {
+                            Label("Same sermon", systemImage: "arrow.triangle.merge")
+                                .font(.ccUI(12, weight: .semibold))
+                                .padding(.horizontal, 12).padding(.vertical, 8)
+                                .background(Color.ccFill, in: Capsule())
                         }
-                        .padding(.vertical, 4)
+                        .buttonStyle(.plain)
+                        .accessibilityIdentifier("batch.merge.\(index - 1)")
                     }
-                    if group.pageIds.count > CaptureDraft.maxPages {
-                        Text("A sermon keeps up to \(CaptureDraft.maxPages) pages. Split this one at a page.")
-                            .font(.ccUI(13))
-                            .foregroundStyle(.ccDanger)
-                    }
-                    if index + 1 < groups.count {
-                        Button("Merge with sermon \(index + 2)") { model.merge(groups[index + 1].id, into: group.id) }
-                            .font(.ccUI(14))
-                            .accessibilityIdentifier("batch.merge.\(index)")
-                    }
-                } header: {
-                    groupHeader(group, index: index)
+                    groupCard(group, index: index, groups: groups)
                 }
+                Text("Drop here for a new sermon")
+                    .font(.ccUI(13, weight: .semibold))
+                    .foregroundStyle(.ccChapel)
+                    .frame(maxWidth: .infinity, minHeight: 52)
+                    .background(Color.ccFill, in: RoundedRectangle(cornerRadius: 12))
+                    .overlay { RoundedRectangle(cornerRadius: 12).strokeBorder(Color.ccLine, style: StrokeStyle(dash: [5, 4])) }
+                    .dropDestination(for: String.self) { items, _ in
+                        guard let page = items.first.flatMap(UUID.init(uuidString:)), model.pages.contains(where: { $0.id == page }) else { return false }
+                        model.moveToNewGroup(page)
+                        return true
+                    }
+                Text("Hold and drag a page to move it. Tap the scissors between pages to start a new sermon there.")
+                    .font(.ccUI(12)).foregroundStyle(.ccInk2).multilineTextAlignment(.center)
             }
-            Section {
-                Button {
-                    do {
-                        try model.finish()
-                        onFinish(model.noteIds)
-                    } catch {
-                        finishFailed = true
-                    }
-                } label: {
-                    Text("Make \(groups.count) sermon\(groups.count == 1 ? "" : "s")")
-                        .frame(maxWidth: .infinity)
+            .padding(.horizontal, 20).padding(.bottom, 12)
+        }
+        .safeAreaInset(edge: .bottom) {
+            VStack(spacing: 8) {
+                Text("Each sermon is drafted on its own and lands in the journal by its date.")
+                    .font(.ccUI(12)).foregroundStyle(.ccInk2).multilineTextAlignment(.center)
+                primaryButton(oversized > 0 ? "Fix \(oversized) over the page limit" : "Draft \(groups.count) sermon\(groups.count == 1 ? "" : "s")") {
+                    do { try model.finish() } catch { finishFailed = true }
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(.ccChapel)
                 .disabled(!(model.grouping?.canContinue ?? false))
                 .accessibilityIdentifier("batch.finish")
             }
+            .padding(.horizontal, 20).padding(.vertical, 8)
+            .background(Color.ccPaper)
         }
-        .scrollContentBackground(.hidden)
     }
 
-    private func groupHeader(_ group: SermonGroup, index: Int) -> some View {
+    private func groupCard(_ group: SermonGroup, index: Int, groups: [SermonGroup]) -> some View {
         let sermon = model.sermon(of: group)
         let date = model.date(of: group)
-        let dateText = date.date.formatted(.dateTime.month(.abbreviated).day().year())
-        let how = switch date.source {
-        case .notes: "from the notes"
-        case .photo: "from the photos"
-        case .guess: "guessed"
-        }
-        return VStack(alignment: .leading, spacing: 2) {
-            Text("Sermon \(index + 1) · \(group.pageIds.count) page\(group.pageIds.count == 1 ? "" : "s")")
-                .font(.ccUI(12, weight: .semibold))
-            Text(sermon?.title ?? sermon?.passage ?? "No title read")
-                .font(.ccDisplay(15, semibold: true))
-                .foregroundStyle(.ccInk)
-                .textCase(nil)
-            Text("\(dateText) · \(how)")
-                .font(.ccUI(12))
-                .foregroundStyle(date.isGuess ? .ccOchre : .ccInk3)
-                .textCase(nil)
-        }
-        .accessibilityIdentifier("batch.group.\(index)")
-    }
-
-    private func pageMenu(_ pageId: UUID, in group: SermonGroup, index: Int, groups: [SermonGroup]) -> some View {
-        let number = (model.pages.firstIndex { $0.id == pageId } ?? 0) + 1
-        return Menu {
-            ForEach(Array(groups.enumerated()), id: \.element.id) { other, target in
-                if target.id != group.id {
-                    Button("Move to sermon \(other + 1)") { model.move(pageId, to: target.id) }
+        let over = group.pageIds.count > CaptureDraft.maxPages
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top, spacing: 9) {
+                Text("\(index + 1)").font(.ccUI(13, weight: .semibold))
+                    .foregroundStyle(.ccChapel).frame(width: 29, height: 29)
+                    .background(Color.ccFill, in: Circle())
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(sermon?.title ?? sermon?.passage ?? "No title on the page")
+                        .font(.ccDisplay(16, semibold: true))
+                    HStack(spacing: 5) {
+                        Text(date.date.formatted(.dateTime.month(.abbreviated).day()))
+                        dateMark(date.source)
+                        Text("· \(group.pageIds.count) pages")
+                    }
+                    .font(.ccUI(11)).foregroundStyle(.ccInk2)
                 }
             }
-            if group.pageIds.first != pageId {
-                Button("Start a new sermon here") { model.split(group.id, at: pageId) }
+            .accessibilityIdentifier("batch.group.\(index)")
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 4) {
+                    ForEach(Array(group.pageIds.enumerated()), id: \.element) { offset, page in
+                        if offset > 0 {
+                            Button { model.split(group.id, at: page) } label: {
+                                Image(systemName: "scissors").font(.system(size: 12))
+                                    .frame(width: 30, height: 44)
+                            }
+                            .buttonStyle(.plain).foregroundStyle(.ccChapel)
+                            .accessibilityLabel("Start a new sermon at page \(pageNumber(page))")
+                        }
+                        pageMenu(page, in: group, groups: groups)
+                    }
+                }
             }
-        } label: {
-            thumbnail(pageId, label: "\(number)", read: true)
+            if over {
+                Text("\(group.pageIds.count) pages. A sermon takes \(CaptureDraft.maxPages) at most.")
+                    .font(.ccUI(12, weight: .semibold)).foregroundStyle(.ccDanger)
+            }
         }
-        .accessibilityIdentifier("batch.page.\(number)")
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(over ? Color.ccDangerFill : Color.ccSurface, in: RoundedRectangle(cornerRadius: 16))
+        .overlay { RoundedRectangle(cornerRadius: 16).strokeBorder(over ? Color.ccDanger : Color.ccLine) }
+        .dropDestination(for: String.self) { items, _ in
+            guard let page = items.first.flatMap(UUID.init(uuidString:)), model.pages.contains(where: { $0.id == page }) else { return false }
+            model.move(page, to: group.id)
+            return true
+        }
     }
 
-    private func thumbnail(_ id: UUID, label: String, read: Bool) -> some View {
+    private func pageNumber(_ page: UUID) -> Int {
+        (model.pages.firstIndex { $0.id == page } ?? 0) + 1
+    }
+
+    private func pageMenu(_ page: UUID, in group: SermonGroup, groups: [SermonGroup]) -> some View {
+        Menu {
+            Menu("Move") {
+                ForEach(Array(groups.enumerated()), id: \.element.id) { index, target in
+                    if target.id != group.id {
+                        Button("Sermon \(index + 1)") { model.move(page, to: target.id) }
+                    }
+                }
+                Button("New sermon") { model.moveToNewGroup(page) }
+            }
+            if group.pageIds.first != page {
+                Button("Start a new sermon here") { model.split(group.id, at: page) }
+            }
+            Button("Remove page", role: .destructive) { model.removePage(page) }
+        } label: {
+            thumbnail(page, label: "\(pageNumber(page))", read: true)
+        }
+        .draggable(page.uuidString)
+        .accessibilityLabel("Page \(pageNumber(page))")
+        .accessibilityIdentifier("batch.page.\(pageNumber(page))")
+    }
+
+    private func dateMark(_ source: ServiceDateResolution.Source) -> some View {
+        let text = switch source {
+        case .notes: "From notes"
+        case .photo: "From photo date"
+        case .guess: "Date guessed"
+        }
+        return Text(text).font(.ccUI(10, weight: .semibold))
+            .foregroundStyle(source == .guess ? .ccDanger : .ccChapel)
+            .padding(.horizontal, 6).padding(.vertical, 3)
+            .background(source == .guess ? Color.ccDangerFill : Color.ccFill, in: Capsule())
+    }
+
+    private var queue: some View {
+        let groups = model.grouping?.groups ?? []
+        return ScrollView {
+            VStack(alignment: .leading, spacing: 10) {
+                ProgressView(value: Double(selectedSermon + 1), total: Double(max(groups.count, 1)))
+                    .tint(.ccChapel)
+                    .padding(.horizontal, 20)
+                Text("Sermon \(selectedSermon + 1) of \(groups.count) · \(kept.count) kept")
+                    .font(.ccUI(12)).foregroundStyle(.ccInk2).padding(.horizontal, 20)
+                    .accessibilityIdentifier("batch.queue.progress")
+                TabView(selection: $selectedSermon) {
+                    ForEach(Array(groups.enumerated()), id: \.element.id) { index, group in
+                        queueCard(group).padding(.horizontal, 20).tag(index)
+                    }
+                }
+                .tabViewStyle(.page(indexDisplayMode: .never))
+                .frame(height: 256)
+
+                ForEach(Array(groups.enumerated()), id: \.element.id) { index, group in
+                    Button { selectedSermon = index } label: {
+                        HStack(spacing: 10) {
+                            RoundedRectangle(cornerRadius: 3).fill(Color.ccChapel).frame(width: 5, height: 30)
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(queueTitle(group)).font(.ccDisplay(14, semibold: true)).foregroundStyle(.ccInk)
+                                Text(queueDate(group).formatted(.dateTime.month(.abbreviated).day()))
+                                    .font(.ccUI(12)).foregroundStyle(.ccInk2)
+                            }
+                            Spacer()
+                            Text(kept.contains(group.id) ? "✓ Kept" : "Ready").font(.ccUI(12, weight: .semibold))
+                                .foregroundStyle(.ccChapel)
+                        }
+                        .padding(10)
+                        .background(Color.ccSurface, in: RoundedRectangle(cornerRadius: 10))
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.horizontal, 20)
+                }
+            }
+            .padding(.vertical, 8)
+        }
+    }
+
+    private func queueTitle(_ group: SermonGroup) -> String {
+        model.note(for: group.id)?.sermonTitle ?? "Sermon notes"
+    }
+
+    private func queueDate(_ group: SermonGroup) -> Date {
+        model.note(for: group.id)?.serviceDate ?? model.date(of: group).date
+    }
+
+    private func queueCard(_ group: SermonGroup) -> some View {
+        let isKept = kept.contains(group.id)
+        let dateIsGuess = !isKept && model.dateIsGuess(for: group.id)
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text(queueDate(group).formatted(.dateTime.month(.wide).day().year()).uppercased())
+                    .font(.ccLabelCaps).tracking(0.7)
+                if dateIsGuess {
+                    Button { openReview(group.id, editingDate: true) } label: { dateMark(.guess) }
+                        .buttonStyle(.plain)
+                        .accessibilityIdentifier("batch.queue.guessedDate")
+                }
+            }
+            Text(queueTitle(group)).font(.ccTitle).lineLimit(2)
+            if let passage = model.note(for: group.id)?.passageRef {
+                Text(passage).font(.ccUI(12)).lineLimit(1)
+            }
+            HStack(spacing: 5) {
+                ForEach(group.pageIds.prefix(6), id: \.self) { page in
+                    thumbnail(page, label: "\(pageNumber(page))", read: true, width: 34, height: 42)
+                }
+            }
+            Spacer(minLength: 0)
+            HStack {
+                Text(isKept ? "✓ Kept" : "Ready").font(.ccUI(12, weight: .semibold))
+                Spacer()
+                if !isKept {
+                    Button("Review") { openReview(group.id) }.buttonStyle(.borderedProminent)
+                        .accessibilityIdentifier("batch.queue.review")
+                }
+            }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .foregroundStyle(.ccChapel)
+        .background(Color.ccFill, in: RoundedRectangle(cornerRadius: 18))
+        .overlay { RoundedRectangle(cornerRadius: 18).strokeBorder(Color.ccLine) }
+    }
+
+    private func openReview(_ id: UUID, editingDate: Bool = false) {
+        opensDate = editingDate
+        reviewing = model.review(for: id)
+    }
+
+    private func thumbnail(_ id: UUID, label: String, read: Bool, width: CGFloat = 57, height: CGFloat = 75) -> some View {
         ZStack(alignment: .bottomLeading) {
             Group {
                 if let image = model.thumbnails[id] {
@@ -230,7 +467,7 @@ struct BatchImportView: View {
                     Color.ccFill
                 }
             }
-            .frame(width: 72, height: 96)
+            .frame(width: width, height: height)
             .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
             Text(label)
                 .font(.ccUI(11, weight: .semibold))
@@ -244,7 +481,7 @@ struct BatchImportView: View {
 }
 
 #if DEBUG
-/// Screenshot hook: `-LordsDayBatchFixture picker|groups|review|keep`. Seven sample pages read by
+/// Screenshot hook: `-LordsDayBatchFixture picker|cap|groups|queue|review|date|keep`. Seven sample pages read by
 /// `BatchFixtureGenerator` into three sermons: a date read from the notes (Nov 15), a date from the
 /// photos (Nov 8) and, for `groups`/`review`, a guessed date (`keep` dates it from its photos, Nov 1).
 /// `picker`, `groups` and `review` use a throwaway folder and an in-memory store; `review` opens the
@@ -263,9 +500,9 @@ struct LordsDayBatchFixture: View {
             if kept {
                 RootView()
             } else if let review {
-                ReviewView(model: review, onClose: {}, onFinish: {})
+                ReviewView(model: review, onClose: {}, onFinish: {}, startsEditingDate: scene == "date")
             } else if let model {
-                BatchImportView(model: model, onClose: {}, onFinish: { _ in })
+                BatchImportView(model: model, onClose: {})
             }
         }
         .task { await load() }
@@ -288,14 +525,16 @@ struct LordsDayBatchFixture: View {
         }
         let generator = BatchFixtureGenerator()
         guard let model = try? BatchImportModel(context: context, storeProvider: storeProvider, generator: generator, root: root) else { return }
-        if scene != "picker" {
+        if scene == "cap" {
+            for index in 1...BatchImportDraft.maxPhotos { model.add(Self.samplePage(index)) }
+        } else if scene != "picker" {
             for (index, takenAt) in BatchFixtureGenerator.takenAt(datingLastFromPhotos: keeps).enumerated() {
                 model.add(Self.samplePage(index + 1), takenAt: takenAt)
             }
             model.read()
             while model.step == .reading { try? await Task.sleep(for: .milliseconds(50)) }
         }
-        if scene == "review" || keeps {
+        if scene == "review" || scene == "date" || scene == "queue" || keeps {
             try? model.finish()
             let ids = model.noteIds
             if keeps {
@@ -307,7 +546,7 @@ struct LordsDayBatchFixture: View {
                 kept = true
                 return
             }
-            if let id = ids.last, let note = try? storeProvider().note(id: id) {
+            if scene != "queue", let id = ids.last, let note = try? storeProvider().note(id: id) {
                 review = ReviewModel.session(for: note, context: context, storeProvider: storeProvider, generator: generator, root: root)
                 return
             }

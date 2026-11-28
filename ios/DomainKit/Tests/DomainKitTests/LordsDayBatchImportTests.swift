@@ -35,6 +35,16 @@ final class LordsDayBatchImportTests: XCTestCase {
         grouping.groups.map { group in group.pageIds.map { id in pages.firstIndex { $0.id == id }! } }
     }
 
+    func testMoveToNewGroupAndBackRemovesEmptyGroup() {
+        let pages = [page(), page(), page()]
+        var grouping = SermonGrouping.propose(pages)
+        let original = grouping.groups[0].id
+        grouping.moveToNewGroup(pages[0].id)
+        XCTAssertEqual(indexGroups(grouping, pages), [[1, 2], [0]])
+        grouping.move(pages[0].id, to: original)
+        XCTAssertEqual(indexGroups(grouping, pages), [[0, 1, 2]])
+    }
+
     // MARK: The request plan
 
     func testTwentyPagesAreReadInFourChunksWithNoSermonMetadata() throws {

@@ -87,6 +87,20 @@ public struct SermonGrouping: Codable, Equatable, Sendable {
         groups.removeAll { $0.pageIds.isEmpty }
     }
 
+    /// A detached page becomes a new sermon. A one-page sermon is already separate.
+    public mutating func moveToNewGroup(_ page: UUID) {
+        guard let from = groupIndex(of: page), groups[from].pageIds.count > 1 else { return }
+        groups[from].pageIds.removeAll { $0 == page }
+        groups.append(SermonGroup(pageIds: [page]))
+    }
+
+    fileprivate mutating func remove(_ page: UUID) {
+        guard let index = groupIndex(of: page) else { return }
+        order.removeAll { $0 == page }
+        groups[index].pageIds.removeAll { $0 == page }
+        if groups[index].pageIds.isEmpty { groups.remove(at: index) }
+    }
+
     /// `page` and every page after it in the sermon become a new sermon right after it.
     public mutating func split(_ group: UUID, at page: UUID) {
         guard let index = groups.firstIndex(where: { $0.id == group }),
@@ -302,8 +316,10 @@ public final class BatchImportDraft {
     }
 
     public func removePage(_ id: UUID) throws {
-        guard state.grouping == nil, let index = state.pages.firstIndex(where: { $0.id == id }) else { throw CaptureError.noSuchPage }
+        guard state.materialized.isEmpty, let index = state.pages.firstIndex(where: { $0.id == id }) else { throw CaptureError.noSuchPage }
         state.pages.remove(at: index)
+        state.grouping?.remove(id)
+        if state.pages.isEmpty { state.grouping = nil }
         try save()
         try? FileManager.default.removeItem(at: url(for: id))
     }

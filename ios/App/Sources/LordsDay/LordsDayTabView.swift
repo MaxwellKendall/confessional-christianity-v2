@@ -64,8 +64,8 @@ struct LordsDayTabView: View {
             }, startsTyping: capturesTyping)
         }
         .fullScreenCover(item: $batch, onDismiss: refresh) { model in
-            BatchImportView(model: model, onClose: { batch = nil }, onFinish: { _ in
-                batch = nil
+            BatchImportView(model: model, onClose: { batch = nil }, onKeep: {
+                ReminderScheduler.shared.refresh(in: context, keptSermon: true)
             })
         }
         .fullScreenCover(item: $review, onDismiss: refresh) { model in
