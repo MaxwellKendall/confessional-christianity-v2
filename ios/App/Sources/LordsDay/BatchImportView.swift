@@ -20,6 +20,9 @@ struct BatchImportView: View {
     @State private var showsPicker = false
     @State private var showsCancel = false
     @State private var finishFailed = false
+    #if DEBUG
+    @State private var appliedFixture = false
+    #endif
 
     var body: some View {
         VStack(spacing: 0) {
@@ -43,6 +46,20 @@ struct BatchImportView: View {
                 reviewing = nil
             }, startsEditingDate: opensDate)
         }
+        #if DEBUG
+        .onAppear {
+            guard !appliedFixture, model.step == .done else { return }
+            appliedFixture = true
+            switch UserDefaults.standard.string(forKey: "LordsDayBatchFixture") {
+            case "date":
+                if let id = model.noteIds.last { openReview(id, editingDate: true) }
+            case "allKept":
+                kept = Set(model.noteIds)
+            default:
+                break
+            }
+        }
+        #endif
         .tint(.ccInk)
         .photosPicker(isPresented: $showsPicker, selection: $picked, maxSelectionCount: max(1, model.remainingPhotos),
                       selectionBehavior: .ordered, matching: .images, preferredItemEncoding: .current, photoLibrary: .shared())
@@ -391,19 +408,14 @@ struct BatchImportView: View {
                 }
                 .padding(.horizontal, 20)
                 .accessibilityHidden(true)
-                Text("Sermon \(selectedSermon + 1) of \(groups.count) · \(kept.count) kept")
+                Text("Sermon \(selectedSermon + 1) of \(groups.count) · Swipe through or review in any order.")
                     .font(.ccUI(12)).foregroundStyle(.ccInk2).padding(.horizontal, 20)
                     .accessibilityIdentifier("batch.queue.progress")
-                TabView(selection: $selectedSermon) {
-                    ForEach(Array(groups.enumerated()), id: \.element.id) { index, group in
-                        queueCard(group, index: index).padding(.horizontal, 20).tag(index)
-                    }
-                }
-                .tabViewStyle(.page(indexDisplayMode: .never))
-                .frame(height: 320)
+                queuePager(groups)
+
 
                 ForEach(Array(groups.enumerated()), id: \.element.id) { index, group in
-                    Button { selectedSermon = index } label: {
+                    Button { withAnimation(.easeOut(duration: 0.2)) { selectedSermon = index } } label: {
                         HStack(spacing: 10) {
                             RoundedRectangle(cornerRadius: 3).fill(Color(hex: queuePalette(index).accent)).frame(width: 5, height: 30)
                             VStack(alignment: .leading, spacing: 4) {
@@ -415,8 +427,8 @@ struct BatchImportView: View {
                             Text(queueStatus(group)).font(.ccUI(12, weight: .semibold))
                                 .foregroundStyle(.ccChapel)
                         }
-                        .padding(10)
-                        .background(Color.ccSurface, in: RoundedRectangle(cornerRadius: 10))
+                        .padding(.vertical, 6)
+                        .overlay(alignment: .bottom) { Rectangle().fill(Color.ccLine).frame(height: 1) }
                     }
                     .buttonStyle(.plain)
                     .padding(.horizontal, 20)
@@ -424,6 +436,30 @@ struct BatchImportView: View {
             }
             .padding(.vertical, 8)
         }
+    }
+
+    private func queuePager(_ groups: [SermonGroup]) -> some View {
+        GeometryReader { proxy in
+            let width = min(300, proxy.size.width - 40)
+            ScrollView(.horizontal) {
+                HStack(spacing: 12) {
+                    ForEach(Array(groups.enumerated()), id: \.element.id) { index, group in
+                        queueCard(group, index: index)
+                            .frame(width: width)
+                            .id(index)
+                    }
+                }
+                .scrollTargetLayout()
+            }
+            .scrollIndicators(.hidden)
+            .contentMargins(.horizontal, (proxy.size.width - width) / 2, for: .scrollContent)
+            .scrollTargetBehavior(.viewAligned)
+            .scrollPosition(id: Binding<Int?>(
+                get: { selectedSermon },
+                set: { if let index = $0 { selectedSermon = index } }
+            ), anchor: .center)
+        }
+        .frame(height: 400)
     }
 
     private func queueTitle(_ group: SermonGroup) -> String {
@@ -466,7 +502,7 @@ struct BatchImportView: View {
                     thumbnail(page, label: "\(pageNumber(page))", read: true, width: 40, height: 52)
                 }
             }
-            Spacer(minLength: 0)
+            Divider().overlay(Color(hex: palette.frame)).padding(.top, 5)
             HStack {
                 Text(queueStatus(group)).font(.ccUI(12, weight: .semibold))
                 Spacer()
@@ -546,7 +582,7 @@ struct BatchImportView: View {
 }
 
 #if DEBUG
-/// Screenshot hook: `-LordsDayBatchFixture picker|cap|groups|queue|review|date|keep`. Seven sample pages read by
+/// Screenshot hook: `-LordsDayBatchFixture picker|cap|reading|groups|oversized|failed|queue|review|date|allKept|keep`. Seven sample pages read by
 /// `BatchFixtureGenerator` into three sermons: a date read from the notes (Nov 15), a date from the
 /// photos (Nov 8) and, for `groups`/`review`, a guessed date (`keep` dates it from its photos, Nov 1).
 /// `picker`, `groups` and `review` use a throwaway folder and an in-memory store; `review` opens the
@@ -565,7 +601,7 @@ struct LordsDayBatchFixture: View {
             if kept {
                 RootView()
             } else if let review {
-                ReviewView(model: review, onClose: {}, onFinish: {}, startsEditingDate: scene == "date")
+                ReviewView(model: review, onClose: {}, onFinish: {})
             } else if let model {
                 BatchImportView(model: model, onClose: {})
             }
@@ -588,7 +624,8 @@ struct LordsDayBatchFixture: View {
             root = FileManager.default.temporaryDirectory.appendingPathComponent("batch-fixture-\(UUID().uuidString)")
             storeProvider = { LordsDayStore(context: context) }
         }
-        let generator = BatchFixtureGenerator()
+        let generator = BatchFixtureGenerator(failsPage: scene == "failed" ? 6 : nil,
+                                             pageDelay: scene == "reading" ? .seconds(2) : .milliseconds(120))
         guard let model = try? BatchImportModel(context: context, storeProvider: storeProvider, generator: generator, root: root) else { return }
         if scene == "cap" {
             for index in 1...BatchImportDraft.maxPhotos { model.add(Self.samplePage(index)) }
@@ -597,9 +634,16 @@ struct LordsDayBatchFixture: View {
                 model.add(Self.samplePage(index + 1), takenAt: takenAt)
             }
             model.read()
+            if scene == "reading" {
+                self.model = model
+                return
+            }
             while model.step == .reading { try? await Task.sleep(for: .milliseconds(50)) }
         }
-        if scene == "review" || scene == "date" || scene == "queue" || keeps {
+        if scene == "oversized", let groups = model.grouping?.groups, let first = groups.first {
+            for group in groups.dropFirst() { model.merge(group.id, into: first.id) }
+        }
+        if ["review", "date", "queue", "allKept"].contains(scene) || keeps {
             try? model.finish()
             let ids = model.noteIds
             if keeps {
@@ -611,7 +655,7 @@ struct LordsDayBatchFixture: View {
                 kept = true
                 return
             }
-            if scene != "queue", let id = ids.last, let note = try? storeProvider().note(id: id) {
+            if scene == "review", let id = ids.last, let note = try? storeProvider().note(id: id) {
                 review = ReviewModel.session(for: note, context: context, storeProvider: storeProvider, generator: generator, root: root)
                 return
             }
@@ -643,6 +687,13 @@ struct LordsDayBatchFixture: View {
 final class BatchFixtureGenerator: CardsGenerator, @unchecked Sendable {
     private let lock = NSLock()
     private var nextPage = 0
+    private let failsPage: Int?
+    private let pageDelay: Duration
+
+    init(failsPage: Int? = nil, pageDelay: Duration = .milliseconds(120)) {
+        self.failsPage = failsPage
+        self.pageDelay = pageDelay
+    }
 
     /// What each of the seven pages names.
     static let sermons: [SermonDetails?] = [
@@ -674,8 +725,12 @@ final class BatchFixtureGenerator: CardsGenerator, @unchecked Sendable {
             let task = Task {
                 continuation.yield(.started(pages: count))
                 for i in 0..<count {
-                    try? await Task.sleep(for: .milliseconds(120))
+                    try? await Task.sleep(for: self.pageDelay)
                     let page = start + i
+                    if page == self.failsPage {
+                        continuation.yield(.pageFailed(i))
+                        continue
+                    }
                     let sermon = Self.sermons.indices.contains(page) ? Self.sermons[page] : nil
                     let cards = [
                         DraftCardPayload(kind: "key_point", page: i, order: 0, text: "A point from page \(page + 1) of \(sermon?.title ?? "these notes").", sourceKey: "fixture-\(page):0"),

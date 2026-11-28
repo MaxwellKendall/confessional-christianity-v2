@@ -59,13 +59,15 @@ struct CaptureView: View {
             if let onImportSeveral, model.pages.isEmpty, model.retakeTarget == nil {
                 Button(action: onImportSeveral) {
                     Label("Import several sermons", systemImage: "square.stack.3d.up")
-                        .font(.system(size: 13.5))
+                        .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(camGilt)
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 9)
-                        .background(.white.opacity(0.09), in: Capsule())
+                        .padding(.horizontal, 16)
+                        .frame(height: 40)
+                        .background(camGilt.opacity(0.16), in: Capsule())
+                        .overlay { Capsule().strokeBorder(camGilt.opacity(0.45)) }
                 }
                 .buttonStyle(.plain)
+                .padding(.top, 14)
                 .padding(.bottom, 8)
                 .accessibilityIdentifier("capture.importSeveral")
             }
