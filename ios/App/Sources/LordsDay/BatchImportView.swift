@@ -15,9 +15,22 @@ struct BatchImportView: View {
     @State private var selectedSermon = 0
     @State private var kept: Set<UUID> = []
     @State private var discarded: Set<UUID> = []
-    @State private var opensDate = false
-    @State private var editingGroup: SermonGroup?
-    @State private var groupEditorFocus: EditSermonDetailsSheet.Field?
+    @State private var detailsRequest: DetailsRequest?
+    @State private var pageAction: PageAction?
+
+    private struct PageAction: Identifiable {
+        let id: UUID
+        let group: SermonGroup
+    }
+
+    private struct DetailsRequest: Identifiable {
+        let id: UUID
+        let initial: SermonDetailsEdit
+        let readFromNotes: SermonDetails?
+        let dateIsGuess: Bool
+        let focus: EditSermonDetailsSheet.Field?
+        let save: (SermonDetailsEdit) throws -> Void
+    }
     @State private var picked: [PhotosPickerItem] = []
     @State private var showsPicker = false
     @State private var showsCancel = false
@@ -41,12 +54,16 @@ struct BatchImportView: View {
                     kept.insert(review.noteId)
                     onKeep()
                 }
-                let pending = model.noteIds.indices.filter { !kept.contains(model.noteIds[$0]) && !discarded.contains(model.noteIds[$0]) }
+                let pending = model.noteIds.indices.filter { index in
+                    let id = model.noteIds[index]
+                    guard !kept.contains(id), !discarded.contains(id), let review = model.details(for: id) else { return false }
+                    return !review.hasNothingToKeep && !review.isDrafting && !review.retryWhenOnline
+                }
                 if let next = pending.first(where: { $0 > selectedSermon }) ?? pending.first {
                     selectedSermon = next
                 }
                 reviewing = nil
-            }, startsEditingDate: opensDate)
+            })
         }
         #if DEBUG
         .onAppear {
@@ -62,12 +79,11 @@ struct BatchImportView: View {
             }
         }
         #endif
-        .sheet(item: $editingGroup) { group in
-            EditSermonDetailsSheet(initial: model.details(of: group), readFromNotes: model.sermon(of: group),
-                                   dateIsGuess: model.date(of: group).isGuess, initialFocus: groupEditorFocus) { edit in
-                try model.edit(group, details: edit)
-            }
+        .sheet(item: $detailsRequest) { request in
+            EditSermonDetailsSheet(initial: request.initial, readFromNotes: request.readFromNotes,
+                                   dateIsGuess: request.dateIsGuess, initialFocus: request.focus, onSave: request.save)
         }
+        .sheet(item: $pageAction) { action in pageCommands(action) }
         .tint(.ccInk)
         .photosPicker(isPresented: $showsPicker, selection: $picked, maxSelectionCount: max(1, model.remainingPhotos),
                       selectionBehavior: .ordered, matching: .images, preferredItemEncoding: .current, photoLibrary: .shared())
@@ -271,7 +287,7 @@ struct BatchImportView: View {
                         .buttonStyle(.plain)
                         .accessibilityIdentifier("batch.merge.\(index - 1)")
                     }
-                    groupCard(group, index: index, groups: groups)
+                    groupCard(group, index: index)
                 }
                 Text("Drop here for a new sermon")
                     .font(.ccUI(13, weight: .semibold))
@@ -304,7 +320,7 @@ struct BatchImportView: View {
         }
     }
 
-    private func groupCard(_ group: SermonGroup, index: Int, groups: [SermonGroup]) -> some View {
+    private func groupCard(_ group: SermonGroup, index: Int) -> some View {
         let details = model.details(of: group)
         let date = model.date(of: group)
         let over = group.pageIds.count > CaptureDraft.maxPages
@@ -347,7 +363,7 @@ struct BatchImportView: View {
                             .buttonStyle(.plain).foregroundStyle(.ccChapel)
                             .accessibilityLabel("Start a new sermon at page \(pageNumber(page))")
                         }
-                        pageMenu(page, in: group, groups: groups)
+                        groupPage(page, in: group)
                     }
                 }
             }
@@ -376,35 +392,71 @@ struct BatchImportView: View {
     }
 
     private func editDetails(_ group: SermonGroup, focus: EditSermonDetailsSheet.Field? = nil) {
-        groupEditorFocus = focus
-        editingGroup = group
+        detailsRequest = DetailsRequest(id: group.id, initial: model.details(of: group),
+                                        readFromNotes: model.sermon(of: group), dateIsGuess: model.date(of: group).isGuess,
+                                        focus: focus) { edit in
+            try model.edit(group, details: edit)
+        }
     }
 
     private func pageNumber(_ page: UUID) -> Int {
         (model.pages.firstIndex { $0.id == page } ?? 0) + 1
     }
 
-    private func pageMenu(_ page: UUID, in group: SermonGroup, groups: [SermonGroup]) -> some View {
-        Menu {
-            Menu("Move") {
-                ForEach(Array(groups.enumerated()), id: \.element.id) { index, target in
-                    if target.id != group.id {
-                        Button("Sermon \(index + 1)") { model.move(page, to: target.id) }
+    private func groupPage(_ page: UUID, in group: SermonGroup) -> some View {
+        thumbnail(page, label: "\(pageNumber(page))", read: true)
+            .contentShape(Rectangle())
+            .onTapGesture { pageAction = PageAction(id: page, group: group) }
+            .accessibilityAddTraits(.isButton)
+            .accessibilityAction { pageAction = PageAction(id: page, group: group) }
+            .draggable(page.uuidString)
+            .accessibilityLabel("Page \(pageNumber(page))")
+            .accessibilityIdentifier("batch.page.\(pageNumber(page))")
+    }
+
+    private func pageCommands(_ action: PageAction) -> some View {
+        NavigationStack {
+            List {
+                Section("Move this page") {
+                    ForEach(Array((model.grouping?.groups ?? []).enumerated()), id: \.element.id) { index, target in
+                        if target.id != action.group.id {
+                            Button("Move to sermon \(index + 1)") {
+                                model.move(action.id, to: target.id)
+                                pageAction = nil
+                            }
+                        }
+                    }
+                    Button("Move to a new sermon") {
+                        model.moveToNewGroup(action.id)
+                        pageAction = nil
                     }
                 }
-                Button("New sermon") { model.moveToNewGroup(page) }
+                Section {
+                    if action.group.pageIds.first != action.id {
+                        Button("Start a new sermon here") {
+                            model.split(action.group.id, at: action.id)
+                            pageAction = nil
+                        }
+                    }
+                    Button("Remove page", role: .destructive) {
+                        model.removePage(action.id)
+                        pageAction = nil
+                    }
+                    .disabled(model.retryingPage != nil)
+                }
             }
-            if group.pageIds.first != page {
-                Button("Start a new sermon here") { model.split(group.id, at: page) }
+            .scrollContentBackground(.hidden)
+            .background(Color.ccPaper)
+            .navigationTitle("Page \(pageNumber(action.id))")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { pageAction = nil }
+                }
             }
-            Button("Remove page", role: .destructive) { model.removePage(page) }
-        } label: {
-            thumbnail(page, label: "\(pageNumber(page))", read: true)
         }
-        .disabled(model.retryingPage != nil)
-        .draggable(page.uuidString)
-        .accessibilityLabel("Page \(pageNumber(page))")
-        .accessibilityIdentifier("batch.page.\(pageNumber(page))")
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
     }
 
     private func dateMark(_ source: ServiceDateResolution.Source) -> some View {
@@ -547,7 +599,11 @@ struct BatchImportView: View {
     private func queueStatus(_ group: SermonGroup) -> String {
         if kept.contains(group.id) { return "✓ Kept" }
         if discarded.contains(group.id) { return "Discarded" }
-        if model.details(for: group.id)?.hasNothingToKeep == true { return "Couldn’t draft" }
+        if let review = model.details(for: group.id) {
+            if review.isDrafting { return "Drafting cards" }
+            if review.retryWhenOnline { return "Waiting for a connection" }
+            if review.hasNothingToKeep { return "Couldn’t draft" }
+        }
         return "Ready to review"
     }
 
@@ -580,8 +636,13 @@ struct BatchImportView: View {
     }
 
     private func openReview(_ id: UUID, editingDate: Bool = false) {
-        opensDate = editingDate
-        reviewing = model.review(for: id)
+        guard let review = model.review(for: id) else { return }
+        if editingDate {
+            detailsRequest = DetailsRequest(id: id, initial: review.detailsEdit, readFromNotes: review.review.sermon,
+                                            dateIsGuess: review.dateIsGuess, focus: .date, save: review.updateDetails)
+        } else {
+            reviewing = review
+        }
     }
 
     private func thumbnail(_ id: UUID, label: String, read: Bool, width: CGFloat = 57, height: CGFloat = 75) -> some View {

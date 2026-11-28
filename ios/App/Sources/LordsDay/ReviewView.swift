@@ -12,7 +12,6 @@ struct ReviewView: View {
     @Bindable var model: ReviewModel
     var onClose: () -> Void
     var onFinish: () -> Void
-    var startsEditingDate = false
     #if DEBUG
     /// Screenshot hook: the card the pager opens at.
     var startAt: String?
@@ -24,7 +23,6 @@ struct ReviewView: View {
 
     @Environment(\.colorScheme) private var colorScheme
     @Environment(AuthService.self) private var auth
-    @State private var didOpenDate = false
     @State private var current: String?
     @State private var detailsSheet: DetailsSheetRequest?
     @State private var editingCardId: String?
@@ -66,10 +64,6 @@ struct ReviewView: View {
         .foregroundStyle(.ccInk)
         .background(Color.ccPaper.ignoresSafeArea())
         .onAppear {
-            if startsEditingDate && !didOpenDate {
-                didOpenDate = true
-                openDetails(.date)
-            }
             if auth.phase.isSignedIn && model.failure == .accountNeeded {
                 model.retry()
             } else {

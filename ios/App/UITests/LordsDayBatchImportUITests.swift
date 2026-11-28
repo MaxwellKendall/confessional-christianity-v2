@@ -33,7 +33,7 @@ final class LordsDayBatchImportUITests: XCTestCase {
         let destination = app.staticTexts["Gospel Partnership"]
         XCTAssertTrue(page.waitForExistence(timeout: 15))
         XCTAssertTrue(destination.exists)
-        page.press(forDuration: 0.8, thenDragTo: destination)
+        page.press(forDuration: 0.8, thenDragTo: destination, withVelocity: .slow, thenHoldForDuration: 0.4)
         XCTAssertTrue(app.staticTexts["No title on the page"].waitForExistence(timeout: 5))
     }
 
