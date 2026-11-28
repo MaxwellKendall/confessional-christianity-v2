@@ -24,6 +24,9 @@ final class ReviewModel {
     private(set) var church: String?
     private(set) var serviceDate: Date
 
+    /// The service date was guessed in a batch import (TKL-1107); saving the details confirms it.
+    var dateIsGuess: Bool { review.dateIsGuess }
+
     var detailsEdit: SermonDetailsEdit {
         SermonDetailsEdit(title: title, preacher: preacher, passage: passage, church: church, serviceDate: serviceDate)
     }
@@ -240,6 +243,10 @@ final class ReviewModel {
         church = normalizedNoteField(note.church)
         serviceDate = note.serviceDate
         saveFailed = false
+        if review.dateIsGuess {
+            review.setDateIsGuess(false)
+            save()
+        }
     }
 
     /// Keeps the kept cards, in order, as this note's week. The photos stay on the device.

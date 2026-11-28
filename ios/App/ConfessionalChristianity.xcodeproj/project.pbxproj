@@ -10,6 +10,7 @@
 		03406E43F389106CA35A9696 /* LaunchOpening.swift in Sources */ = {isa = PBXBuildFile; fileRef = DED886F4D74FDA0C6440E667 /* LaunchOpening.swift */; };
 		071133A6E8575DC8F1628D43 /* AlgoliaClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32915AE286582745AF6691CB /* AlgoliaClient.swift */; };
 		078ADB6E19374EF694819591 /* DomainKit in Frameworks */ = {isa = PBXBuildFile; productRef = 17B689653BB9AF85B87373ED /* DomainKit */; };
+		0A95D2F5FD0802B8BF20591E /* BatchImportModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1EE204A0C313AC5E2765B04 /* BatchImportModel.swift */; };
 		146A501329EAAC4041266E5F /* Cinzel-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E38A936D51B1960620B4EA13 /* Cinzel-SemiBold.ttf */; };
 		14F7975F68D4AEC8E0E0AD6A /* SermonCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2C0E1A34CAA850FC9DAEC57 /* SermonCardView.swift */; };
 		1759D64CAD6C6F870DE4716A /* JumpToQuestionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 943068F9BE1D5E9C1869664E /* JumpToQuestionView.swift */; };
@@ -98,6 +99,7 @@
 		EF6180A42307C70469D1AAF6 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE787EFA6523867E8B169F3C /* RootView.swift */; };
 		EFA34C338B6953619F1527DD /* CatechismWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0314FB2410D204F15CCB2B2B /* CatechismWidgetBundle.swift */; };
 		F6B941A744D11BA50D05F8DE /* Cinzel-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0DEE3A1FB42239248ABA0E9F /* Cinzel-Regular.ttf */; };
+		F6BD68695901B958DA0164D7 /* BatchImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB001545AD08CE9E2B986E27 /* BatchImportView.swift */; };
 		F9A6A194E510D0FB131952FF /* ReflectionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 826FFB63796815E34180F9FC /* ReflectionDetailView.swift */; };
 		FF630E068B55F6BCC10ECE07 /* SearchRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1355BBE9BF8900B5FE2A2F86 /* SearchRoute.swift */; };
 /* End PBXBuildFile section */
@@ -199,6 +201,7 @@
 		B457BF311BED9BFB4321BC0F /* CameraController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraController.swift; sourceTree = "<group>"; };
 		BD4AB7A9E7C2AD7577016708 /* LoopCounter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopCounter.swift; sourceTree = "<group>"; };
 		BE787EFA6523867E8B169F3C /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		C1EE204A0C313AC5E2765B04 /* BatchImportModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatchImportModel.swift; sourceTree = "<group>"; };
 		C23F51243C50FFC327642E50 /* FlowLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowLayout.swift; sourceTree = "<group>"; };
 		C45EC54D0EE5907B79FC4071 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		C643620A0907843D1122CAB4 /* ReviewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewModel.swift; sourceTree = "<group>"; };
@@ -222,6 +225,7 @@
 		F2C0E1A34CAA850FC9DAEC57 /* SermonCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SermonCardView.swift; sourceTree = "<group>"; };
 		F9026BA4701C493912921EF2 /* LordsDayTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LordsDayTabView.swift; sourceTree = "<group>"; };
 		FA9521FA8EA217CBBD515DF6 /* SyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncService.swift; sourceTree = "<group>"; };
+		FB001545AD08CE9E2B986E27 /* BatchImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatchImportView.swift; sourceTree = "<group>"; };
 		FD56999FD625474310C151DA /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		FFB9FC7991ABDA560217F657 /* ConfessionalChristianity.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ConfessionalChristianity.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -395,6 +399,8 @@
 		75C166442B06CB26648E4B9B /* LordsDay */ = {
 			isa = PBXGroup;
 			children = (
+				C1EE204A0C313AC5E2765B04 /* BatchImportModel.swift */,
+				FB001545AD08CE9E2B986E27 /* BatchImportView.swift */,
 				B457BF311BED9BFB4321BC0F /* CameraController.swift */,
 				DFB100594401DF03A33600E0 /* CaptureModel.swift */,
 				E00C25ED916B66A447B8C411 /* CaptureView.swift */,
@@ -698,6 +704,8 @@
 				071133A6E8575DC8F1628D43 /* AlgoliaClient.swift in Sources */,
 				771DFCA83B8D42C191A78FB7 /* AppDestinations.swift in Sources */,
 				DDA8BECCFA53AFFDA838939E /* AuthService.swift in Sources */,
+				0A95D2F5FD0802B8BF20591E /* BatchImportModel.swift in Sources */,
+				F6BD68695901B958DA0164D7 /* BatchImportView.swift in Sources */,
 				8B6C145E341F77C8E643D573 /* CameraController.swift in Sources */,
 				E05748719EA05C3738219BC2 /* CaptureModel.swift in Sources */,
 				D0AEC860FC03BD3CCA1EC43C /* CaptureView.swift in Sources */,

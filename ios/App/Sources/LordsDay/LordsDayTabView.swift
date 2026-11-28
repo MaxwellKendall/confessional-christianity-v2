@@ -21,6 +21,9 @@ struct LordsDayTabView: View {
     @Query private var observedNotes: [LordsDayNote]
     @Query private var observedCards: [NoteCard]
     @State private var capture: CaptureModel?
+    @State private var batch: BatchImportModel?
+    /// Set by the capture's "Import several sermons", so its cover's dismissal opens the import.
+    @State private var importAfterCapture = false
     @State private var capturesTyping = false
     @State private var status = CaptureStatus()
     @State private var reel = LordsDayReel(testSermonPageCounts: [])
@@ -55,7 +58,15 @@ struct LordsDayTabView: View {
             CaptureView(model: model, onClose: { capture = nil }, onFinish: {
                 draftAfterCapture = model.noteId
                 capture = nil
+            }, onImportSeveral: {
+                importAfterCapture = true
+                capture = nil
             }, startsTyping: capturesTyping)
+        }
+        .fullScreenCover(item: $batch, onDismiss: refresh) { model in
+            BatchImportView(model: model, onClose: { batch = nil }, onFinish: { _ in
+                batch = nil
+            })
         }
         .fullScreenCover(item: $review, onDismiss: refresh) { model in
             ReviewView(model: model, onClose: { review = nil }, onFinish: {
@@ -225,6 +236,12 @@ struct LordsDayTabView: View {
     /// Finishing a capture starts reading the notes; the landing page shows it, and a tap opens the review.
     private func afterCapture() {
         refresh()
+        if importAfterCapture {
+            importAfterCapture = false
+            // An untouched capture leaves nothing behind; one with pages stays saved to resume.
+            batch = try? BatchImportModel(context: context, storeProvider: makeStoreProvider(), generator: makeGenerator())
+            return
+        }
         guard let id = draftAfterCapture else { return }
         draftAfterCapture = nil
         guard let note = try? sync.lordsDayStore(in: context).note(id: id) else { return }

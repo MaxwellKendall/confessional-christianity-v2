@@ -165,6 +165,8 @@ struct ReviewView: View {
         ) ?? .none
         let anyReadFromNotes = flags.title || flags.preacher || flags.passage || flags.church || flags.serviceDate
         let metaParts = [model.passage, model.preacher, model.church].compactMap { $0 }
+        // A batch-imported sermon whose date nothing said (TKL-1107) says so until its details are saved.
+        let shownDate = model.dateIsGuess ? "\(dateString) (date guessed)" : dateString
 
         return VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .top, spacing: 10) {
@@ -208,11 +210,11 @@ struct ReviewView: View {
             Button { openDetails(model.passage == nil ? .passage : .preacher) } label: {
                 HStack(spacing: 6) {
                     if metaParts.isEmpty {
-                        Text("Add passage, preacher or church · \(dateString)")
+                        Text("Add passage, preacher or church · \(shownDate)")
                             .font(.ccUI(13))
                             .foregroundStyle(.ccInk3)
                     } else {
-                        Text((metaParts + [dateString]).joined(separator: " · "))
+                        Text((metaParts + [shownDate]).joined(separator: " · "))
                             .font(.ccUI(13))
                             .foregroundStyle(.ccInk2)
                             .accessibilityIdentifier("review.sermon.meta")

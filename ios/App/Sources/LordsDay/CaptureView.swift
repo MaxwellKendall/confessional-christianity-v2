@@ -28,6 +28,8 @@ struct CaptureView: View {
     var onClose: () -> Void
     /// Done: the notes are ready to draft cards from (TKL-863). Without it, Done just closes.
     var onFinish: (() -> Void)? = nil
+    /// "Import several sermons" (TKL-1107): many Sundays' photos at once, outside this note.
+    var onImportSeveral: (() -> Void)? = nil
     /// "Type them instead" on the landing page: open on the typing sheet.
     var startsTyping = false
     /// DEBUG screenshots: the simulator has no camera, so show a sample page in the viewfinder.
@@ -55,6 +57,16 @@ struct CaptureView: View {
             }
             pageStrip
             controls
+            if let onImportSeveral, model.pages.isEmpty, model.retakeTarget == nil {
+                Button(action: onImportSeveral) {
+                    Label("Import several sermons · up to \(BatchImportDraft.maxPhotos) photos", systemImage: "square.stack.3d.up")
+                        .font(.system(size: 13.5))
+                        .foregroundStyle(camGilt)
+                }
+                .buttonStyle(.plain)
+                .padding(.bottom, 8)
+                .accessibilityIdentifier("capture.importSeveral")
+            }
             footer
         }
         .background(camBackground.ignoresSafeArea())

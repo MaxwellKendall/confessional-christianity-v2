@@ -54,6 +54,8 @@ struct ConfessionalChristianityApp: App {
                     .preferredColorScheme(appearances[appearance])
                 } else if let scene = UserDefaults.standard.string(forKey: "LordsDayCaptureFixture") {
                     CaptureFixture(scene: scene)
+                } else if let scene = UserDefaults.standard.string(forKey: "LordsDayBatchFixture") {
+                    LordsDayBatchFixture(scene: scene)
                 } else if let scene = UserDefaults.standard.string(forKey: "LordsDayReviewFixture") {
                     LordsDayReviewFixture(scene: scene)
                 } else if let scene = UserDefaults.standard.string(forKey: "LordsDayLandingFixture") {
