@@ -407,9 +407,10 @@ struct BatchImportView: View {
         thumbnail(page, label: "\(pageNumber(page))", read: true)
             .contentShape(Rectangle())
             .onTapGesture { pageAction = PageAction(id: page, group: group) }
+            .draggable(page.uuidString)
+            .accessibilityElement(children: .ignore)
             .accessibilityAddTraits(.isButton)
             .accessibilityAction { pageAction = PageAction(id: page, group: group) }
-            .draggable(page.uuidString)
             .accessibilityLabel("Page \(pageNumber(page))")
             .accessibilityIdentifier("batch.page.\(pageNumber(page))")
     }

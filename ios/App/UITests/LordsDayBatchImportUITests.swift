@@ -29,7 +29,7 @@ final class LordsDayBatchImportUITests: XCTestCase {
     @MainActor
     func testDraggingPageMovesItBetweenSermons() {
         let app = launch("groups")
-        let page = app.buttons["batch.page.1"]
+        let page = app.buttons["batch.page.1"].firstMatch
         let destination = app.staticTexts["Gospel Partnership"]
         XCTAssertTrue(page.waitForExistence(timeout: 15))
         XCTAssertTrue(destination.exists)
