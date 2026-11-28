@@ -119,6 +119,47 @@ private final class FakeLordsDaySyncServer: @unchecked Sendable {
 struct LordsDaySyncTests {
     private let subject = "11111111-1111-4111-8111-111111111111"
 
+    @Test("oversized extracted text fits in sync payloads without changing the local note")
+    func boundsExtractedTextInBothEnqueuePaths() throws {
+        let ctx = try makeLordsDayContext()
+        let store = LordsDayStore(context: ctx, syncSubject: subject)
+        let text = String(repeating: "é👩🏽‍💻" + String(UnicodeScalar(1)), count: 8_000)
+        let note = LordsDayNote(serviceDate: ldStamp(0), sermonTitle: "Sermon", extractedText: text)
+        try store.save(note)
+        _ = try GuestDataMerge.enqueueGuestData(for: "merge-subject", in: ctx)
+
+        let rows = try ctx.fetch(FetchDescriptor<SyncOutboxEntry>())
+            .filter { $0.table == SyncTable.lordsDayNotes }
+        #expect(rows.count == 2)
+        for row in rows {
+            let payload = try #require(row.payload)
+            let decoded = try JSONDecoder().decode(LordsDayNoteSyncPayload.self, from: payload)
+            let synced = try #require(decoded.extracted_text)
+            #expect(payload.count <= 65_536)
+            #expect(payload.count > 65_500)
+            #expect(synced.utf8.count < text.utf8.count)
+            #expect(text.hasPrefix(synced))
+            #expect(decoded.sermon_title == "Sermon")
+        }
+        #expect(note.extractedText == text)
+    }
+
+    @Test("successive note updates from the same clock millisecond advance on the wire")
+    func sameMillisecondNoteUpdatesAdvance() throws {
+        let ctx = try makeLordsDayContext()
+        let now = Date(timeIntervalSince1970: 1_795_100_000.0004)
+        let store = LordsDayStore(context: ctx, syncSubject: subject, now: { now })
+        let note = LordsDayNote(serviceDate: now, createdAt: now, updatedAt: now)
+        try store.save(note)
+        let original = SyncTimestamp.format(note.updatedAt)
+        try store.update(note) { $0.sermonTitle = "First" }
+        let first = SyncTimestamp.format(note.updatedAt)
+        try store.update(note) { $0.sermonTitle = "Second" }
+        let second = SyncTimestamp.format(note.updatedAt)
+        #expect(original < first)
+        #expect(first < second)
+    }
+
     @Test("round-trips LordsDayNote and all NoteCard kinds with identical UUIDs, preserved fields, and soft deletes")
     func roundTripsNotesCardsAndSoftDeletes() async throws {
         let server = FakeLordsDaySyncServer()
@@ -363,8 +404,9 @@ struct LordsDaySyncTests {
         }
     }
 
-    @Test("AppSyncTransport wire format sends note_id for notes/cards and parses note_id on pull")
-    func appSyncTransportWireFormatForNotesAndCards() async throws {
+    @Test("AppSyncTransport sends note_id, acknowledges permanent rejects, and pulls note_id",
+          arguments: ["ACCEPTED", "REJECTED"])
+    func appSyncTransportWireFormatForNotesAndCards(noteStatus: String) async throws {
         final class CaptureHTTP: @unchecked Sendable {
             var bodies: [[String: Any]] = []
             var responses: [String] = []
@@ -382,8 +424,9 @@ struct LordsDaySyncTests {
         let cardId = UUID().uuidString.lowercased()
         let op1 = UUID()
         let op2 = UUID()
+        let reason = noteStatus == "REJECTED" ? #""CLOCK_SKEW""# : "null"
         http.responses = [
-            #"{"data":{"pushSync":[{"id":"\#(op1.uuidString.lowercased())","status":"ACCEPTED","reason":null},{"id":"\#(op2.uuidString.lowercased())","status":"ACCEPTED","reason":null}]}}"#,
+            #"{"data":{"pushSync":[{"id":"\#(op1.uuidString.lowercased())","status":"\#(noteStatus)","reason":\#(reason)},{"id":"\#(op2.uuidString.lowercased())","status":"ACCEPTED","reason":null}]}}"#,
             #"{"data":{"pullSync":[{"table":"note_cards","id":"\#(cardId)","child_id":null,"note_id":"\#(noteId)","updated_at":"2026-11-22T10:00:00.000Z","deleted_at":null,"payload":"{\"kind\":\"key_point\",\"body\":\"Hello\",\"position\":0,\"edited_by_user\":false,\"created_at\":\"2026-11-22T10:00:00.000Z\"}","change_id":"7"}]}}"#,
         ]
 

@@ -155,14 +155,9 @@ public func todayCardIndex(serviceDate: Date, today: Date, cardCount: Int, calen
     }
 
     private func stampedNow(after previous: Date? = nil) -> Date {
-        let current = SyncTimestamp.truncate(now())
-        if let previous {
-            let truncatedPrev = SyncTimestamp.truncate(previous)
-            if current <= truncatedPrev {
-                return SyncTimestamp.truncate(truncatedPrev.addingTimeInterval(0.001))
-            }
-        }
-        return current
+        let current = now()
+        guard let previous else { return SyncTimestamp.truncate(current) }
+        return SyncTimestamp.monotonic(current, after: previous)
     }
 
     public func save(_ note: LordsDayNote) throws {
@@ -366,15 +361,7 @@ public func todayCardIndex(serviceDate: Date, today: Date, cardCount: Int, calen
     private func enqueueNoteUpsert(_ note: LordsDayNote) throws {
         guard let subject = syncSubject else { return }
         let nid = note.id.uuidString.lowercased()
-        let payload = try JSONEncoder().encode(LordsDayNoteSyncPayload(
-            service_date: SyncTimestamp.format(note.serviceDate),
-            passage_ref: note.passageRef,
-            sermon_title: note.sermonTitle,
-            preacher: note.preacher,
-            church: note.church,
-            extracted_text: note.extractedText,
-            created_at: SyncTimestamp.format(note.createdAt)
-        ))
+        let payload = try LordsDayNoteSyncPayload.encode(note)
         try SyncMetaStore.upsert(
             table: SyncTable.lordsDayNotes, rowId: nid, childId: "", naturalKey: nid,
             updatedAt: note.updatedAt, in: context

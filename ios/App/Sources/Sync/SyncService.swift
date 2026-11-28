@@ -260,11 +260,6 @@ final class SyncService {
             },
             isOnline: {
                 await NetworkConnectivity.shared.isOnline()
-            },
-            onRejected: { id, reason in
-                Self.logger.warning(
-                    "sync change permanently rejected id=\(id.uuidString.lowercased(), privacy: .public) reason=\(reason ?? "unknown", privacy: .public)"
-                )
             }
         )
         let engine = SyncEngine(

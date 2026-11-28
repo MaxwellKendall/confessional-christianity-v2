@@ -129,20 +129,18 @@ final class CaptureModel {
     // MARK: Saving
 
     private func write(_ change: (LordsDayNote) -> Void) {
-        change(note)
         markActive()
-        persistNote()
+        persistNote(change)
     }
 
     private func markActive() {
         try? CaptureDraft.setActive(note.id, root: root)
     }
 
-    private func persistNote() {
+    private func persistNote(_ change: (LordsDayNote) -> Void = { _ in }) {
         do {
-            note.updatedAt = SyncTimestamp.truncate(Date())
             isPersisted = true
-            try storeProvider().save(note)
+            try storeProvider().update(note, change)
             saveState = .saved
         } catch {
             saveState = .failed

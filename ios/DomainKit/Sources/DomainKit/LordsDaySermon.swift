@@ -78,7 +78,7 @@ extension LordsDayNote {
                 changed = true
             }
         }
-        if changed { updatedAt = max(Date(), updatedAt.addingTimeInterval(0.001)) }
+        if changed { updatedAt = SyncTimestamp.monotonic(Date(), after: updatedAt) }
         return changed
     }
 

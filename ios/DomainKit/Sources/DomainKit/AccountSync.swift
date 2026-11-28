@@ -45,6 +45,7 @@
 //       (envelope updated_at/deleted_at <-> NoteCard.updatedAt/deletedAt)
 import CryptoKit
 import Foundation
+import OSLog
 import SwiftData
 
 // MARK: - Config
@@ -86,7 +87,15 @@ public enum SyncTimestamp {
     /// Truncates a Date to millisecond precision so local timestamps match
     /// AppSync/DynamoDB's ISO 8601 millisecond precision during LWW comparisons.
     public static func truncate(_ date: Date) -> Date {
-        Date(timeIntervalSince1970: floor(date.timeIntervalSince1970 * 1000.0) / 1000.0)
+        // A Date round-trip can put an exact millisecond one floating-point step below its boundary.
+        let milliseconds = (date.timeIntervalSince1970 * 1_000).nextUp.rounded(.down)
+        return Date(timeIntervalSince1970: milliseconds / 1_000)
+    }
+
+    static func monotonic(_ now: Date, after previous: Date) -> Date {
+        let previousMilliseconds = (truncate(previous).timeIntervalSince1970 * 1_000).rounded()
+        let next = Date(timeIntervalSince1970: (previousMilliseconds + 1) / 1_000)
+        return max(truncate(now), next)
     }
 
     /// UTC ISO 8601 with exact millisecond precision (`YYYY-MM-DDTHH:mm:ss.SSSZ`),
@@ -148,6 +157,8 @@ public enum AppSyncTransportError: Error, Equatable, Sendable {
 }
 
 public final class AppSyncTransport: SyncTransport {
+    private static let logger = Logger(subsystem: "com.confessionalchristianity.app", category: "sync")
+
     public static let maxPushBatchSize = 20
     public static let maxPullPageSize = 100
 
@@ -254,6 +265,10 @@ public final class AppSyncTransport: SyncTransport {
                     // drop from outbox so it cannot block later writes.
                     acknowledged.insert(id)
                     sliceAcked += 1
+                    let table = slice.first { $0.id == id }?.table ?? "unknown"
+                    Self.logger.warning(
+                        "sync change permanently rejected table=\(table, privacy: .public) id=\(id.uuidString.lowercased(), privacy: .public) reason=\(result.reason ?? "unknown", privacy: .public)"
+                    )
                     onRejected?(id, result.reason)
                 case "RETRY":
                     sawRetry = true
@@ -472,8 +487,45 @@ struct LordsDayNoteSyncPayload: Codable {
     let sermon_title: String?
     let preacher: String?
     let church: String?
-    let extracted_text: String?
+    var extracted_text: String?
     let created_at: String
+
+    // Match Buffer.byteLength(payload) in infra/lambda/sync/service.mjs.
+    @MainActor
+    static func encode(_ note: LordsDayNote) throws -> Data {
+        let limit = 65_536
+        let encoder = JSONEncoder()
+        var payload = Self(
+            service_date: SyncTimestamp.format(note.serviceDate),
+            passage_ref: note.passageRef,
+            sermon_title: note.sermonTitle,
+            preacher: note.preacher,
+            church: note.church,
+            extracted_text: note.extractedText,
+            created_at: SyncTimestamp.format(note.createdAt)
+        )
+        let full = try encoder.encode(payload)
+        guard full.count > limit, let text = payload.extracted_text else { return full }
+
+        payload.extracted_text = nil
+        var best = try encoder.encode(payload)
+        let characters = Array(text.prefix(limit))
+        var lower = 1
+        var upper = characters.count
+        // Count encoded bytes, including escapes, and keep whole characters.
+        while lower <= upper {
+            let length = lower + (upper - lower) / 2
+            payload.extracted_text = String(characters.prefix(length))
+            let candidate = try encoder.encode(payload)
+            if candidate.count <= limit {
+                best = candidate
+                lower = length + 1
+            } else {
+                upper = length - 1
+            }
+        }
+        return best
+    }
 }
 
 struct NoteCardSyncPayload: Codable {
@@ -659,10 +711,6 @@ final class LordsDayNotesSyncAdapter: SyncTableAdapter {
         )
     }
 
-    func remove(id: String, in context: ModelContext) throws {
-        try softDelete(id: id, updatedAt: SyncTimestamp.truncate(Date()), deletedAt: SyncTimestamp.truncate(Date()), in: context)
-    }
-
     func remove(_ record: SyncRecord, in context: ModelContext) throws {
         try softDelete(id: record.id, updatedAt: record.updatedAt, deletedAt: record.deletedAt ?? record.updatedAt, in: context)
     }
@@ -749,10 +797,6 @@ final class NoteCardsSyncAdapter: SyncTableAdapter {
         )
     }
 
-    func remove(id: String, in context: ModelContext) throws {
-        try softDelete(id: id, noteId: nil, updatedAt: SyncTimestamp.truncate(Date()), deletedAt: SyncTimestamp.truncate(Date()), in: context)
-    }
-
     func remove(_ record: SyncRecord, in context: ModelContext) throws {
         try softDelete(id: record.id, noteId: record.noteId, updatedAt: record.updatedAt, deletedAt: record.deletedAt ?? record.updatedAt, in: context)
     }
@@ -831,7 +875,8 @@ final class ChildrenSyncAdapter: SyncTableAdapter {
         )
     }
 
-    func remove(id: String, in context: ModelContext) throws {
+    func remove(_ record: SyncRecord, in context: ModelContext) throws {
+        let id = record.id
         guard let uuid = UUID(uuidString: id) else { return }
         let childPredicate = #Predicate<LocalChild> { $0.id == uuid }
         if let child = try context.fetch(FetchDescriptor(predicate: childPredicate)).first {
@@ -889,7 +934,8 @@ final class CatechismAssignmentsSyncAdapter: SyncTableAdapter {
         )
     }
 
-    func remove(id: String, in context: ModelContext) throws {
+    func remove(_ record: SyncRecord, in context: ModelContext) throws {
+        let id = record.id
         guard let meta = try SyncMetaStore.meta(table: table, rowId: id, in: context) else { return }
         context.delete(meta)
         try deleteTrackIfOrphaned(naturalKey: meta.naturalKey, in: context)
@@ -931,7 +977,8 @@ final class CatechismPacingSyncAdapter: SyncTableAdapter {
         )
     }
 
-    func remove(id: String, in context: ModelContext) throws {
+    func remove(_ record: SyncRecord, in context: ModelContext) throws {
+        let id = record.id
         guard let meta = try SyncMetaStore.meta(table: table, rowId: id, in: context) else { return }
         context.delete(meta)
         try deleteTrackIfOrphaned(naturalKey: meta.naturalKey, in: context)
@@ -1033,7 +1080,8 @@ final class CatechismMilestonesSyncAdapter: SyncTableAdapter {
         }
     }
 
-    func remove(id: String, in context: ModelContext) throws {
+    func remove(_ record: SyncRecord, in context: ModelContext) throws {
+        let id = record.id
         guard let meta = try SyncMetaStore.meta(table: table, rowId: id, in: context) else { return }
         let parts = meta.naturalKey.split(separator: ":", maxSplits: 2).map(String.init)
         if parts.count == 3, let childId = UUID(uuidString: parts[0]) {
@@ -1369,17 +1417,7 @@ public enum GuestDataMerge {
             for note in notes {
                 let nid = note.id.uuidString.lowercased()
                 let updatedAt = SyncTimestamp.truncate(note.updatedAt)
-                let serviceDate = SyncTimestamp.truncate(note.serviceDate)
-                let createdAt = SyncTimestamp.truncate(note.createdAt)
-                let payload = try JSONEncoder().encode(LordsDayNoteSyncPayload(
-                    service_date: SyncTimestamp.format(serviceDate),
-                    passage_ref: note.passageRef,
-                    sermon_title: note.sermonTitle,
-                    preacher: note.preacher,
-                    church: note.church,
-                    extracted_text: note.extractedText,
-                    created_at: SyncTimestamp.format(createdAt)
-                ))
+                let payload = try LordsDayNoteSyncPayload.encode(note)
                 try SyncMetaStore.upsert(
                     table: SyncTable.lordsDayNotes, rowId: nid, childId: "", naturalKey: nid,
                     updatedAt: updatedAt, in: context

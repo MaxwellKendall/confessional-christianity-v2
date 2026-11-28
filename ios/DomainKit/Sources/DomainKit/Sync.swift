@@ -117,8 +117,6 @@ public protocol SyncTableAdapter: AnyObject {
     func localUpdatedAt(id: String, in context: ModelContext) throws -> Date?
     /// Insert or replace the local row from a (non-deleted) server row.
     func apply(_ record: SyncRecord, in context: ModelContext) throws
-    /// Remove the local row (a server soft delete won).
-    func remove(id: String, in context: ModelContext) throws
     /// Remove with full tombstone metadata (e.g. `updatedAt` / `deletedAt`) for soft-deleted tables.
     func remove(_ record: SyncRecord, in context: ModelContext) throws
     /// When true, live (non-deleted) incoming records are always passed to
@@ -129,10 +127,6 @@ public protocol SyncTableAdapter: AnyObject {
 }
 
 public extension SyncTableAdapter {
-    func remove(_ record: SyncRecord, in context: ModelContext) throws {
-        try remove(id: record.id, in: context)
-    }
-
     var mergesLiveRecords: Bool { false }
 }
 

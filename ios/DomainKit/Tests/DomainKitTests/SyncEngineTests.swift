@@ -67,7 +67,7 @@ final class FakeTable: SyncTableAdapter {
 
     func localUpdatedAt(id: String, in context: ModelContext) throws -> Date? { rows[id]?.updatedAt }
     func apply(_ record: SyncRecord, in context: ModelContext) throws { rows[record.id] = (record.payload, record.updatedAt) }
-    func remove(id: String, in context: ModelContext) throws { rows[id] = nil }
+    func remove(_ record: SyncRecord, in context: ModelContext) throws { rows[record.id] = nil }
 }
 
 private func t(_ seconds: TimeInterval) -> Date { Date(timeIntervalSince1970: 1_800_000_000 + seconds) }
@@ -408,7 +408,7 @@ final class BrokenTable: SyncTableAdapter {
     init(_ table: String) { self.table = table }
     func localUpdatedAt(id: String, in context: ModelContext) throws -> Date? { nil }
     func apply(_ record: SyncRecord, in context: ModelContext) throws { throw DiskFull() }
-    func remove(id: String, in context: ModelContext) throws { throw DiskFull() }
+    func remove(_ record: SyncRecord, in context: ModelContext) throws { throw DiskFull() }
 }
 
 // MARK: - Scheduler
