@@ -45,6 +45,24 @@ final class LordsDayBatchImportTests: XCTestCase {
         XCTAssertEqual(indexGroups(grouping, pages), [[0, 1, 2]])
     }
 
+    func testEditingGuessedDatePersistsThroughBatchReview() throws {
+        let draft = try BatchImportDraft(root: root)
+        try draft.addPage(jpeg(1), takenAt: nil)
+        let group = try XCTUnwrap(draft.proposeGroups().groups.first)
+        let now = day(2026, 11, 28)
+        let chosenDay = day(2026, 11, 15, 0)
+        XCTAssertTrue(draft.date(of: group, now: now, calendar: calendar).isGuess)
+
+        let edit = SermonDetailsEdit(title: "A remembered sermon", preacher: nil, passage: nil, church: nil, serviceDate: chosenDay)
+        try draft.setDetails(edit, for: group.id)
+        let reopened = try BatchImportDraft(root: root)
+        XCTAssertEqual(reopened.editedDetails(for: group.id), edit)
+        let made = try reopened.materialize(group, now: now, calendar: calendar)
+        XCTAssertEqual(made.date.date, chosenDay)
+        XCTAssertFalse(made.date.isGuess)
+        XCTAssertEqual(made.sermon?.title, edit.title)
+    }
+
     // MARK: The request plan
 
     func testTwentyPagesAreReadInFourChunksWithNoSermonMetadata() throws {

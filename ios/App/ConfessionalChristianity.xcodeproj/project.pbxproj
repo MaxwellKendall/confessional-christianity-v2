@@ -31,6 +31,7 @@
 		3739A33AC30DEAF56A3F62A9 /* ScriptureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DE21E2EC93C342F162E7EB8 /* ScriptureView.swift */; };
 		3A8177803277E0833708FC6C /* SampleSermonWeek.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB84AC98193447820C31550B /* SampleSermonWeek.swift */; };
 		3E6D00B4CA23EBC3805923A5 /* SignInSheetUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1092716DFCAAFBFA67FC835E /* SignInSheetUITests.swift */; };
+		3F4BD35690B6B42E4D9235FE /* LordsDayBatchImportUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71B8DF17CAF46678658905D4 /* LordsDayBatchImportUITests.swift */; };
 		4BF1AA038DAF23E878D34262 /* SiteHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA107B8B544A9F504E2D6E4F /* SiteHeaderView.swift */; };
 		4C9F8EC58B6134846888E049 /* ReaderChapterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78ABC84F127EEF53401B4B8F /* ReaderChapterView.swift */; };
 		58641ED3BB13D794A63BE99F /* ConfessionalChristianityApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D721D4D4D91E53FCEF7C32EB /* ConfessionalChristianityApp.swift */; };
@@ -170,6 +171,7 @@
 		5DD733ACA6D72F2D1A6C192B /* ShareCardImageUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareCardImageUITests.swift; sourceTree = "<group>"; };
 		67FA73BDA3C0F54F277F6D36 /* GuestDataMergeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuestDataMergeView.swift; sourceTree = "<group>"; };
 		6F0B1A13CFCB4351B4180520 /* LibraryRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryRoute.swift; sourceTree = "<group>"; };
+		71B8DF17CAF46678658905D4 /* LordsDayBatchImportUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LordsDayBatchImportUITests.swift; sourceTree = "<group>"; };
 		72FB0289223150F84B4EF930 /* EsvClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EsvClient.swift; sourceTree = "<group>"; };
 		786FDD2AB314C8BC32806E54 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
 		78ABC84F127EEF53401B4B8F /* ReaderChapterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderChapterView.swift; sourceTree = "<group>"; };
@@ -378,6 +380,7 @@
 			children = (
 				044DF99E6706887F5BA10009 /* ConfessionsReaderTests.swift */,
 				488B97E15ED8C9433237A75B /* LoopEventsUITests.swift */,
+				71B8DF17CAF46678658905D4 /* LordsDayBatchImportUITests.swift */,
 				0C4B68D1D371A1DA4EFC1936 /* LordsDaySkeletonUITests.swift */,
 				38AF05E7396D366BFF71D559 /* LordsDayStackSwipeUITests.swift */,
 				85F5AFB7F423DA9F7CABB375 /* LordsDayWeekUITests.swift */,
@@ -678,6 +681,7 @@
 			files = (
 				DC86ECECFC442185EF1FC948 /* ConfessionsReaderTests.swift in Sources */,
 				93D0DAB535D7FDAF4CD85114 /* LoopEventsUITests.swift in Sources */,
+				3F4BD35690B6B42E4D9235FE /* LordsDayBatchImportUITests.swift in Sources */,
 				1EF79ED90ACDDF6E3CCA99C5 /* LordsDaySkeletonUITests.swift in Sources */,
 				35CB0D9648A80934EC311FF2 /* LordsDayStackSwipeUITests.swift in Sources */,
 				9790C499EC4C92AB3BF79308 /* LordsDayWeekUITests.swift in Sources */,

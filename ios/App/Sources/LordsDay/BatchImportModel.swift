@@ -19,6 +19,7 @@ final class BatchImportModel {
     private(set) var pages: [BatchPage] = []
     private(set) var thumbnails: [UUID: UIImage] = [:]
     private(set) var grouping: SermonGrouping?
+    private(set) var edits: [UUID: SermonDetailsEdit] = [:]
     private(set) var retryingPage: UUID?
     private(set) var failure: CardsGeneratorError?
     private(set) var saveFailed = false
@@ -54,6 +55,7 @@ final class BatchImportModel {
         pages = draft.pages
         for page in pages { loadThumbnail(page.id) }
         if let saved = draft.grouping {
+            for group in saved.groups { edits[group.id] = draft.editedDetails(for: group.id) }
             grouping = saved
             step = .grouping
         }
@@ -152,6 +154,18 @@ final class BatchImportModel {
 
     func sermon(of group: SermonGroup) -> SermonDetails? { draft.sermon(of: group) }
     func date(of group: SermonGroup) -> ServiceDateResolution { draft.date(of: group, now: now()) }
+
+    func details(of group: SermonGroup) -> SermonDetailsEdit {
+        if let edit = edits[group.id] { return edit }
+        let read = sermon(of: group)
+        return SermonDetailsEdit(title: read?.title, preacher: read?.preacher, passage: read?.passage,
+                                 church: read?.church, serviceDate: date(of: group).date)
+    }
+
+    func edit(_ group: SermonGroup, details: SermonDetailsEdit) throws {
+        try draft.setDetails(details, for: group.id)
+        edits[group.id] = details
+    }
 
     func move(_ page: UUID, to group: UUID) { change { $0.move(page, to: group) } }
     func moveToNewGroup(_ page: UUID) { change { $0.moveToNewGroup(page) } }

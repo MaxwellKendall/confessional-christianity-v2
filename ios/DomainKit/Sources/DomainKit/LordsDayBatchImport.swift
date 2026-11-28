@@ -139,6 +139,8 @@ public struct ServiceDateResolution: Codable, Equatable, Sendable {
         case photo
         /// Nothing said: the Sunday on or before today, shown as a guess.
         case guess
+        /// The date was confirmed in Edit details.
+        case confirmed
     }
     public let date: Date
     public let source: Source
@@ -275,6 +277,7 @@ public final class BatchImportDraft {
         var pages: [BatchPage] = []
         var grouping: SermonGrouping?
         var materialized: Set<UUID> = []
+        var editedDetails: [UUID: SermonDetailsEdit]?
     }
 
     public let root: URL
@@ -369,6 +372,22 @@ public final class BatchImportDraft {
         try save()
     }
 
+    public func editedDetails(for group: UUID) -> SermonDetailsEdit? {
+        state.editedDetails?[group]
+    }
+
+    public func setDetails(_ edit: SermonDetailsEdit, for group: UUID) throws {
+        guard pendingGroups.contains(where: { $0.id == group }) else { throw BatchImportError.unknownGroup }
+        var updated = state
+        var details = updated.editedDetails ?? [:]
+        details[group] = edit
+        updated.editedDetails = details
+        let previous = state
+        state = updated
+        do { try save() }
+        catch { state = previous; throw error }
+    }
+
     /// What a group's pages named, merged in page order (first value per field).
     public func sermon(of group: SermonGroup) -> SermonDetails? {
         let merged = pages(of: group).compactMap { $0.read?.sermon }.reduce(SermonDetails(title: nil, preacher: nil, passage: nil, church: nil, serviceDate: nil)) {
@@ -378,7 +397,10 @@ public final class BatchImportDraft {
     }
 
     public func date(of group: SermonGroup, now: Date, calendar: Calendar = .current) -> ServiceDateResolution {
-        resolveServiceDate(readDate: sermon(of: group)?.serviceDate, photoDates: pages(of: group).map(\.takenAt), now: now, calendar: calendar)
+        if let edit = editedDetails(for: group.id) {
+            return ServiceDateResolution(date: calendar.startOfDay(for: edit.serviceDate), source: .confirmed)
+        }
+        return resolveServiceDate(readDate: sermon(of: group)?.serviceDate, photoDates: pages(of: group).map(\.takenAt), now: now, calendar: calendar)
     }
 
     public func pages(of group: SermonGroup) -> [BatchPage] {
@@ -420,7 +442,10 @@ public final class BatchImportDraft {
         let date = date(of: group, now: now, calendar: calendar)
         review.setDateIsGuess(date.isGuess)
         try review.save(root: root)
-        return BatchMaterializedGroup(noteId: group.id, sermon: sermon(of: group), date: date)
+        let sermon = editedDetails(for: group.id).map {
+            SermonDetails(title: $0.title, preacher: $0.preacher, passage: $0.passage, church: $0.church, serviceDate: nil)
+        } ?? sermon(of: group)
+        return BatchMaterializedGroup(noteId: group.id, sermon: sermon, date: date)
     }
 
     /// The group's note is saved: a resumed batch won't make it again.

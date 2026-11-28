@@ -247,7 +247,7 @@ extension SermonDetails {
 }
 
 /// The five editable fields of a sermon note.
-public struct SermonDetailsEdit: Equatable, Sendable {
+public struct SermonDetailsEdit: Codable, Equatable, Sendable {
     public var title: String?
     public var preacher: String?
     public var passage: String?

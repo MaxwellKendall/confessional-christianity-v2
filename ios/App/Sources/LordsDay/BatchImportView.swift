@@ -16,6 +16,8 @@ struct BatchImportView: View {
     @State private var kept: Set<UUID> = []
     @State private var discarded: Set<UUID> = []
     @State private var opensDate = false
+    @State private var editingGroup: SermonGroup?
+    @State private var groupEditorFocus: EditSermonDetailsSheet.Field?
     @State private var picked: [PhotosPickerItem] = []
     @State private var showsPicker = false
     @State private var showsCancel = false
@@ -60,6 +62,12 @@ struct BatchImportView: View {
             }
         }
         #endif
+        .sheet(item: $editingGroup) { group in
+            EditSermonDetailsSheet(initial: model.details(of: group), readFromNotes: model.sermon(of: group),
+                                   dateIsGuess: model.date(of: group).isGuess, initialFocus: groupEditorFocus) { edit in
+                try model.edit(group, details: edit)
+            }
+        }
         .tint(.ccInk)
         .photosPicker(isPresented: $showsPicker, selection: $picked, maxSelectionCount: max(1, model.remainingPhotos),
                       selectionBehavior: .ordered, matching: .images, preferredItemEncoding: .current, photoLibrary: .shared())
@@ -297,7 +305,7 @@ struct BatchImportView: View {
     }
 
     private func groupCard(_ group: SermonGroup, index: Int, groups: [SermonGroup]) -> some View {
-        let sermon = model.sermon(of: group)
+        let details = model.details(of: group)
         let date = model.date(of: group)
         let over = group.pageIds.count > CaptureDraft.maxPages
         return VStack(alignment: .leading, spacing: 10) {
@@ -306,15 +314,26 @@ struct BatchImportView: View {
                     .foregroundStyle(.ccChapel).frame(width: 29, height: 29)
                     .background(Color.ccFill, in: Circle())
                 VStack(alignment: .leading, spacing: 5) {
-                    Text(sermon?.title ?? sermon?.passage ?? "No title on the page")
+                    Text(details.title ?? details.passage ?? "No title on the page")
                         .font(.ccDisplay(16, semibold: true))
                     HStack(spacing: 5) {
                         Text(date.date.formatted(.dateTime.month(.abbreviated).day()))
-                        dateMark(date.source)
+                        if date.isGuess {
+                            Button { editDetails(group, focus: .date) } label: { dateMark(.guess) }
+                                .buttonStyle(.plain)
+                                .accessibilityIdentifier("batch.group.guessedDate")
+                        } else if date.source != .confirmed {
+                            dateMark(date.source)
+                        }
                         Text("· \(group.pageIds.count) pages")
                     }
                     .font(.ccUI(11)).foregroundStyle(.ccInk2)
                 }
+                Spacer(minLength: 0)
+                Button("Edit") { editDetails(group) }
+                    .font(.ccUI(12, weight: .semibold)).foregroundStyle(.ccChapel)
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Edit details for sermon \(index + 1)")
             }
             .accessibilityIdentifier("batch.group.\(index)")
             ScrollView(.horizontal, showsIndicators: false) {
@@ -356,6 +375,11 @@ struct BatchImportView: View {
         }
     }
 
+    private func editDetails(_ group: SermonGroup, focus: EditSermonDetailsSheet.Field? = nil) {
+        groupEditorFocus = focus
+        editingGroup = group
+    }
+
     private func pageNumber(_ page: UUID) -> Int {
         (model.pages.firstIndex { $0.id == page } ?? 0) + 1
     }
@@ -388,6 +412,7 @@ struct BatchImportView: View {
         case .notes: "From notes"
         case .photo: "From photo date"
         case .guess: "Date guessed"
+        case .confirmed: "Date confirmed"
         }
         return Text(text).font(.ccUI(10, weight: .semibold))
             .foregroundStyle(source == .guess ? .ccDanger : .ccChapel)
