@@ -22,5 +22,18 @@ enum SampleSermonWeek {
         try! store.appendCard(to: note, kind: .keyPoint, body: "“Glorified” is in the past tense. Tomorrow, worship like it is already settled.")
         return note
     }
+
+    /// `-SeedSameDaySermon YES` (TKL-1115): a second, older note of the same Sunday with one kept card,
+    /// so the reel holds two sermons on one day (the sample first, this one after it).
+    @MainActor @discardableResult
+    static func seedSameDayCompanion(container: ModelContainer, sample: LordsDayNote) -> LordsDayNote {
+        let store = LordsDayStore(context: container.mainContext)
+        let note = LordsDayNote(serviceDate: sample.serviceDate, sermonTitle: "The Morning Lesson",
+                                createdAt: sample.createdAt.addingTimeInterval(-3600),
+                                updatedAt: sample.createdAt.addingTimeInterval(-3600))
+        try! store.save(note)
+        try! store.appendCard(to: note, kind: .keyPoint, body: "The Lord's Day is a gift before it is a duty.")
+        return note
+    }
 }
 #endif

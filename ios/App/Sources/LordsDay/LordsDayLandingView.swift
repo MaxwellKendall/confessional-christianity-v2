@@ -208,7 +208,8 @@ struct LordsDayLandingView: View {
                 sermon: sermon,
                 page: page,
                 hint: reel.stackHint(at: index),
-                onEditDetails: onEditSermon.map { edit in { edit(sermon.id) } }
+                // Pin the stack to this sermon by id, so the rebuild after saving keeps it on top (TKL-1115).
+                onEditDetails: onEditSermon.map { edit in { shownSermon = sermon.id; edit(sermon.id) } }
             )
         }
         .contentShape(Rectangle())

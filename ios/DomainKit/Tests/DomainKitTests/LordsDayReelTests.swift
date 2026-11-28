@@ -67,6 +67,51 @@ import XCTest
         XCTAssertEqual(reel.earlier(today: today, calendar: calendar).map(\.title), ["Fifteenth", "Photographed weeks later", "First"])
     }
 
+    /// TKL-1115: editing one of two sermons on the same Sunday doesn't swap their order.
+    func testSameDaySermonsKeepTheirOrderWhenOneIsEdited() throws {
+        let store = try makeStore()
+        let older = LordsDayNote(serviceDate: day(2026, 11, 22), sermonTitle: "Morning", createdAt: day(2026, 11, 22, hour: 12))
+        try store.save(older)
+        try store.appendCard(to: older, kind: .keyPoint, body: "m")
+        let newer = LordsDayNote(serviceDate: day(2026, 11, 22), sermonTitle: "Evening", createdAt: day(2026, 11, 22, hour: 20))
+        try store.save(newer)
+        try store.appendCard(to: newer, kind: .keyPoint, body: "e")
+        XCTAssertEqual(try LordsDayReel(store: store, calendar: calendar).sermons.map(\.title), ["Evening", "Morning"])
+
+        var edit = SermonDetailsEdit(note: older)
+        edit.title = "Morning, retitled"
+        try store.updateDetails(edit, for: older)
+        XCTAssertEqual(try LordsDayReel(store: store, calendar: calendar).sermons.map(\.title), ["Evening", "Morning, retitled"])
+    }
+
+    /// TKL-1115: after a rebuild the reel stays on the same sermon and page, wherever it moved to.
+    func testReanchoringFollowsTheSermonAfterAReorder() throws {
+        let store = try makeStore()
+        let moved = try sermon(store, day(2026, 11, 22), title: "Moved", cards: 2)
+        try sermon(store, day(2026, 11, 15), title: "Fifteenth", cards: 3)
+        try sermon(store, day(2026, 11, 1), title: "First", cards: 1)
+        let before = try LordsDayReel(store: store, calendar: calendar)
+        let cover = ReelPosition(sermon: 0, page: 0)
+
+        var edit = SermonDetailsEdit(note: moved)
+        edit.title = "Moved and retitled"
+        edit.serviceDate = day(2026, 11, 8)
+        try store.updateDetails(edit, for: moved)
+        let after = try LordsDayReel(store: store, calendar: calendar)
+        XCTAssertEqual(after.sermons.map(\.title), ["Fifteenth", "Moved and retitled", "First"])
+
+        let anchored = after.reanchor(cover, from: before)
+        XCTAssertEqual(anchored, ReelPosition(sermon: 1, page: 0))
+        XCTAssertEqual(after.sermons[anchored.sermon].title, "Moved and retitled")
+        // A card page keeps its page, clamped to the sermon's pages.
+        XCTAssertEqual(after.reanchor(ReelPosition(sermon: 0, page: 2), from: before), ReelPosition(sermon: 1, page: 2))
+        // A sermon that didn't move stays where it is.
+        XCTAssertEqual(after.reanchor(ReelPosition(sermon: 2, page: 1), from: before), ReelPosition(sermon: 2, page: 1))
+        // A sermon that's gone falls back to the same slot, clamped.
+        let empty = LordsDayReel(testSermonPageCounts: [])
+        XCTAssertEqual(empty.reanchor(cover, from: before), ReelPosition(sermon: 0, page: 0))
+    }
+
     func testBindingNamesTheSermonAndFallsBackToPassageThenDate() throws {
         let store = try makeStore()
         try sermon(store, day(2026, 11, 22), title: "To the Church at Smyrna", cards: 1)

@@ -119,6 +119,17 @@ struct LordsDayReelView: View {
                 }
             }
             .background(ScrubScroller(target: scrubStart == nil ? nil : current, proxy: proxy))
+            // Saving a sermon's details rebuilds the reel, which can reorder it (a date edit moves the
+            // sermon): stay on the same sermon and page, found by id, not on the same flat index (TKL-1115).
+            .onChange(of: reel) { old, new in
+                let anchored = new.reanchor(old.position(at: flat), from: old)
+                let more = new.sermonsToLoad(loaded: min(loaded, new.sermons.count), through: anchored.sermon)
+                if more != loaded { loaded = more }
+                let target = new.flatIndex(of: anchored)
+                guard target != current else { return }
+                current = target
+                DispatchQueue.main.async { proxy.scrollTo(target, anchor: .top) }
+            }
         }
     }
 

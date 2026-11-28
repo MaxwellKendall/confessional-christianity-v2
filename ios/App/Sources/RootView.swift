@@ -253,7 +253,10 @@ struct RootView: View {
     /// notes and six kept cards) to the app's own store, only when it has no notes.
     private func seedSermonWeekForScreenshots() {
         guard UserDefaults.standard.bool(forKey: "SeedSermonWeek"), sermons.isEmpty else { return }
-        SampleSermonWeek.seed(container: modelContext.container)
+        let sample = SampleSermonWeek.seed(container: modelContext.container)
+        if UserDefaults.standard.bool(forKey: "SeedSameDaySermon") {
+            SampleSermonWeek.seedSameDayCompanion(container: modelContext.container, sample: sample)
+        }
     }
 
     /// Two-simulator sync proof hooks (TKL-1068, TKL-1069):

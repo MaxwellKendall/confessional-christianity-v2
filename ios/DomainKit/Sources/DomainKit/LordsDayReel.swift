@@ -144,7 +144,11 @@ public struct LordsDayReel: Equatable, Sendable {
 
     @MainActor public init(store: LordsDayStore, today: Date = Date(), calendar: Calendar = .current) throws {
         var built: [ReelSermon] = []
-        let notes = try store.allNotes().sorted { ($0.serviceDate, $0.updatedAt) > ($1.serviceDate, $1.updatedAt) }
+        // Ties on a Sunday break on when the note was made (then id), never `updatedAt`: editing a
+        // sermon must not swap it with another on the same day (TKL-1115).
+        let notes = try store.allNotes().sorted {
+            ($0.serviceDate, $0.createdAt, $0.id.uuidString) > ($1.serviceDate, $1.createdAt, $1.id.uuidString)
+        }
         for note in notes {
             let cards = try store.cards(for: note)
             if !cards.isEmpty { built.append(ReelSermon(note: note, cards: cards, today: today, calendar: calendar)) }
@@ -192,6 +196,15 @@ public struct LordsDayReel: Equatable, Sendable {
     public func opening(sermon id: UUID, memory: LordsDayStackMemory) -> ReelPosition? {
         guard let index = sermons.firstIndex(where: { $0.id == id }) else { return nil }
         return ReelPosition(sermon: index, page: memory.page(for: sermons[index]))
+    }
+
+    /// Where `position` in `old` is in this rebuilt reel (TKL-1115): the same sermon, found by id
+    /// wherever an edit moved it, on the same page (clamped). A sermon no longer here keeps its slot, clamped.
+    public func reanchor(_ position: ReelPosition, from old: LordsDayReel) -> ReelPosition {
+        guard !sermons.isEmpty else { return ReelPosition(sermon: 0, page: 0) }
+        let id = old.sermons.indices.contains(position.sermon) ? old.sermons[position.sermon].id : nil
+        let s = id.flatMap(index(of:)) ?? min(max(position.sermon, 0), sermons.count - 1)
+        return ReelPosition(sermon: s, page: min(max(position.page, 0), sermons[s].pageCount - 1))
     }
 
     public func flatIndex(of position: ReelPosition) -> Int {

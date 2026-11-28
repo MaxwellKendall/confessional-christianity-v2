@@ -92,6 +92,15 @@ struct LordsDayTabView: View {
         .task {
             // Screenshot hook: `-OpenJournal YES` pushes the journal on launch.
             if UserDefaults.standard.bool(forKey: "OpenJournal"), path.isEmpty { path.append(JournalRoute.journal) }
+            // `-LordsDayOpenReel N` opens the tab's own reel at sermon N's cover once the store has it (TKL-1115).
+            if UserDefaults.standard.object(forKey: "LordsDayOpenReel") != nil {
+                let n = UserDefaults.standard.integer(forKey: "LordsDayOpenReel")
+                for _ in 0..<40 where !reel.sermons.indices.contains(n) {
+                    try? await Task.sleep(for: .milliseconds(250))
+                    refresh()
+                }
+                if reel.sermons.indices.contains(n) { reelStart = ReelOpening(position: ReelPosition(sermon: n, page: 0)) }
+            }
         }
         #endif
         .onChange(of: reminder, initial: true) { _, route in
