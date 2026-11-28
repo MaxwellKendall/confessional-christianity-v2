@@ -100,10 +100,33 @@ public protocol SyncTransport: Sendable {
     /// per-user transaction lock).
     func push(_ changes: [SyncChange]) async throws -> Set<UUID>
 
+    /// As `push`, but also says which acknowledged changes the server rejected
+    /// for good (TKL-1084): they count as acknowledged so ordinary sync drops
+    /// them, yet they never reached the account. Default: no rejections.
+    func pushReportingRejections(_ changes: [SyncChange]) async throws -> SyncPushResult
+
     /// Up to `limit` rows of `table` with `change_id` strictly greater than
     /// `cursor` (all rows when nil), soft-deleted rows included, ascending by
     /// `change_id`.
     func pull(table: String, after cursor: SyncCursor?, limit: Int) async throws -> [SyncRecord]
+}
+
+/// What one push achieved: `acknowledged` may be removed from the outbox;
+/// `rejected` (a subset) was refused permanently and is not in the account.
+public struct SyncPushResult: Equatable, Sendable {
+    public var acknowledged: Set<UUID>
+    public var rejected: Set<UUID>
+
+    public init(acknowledged: Set<UUID>, rejected: Set<UUID> = []) {
+        self.acknowledged = acknowledged
+        self.rejected = rejected
+    }
+}
+
+extension SyncTransport {
+    public func pushReportingRejections(_ changes: [SyncChange]) async throws -> SyncPushResult {
+        SyncPushResult(acknowledged: try await push(changes))
+    }
 }
 
 /// The local side of one synced table, supplied by the app. Read and write
@@ -375,22 +398,32 @@ public final class SyncEngine: SyncRunning {
     /// Sends the outbox in order, in batches; removes an entry only once the
     /// server has acknowledged it. Stops at the first batch that isn't fully
     /// acknowledged so later writes never overtake earlier ones.
-    public func push() async throws {
+    ///
+    /// `keepingRejected` (the sign-out flush, TKL-1084): changes the server
+    /// rejected for good stay in the outbox, so the caller can see they never
+    /// reached the account and nothing is lost if the user cancels; the push
+    /// moves on past them. Ordinary sync drops them so they can't block later writes.
+    public func push(keepingRejected: Bool = false) async throws {
+        var kept = Set<UUID>()
         while true {
             try checkActive()
-            let batch = Array(try outbox().prefix(pushBatchSize))
+            let batch = Array(try outbox().filter { !kept.contains($0.entryId) }.prefix(pushBatchSize))
             guard !batch.isEmpty else { return }
-            let acknowledged = try await transport.push(batch.map(\.change))
+            let result = try await transport.pushReportingRejections(batch.map(\.change))
             try checkActive()
-            var removed = 0
+            var handled = 0
             try commit {
-                for entry in batch where acknowledged.contains(entry.entryId) {
-                    context.delete(entry)
-                    removed += 1
+                for entry in batch where result.acknowledged.contains(entry.entryId) {
+                    handled += 1
+                    if keepingRejected && result.rejected.contains(entry.entryId) {
+                        kept.insert(entry.entryId)
+                    } else {
+                        context.delete(entry)
+                    }
                 }
             }
-            if removed < batch.count {
-                throw SyncError.partialAcknowledgement(acknowledged: removed, sent: batch.count)
+            if handled < batch.count {
+                throw SyncError.partialAcknowledgement(acknowledged: handled, sent: batch.count)
             }
         }
     }

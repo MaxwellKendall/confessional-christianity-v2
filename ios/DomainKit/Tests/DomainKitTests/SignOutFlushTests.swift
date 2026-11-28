@@ -15,7 +15,7 @@ private func flushContext() throws -> ModelContext {
     return ModelContext(container)
 }
 
-private enum FlushTransportMode: Sendable { case ack, offline, hang }
+private enum FlushTransportMode: Sendable { case ack, offline, hang, reject }
 
 private final class FlushTransport: SyncTransport, @unchecked Sendable {
     private let lock = NSLock()
@@ -32,7 +32,15 @@ private final class FlushTransport: SyncTransport, @unchecked Sendable {
         case .hang:
             try await Task.sleep(for: .seconds(30))
             return Set(changes.map(\.id))
+        case .reject:
+            // As AppSyncTransport: a permanent rejection counts as acknowledged.
+            return Set(changes.map(\.id))
         }
+    }
+
+    func pushReportingRejections(_ changes: [SyncChange]) async throws -> SyncPushResult {
+        let acknowledged = try await push(changes)
+        return SyncPushResult(acknowledged: acknowledged, rejected: mode == .reject ? acknowledged : [])
     }
 
     func pull(table: String, after cursor: SyncCursor?, limit: Int) async throws -> [SyncRecord] { [] }
@@ -90,6 +98,64 @@ struct SignOutFlushTests {
         // A late acknowledgement after the timeout never removes entries.
         try await Task.sleep(for: .milliseconds(50))
         #expect(try e.pendingChanges().count == 1)
+    }
+
+    @Test("a permanently rejected change is reported as unsynced and kept for the sheet")
+    func rejectedPushReportsUnsynced() async throws {
+        let transport = FlushTransport(.reject)
+        let e = try engine(transport, pending: 2, in: try flushContext())
+        #expect(await SignOutFlush.run(e) == .unsynced(count: 2))
+        #expect(try e.pendingChanges().count == 2)
+        // Ordinary sync still drops permanent rejections so they never block later writes.
+        try await e.push()
+        #expect(try e.pendingChanges().isEmpty)
+    }
+
+    @Test("a CLOCK_SKEW rejection from the real AppSync transport is not reported as pushed")
+    func appSyncClockSkewRejectionIsUnsynced() async throws {
+        final class FakeHTTP: @unchecked Sendable {
+            private let lock = NSLock()
+            private var _calls = 0
+            var calls: Int { lock.withLock { _calls } }
+            func fetch(_ req: URLRequest) async throws -> (Data, URLResponse) {
+                lock.withLock { _calls += 1 }
+                let json = (try? JSONSerialization.jsonObject(with: req.httpBody ?? Data())) as? [String: Any]
+                let changes = ((json?["variables"] as? [String: Any])?["changes"] as? [[String: Any]]) ?? []
+                // The first change is rejected for clock skew, the rest are accepted.
+                let results = changes.enumerated().map { i, c -> String in
+                    let id = c["id"] as? String ?? ""
+                    return i == 0
+                        ? #"{"id":"\#(id)","status":"REJECTED","reason":"CLOCK_SKEW"}"#
+                        : #"{"id":"\#(id)","status":"ACCEPTED","reason":null}"#
+                }
+                let body = #"{"data":{"pushSync":[\#(results.joined(separator: ","))]}}"#
+                let resp = HTTPURLResponse(url: req.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!
+                return (Data(body.utf8), resp)
+            }
+        }
+        let http = FakeHTTP()
+        var rejectedReasons: [String?] = []
+        let lock = NSLock()
+        let transport = AppSyncTransport(
+            endpoint: URL(string: "https://sync.example.com/graphql")!,
+            tokenProvider: { _ in "tok" },
+            fetch: { try await http.fetch($0) },
+            onRejected: { _, reason in lock.withLock { rejectedReasons.append(reason) } }
+        )
+        let ctx = try flushContext()
+        let e = SyncEngine(context: ctx, transport: transport, tables: [], subject: "sub-flush")
+        for i in 0..<3 {
+            try e.recordLocalWrite(table: SyncTable.children, id: UUID().uuidString.lowercased(), payload: Data("{}".utf8),
+                                   updatedAt: Date(timeIntervalSince1970: 1_795_200_000 + Double(i)))
+        }
+        let rejectedId = try #require(try e.pendingChanges().first?.id)
+
+        #expect(await SignOutFlush.run(e) == .unsynced(count: 1))
+        // The accepted two left the outbox; the rejected one stays, so cancelling keeps it.
+        #expect(try e.pendingChanges().map(\.id) == [rejectedId])
+        #expect(lock.withLock { rejectedReasons } == ["CLOCK_SKEW"])
+        #expect(SignOutConfirmationCopy.confirmTitle(for: .unsynced(count: 1)) == "Sign out anyway")
+        #expect(http.calls == 1)
     }
 
     @Test("the default timeout is short")

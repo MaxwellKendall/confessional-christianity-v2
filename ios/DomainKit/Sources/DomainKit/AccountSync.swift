@@ -213,8 +213,13 @@ public final class AppSyncTransport: SyncTransport {
     """
 
     public func push(_ changes: [SyncChange]) async throws -> Set<UUID> {
-        guard !changes.isEmpty else { return [] }
+        try await pushReportingRejections(changes).acknowledged
+    }
+
+    public func pushReportingRejections(_ changes: [SyncChange]) async throws -> SyncPushResult {
+        guard !changes.isEmpty else { return SyncPushResult(acknowledged: []) }
         var acknowledged = Set<UUID>()
+        var rejected = Set<UUID>()
         var offset = 0
         while offset < changes.count {
             try Task.checkCancellation()
@@ -262,8 +267,10 @@ public final class AppSyncTransport: SyncTransport {
                     sliceAcked += 1
                 case "REJECTED":
                     // Permanent rejection (UNAUTHORIZED / INVALID_INPUT / CLOCK_SKEW):
-                    // drop from outbox so it cannot block later writes.
+                    // drop from outbox so it cannot block later writes (the
+                    // sign-out flush keeps it: it never reached the account).
                     acknowledged.insert(id)
+                    rejected.insert(id)
                     sliceAcked += 1
                     let table = slice.first { $0.id == id }?.table ?? "unknown"
                     Self.logger.warning(
@@ -282,7 +289,7 @@ public final class AppSyncTransport: SyncTransport {
             }
             offset = end
         }
-        return acknowledged
+        return SyncPushResult(acknowledged: acknowledged, rejected: rejected)
     }
 
     public func pull(table: String, after cursor: SyncCursor?, limit: Int) async throws -> [SyncRecord] {

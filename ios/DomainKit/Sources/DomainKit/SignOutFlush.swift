@@ -11,7 +11,8 @@ public enum SignOutFlushOutcome: Equatable, Sendable {
     case nothingPending
     /// Every queued change reached the account.
     case pushed
-    /// The push failed or timed out; `count` changes are still only on this iPhone.
+    /// The push failed, timed out or was permanently rejected by the server;
+    /// `count` changes are still only on this iPhone.
     case unsynced(count: Int)
 }
 
@@ -23,7 +24,8 @@ public enum SignOutFlush {
 
     /// Pushes `engine`'s outbox once. Never throws and never waits longer
     /// than `timeout`: on timeout the push is cancelled, and the engine drops
-    /// any late acknowledgement, so the outbox is left as it was.
+    /// any late acknowledgement, so the outbox is left as it was. Changes the
+    /// server rejects for good stay in the outbox and count as unsynced.
     public static func run(_ engine: SyncEngine, timeout: Duration = defaultTimeout) async -> SignOutFlushOutcome {
         guard let before = try? engine.pendingChanges().count else { return .unsynced(count: 0) }
         if before == 0 { return .nothingPending }
@@ -31,7 +33,7 @@ public enum SignOutFlush {
         let gate = Gate()
         let pushTask = Task { @MainActor in
             do {
-                try await engine.push()
+                try await engine.push(keepingRejected: true)
                 gate.finish(true)
             } catch {
                 gate.finish(false)
