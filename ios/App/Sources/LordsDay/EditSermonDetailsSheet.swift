@@ -9,11 +9,14 @@ import DomainKit
 
 struct EditSermonDetailsSheet: View {
     enum Field: String, Hashable, CaseIterable {
-        case title, preacher, passage, church
+        /// Not a text field: opening on it shows the calendar and scrolls to it (TKL-1085).
+        case title, preacher, passage, church, date
     }
 
     let initial: SermonDetailsEdit
     let readFromNotes: SermonDetails?
+    /// Nothing said when it was preached (no date in the notes, no photo date): say so.
+    var dateIsGuess: Bool = false
     var initialFocus: Field? = nil
     let onSave: (SermonDetailsEdit) throws -> Void
 
@@ -24,17 +27,21 @@ struct EditSermonDetailsSheet: View {
     @State private var church: String
     @State private var serviceDate: Date
     @State private var saveError: String?
+    @State private var showsCalendar: Bool
     @FocusState private var focused: Field?
 
     init(
         initial: SermonDetailsEdit,
         readFromNotes: SermonDetails? = nil,
+        dateIsGuess: Bool = false,
         initialFocus: Field? = nil,
         onSave: @escaping (SermonDetailsEdit) throws -> Void
     ) {
         self.initial = initial
         self.readFromNotes = readFromNotes
+        self.dateIsGuess = dateIsGuess
         self.initialFocus = initialFocus
+        _showsCalendar = State(initialValue: initialFocus == .date)
         self.onSave = onSave
         _title = State(initialValue: initial.title ?? "")
         _preacher = State(initialValue: initial.preacher ?? "")
@@ -50,6 +57,10 @@ struct EditSermonDetailsSheet: View {
     private var passageError: String? {
         if case .invalid(let message) = passageValidation { return message }
         return nil
+    }
+
+    private var calendarIsUnchanged: Bool {
+        Calendar.current.isDate(serviceDate, inSameDayAs: initial.serviceDate)
     }
 
     private var canSave: Bool {
@@ -140,22 +151,38 @@ struct EditSermonDetailsSheet: View {
 
                         VStack(alignment: .leading, spacing: 6) {
                             fieldHeader("Date", readFromNotes: readFlags.serviceDate)
-                            HStack {
-                                DatePicker("Service date", selection: $serviceDate, displayedComponents: .date)
-                                    .labelsHidden()
-                                    .tint(.ccChapel)
-                                    .accessibilityIdentifier("sermonDetails.date")
-                                Spacer(minLength: 0)
+                            Group {
+                                if showsCalendar {
+                                    DatePicker("Service date", selection: $serviceDate, in: ...Date(), displayedComponents: .date)
+                                        .datePickerStyle(.graphical)
+                                        .labelsHidden()
+                                        .padding(.horizontal, 4)
+                                } else {
+                                    HStack {
+                                        DatePicker("Service date", selection: $serviceDate, displayedComponents: .date)
+                                            .labelsHidden()
+                                        Spacer(minLength: 0)
+                                    }
+                                    .padding(.horizontal, 12)
+                                    .frame(minHeight: 46)
+                                }
                             }
-                            .padding(.horizontal, 12)
-                            .frame(minHeight: 46)
+                            .tint(.ccChapel)
+                            .accessibilityIdentifier("sermonDetails.date")
                             .background(Color.ccSurface, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                             .overlay(
                                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                    .strokeBorder(Color.ccLine, lineWidth: 1)
+                                    .strokeBorder(showsCalendar ? Color.ccChapel : Color.ccLine, lineWidth: showsCalendar ? 1.5 : 1)
                             )
+                            if dateIsGuess && calendarIsUnchanged {
+                                Text("A guess: neither your notes nor the photos say when it was preached. Pick the Sunday.")
+                                    .font(.ccUI(13))
+                                    .foregroundStyle(.ccOchre)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .accessibilityIdentifier("sermonDetails.dateGuess")
+                            }
                         }
-                        .id("date")
+                        .id(Field.date)
 
                         if let saveError {
                             Text(saveError)
@@ -174,6 +201,7 @@ struct EditSermonDetailsSheet: View {
                 .background(Color.ccPaper.ignoresSafeArea())
                 .onChange(of: focused) { _, target in
                     guard let target else { return }
+                    if target == .date { focused = nil; return }
                     withAnimation(.easeOut(duration: 0.2)) {
                         proxy.scrollTo(target, anchor: .center)
                     }
@@ -181,7 +209,7 @@ struct EditSermonDetailsSheet: View {
                 .onAppear {
                     if let initialFocus {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                            focused = initialFocus
+                            if initialFocus != .date { focused = initialFocus }
                             proxy.scrollTo(initialFocus, anchor: .center)
                         }
                     }

@@ -282,3 +282,67 @@ private func day(_ iso: String) -> Date {
         #expect(note.passageRef == "Romans 8:28")
     }
 }
+
+// TKL-1085 (2026-11-28): a single capture is dated by the notes, then the photos, then last Sunday.
+@Suite struct SingleCaptureDateTests {
+    private func note(createdOn created: String) -> LordsDayNote {
+        let createdAt = day(created).addingTimeInterval(15 * 3600)
+        return LordsDayNote(serviceDate: lastSunday(onOrBefore: createdAt, calendar: utc), createdAt: createdAt, updatedAt: createdAt)
+    }
+    private let noDetails = SermonDetails(title: nil, preacher: nil, passage: nil, church: nil, serviceDate: nil)
+
+    @Test func photosFromTheLibraryDateTheNoteNotTheUploadDay() {
+        let n = note(createdOn: "2026-11-26") // a Thursday; the default is Sun 22 Nov
+        let before = n.updatedAt
+        // Two pages, taken on Sun 1 Nov and Mon 2 Nov: the earliest page wins.
+        #expect(n.dateFromPhotos([day("2026-11-02"), nil, day("2026-11-01").addingTimeInterval(11 * 3600)], calendar: utc))
+        #expect(n.serviceDate == day("2026-11-01"))
+        #expect(n.updatedAt > before)
+        #expect(!n.serviceDateIsGuess(photoDates: [day("2026-11-01")], calendar: utc))
+    }
+
+    @Test func aDateReadFromTheNotesStillWinsOverThePhotoDate() {
+        let n = note(createdOn: "2026-11-26")
+        let photos = [day("2026-11-03")]
+        _ = n.dateFromPhotos(photos, calendar: utc)
+        #expect(n.serviceDate == day("2026-11-01"))
+        _ = n.fill(with: SermonDetails(title: nil, preacher: nil, passage: nil, church: nil, serviceDate: "2026-10-25"), photoDates: photos, calendar: utc)
+        #expect(n.serviceDate == day("2026-10-25"))
+    }
+
+    @Test func aNotesDateNearOldPhotosIsNotRejectedAsImplausible() {
+        // Photos from two years back, notes naming that Sunday: the window follows the photos.
+        let n = note(createdOn: "2026-11-26")
+        let photos = [day("2024-09-17")]
+        _ = n.dateFromPhotos(photos, calendar: utc)
+        #expect(n.serviceDate == day("2024-09-15"))
+        _ = n.fill(with: SermonDetails(title: nil, preacher: nil, passage: nil, church: nil, serviceDate: "2024-09-08"), photoDates: photos, calendar: utc)
+        #expect(n.serviceDate == day("2024-09-08"))
+    }
+
+    @Test func withNeitherItIsLastSundayAndSaysItIsAGuess() {
+        let n = note(createdOn: "2026-11-26")
+        #expect(!n.dateFromPhotos([nil, nil], calendar: utc))
+        #expect(n.serviceDate == day("2026-11-22"))
+        #expect(n.serviceDateIsGuess(photoDates: [nil, nil], calendar: utc))
+        #expect(n.serviceDateIsGuess(photoDates: [], calendar: utc), "typed notes have no photo date")
+        _ = n.fill(with: noDetails, photoDates: [], calendar: utc)
+        #expect(n.serviceDate == day("2026-11-22"))
+    }
+
+    @Test func aDateThePersonChoseIsNeitherMovedByPhotosNorAGuess() {
+        let n = note(createdOn: "2026-11-26")
+        n.serviceDate = day("2026-11-15")
+        #expect(!n.dateFromPhotos([day("2026-11-01")], calendar: utc))
+        #expect(n.serviceDate == day("2026-11-15"))
+        #expect(!n.serviceDateIsGuess(photoDates: [], calendar: utc))
+        _ = n.fill(with: SermonDetails(title: nil, preacher: nil, passage: nil, church: nil, serviceDate: "2026-10-25"), photoDates: [day("2026-11-01")], calendar: utc)
+        #expect(n.serviceDate == day("2026-11-15"))
+    }
+
+    @Test func aPhotoClockInTheFutureIsPassedOver() {
+        let n = note(createdOn: "2026-11-26")
+        #expect(!n.dateFromPhotos([day("2027-03-01")], now: day("2026-11-26"), calendar: utc))
+        #expect(n.serviceDate == day("2026-11-22"))
+    }
+}

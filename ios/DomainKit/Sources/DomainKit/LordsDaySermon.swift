@@ -54,11 +54,12 @@ public func lastSunday(onOrBefore date: Date, calendar: Calendar = .current) -> 
 extension LordsDayNote {
     /// Fills the fields the person left empty from what the notes say; returns whether
     /// anything changed (and then marks the note updated, so it syncs like any edit).
-    /// A date read from the page replaces the service date only while it is still the
-    /// default a new note starts with, and only when it is plausible: within a year
-    /// before the note was made and not after it (a misread year must not move the week).
+    /// A date read from the page replaces the service date only while the app chose it
+    /// (the default a new note starts with, or the photos' Sunday: TKL-1085), and only
+    /// when it is plausible: not after the note was made, and within a year before it,
+    /// or before the photos when they are older (a misread year must not move the week).
     @discardableResult
-    public func fill(with details: SermonDetails, calendar: Calendar = .current) -> Bool {
+    public func fill(with details: SermonDetails, photoDates: [Date?] = [], calendar: Calendar = .current) -> Bool {
         var changed = false
         func fill(_ field: ReferenceWritableKeyPath<LordsDayNote, String?>, _ value: String?) {
             guard let value, normalizedNoteField(self[keyPath: field]) == nil else { return }
@@ -69,17 +70,50 @@ extension LordsDayNote {
         fill(\.preacher, details.preacher)
         fill(\.passageRef, details.passage)
         fill(\.church, details.church)
-        if let raw = details.serviceDate, let date = Self.day(raw, calendar: calendar),
-           calendar.isDate(serviceDate, inSameDayAs: lastSunday(onOrBefore: createdAt, calendar: calendar)),
+        let photoSunday = photoServiceDate(photoDates, now: nil, calendar: calendar)
+        let chosenByTheApp = hasDefaultServiceDate(calendar: calendar)
+            || photoSunday.map { calendar.isDate(serviceDate, inSameDayAs: $0) } == true
+        if let raw = details.serviceDate, let date = Self.day(raw, calendar: calendar), chosenByTheApp,
            !calendar.isDate(serviceDate, inSameDayAs: date) {
             let made = calendar.startOfDay(for: createdAt)
-            if let earliest = calendar.date(byAdding: .day, value: -366, to: made), date >= earliest, date <= made {
+            let anchor = min(made, photoSunday ?? made)
+            if let earliest = calendar.date(byAdding: .day, value: -366, to: anchor), date >= earliest, date <= made {
                 serviceDate = date
                 changed = true
             }
         }
         if changed { updatedAt = SyncTimestamp.monotonic(Date(), after: updatedAt) }
         return changed
+    }
+
+    /// Dates a new note from its photos (TKL-1085): the Sunday on or before the earliest
+    /// page's capture time, so notes photographed weeks ago aren't filed under this week.
+    /// Moves only a date the app chose itself; returns whether it changed.
+    @discardableResult
+    public func dateFromPhotos(_ photoDates: [Date?], now: Date? = nil, calendar: Calendar = .current) -> Bool {
+        guard hasDefaultServiceDate(calendar: calendar),
+              let sunday = photoServiceDate(photoDates, now: now, calendar: calendar),
+              !calendar.isDate(serviceDate, inSameDayAs: sunday) else { return false }
+        serviceDate = sunday
+        updatedAt = SyncTimestamp.monotonic(Date(), after: updatedAt)
+        return true
+    }
+
+    /// True while the service date is only the app's guess: still the Sunday before the
+    /// note was made, with no photo to date it by. A date read from the notes is the
+    /// caller's to know (it may fall on that same Sunday).
+    public func serviceDateIsGuess(photoDates: [Date?], now: Date? = nil, calendar: Calendar = .current) -> Bool {
+        hasDefaultServiceDate(calendar: calendar) && photoServiceDate(photoDates, now: now, calendar: calendar) == nil
+    }
+
+    private func hasDefaultServiceDate(calendar: Calendar) -> Bool {
+        calendar.isDate(serviceDate, inSameDayAs: lastSunday(onOrBefore: createdAt, calendar: calendar))
+    }
+
+    private func photoServiceDate(_ photoDates: [Date?], now: Date?, calendar: Calendar) -> Date? {
+        let now = now ?? max(Date(), updatedAt, createdAt)
+        let resolved = resolveServiceDate(readDate: nil, photoDates: photoDates, now: now, calendar: calendar)
+        return resolved.source == .photo ? resolved.date : nil
     }
 
     private static func day(_ iso: String, calendar: Calendar) -> Date? {
@@ -240,7 +274,7 @@ public struct SermonDetailsEdit: Equatable, Sendable {
 }
 
 /// A `YYYY-MM-DD` date as the notes write it, at the start of that day; nil unless it is a real date.
-func isoServiceDay(_ iso: String, calendar: Calendar) -> Date? {
+public func isoServiceDay(_ iso: String, calendar: Calendar = .current) -> Date? {
     let parts = iso.split(separator: "-").compactMap { Int($0) }
     guard parts.count == 3, iso.count == 10 else { return nil }
     let components = DateComponents(year: parts[0], month: parts[1], day: parts[2])

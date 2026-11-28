@@ -73,20 +73,24 @@ final class CaptureModel {
 
     // MARK: Pages
 
-    func addPhoto(_ image: UIImage) {
+    /// `takenAt` is the shutter time or the library photo's EXIF time: the earliest page
+    /// dates the note when nothing else has (TKL-1085).
+    func addPhoto(_ image: UIImage, takenAt: Date? = nil) {
         guard let jpeg = Self.jpegForUpload(image) else { saveState = .failed; return }
         do {
             markActive()
             if let target = retakeTarget {
-                try draft.retakePage(target, with: jpeg)
+                try draft.retakePage(target, with: jpeg, takenAt: takenAt)
                 retakeTarget = nil
                 thumbnails[target] = Self.thumbnail(image)
             } else {
-                let id = try draft.addPage(jpeg)
+                let id = try draft.addPage(jpeg, takenAt: takenAt)
                 thumbnails[id] = Self.thumbnail(image)
             }
             pages = draft.pages
-            persistNote()
+            let photoDates = draft.photoDates
+            persistNote { _ = $0.dateFromPhotos(photoDates) }
+            serviceDate = note.serviceDate
         } catch {
             saveState = .failed
         }

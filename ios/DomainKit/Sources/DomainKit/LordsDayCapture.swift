@@ -12,6 +12,14 @@ public struct CapturePage: Codable, Equatable, Identifiable, Sendable {
     public let id: UUID
     /// Bumped on retake so views reload the thumbnail.
     public var revision: Int
+    /// When the photo was taken (EXIF, or the shutter time), to date the note (TKL-1085).
+    public var takenAt: Date?
+
+    public init(id: UUID, revision: Int, takenAt: Date? = nil) {
+        self.id = id
+        self.revision = revision
+        self.takenAt = takenAt
+    }
 }
 
 /// The pages of one note's capture, in order, backed by files.
@@ -43,19 +51,20 @@ public final class CaptureDraft {
 
     public var canAddPage: Bool { pages.count < Self.maxPages }
 
-    @discardableResult public func addPage(_ jpeg: Data) throws -> UUID {
+    @discardableResult public func addPage(_ jpeg: Data, takenAt: Date? = nil) throws -> UUID {
         guard canAddPage else { throw CaptureError.pageLimit }
-        let page = CapturePage(id: UUID(), revision: 0)
+        let page = CapturePage(id: UUID(), revision: 0, takenAt: takenAt)
         try jpeg.write(to: url(for: page.id), options: .atomic)
         pages.append(page)
         try saveManifest()
         return page.id
     }
 
-    public func retakePage(_ id: UUID, with jpeg: Data) throws {
+    public func retakePage(_ id: UUID, with jpeg: Data, takenAt: Date? = nil) throws {
         guard let index = pages.firstIndex(where: { $0.id == id }) else { throw CaptureError.noSuchPage }
         try jpeg.write(to: url(for: id), options: .atomic)
         pages[index].revision += 1
+        pages[index].takenAt = takenAt
         try saveManifest()
     }
 
@@ -70,6 +79,9 @@ public final class CaptureDraft {
         guard pages.contains(where: { $0.id == id }) else { throw CaptureError.noSuchPage }
         return try Data(contentsOf: url(for: id))
     }
+
+    /// When each page was taken, in order (nil where unknown).
+    public var photoDates: [Date?] { pages.map(\.takenAt) }
 
     /// Every page's JPEG in order: what the generator call sends.
     public func pageData() throws -> [Data] { try pages.map { try data(for: $0.id) } }

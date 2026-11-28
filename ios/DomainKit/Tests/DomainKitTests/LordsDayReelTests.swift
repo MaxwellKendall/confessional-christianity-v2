@@ -49,6 +49,24 @@ import XCTest
         XCTAssertNotEqual(smyrna.palette(atPage: 1), smyrna.coverPalette)
     }
 
+    /// TKL-1085: a kept sermon whose date is corrected leaves "This week" and takes its place among earlier ones.
+    func testChangingAKeptSermonsDateMovesItOffThisWeekAndIntoPlace() throws {
+        let store = try makeStore()
+        let today = day(2026, 11, 26)
+        let uploaded = try sermon(store, day(2026, 11, 22), title: "Photographed weeks later", cards: 2)
+        try sermon(store, day(2026, 11, 15), title: "Fifteenth", cards: 1)
+        try sermon(store, day(2026, 11, 1), title: "First", cards: 1)
+        XCTAssertEqual(try LordsDayReel(store: store, calendar: calendar).thisWeek(today: today, calendar: calendar)?.title, "Photographed weeks later")
+
+        var edit = SermonDetailsEdit(note: uploaded)
+        edit.serviceDate = day(2026, 11, 8)
+        try store.updateDetails(edit, for: uploaded)
+        let reel = try LordsDayReel(store: store, calendar: calendar)
+        XCTAssertNil(reel.thisWeek(today: today, calendar: calendar))
+        XCTAssertEqual(reel.sermons.map(\.title), ["Fifteenth", "Photographed weeks later", "First"])
+        XCTAssertEqual(reel.earlier(today: today, calendar: calendar).map(\.title), ["Fifteenth", "Photographed weeks later", "First"])
+    }
+
     func testBindingNamesTheSermonAndFallsBackToPassageThenDate() throws {
         let store = try makeStore()
         try sermon(store, day(2026, 11, 22), title: "To the Church at Smyrna", cards: 1)

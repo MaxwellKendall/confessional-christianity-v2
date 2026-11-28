@@ -310,7 +310,7 @@ struct CaptureView: View {
         Task {
             let image: UIImage? = if let simulatedViewfinder { simulatedViewfinder } else { await camera.capture() }
             withAnimation(.easeIn(duration: 0.2)) { shutterFlash = false }
-            if let image { model.addPhoto(image) }
+            if let image { model.addPhoto(image, takenAt: Date()) }
         }
     }
 
@@ -319,7 +319,8 @@ struct CaptureView: View {
             guard model.canAddPage,
                   let data = try? await item.loadTransferable(type: Data.self),
                   let image = UIImage(data: data) else { continue }
-            model.addPhoto(image)
+            // The library photo's own capture time dates the note, not today (TKL-1085).
+            model.addPhoto(image, takenAt: photoTakenAt(data))
         }
     }
 }

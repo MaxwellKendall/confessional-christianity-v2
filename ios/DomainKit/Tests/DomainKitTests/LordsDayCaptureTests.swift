@@ -18,6 +18,18 @@ final class LordsDayCaptureTests: XCTestCase {
 
     private func jpeg(_ byte: UInt8) -> Data { Data([0xFF, 0xD8, byte, 0xFF, 0xD9]) }
 
+    func testEachPageKeepsWhenItWasTakenAcrossARelaunchAndARetake() throws {
+        let noteId = UUID()
+        let taken = Date(timeIntervalSince1970: 1_793_000_000)
+        let draft = try CaptureDraft(noteId: noteId, root: root)
+        let first = try draft.addPage(jpeg(1), takenAt: taken)
+        _ = try draft.addPage(jpeg(2))
+        XCTAssertEqual(draft.photoDates, [taken, nil])
+        try draft.retakePage(first, with: jpeg(3), takenAt: taken.addingTimeInterval(60))
+        let reopened = try CaptureDraft(noteId: noteId, root: root)
+        XCTAssertEqual(reopened.photoDates, [taken.addingTimeInterval(60), nil])
+    }
+
     func testPagesKeepOrderAndCanBeRetakenOrRemoved() throws {
         let noteId = UUID()
         let draft = try CaptureDraft(noteId: noteId, root: root)

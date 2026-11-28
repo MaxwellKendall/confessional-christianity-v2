@@ -24,7 +24,8 @@ final class ReviewModel {
     private(set) var church: String?
     private(set) var serviceDate: Date
 
-    /// The service date was guessed in a batch import (TKL-1107); saving the details confirms it.
+    /// The service date is only a guess (TKL-1107 batch import; TKL-1085 a single capture with
+    /// no date in the notes and no photo date); saving the details confirms it.
     var dateIsGuess: Bool { review.dateIsGuess }
 
     var detailsEdit: SermonDetailsEdit {
@@ -96,8 +97,13 @@ final class ReviewModel {
         passage = normalizedNoteField(note.passageRef)
         church = normalizedNoteField(note.church)
         serviceDate = note.serviceDate
-        let pages = (try? CaptureDraft(noteId: note.id, root: root))?.pages.count ?? 0
-        review = (try? LordsDayReview.load(noteId: note.id, root: root)) ?? LordsDayReview(noteId: note.id, pageCount: pages)
+        let draft = try? CaptureDraft(noteId: note.id, root: root)
+        if let saved = try? LordsDayReview.load(noteId: note.id, root: root) {
+            review = saved
+        } else {
+            review = LordsDayReview(noteId: note.id, pageCount: draft?.pages.count ?? 0)
+            review.setDateIsGuess(note.serviceDateIsGuess(photoDates: draft?.photoDates ?? []))
+        }
     }
 
     // MARK: Drafting
@@ -275,7 +281,14 @@ final class ReviewModel {
 
     /// What the notes named fills only what the person left empty.
     private func fillNote(from sermon: SermonDetails) {
-        guard note.fill(with: sermon) else { return }
+        let photoDates = (try? CaptureDraft(noteId: note.id, root: root))?.photoDates ?? []
+        let changed = note.fill(with: sermon, photoDates: photoDates)
+        // A date the notes name, even the Sunday already shown, is no longer a guess.
+        if review.dateIsGuess, let raw = sermon.serviceDate, let read = isoServiceDay(raw),
+           Calendar.current.isDate(read, inSameDayAs: note.serviceDate) {
+            review.setDateIsGuess(false)
+        }
+        guard changed else { return }
         saveNote()
         title = normalizedNoteField(note.sermonTitle)
         preacher = normalizedNoteField(note.preacher)

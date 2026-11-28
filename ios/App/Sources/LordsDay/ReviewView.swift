@@ -108,6 +108,7 @@ struct ReviewView: View {
             EditSermonDetailsSheet(
                 initial: model.detailsEdit,
                 readFromNotes: model.review.sermon,
+                dateIsGuess: model.dateIsGuess,
                 initialFocus: request.focus
             ) { edit in
                 try model.updateDetails(edit)
@@ -207,7 +208,7 @@ struct ReviewView: View {
                 .accessibilityIdentifier("review.sermon.editDetails")
             }
 
-            Button { openDetails(model.passage == nil ? .passage : .preacher) } label: {
+            Button { openDetails(model.dateIsGuess ? .date : (model.passage == nil ? .passage : .preacher)) } label: {
                 HStack(spacing: 6) {
                     if metaParts.isEmpty {
                         Text("Add passage, preacher or church · \(shownDate)")
