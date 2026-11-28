@@ -249,11 +249,11 @@ struct RootView: View {
         }
     }
 
-    /// Screenshot hook: `-SeedSermonWeek YES` saves the sample week (Sunday's
-    /// notes, a card a day) to the app's own store, only when it has no notes.
+    /// Screenshot hook: `-SeedSermonWeek YES` saves the sample week (last Sunday's
+    /// notes and six kept cards) to the app's own store, only when it has no notes.
     private func seedSermonWeekForScreenshots() {
         guard UserDefaults.standard.bool(forKey: "SeedSermonWeek"), sermons.isEmpty else { return }
-        _ = LordsDayFeedFixture.makeFeed("key_point", container: modelContext.container)
+        SampleSermonWeek.seed(container: modelContext.container)
     }
 
     /// Two-simulator sync proof hooks (TKL-1068, TKL-1069):

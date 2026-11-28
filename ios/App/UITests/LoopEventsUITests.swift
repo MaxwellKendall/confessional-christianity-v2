@@ -18,11 +18,12 @@ final class LoopEventsUITests: XCTestCase {
         return app
     }
 
-    /// The feed opens at today's card (lords_day_day_opened); Share on it opens the share sheet (lords_day_card_shared).
+    /// The reel opens on this week's sermon (lords_day_day_opened); Share on a card opens the share sheet
+    /// (lords_day_card_shared). The retired week feed used to drive this (TKL-1085 pass 3).
     @MainActor func testOpeningTheWeekAndSharingACard() throws {
-        let app = launch(["-LordsDayFeedFixture", "key_point"])
+        let app = launch(["-LordsDayLandingFixture", "week", "-LordsDayReelAt", "0:1"])
         XCTAssertTrue(app.buttons["Share this card"].firstMatch.waitForExistence(timeout: 15))
-        // Every card has a Share button; only today's is on screen.
+        // Every card has a Share button; only the one on screen is hittable.
         let share = try XCTUnwrap(app.buttons.matching(identifier: "Share this card").allElementsBoundByIndex.first { $0.isHittable })
         share.tap()
         // Leave the share sheet up long enough for the send to finish.

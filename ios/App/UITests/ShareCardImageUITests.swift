@@ -8,9 +8,12 @@ final class ShareCardImageUITests: XCTestCase {
         continueAfterFailure = false
     }
 
+    /// The landing fixture's Smyrna sermon in the reel: page 2 is a verse (Revelation 2:10), page 4 a quote.
     @MainActor private func shareSheet(fixture: String) throws -> XCUIApplication {
+        let page = fixture == "verse" ? 2 : 4
         let app = XCUIApplication()
-        app.launchArguments = ["-LordsDayFeedFixture", fixture, "-SkipNotificationOffer", "YES", "-EsvOffline", "YES"]
+        app.launchArguments = ["-LordsDayLandingFixture", "week", "-LordsDayReelAt", "0:\(page)",
+                               "-SkipNotificationOffer", "YES", "-EsvOffline", "YES"]
         app.launch()
         XCTAssertTrue(app.buttons["Share this card"].firstMatch.waitForExistence(timeout: 20))
         // The image renders off the main thread as the card appears; give it a beat.
