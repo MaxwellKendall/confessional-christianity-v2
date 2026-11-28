@@ -301,10 +301,11 @@ public enum LordsDayLanding {
     }
 
     public static func kind(isSunday: Bool, hasThisWeeksSermon: Bool, hasAnyKeptSermon: Bool, isReadingNotes: Bool,
-                            readFailed: Bool, hasPendingReview: Bool) -> Kind {
+                            readFailed: Bool, hasPendingReview: Bool, pendingReviewIsEmpty: Bool = false) -> Kind {
         if readFailed { return .readFailed }
         if isReadingNotes { return .readingNotes }
-        if hasPendingReview { return .reviewPending }
+        // A review with nothing to keep doesn't hide the week's kept sermon (TKL-1103).
+        if hasPendingReview && !(pendingReviewIsEmpty && hasThisWeeksSermon) { return .reviewPending }
         if hasThisWeeksSermon { return .week }
         if !hasAnyKeptSermon { return .firstSunday }
         return isSunday ? .sundayBeforeNotes : .noSermon

@@ -134,7 +134,8 @@ struct LordsDayTabView: View {
         let thisWeek = reel.thisWeek(today: now, calendar: calendar)
         let kind = LordsDayLanding.kind(isSunday: isSunday, hasThisWeeksSermon: thisWeek != nil,
                                         hasAnyKeptSermon: !reel.sermons.isEmpty, isReadingNotes: reading,
-                                        readFailed: failed, hasPendingReview: pending != nil || status.reviewable)
+                                        readFailed: failed, hasPendingReview: pending != nil || status.reviewable,
+                                        pendingReviewIsEmpty: pending?.review.hasNothingToKeep ?? false)
         return LordsDayLandingView(
             reel: reel, kind: kind, today: now, isSunday: isSunday, offline: offline,
             stackPage: thisWeek.map(memory.page(for:)) ?? 0, draft: draft, calendar: calendar,
@@ -246,7 +247,12 @@ struct LordsDayTabView: View {
         let store = sync.lordsDayStore(in: context)
         reel = (try? LordsDayReel(store: store, today: now, calendar: calendar)) ?? LordsDayReel(testSermonPageCounts: [])
         memory = LordsDayStackMemory(stored: UserDefaults.standard.dictionary(forKey: Self.memoryKey) as? [String: Int] ?? [:])
-        if let first = status.pendingReviews.first, let note = try? store.note(id: first.id) {
+        // A review with cards to keep comes before one that drafted nothing (TKL-1103).
+        let shown = status.pendingReviews.first { item in
+            ReviewModel.activeSessionIds.contains(item.id)
+                || !((try? LordsDayReview.load(noteId: item.id))?.hasNothingToKeep ?? false)
+        } ?? status.pendingReviews.first
+        if let first = shown, let note = try? store.note(id: first.id) {
             pending = ReviewModel.session(for: note, context: context, storeProvider: makeStoreProvider(), generator: makeGenerator())
         } else {
             pending = nil

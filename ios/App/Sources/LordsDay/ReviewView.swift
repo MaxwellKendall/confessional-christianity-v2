@@ -34,6 +34,7 @@ struct ReviewView: View {
     @State private var pickingVerseForId: String?
     @State private var showsSignIn = false
     @State private var finishFailed = false
+    @State private var confirmsDiscard = false
 
     private struct DetailsSheetRequest: Identifiable {
         let id = UUID()
@@ -539,22 +540,43 @@ struct ReviewView: View {
                 .accessibilityIdentifier("review.unreadHint")
             }
 
-            Button {
-                do {
-                    try model.finish()
-                    onFinish()
-                } catch {
-                    finishFailed = true
+            if review.hasNothingToKeep && editingCardId == nil {
+                // Nothing to keep can't be finished; without a way out it waits for review forever (TKL-1103).
+                Button("Discard these notes") { confirmsDiscard = true }
+                    .buttonStyle(ChapelQuietButtonStyle())
+                    .accessibilityIdentifier("review.discard")
+                    .confirmationDialog("Discard these notes?", isPresented: $confirmsDiscard, titleVisibility: .visible) {
+                        Button("Discard notes", role: .destructive) {
+                            do {
+                                try model.discard()
+                                onFinish()
+                            } catch {
+                                finishFailed = true
+                            }
+                        }
+                    } message: {
+                        Text(review.cards.isEmpty
+                             ? "Nothing was drafted from them. The photos will be deleted from this iPhone."
+                             : "No cards are kept. The photos will be deleted from this iPhone.")
+                    }
+            } else {
+                Button {
+                    do {
+                        try model.finish()
+                        onFinish()
+                    } catch {
+                        finishFailed = true
+                    }
+                } label: {
+                    Text(finishLabel)
                 }
-            } label: {
-                Text(finishLabel)
+                .buttonStyle(ChapelPrimaryButtonStyle())
+                .disabled(!review.canFinish || editingCardId != nil)
+                .opacity(review.canFinish && editingCardId == nil ? 1 : 0.4)
+                .accessibilityIdentifier("review.finish")
             }
-            .buttonStyle(ChapelPrimaryButtonStyle())
-            .disabled(!review.canFinish || editingCardId != nil)
-            .opacity(review.canFinish && editingCardId == nil ? 1 : 0.4)
-            .accessibilityIdentifier("review.finish")
 
-            if review.blockingCardIndex == nil && review.unhandledUnreadPages.isEmpty && editingCardId == nil {
+            if review.blockingCardIndex == nil && review.unhandledUnreadPages.isEmpty && editingCardId == nil && !review.hasNothingToKeep {
                 Text("Edit a card's words, or Redraft it for another from the same notes.")
                     .font(.ccUI(12.5))
                     .foregroundStyle(.ccInk3)
@@ -1004,7 +1026,7 @@ private struct ProgressLine: View {
 }
 
 #if DEBUG
-/// Screenshot hook: `-LordsDayReviewFixture filling|complete|smyrna`, optionally
+/// Screenshot hook: `-LordsDayReviewFixture filling|complete|smyrna|empty` (`empty`: one page that drafts no cards, TKL-1103), optionally
 /// `-LordsDayReviewCard p0-1` (or `drafting`), `-LordsDayReviewOpenDetails title|preacher|passage|church`,
 /// `-LordsDayReviewApplyDetails "Title|Preacher|Passage|Church"`, `-LordsDayReviewEditCard p0-0`,
 /// `-LordsDayReviewRedrafting p0-0`.
@@ -1089,9 +1111,11 @@ struct LordsDayReviewFixture: View {
                 )
             try! storeProvider().save(note)
             let draft = try! CaptureDraft(noteId: note.id, root: root)
-            for _ in 0..<(scene == "smyrna" ? 1 : 3) { try! draft.addPage(CaptureModel.jpegForUpload(CaptureFixture.samplePage())!) }
+            for _ in 0..<(scene == "smyrna" || scene == "empty" ? 1 : 3) { try! draft.addPage(CaptureModel.jpegForUpload(CaptureFixture.samplePage())!) }
             let generator = scene == "smyrna"
                 ? FixtureCardsGenerator.smyrna
+                : scene == "empty"
+                ? FixtureCardsGenerator(delay: .milliseconds(150), pages: [[]], pageText: ["(blank page)"])
                 : FixtureCardsGenerator(stopsAfter: scene == "filling" ? 2 : nil, delay: .milliseconds(scene == "filling" ? 300 : 150))
             model = ReviewModel.session(for: note, context: context, storeProvider: storeProvider, generator: generator, root: root)
         }

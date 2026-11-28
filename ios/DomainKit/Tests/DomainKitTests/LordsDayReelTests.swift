@@ -191,9 +191,10 @@ import XCTest
 
     func testLandingStates() {
         func state(sunday: Bool = false, thisWeek: Bool = false, kept: Bool = false, reading: Bool = false,
-                   failed: Bool = false, review: Bool = false) -> LordsDayLanding.Kind {
+                   failed: Bool = false, review: Bool = false, empty: Bool = false) -> LordsDayLanding.Kind {
             LordsDayLanding.kind(isSunday: sunday, hasThisWeeksSermon: thisWeek, hasAnyKeptSermon: kept,
-                                 isReadingNotes: reading, readFailed: failed, hasPendingReview: review)
+                                 isReadingNotes: reading, readFailed: failed, hasPendingReview: review,
+                                 pendingReviewIsEmpty: empty)
         }
         XCTAssertEqual(state(), .firstSunday)
         XCTAssertEqual(state(kept: true), .noSermon)
@@ -207,6 +208,11 @@ import XCTest
         XCTAssertEqual(state(kept: true, reading: true, failed: true), .readFailed)
         // A draft waiting takes the stack's place even when the week already has kept cards.
         XCTAssertEqual(state(thisWeek: true, kept: true, review: true), .reviewPending)
+        // TKL-1103: a second capture that drafted nothing doesn't hide the sermon just kept.
+        XCTAssertEqual(state(thisWeek: true, kept: true, review: true, empty: true), .week)
+        XCTAssertEqual(state(sunday: true, thisWeek: true, kept: true, review: true, empty: true), .week)
+        // With no sermon kept this week, the empty review still shows so it can be discarded.
+        XCTAssertEqual(state(kept: true, review: true, empty: true), .reviewPending)
     }
 
     func testHeaderTitle() {

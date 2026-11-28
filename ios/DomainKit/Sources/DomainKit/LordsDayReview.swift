@@ -311,6 +311,9 @@ public struct LordsDayReview: Codable, Equatable, Sendable {
     public var canFinish: Bool {
         !isDrafting && !cards.isEmpty && keptCount > 0 && blockingCardIndex == nil && unhandledUnreadPages.isEmpty
     }
+    /// The notes have been read (or tried) and nothing is kept: the review can't be finished,
+    /// only discarded (TKL-1103).
+    public var hasNothingToKeep: Bool { phase != .notStarted && !isDrafting && keptCount == 0 }
 
     public func card(_ id: String) -> ReviewCard? { cards.first { $0.id == id } }
 

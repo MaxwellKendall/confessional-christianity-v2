@@ -601,7 +601,9 @@ private extension View {
 
 #if DEBUG
 
-/// Screenshot hook (TKL-1063): `-LordsDayLandingFixture week|sunday|drafting|review|none|first|offline|error`
+/// Screenshot hook (TKL-1063): `-LordsDayLandingFixture week|sunday|drafting|review|none|first|offline|error|keptPlusEmpty`
+/// (`keptPlusEmpty`, TKL-1103: this week's kept sermon plus a second note whose review drafted nothing;
+/// its state comes from the store through `LordsDayLanding.kind`, as on the tab)
 /// draws the landing page in that state from an in-memory store (this week's sermon is the
 /// Revelation 2:8-11 note; earlier ones are samples). `-LordsDayStackPage 4` puts the stack on that
 /// page; `-LordsDayReelAt 0:4` opens the reel at sermon 0, page 4; `-LordsDayReelBubble YES`
@@ -612,13 +614,14 @@ struct LordsDayLandingFixture: View {
     @State private var today = Date()
     @State private var opening: ReelPosition?
     @State private var path = NavigationPath()
+    @State private var computedKind: LordsDayLanding.Kind?
 
     private var defaults: UserDefaults { .standard }
 
     var body: some View {
         let calendar = Calendar.current
         let isSunday = calendar.component(.weekday, from: today) == 1
-        let kind: LordsDayLanding.Kind = switch scene {
+        let sceneKind: LordsDayLanding.Kind = switch scene {
         case "sunday": .sundayBeforeNotes
         case "drafting": .readingNotes
         case "review": .reviewPending
@@ -627,6 +630,7 @@ struct LordsDayLandingFixture: View {
         case "error": .readFailed
         default: .week
         }
+        let kind = computedKind ?? sceneKind
         NavigationStack(path: $path) {
             LordsDayLandingView(
                 reel: reel, kind: kind, today: today, isSunday: isSunday, offline: scene == "offline",
@@ -644,6 +648,7 @@ struct LordsDayLandingFixture: View {
             let (reel, today) = Self.make(scene)
             self.reel = reel
             self.today = today
+            if scene == "keptPlusEmpty" { computedKind = Self.keptPlusEmptyKind(today: today) }
             if let spec = defaults.string(forKey: "LordsDayReelAt") {
                 let parts = spec.split(separator: ":").compactMap { Int($0) }
                 if parts.count == 2 { opening = ReelPosition(sermon: parts[0], page: parts[1]) }
@@ -673,6 +678,34 @@ struct LordsDayLandingFixture: View {
                                 dateCaps: caps, pageCount: 2, pagesRead: 1, progress: 1, arrived: [], cardCount: 4, failedPage: 1)
         default: return nil
         }
+    }
+
+    /// This week's kept sermon, then a second, untitled note of the same Sunday whose one page drafted
+    /// nothing: the landing state the tab computes from the same store and saved review (TKL-1103).
+    @MainActor static func keptPlusEmptyKind(today: Date) -> LordsDayLanding.Kind {
+        let calendar = Calendar.current
+        let container = try! ModelContainer(for: progressSchema, configurations: [ModelConfiguration(schema: progressSchema, isStoredInMemoryOnly: true)])
+        let store = LordsDayStore(context: ModelContext(container))
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("landing-fixture-\(UUID().uuidString)", isDirectory: true)
+        let sunday = lastSunday(onOrBefore: today, calendar: calendar)
+        let kept = LordsDayNote(serviceDate: sunday, passageRef: "Revelation 2:8-11", sermonTitle: "To the Church at Smyrna")
+        try! store.save(kept)
+        try! store.appendCard(to: kept, kind: .keyPoint, body: "The hatred of the world is part of our heritage with Christ.")
+        let empty = LordsDayNote(serviceDate: sunday)
+        try! store.save(empty)
+        try! CaptureDraft(noteId: empty.id, root: root).addPage(Data([0xFF, 0xD8, 0xFF]))
+        var review = LordsDayReview(noteId: empty.id, pageCount: 1)
+        _ = review.begin()
+        review.apply(.page(0, cardCount: 0))
+        review.apply(.done(failedPages: []))
+        try! review.save(root: root)
+        let pending = (try? store.pendingReviewNotes(root: root)) ?? []
+        let first = pending.first.flatMap { try? LordsDayReview.load(noteId: $0.id, root: root) }
+        let reel = (try? LordsDayReel(store: store, today: today, calendar: calendar)) ?? LordsDayReel(testSermonPageCounts: [])
+        return LordsDayLanding.kind(isSunday: calendar.component(.weekday, from: today) == 1,
+                                    hasThisWeeksSermon: reel.thisWeek(today: today, calendar: calendar) != nil,
+                                    hasAnyKeptSermon: !reel.sermons.isEmpty, isReadingNotes: false, readFailed: false,
+                                    hasPendingReview: !pending.isEmpty, pendingReviewIsEmpty: first?.hasNothingToKeep ?? false)
     }
 
     @MainActor static func make(_ scene: String) -> (LordsDayReel, Date) {

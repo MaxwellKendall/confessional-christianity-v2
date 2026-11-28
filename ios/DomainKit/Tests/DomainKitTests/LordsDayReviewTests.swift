@@ -877,6 +877,63 @@ final class LordsDayReviewTests: XCTestCase {
         XCTAssertEqual(try store.note(id: older.id)?.id, older.id)
         XCTAssertEqual(try LordsDayReview.load(noteId: older.id, root: root)?.cards.count, 1)
     }
+    // TKL-1103: a review that drafted nothing could never be finished, so it stayed "Draft · Review".
+    func testZeroCardReviewIsDiscardedAndLeavesPendingReviews() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("discard-empty-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let container = try ModelContainer(for: progressSchema, configurations: [ModelConfiguration(schema: progressSchema, isStoredInMemoryOnly: true)])
+        let store = LordsDayStore(context: ModelContext(container))
+
+        let note = LordsDayNote(serviceDate: Date())
+        try store.save(note)
+        try CaptureDraft(noteId: note.id, root: root).addPage(Data([0xFF, 0xD8, 0xFF]))
+        var review = LordsDayReview(noteId: note.id, pageCount: 1)
+        XCTAssertFalse(review.hasNothingToKeep, "a review not yet read is not empty")
+        _ = review.begin()
+        XCTAssertFalse(review.hasNothingToKeep, "nothing to discard while the notes are being read")
+        review.apply(.page(0, cardCount: 0))
+        review.apply(.done(failedPages: []))
+        try review.save(root: root)
+        XCTAssertFalse(review.canFinish)
+        XCTAssertTrue(review.hasNothingToKeep)
+        XCTAssertEqual(try store.pendingReviewNotes(root: root).map(\.id), [note.id])
+
+        try store.discardPendingReview(note, root: root)
+
+        XCTAssertEqual(try store.pendingReviewNotes(root: root).map(\.id), [])
+        XCTAssertFalse(LordsDayReview.exists(noteId: note.id, root: root))
+        XCTAssertEqual(CaptureDraft.savedPageCount(noteId: note.id, root: root), 0)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: root.appendingPathComponent(note.id.uuidString).path))
+        XCTAssertNil(try store.note(id: note.id), "a note with no cards goes with its review")
+    }
+
+    func testDiscardingAReviewKeepsANoteThatAlreadyHasCards() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("discard-kept-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let container = try ModelContainer(for: progressSchema, configurations: [ModelConfiguration(schema: progressSchema, isStoredInMemoryOnly: true)])
+        let store = LordsDayStore(context: ModelContext(container))
+
+        let note = LordsDayNote(serviceDate: Date(), passageRef: "Romans 8")
+        try store.save(note)
+        try store.keepCards([KeptCard(kind: .keyPoint, body: "Kept already", verseRef: nil, attribution: nil, editedByUser: false)], for: note)
+        try CaptureDraft(noteId: note.id, root: root).addPage(Data([0xFF, 0xD8, 0xFF]))
+        var review = LordsDayReview(noteId: note.id, pageCount: 1)
+        _ = review.begin()
+        review.apply(.page(0, cardCount: 1))
+        review.apply(.card(DraftCardPayload(kind: "key_point", page: 0, order: 0, text: "Removed by the reader.")))
+        review.apply(.done(failedPages: []))
+        review.remove("p0-0")
+        try review.save(root: root)
+        XCTAssertTrue(review.hasNothingToKeep, "every card removed leaves nothing to keep")
+        XCTAssertEqual(try store.pendingReviewNotes(root: root).map(\.id), [note.id])
+
+        try store.discardPendingReview(note, root: root)
+
+        XCTAssertEqual(try store.pendingReviewNotes(root: root).map(\.id), [])
+        XCTAssertEqual(try store.note(id: note.id)?.id, note.id)
+        XCTAssertEqual(try store.cards(for: note).map(\.body), ["Kept already"])
+    }
+
     func testRetryUsesSavedGenerationWhenStreamDropsAfterPageHeader() throws {
         var review = LordsDayReview(noteId: UUID(), pageCount: 2)
         XCTAssertEqual(review.begin(), [0, 1])

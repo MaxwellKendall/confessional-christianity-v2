@@ -254,6 +254,15 @@ final class ReviewModel {
         Self.sessions[noteId] = nil
     }
 
+    /// Drops notes there is nothing to keep from (TKL-1103): the saved review and the
+    /// photos go, and the note too when it has no kept cards, so it stops waiting for review.
+    func discard() throws {
+        guard review.hasNothingToKeep else { throw LordsDayReviewError.nothingToKeep }
+        task?.cancel()
+        try storeProvider().discardPendingReview(note, root: root)
+        Self.sessions[noteId] = nil
+    }
+
     // MARK: The note's sermon fields
 
     /// What the notes named fills only what the person left empty.

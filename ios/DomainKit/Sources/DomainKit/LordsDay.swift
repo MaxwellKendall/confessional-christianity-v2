@@ -217,6 +217,16 @@ public func todayCardIndex(serviceDate: Date, today: Date, cardCount: Int, calen
         if syncSubject != nil { onLocalWrite?() }
     }
 
+    /// Drops a review there is nothing to keep from (TKL-1103): its saved review and the
+    /// note's photos go, and so does the note itself when it has no kept cards.
+    public func discardPendingReview(_ note: LordsDayNote, root: URL = CaptureDraft.defaultRoot) throws {
+        try LordsDayReview.delete(noteId: note.id, root: root)
+        let folder = root.appendingPathComponent(note.id.uuidString, isDirectory: true)
+        if FileManager.default.fileExists(atPath: folder.path) { try FileManager.default.removeItem(at: folder) }
+        if (try? CaptureDraft.activeNoteId(root: root)) == note.id { try CaptureDraft.setActive(nil, root: root) }
+        if try cards(for: note).isEmpty { try removeNote(note) }
+    }
+
     public func cards(for note: LordsDayNote) throws -> [NoteCard] {
         try context.fetch(FetchDescriptor<NoteCard>())
             .filter { $0.noteId == note.id && $0.deletedAt == nil }
