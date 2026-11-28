@@ -625,12 +625,12 @@ enum SyncMetaStore {
 public enum ChildProgressSyncAdapters {
     /// All four child & catechism progress adapters, in dependency order:
     /// `children`, `catechism_assignments`, `catechism_pacing`, `catechism_milestones`.
-    public static func all(subject: String? = nil) -> [any SyncTableAdapter] {
+    public static func all() -> [any SyncTableAdapter] {
         [
             ChildrenSyncAdapter(),
             CatechismAssignmentsSyncAdapter(),
             CatechismPacingSyncAdapter(),
-            CatechismMilestonesSyncAdapter(subject: subject),
+            CatechismMilestonesSyncAdapter(),
         ]
     }
 }
@@ -649,8 +649,8 @@ public enum LordsDaySyncAdapters {
 @MainActor
 public enum AccountSyncAdapters {
     /// Every synced table in dependency order.
-    public static func all(subject: String? = nil) -> [any SyncTableAdapter] {
-        ChildProgressSyncAdapters.all(subject: subject) + LordsDaySyncAdapters.all()
+    public static func all() -> [any SyncTableAdapter] {
+        ChildProgressSyncAdapters.all() + LordsDaySyncAdapters.all()
     }
 }
 
@@ -989,22 +989,24 @@ final class CatechismPacingSyncAdapter: SyncTableAdapter {
 final class CatechismMilestonesSyncAdapter: SyncTableAdapter {
     let table = SyncTable.catechismMilestones
     let mergesLiveRecords = true
-    private let subject: String?
-
-    init(subject: String? = nil) {
-        self.subject = subject
-    }
 
     func localUpdatedAt(id: String, in context: ModelContext) throws -> Date? {
         try SyncMetaStore.meta(table: table, rowId: id, in: context)?.updatedAt
     }
 
     func apply(_ record: SyncRecord, in context: ModelContext) throws {
+        _ = try merge(record, in: context)
+    }
+
+    /// Unions the server's milestone with the local one (the more advanced
+    /// state wins). Returns the merged row when it is ahead of the server's,
+    /// for the engine to queue (TKL-1084).
+    func merge(_ record: SyncRecord, in context: ModelContext) throws -> SyncMergedRow? {
         guard let rawChildId = record.childId,
               let childId = UUID(uuidString: rawChildId),
               let data = record.payload,
               let payload = try? JSONDecoder().decode(CatechismMilestoneSyncPayload.self, from: data) else {
-            return
+            return nil
         }
         let catechismId = SyncTable.contentId(forCatechismSlug: payload.catechism_slug)
         let introducedAt = SyncTimestamp.parse(payload.introduced_at) ?? record.updatedAt
@@ -1060,24 +1062,15 @@ final class CatechismMilestonesSyncAdapter: SyncTableAdapter {
             table: table, rowId: record.id, childId: rawChildId, naturalKey: naturalKey,
             updatedAt: resolvedUpdatedAt, in: context
         )
-        if needsUpgradePush, let subject {
-            let upgradedPayload = try JSONEncoder().encode(CatechismMilestoneSyncPayload(
-                catechism_slug: payload.catechism_slug,
-                question: payload.question,
-                state: finalMilestone.state,
-                introduced_at: SyncTimestamp.format(finalMilestone.introducedAt),
-                review_count: finalMilestone.reviewCount
-            ))
-            try SyncMetaStore.enqueueOutbox(
-                subject: subject,
-                table: table,
-                rowId: record.id,
-                childId: rawChildId,
-                payload: upgradedPayload,
-                updatedAt: resolvedUpdatedAt,
-                in: context
-            )
-        }
+        guard needsUpgradePush else { return nil }
+        let upgradedPayload = try JSONEncoder().encode(CatechismMilestoneSyncPayload(
+            catechism_slug: payload.catechism_slug,
+            question: payload.question,
+            state: finalMilestone.state,
+            introduced_at: SyncTimestamp.format(finalMilestone.introducedAt),
+            review_count: finalMilestone.reviewCount
+        ))
+        return SyncMergedRow(payload: upgradedPayload, updatedAt: resolvedUpdatedAt)
     }
 
     func remove(_ record: SyncRecord, in context: ModelContext) throws {

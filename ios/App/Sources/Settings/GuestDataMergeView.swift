@@ -184,9 +184,18 @@ private struct SavingProgressButton: View {
 
 /// Sign-out confirmation sheet (TKL-833 / TKL-1070): explains that synced account
 /// data stays in the account while the local copies on this iPhone are cleared.
+/// Sign out first pushes unsynced changes (`isFlushing`); if that fails, the
+/// sheet says how many will be removed and offers Sign out anyway (TKL-1084).
 struct SignOutConfirmationSheet: View {
+    var flushOutcome: SignOutFlushOutcome? = nil
+    var isFlushing = false
     let onConfirm: () -> Void
     let onCancel: () -> Void
+
+    private var isUnsynced: Bool {
+        if case .unsynced = flushOutcome { return true }
+        return false
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: ChapelSpace.l) {
@@ -195,13 +204,20 @@ struct SignOutConfirmationSheet: View {
                 .foregroundStyle(.ccInk)
                 .accessibilityAddTraits(.isHeader)
 
-            Text("Everything is kept in your account. This iPhone goes back to using the app without an account, and your synced children, catechism progress and Lord’s Day notes are removed from it until you sign in again.")
+            Text(SignOutConfirmationCopy.body(for: flushOutcome))
                 .chapelReading()
                 .foregroundStyle(.ccInk2)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("settings.signOutBody")
 
-            Button("Sign out", action: onConfirm)
-                .buttonStyle(ChapelPrimaryButtonStyle())
-                .accessibilityIdentifier("settings.signOutConfirm")
+            if isFlushing {
+                SavingProgressButton(title: "Syncing your changes…")
+                    .accessibilityIdentifier("settings.signOutConfirm")
+            } else {
+                Button(SignOutConfirmationCopy.confirmTitle(for: flushOutcome), action: onConfirm)
+                    .buttonStyle(ChapelPrimaryButtonStyle())
+                    .accessibilityIdentifier("settings.signOutConfirm")
+            }
 
             Button("Cancel", action: onCancel)
                 .font(.ccUI(16.5, weight: .medium))
@@ -215,7 +231,7 @@ struct SignOutConfirmationSheet: View {
         .padding(.top, ChapelSpace.xl)
         .padding(.bottom, 24)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .presentationDetents([.height(340)])
+        .presentationDetents([.height(isUnsynced ? 380 : 340)])
         .presentationDragIndicator(.visible)
         .presentationCornerRadius(ChapelRadius.sheet)
         .presentationBackground(.ccSurface)
@@ -223,6 +239,24 @@ struct SignOutConfirmationSheet: View {
 }
 
 #if DEBUG
+/// Screenshot hook (TKL-1084): `-SignOutConfirmFixture kept|flushing|unsynced`
+/// renders the sign-out sheet over paper in that state (no account needed).
+struct SignOutConfirmFixture: View {
+    let scene: String
+
+    var body: some View {
+        Color.ccPaper.ignoresSafeArea()
+            .sheet(isPresented: .constant(true)) {
+                SignOutConfirmationSheet(
+                    flushOutcome: scene == "unsynced" ? .unsynced(count: 3) : nil,
+                    isFlushing: scene == "flushing",
+                    onConfirm: {},
+                    onCancel: {}
+                )
+            }
+    }
+}
+
 /// Screenshot hook (TKL-1070): `-GuestMergeFixture full|loading|error` renders
 /// the merge confirmation screen directly for side-by-side comparison with
 /// TKL-833's prototype.

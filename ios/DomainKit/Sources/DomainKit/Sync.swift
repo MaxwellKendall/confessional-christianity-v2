@@ -120,14 +120,36 @@ public protocol SyncTableAdapter: AnyObject {
     /// Remove with full tombstone metadata (e.g. `updatedAt` / `deletedAt`) for soft-deleted tables.
     func remove(_ record: SyncRecord, in context: ModelContext) throws
     /// When true, live (non-deleted) incoming records are always passed to
-    /// `apply(_:in:)` so the adapter can merge (e.g. unioning milestones so the
+    /// `merge(_:in:)` so the adapter can merge (e.g. unioning milestones so the
     /// more advanced state wins) instead of LWW short-circuiting. Tombstones
     /// (`record.isDeleted`) still follow LWW.
     var mergesLiveRecords: Bool { get }
+    /// Merges a live server row into the local one (only called when
+    /// `mergesLiveRecords`). Returns the merged row when it differs from the
+    /// server's, so the engine queues it for upload under its own subject
+    /// (TKL-1084: the engine, not the adapter, owns the outbox). Default:
+    /// `apply` and nothing to push back.
+    func merge(_ record: SyncRecord, in context: ModelContext) throws -> SyncMergedRow?
+}
+
+/// A merged row the server doesn't have yet, returned by `SyncTableAdapter.merge`.
+public struct SyncMergedRow: Equatable, Sendable {
+    public var payload: Data
+    public var updatedAt: Date
+
+    public init(payload: Data, updatedAt: Date) {
+        self.payload = payload
+        self.updatedAt = updatedAt
+    }
 }
 
 public extension SyncTableAdapter {
     var mergesLiveRecords: Bool { false }
+
+    func merge(_ record: SyncRecord, in context: ModelContext) throws -> SyncMergedRow? {
+        try apply(record, in: context)
+        return nil
+    }
 }
 
 public enum SyncError: Error, Equatable {
@@ -408,10 +430,18 @@ public final class SyncEngine: SyncRunning {
         let lowerId = record.id.lowercased()
         let queued = try outbox().filter { $0.table == record.table && $0.rowId.lowercased() == lowerId }
         if !record.isDeleted && adapter.mergesLiveRecords {
+            // The merge folds the queued writes' state in, so they are replaced
+            // by the merged row (queued here, under this engine's subject).
             for entry in queued {
                 context.delete(entry)
             }
-            try adapter.apply(record, in: context)
+            if let merged = try adapter.merge(record, in: context) {
+                context.insert(SyncOutboxEntry(
+                    sequence: try nextSequence(), subject: subject, table: record.table,
+                    rowId: lowerId, childId: record.childId?.lowercased(), noteId: record.noteId?.lowercased(),
+                    payload: merged.payload, updatedAt: merged.updatedAt, deletedAt: nil
+                ))
+            }
             return
         }
         let localTimes = [try adapter.localUpdatedAt(id: record.id, in: context)].compactMap { $0 } + queued.map(\.updatedAt)

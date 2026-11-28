@@ -44,7 +44,7 @@ Linear project: **confessional christianity** (team TKL): https://linear.app/sof
   `-SkipNotificationOffer YES` (always pass it: an unanswered notification prompt survives reinstalls until the simulator reboots),
   `-OpenReminders YES` (with `-OpenSheet settings`, opens Reminders), `-FireReminder weekday|saturday|resurfaced|catechism`
   (makes two sample sermon weeks in an in-memory store and routes the planner's notification payload through the app),
-  `-OpenSignIn YES` (with `-OpenSheet settings`, opens the sign-in sheet on top), `-OpenSignOutConfirm YES` (with `-OpenSheet settings`, opens the sign-out confirmation sheet), `-SettingsAutoSignOut YES` (confirms sign-out and clears local synced data once restored), `-GuestMergeFixture full|loading|error` (the "Keep what's on this phone in your account" merge screen, TKL-1070), `-GuestMergeAutoConfirm YES` (auto-confirms the guest merge screen on first sign-in),
+  `-OpenSignIn YES` (with `-OpenSheet settings`, opens the sign-in sheet on top), `-OpenSignOutConfirm YES` (with `-OpenSheet settings`, opens the sign-out confirmation sheet), `-SettingsAutoSignOut YES` (confirms sign-out and clears local synced data once restored), `-GuestMergeFixture full|loading|error` (the "Keep what's on this phone in your account" merge screen, TKL-1070), `-GuestMergeAutoConfirm YES` (auto-confirms the guest merge screen on first sign-in), `-SignOutConfirmFixture kept|flushing|unsynced` (the sign-out sheet alone: the usual promise, the pre-sign-out push in flight, or the "3 changes … will be removed" warning with Sign out anyway, TKL-1084),
   and for signing in without taps (TKL-928, dev pool only): `-SignInEmail otp-test@cc-dev-mail.barbrabell.com -SignInAutoSend YES -SignInCodeFile /tmp/code.txt`
   sends the code through the sheet, then types and submits each new code written to that host file (2 s later, for a screenshot);
   fill the file from `infra/scripts/inbox-code.sh`.
@@ -58,7 +58,7 @@ Linear project: **confessional christianity** (team TKL): https://linear.app/sof
 |---|---|---|
 | web unit | `npm test` (vitest, 392 tests, incl. `scripts/**/*.test.mjs`; 60 s timeouts for the loaded build Mac) | ~1 s |
 | web build | `npm run build` (needs `.env.local`; ESLint enforced) | ~15 s |
-| DomainKit | `cd ios/DomainKit && swift test` (433 tests: 317 Swift Testing + 116 XCTest) | ~15 s |
+| DomainKit | `cd ios/DomainKit && swift test` (442 tests: 326 Swift Testing + 116 XCTest) | ~15 s |
 | iOS build | `cd ios/App && xcodegen generate && xcodebuild -scheme ConfessionalChristianity -destination 'platform=iOS Simulator,name=CC iPhone 17 Pro' -derivedDataPath ../../build/dd build` | 15+ min cold (AWS SDK), ~1 min warm |
 | infra | `cd infra && npm ci && npm test` (vitest CDK assertions, 20 tests) | ~6 s |
 | iOS UI (loop events) | `cd ios/App && xcodegen generate && xcodebuild test -scheme ConfessionalChristianity -destination 'platform=iOS Simulator,name=CC iPhone 17 Pro' -derivedDataPath ../../build/dd -only-testing:ConfessionalChristianityUITests` (not a Verify check; sends real events) | ~3 min |

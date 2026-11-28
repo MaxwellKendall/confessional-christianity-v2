@@ -204,6 +204,23 @@ final class SyncService {
         guestMergePhase = .idle
     }
 
+    /// Before a confirmed sign-out (TKL-1084): tries one push of the outbox with
+    /// a short timeout. `.unsynced` means those changes would be lost, so the
+    /// confirmation sheet warns before `signOutAndClearLocalData`.
+    func flushBeforeSignOut() async -> SignOutFlushOutcome {
+        if let engine {
+            return await SignOutFlush.run(engine)
+        }
+        // No running engine (e.g. still waiting on the guest merge): nothing can
+        // be pushed, so report whatever is queued for the departing account.
+        guard let subject = activeSubject ?? lastSyncedSubject,
+              let entries = try? container.mainContext.fetch(FetchDescriptor<SyncOutboxEntry>()) else {
+            return .nothingPending
+        }
+        let count = entries.filter { $0.subject == subject }.count
+        return count == 0 ? .nothingPending : .unsynced(count: count)
+    }
+
     /// Synchronously stops and invalidates in-flight sync and clears all synced
     /// account data from the device back to an empty guest state (TKL-1070).
     func signOutAndClearLocalData() {
@@ -265,7 +282,7 @@ final class SyncService {
         let engine = SyncEngine(
             context: container.mainContext,
             transport: transport,
-            tables: AccountSyncAdapters.all(subject: subject),
+            tables: AccountSyncAdapters.all(),
             subject: subject,
             pushBatchSize: AppSyncTransport.maxPushBatchSize,
             pullPageSize: 50

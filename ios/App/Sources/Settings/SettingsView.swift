@@ -17,6 +17,8 @@ struct SettingsView: View {
     @State private var showsAddChild = false
     @State private var showsSignIn = false
     @State private var showsSignOutConfirm = false
+    @State private var signOutFlush: SignOutFlushOutcome?
+    @State private var isFlushingSignOut = false
     @State private var showsGuestMerge = false
     @State private var showsAbout = false
     @State private var showsReminders = false
@@ -83,12 +85,14 @@ struct SettingsView: View {
                 showsGuestMerge = true
             }
         }) { SignInSheet() }
-        .sheet(isPresented: $showsSignOutConfirm) {
+        .sheet(isPresented: $showsSignOutConfirm, onDismiss: {
+            signOutFlush = nil
+            isFlushingSignOut = false
+        }) {
             SignOutConfirmationSheet(
-                onConfirm: {
-                    showsSignOutConfirm = false
-                    confirmSignOut()
-                },
+                flushOutcome: signOutFlush,
+                isFlushing: isFlushingSignOut,
+                onConfirm: confirmSignOutTapped,
                 onCancel: { showsSignOutConfirm = false }
             )
         }
@@ -211,6 +215,29 @@ struct SettingsView: View {
     /// A list card on paper, as lists sit inside a sheet.
     private func list<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
         VStack(spacing: 0) { content() }.chapelCard(fill: .ccPaper)
+    }
+
+    /// First tap pushes unsynced changes (TKL-1084). Signs out when nothing is
+    /// left unsynced; otherwise the sheet warns and a second tap signs out anyway.
+    private func confirmSignOutTapped() {
+        guard !isFlushingSignOut else { return }
+        if case .unsynced = signOutFlush {
+            showsSignOutConfirm = false
+            confirmSignOut()
+            return
+        }
+        isFlushingSignOut = true
+        Task {
+            let outcome = await sync.flushBeforeSignOut()
+            isFlushingSignOut = false
+            guard showsSignOutConfirm else { return }
+            if case .unsynced = outcome {
+                signOutFlush = outcome
+            } else {
+                showsSignOutConfirm = false
+                confirmSignOut()
+            }
+        }
     }
 
     private func confirmSignOut() {

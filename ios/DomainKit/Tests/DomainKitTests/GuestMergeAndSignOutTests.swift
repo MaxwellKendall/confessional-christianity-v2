@@ -192,7 +192,7 @@ struct GuestMergeAndSignOutTests {
         let lordsDayA = LordsDayStore(context: ctxA, syncSubject: subjectA, now: { gmStamp(10) })
         let engineA = SyncEngine(
             context: ctxA, transport: server.transport(for: subjectA),
-            tables: AccountSyncAdapters.all(subject: subjectA), subject: subjectA
+            tables: AccountSyncAdapters.all(), subject: subjectA
         )
 
         let accountSamuel = try progressA.addChild(name: "Samuel", age: 8, now: gmStamp(1))
@@ -235,7 +235,7 @@ struct GuestMergeAndSignOutTests {
 
         let engineB = SyncEngine(
             context: ctxB, transport: server.transport(for: subjectA),
-            tables: AccountSyncAdapters.all(subject: subjectA), subject: subjectA
+            tables: AccountSyncAdapters.all(), subject: subjectA
         )
         try await engineB.mergeSync()
 
@@ -273,7 +273,7 @@ struct GuestMergeAndSignOutTests {
         let ctxC = try makeContext()
         let engineC = SyncEngine(
             context: ctxC, transport: server.transport(for: subjectA),
-            tables: AccountSyncAdapters.all(subject: subjectA), subject: subjectA
+            tables: AccountSyncAdapters.all(), subject: subjectA
         )
         try await engineC.sync()
         let childrenC = try ctxC.fetch(FetchDescriptor<LocalChild>())
@@ -311,7 +311,7 @@ struct GuestMergeAndSignOutTests {
         _ = storeServer.updateMilestone(childId: sharedChildId, catechismId: "WSC", question: 3, state: "reviewing", introducedAt: gmStamp(30), reviewCount: 2, now: gmStamp(150))
         let engineServer = SyncEngine(
             context: ctxServer, transport: server.transport(for: subjectA),
-            tables: AccountSyncAdapters.all(subject: subjectA), subject: subjectA
+            tables: AccountSyncAdapters.all(), subject: subjectA
         )
         try await engineServer.sync()
 
@@ -337,7 +337,7 @@ struct GuestMergeAndSignOutTests {
         _ = try GuestDataMerge.enqueueGuestData(for: subjectA, in: ctxGuest)
         let engineGuest = SyncEngine(
             context: ctxGuest, transport: server.transport(for: subjectA),
-            tables: AccountSyncAdapters.all(subject: subjectA), subject: subjectA
+            tables: AccountSyncAdapters.all(), subject: subjectA
         )
         try await engineGuest.mergeSync()
         try await engineServer.sync()
@@ -360,6 +360,50 @@ struct GuestMergeAndSignOutTests {
         }
     }
 
+    @Test("a more advanced local milestone is pushed back even when the adapters were built without a subject (TKL-1084)")
+    func milestoneUpgradePushedWithoutAdapterSubject() async throws {
+        let server = FakeFullAccountSyncServer()
+        let childId = UUID()
+
+        // Account has Q. 1 = introduced.
+        let ctxServer = try makeContext()
+        ctxServer.insert(LocalChild(id: childId, name: "Hannah", age: nil, createdAt: gmStamp(1), updatedAt: gmStamp(10), activeCatechismId: "WSC"))
+        ctxServer.insert(ChildCatechismTrack(
+            childId: childId, catechismId: "WSC", currentQuestion: 2, startedAtQuestion: 1,
+            startedAt: gmStamp(1), updatedAt: gmStamp(200),
+            milestones: ["1": MilestoneRecord(state: "introduced", introducedAt: gmStamp(20), reviewCount: 0)]
+        ))
+        try ctxServer.save()
+        _ = try GuestDataMerge.enqueueGuestData(for: subjectA, in: ctxServer)
+        let engineServer = SyncEngine(
+            context: ctxServer, transport: server.transport(for: subjectA),
+            tables: ChildProgressSyncAdapters.all(), subject: subjectA
+        )
+        try await engineServer.sync()
+
+        // This phone has Q. 1 = mastered (older timestamp), queued for the account.
+        let ctxGuest = try makeContext()
+        ctxGuest.insert(LocalChild(id: childId, name: "Hannah", age: nil, createdAt: gmStamp(1), updatedAt: gmStamp(5), activeCatechismId: "WSC"))
+        ctxGuest.insert(ChildCatechismTrack(
+            childId: childId, catechismId: "WSC", currentQuestion: 2, startedAtQuestion: 1,
+            startedAt: gmStamp(1), updatedAt: gmStamp(100),
+            milestones: ["1": MilestoneRecord(state: "mastered", introducedAt: gmStamp(15), reviewCount: 5)]
+        ))
+        try ctxGuest.save()
+        _ = try GuestDataMerge.enqueueGuestData(for: subjectA, in: ctxGuest)
+        let engineGuest = SyncEngine(
+            context: ctxGuest, transport: server.transport(for: subjectA),
+            tables: ChildProgressSyncAdapters.all(), subject: subjectA
+        )
+        try await engineGuest.mergeSync()
+        try await engineServer.sync()
+
+        let onServer = try #require(LocalProgressStore(context: ctxServer).activeTrack(childId: childId))
+        #expect(onServer.milestones["1"]?.state == "mastered")
+        #expect(onServer.milestones["1"]?.reviewCount == 5)
+        #expect(try engineGuest.pendingChanges().isEmpty)
+    }
+
     @Test("same-ID Lord's Day note and card resolve by LWW on merge while preserving order")
     func sameIdNoteAndCardResolveByLWW() async throws {
         let server = FakeFullAccountSyncServer()
@@ -375,7 +419,7 @@ struct GuestMergeAndSignOutTests {
         ctx1.insert(c1)
         try ctx1.save()
         _ = try GuestDataMerge.enqueueGuestData(for: subjectA, in: ctx1)
-        let engine1 = SyncEngine(context: ctx1, transport: server.transport(for: subjectA), tables: AccountSyncAdapters.all(subject: subjectA), subject: subjectA)
+        let engine1 = SyncEngine(context: ctx1, transport: server.transport(for: subjectA), tables: AccountSyncAdapters.all(), subject: subjectA)
         try await engine1.sync()
 
         // Guest has SAME noteId at t=10 ("Older Guest Title") and SAME cardId at t=80 ("Newer Guest Card Body").
@@ -387,7 +431,7 @@ struct GuestMergeAndSignOutTests {
         try ctx2.save()
 
         _ = try GuestDataMerge.enqueueGuestData(for: subjectA, in: ctx2)
-        let engine2 = SyncEngine(context: ctx2, transport: server.transport(for: subjectA), tables: AccountSyncAdapters.all(subject: subjectA), subject: subjectA)
+        let engine2 = SyncEngine(context: ctx2, transport: server.transport(for: subjectA), tables: AccountSyncAdapters.all(), subject: subjectA)
         try await engine2.mergeSync()
         try await engine1.sync()
 
@@ -409,7 +453,7 @@ struct GuestMergeAndSignOutTests {
         let lordsDayA = LordsDayStore(context: ctx, syncSubject: subjectA, now: { gmStamp(10) })
         let engineA = SyncEngine(
             context: ctx, transport: server.transport(for: subjectA),
-            tables: AccountSyncAdapters.all(subject: subjectA), subject: subjectA
+            tables: AccountSyncAdapters.all(), subject: subjectA
         )
 
         let childA = try progressA.addChild(name: "AccountAChild", now: gmStamp(1))
@@ -447,7 +491,7 @@ struct GuestMergeAndSignOutTests {
         let childB = try progressBOther.addChild(name: "AccountBChild", now: gmStamp(10))
         let engineBOther = SyncEngine(
             context: ctxBOther, transport: server.transport(for: subjectB),
-            tables: AccountSyncAdapters.all(subject: subjectB), subject: subjectB
+            tables: AccountSyncAdapters.all(), subject: subjectB
         )
         try await engineBOther.sync()
         server.pushedBySubject[subjectB] = []
@@ -456,7 +500,7 @@ struct GuestMergeAndSignOutTests {
         #expect(try GuestDataMerge.enqueueGuestData(for: subjectB, in: ctx) == 0)
         let engineB = SyncEngine(
             context: ctx, transport: server.transport(for: subjectB),
-            tables: AccountSyncAdapters.all(subject: subjectB), subject: subjectB
+            tables: AccountSyncAdapters.all(), subject: subjectB
         )
         try await engineB.sync()
 
