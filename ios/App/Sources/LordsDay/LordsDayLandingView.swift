@@ -150,9 +150,10 @@ struct LordsDayLandingView: View {
     }
 
     private func sectionHeader(_ title: String, action: String? = nil, id: String? = nil, perform: @escaping () -> Void = {},
-                               trailing: String? = nil) -> some View {
+                               trailing: String? = nil, titleID: String? = nil) -> some View {
         HStack(alignment: .firstTextBaseline) {
             Text(title).font(.ccDisplay(12)).tracking(12 * 0.16).foregroundStyle(.ccInk3)
+                .accessibilityIdentifier(titleID ?? "")
             Spacer()
             if let action {
                 Button(action, action: perform).font(.system(size: 14, weight: .semibold)).foregroundStyle(.ccChapel)
@@ -172,9 +173,8 @@ struct LordsDayLandingView: View {
     private func weekStack(at index: Int) -> some View {
         let sermon = reel.sermons[index]
         return section {
-            sectionHeader(reel.stackHeader(sermon, today: today, calendar: calendar), action: "All cards", id: "lordsDay.allCards") {
-                onOpenReel(ReelPosition(sermon: index, page: 0))
-            }
+            sectionHeader(reel.stackHeader(sermon, today: today, calendar: calendar), action: "All cards", id: "lordsDay.allCards",
+                          perform: { onOpenReel(ReelPosition(sermon: index, page: 0)) }, titleID: "lordsDay.stackHeader")
             ScrollView(.horizontal, showsIndicators: false) {
                 LazyHStack(spacing: 0) {
                     ForEach(Array(reel.sermons.enumerated()), id: \.element.id) { k, sermon in
